@@ -2224,7 +2224,8 @@
                     playerName,
                     finalScore,
                     {
-                        level: boardSize,  // Board size como level para mostrarlo en leaderboard
+                        // NO enviamos 'level' porque el validador solo acepta NOVICE/INTERMEDIATE/etc
+                        // El board_size está en metadata y se muestra desde ahí en el leaderboard
                         time_ms: elapsed * 1000,  // Tiempo en milisegundos para columna TIME
                         metadata: {
                             board_size: boardSize,

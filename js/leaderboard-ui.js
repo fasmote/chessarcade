@@ -359,8 +359,8 @@ function renderKnightQuestScoreRow(score, highlightTop3 = true) {
 
   const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
 
-  // BOARD (tamaño del tablero) - antes era LEVEL
-  const boardDisplay = score.level || '-';
+  // BOARD (tamaño del tablero desde metadata, no desde level)
+  const boardDisplay = (score.metadata && score.metadata.board_size) ? score.metadata.board_size : '-';
 
   // Score formateado con separadores de miles
   const scoreDisplay = score.score.toLocaleString('en-US');
