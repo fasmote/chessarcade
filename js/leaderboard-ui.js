@@ -308,6 +308,92 @@ function renderScoreRow(score, highlightTop3 = true) {
 }
 
 /**
+ * Renderiza una fila de score ESPECÍFICA para Knight Quest
+ * Diferencias vs genérico:
+ * - Bandera al lado del nombre (no columna separada)
+ * - Columna BOARD en vez de LEVEL
+ * - Columna SQUARES mostrando visitadas/total
+ *
+ * @param {object} score - Objeto score del backend
+ * @param {boolean} highlightTop3 - Si destacar el top 3 (default: true)
+ * @returns {string} - HTML string de la fila
+ */
+function renderKnightQuestScoreRow(score, highlightTop3 = true) {
+  // Clases CSS según el rank
+  const rowClasses = ['score-row'];
+  if (highlightTop3 && score.rank <= 3) {
+    rowClasses.push('top-three');
+    rowClasses.push(`rank-${score.rank}`);
+  }
+
+  // Emoji para el top 3
+  let rankDisplay = `#${score.rank}`;
+  if (score.rank === 1) rankDisplay = '🥇 #1';
+  else if (score.rank === 2) rankDisplay = '🥈 #2';
+  else if (score.rank === 3) rankDisplay = '🥉 #3';
+
+  // Player name con primeras 3 letras destacadas + BANDERA AL LADO
+  const playerName = score.player_name || 'UNKNOWN';
+  const initials = playerName.substring(0, 3);
+  const rest = playerName.substring(3);
+
+  // Bandera inline (al lado del nombre)
+  let flagHTML = '';
+  if (score.country && score.country.code) {
+    const countryCode = score.country.code.toLowerCase();
+    const countryName = score.country.name || score.country.code;
+    flagHTML = `
+      <img
+        src="https://flagcdn.com/16x12/${countryCode}.png"
+        srcset="https://flagcdn.com/32x24/${countryCode}.png 2x,
+                https://flagcdn.com/48x36/${countryCode}.png 3x"
+        width="16"
+        height="12"
+        alt="${countryName}"
+        title="${countryName}"
+        class="country-flag"
+        style="margin-left: 6px; vertical-align: middle;"
+      >
+    `;
+  }
+
+  const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
+
+  // BOARD (tamaño del tablero) - antes era LEVEL
+  const boardDisplay = score.level || '-';
+
+  // Score formateado con separadores de miles
+  const scoreDisplay = score.score.toLocaleString('en-US');
+
+  // SQUARES - casillas visitadas/total (desde metadata)
+  let squaresDisplay = '-';
+  if (score.metadata && score.metadata.visited_squares && score.metadata.total_squares) {
+    squaresDisplay = `${score.metadata.visited_squares}/${score.metadata.total_squares}`;
+  }
+
+  // Time formateado
+  let timeDisplay = '-';
+  if (score.time_ms) {
+    const seconds = Math.floor(score.time_ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    timeDisplay = `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Construir la fila (sin columna COUNTRY separada)
+  return `
+    <tr class="${rowClasses.join(' ')}" data-score-id="${score.id}">
+      <td class="rank">${rankDisplay}</td>
+      <td class="player-name">${playerNameHTML}</td>
+      <td class="score">${scoreDisplay}</td>
+      <td class="level">${boardDisplay}</td>
+      <td class="level">${squaresDisplay}</td>
+      <td class="time">${timeDisplay}</td>
+    </tr>
+  `;
+}
+
+/**
  * Renderiza una tabla completa de leaderboard
  *
  * @param {array} scores - Array de scores del backend
@@ -348,6 +434,55 @@ function renderLeaderboardTable(scores, showTime = false) {
   } else {
     // Renderizar cada score
     tbody.innerHTML = scores.map(score => renderScoreRow(score, true)).join('');
+  }
+
+  table.appendChild(tbody);
+
+  return table;
+}
+
+/**
+ * Renderiza una tabla completa de leaderboard ESPECÍFICA para Knight Quest
+ * Headers personalizados: RANK | PLAYER | SCORE | BOARD | SQUARES | TIME
+ * (sin columna COUNTRY separada, la bandera va al lado del nombre)
+ *
+ * @param {array} scores - Array de scores del backend
+ * @returns {HTMLElement} - Elemento table
+ */
+function renderKnightQuestLeaderboardTable(scores) {
+  // Crear elemento table
+  const table = document.createElement('table');
+  table.className = 'leaderboard-table';
+
+  // Crear thead con headers específicos de Knight Quest
+  const thead = document.createElement('thead');
+  thead.innerHTML = `
+    <tr>
+      <th class="rank">Rank</th>
+      <th class="player-name">Player</th>
+      <th class="score">Score</th>
+      <th class="level">Board</th>
+      <th class="level">Squares</th>
+      <th class="time">Time</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+
+  // Crear tbody
+  const tbody = document.createElement('tbody');
+
+  if (scores.length === 0) {
+    // Si no hay scores, mostrar mensaje
+    tbody.innerHTML = `
+      <tr class="no-scores">
+        <td colspan="6" class="text-center">
+          No scores yet. Be the first! 🏆
+        </td>
+      </tr>
+    `;
+  } else {
+    // Renderizar cada score usando la función específica de Knight Quest
+    tbody.innerHTML = scores.map(score => renderKnightQuestScoreRow(score, true)).join('');
   }
 
   table.appendChild(tbody);
@@ -478,8 +613,13 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
         offset: state.currentOffset
       });
 
-      // Renderizar tabla
-      const table = renderLeaderboardTable(data.scores, true);
+      // Renderizar tabla (usar función específica para Knight Quest)
+      let table;
+      if (state.currentGame === 'knight-quest') {
+        table = renderKnightQuestLeaderboardTable(data.scores);
+      } else {
+        table = renderLeaderboardTable(data.scores, true);
+      }
       contentArea.innerHTML = '';
       contentArea.appendChild(table);
 
