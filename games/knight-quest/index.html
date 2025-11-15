@@ -2135,6 +2135,11 @@
         
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
+            // Ignorar atajos de teclado si el usuario está escribiendo en un input o textarea
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
             if (e.key === ' ') {
                 e.preventDefault();
                 getHint();
