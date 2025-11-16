@@ -2,10 +2,13 @@
 
 ## 📋 Resumen Ejecutivo
 
-Este documento describe un bug complejo encontrado al implementar columnas personalizadas en el leaderboard de Knight Quest, donde las columnas BOARD y SQUARES mostraban "-" en lugar de los valores correctos.
+Este documento describe bugs complejos encontrados al implementar columnas personalizadas en los leaderboards de Knight Quest y Master Sequence.
 
-**Tiempo de resolución:** ~3 horas
-**Complejidad:** Alta (involucró frontend, backend y base de datos)
+**Juegos afectados:**
+- Knight Quest: Columnas BOARD y SQUARES mostraban "-" (3 horas de debugging)
+- Master Sequence: Columna LENGTH mostraba "1" siempre (4 horas de debugging)
+
+**Complejidad:** Alta (involucró frontend, backend, base de datos y scope de variables)
 **Fecha:** 15-16 Noviembre 2025
 
 ---
@@ -498,7 +501,233 @@ La clave fue hacer debugging sistemático desde el frontend hacia el backend, ve
 
 ---
 
+# ============================================
+# CASO 2: MASTER SEQUENCE - VARIABLE NO EXPUESTA
+# ============================================
+
+## 🐛 Síntomas del Problema
+
+### Comportamiento Observado
+
+1. El leaderboard de Master Sequence mostraba 6 columnas correctamente:
+   - RANK | PLAYER | SCORE | **LENGTH** | LEVEL | TIME
+
+2. **Pero la columna LENGTH mostraba "1" para TODOS los scores**
+   - Incluso cuando el jugador llegaba a nivel 6
+   - La secuencia acumulativa debería ser 6, pero mostraba 1
+
+3. Los logs del navegador mostraban:
+   ```
+   📊 Last session stats saved: {sequenceLength: 6, ...}
+   🔍 [DEBUG] window.lastSessionStats: undefined
+   ```
+
+---
+
+## 🔍 Diagnóstico del Problema
+
+### 1. Primera Hipótesis: gameState.sequence vs gameState.masterSequence
+
+**Lo que se verificó:**
+- ❌ Inicialmente usaba `gameState.sequence.length` (incorrecto)
+- ✅ Cambiado a `gameState.masterSequence.length` (correcto)
+
+**Fix aplicado (línea 805 en game.js):**
+```javascript
+// ANTES:
+sequenceLength: gameState.sequence.length  // ❌ Copia temporal
+
+// DESPUÉS:
+sequenceLength: gameState.masterSequence.length  // ✅ Secuencia acumulativa
+```
+
+**Resultado:** Seguía mostrando "1" ❌
+
+### 2. Segunda Hipótesis: Logs para rastrear el flujo
+
+**Se agregaron logs detallados en:**
+- `game.js` → Cuando se guarda `lastSessionStats`
+- `leaderboard-integration.js` → Cuando se lee `lastSessionStats`
+- `leaderboard-ui.js` → Cuando se renderiza la columna
+
+**Resultado de los logs:**
+
+```javascript
+// EN GAME.JS (línea 808):
+📊 Last session stats saved: {level: 6, score: 791, sequenceLength: 6, ...}
+✅ sequenceLength: 6 se guardó correctamente
+
+// EN LEADERBOARD-INTEGRATION.JS (línea 194):
+🔍 [DEBUG] window.lastSessionStats: undefined
+❌ ¡No puede leer la variable!
+
+// POR LO TANTO (línea 196):
+sequenceLength: 1  // ← Usa el valor por defecto
+```
+
+### 3. Causa Raíz Encontrada
+
+**El problema:** `lastSessionStats` era una variable **LOCAL** en `game.js`
+
+```javascript
+// EN game.js (línea 69):
+let lastSessionStats = {  // ❌ Variable LOCAL, no está en window
+    level: 1,
+    score: 0,
+    // ...
+};
+
+// EN leaderboard-integration.js (línea 79):
+const stats = window.lastSessionStats || {};  // ❌ Busca en window pero no existe
+```
+
+**¿Por qué fallaba?**
+- `lastSessionStats` estaba en el scope del módulo `game.js`
+- `leaderboard-integration.js` es otro módulo separado
+- `window.lastSessionStats` era `undefined`
+- Por eso defaulteaba a `sequenceLength: 1`
+
+---
+
+## ✅ Soluciones Implementadas
+
+### Fix Final: Exponer la variable en window
+
+**Archivo:** `games/master-sequence/game.js` (línea 810)
+
+```javascript
+// Preservar estadísticas de la sesión
+lastSessionStats = {
+    level: gameState.currentLevel,
+    score: gameState.score,
+    lives: gameState.lives,
+    streak: gameState.perfectStreak,
+    sequenceLength: gameState.masterSequence.length,  // ✅ Secuencia acumulativa
+    totalTimeMs: totalTimeMs
+};
+
+// ✅ CRÍTICO: Exponer en window para que leaderboard-integration.js pueda acceder
+window.lastSessionStats = lastSessionStats;
+
+console.log('📊 Last session stats saved:', lastSessionStats);
+console.log('✅ [DEBUG] window.lastSessionStats exposed:', window.lastSessionStats);
+```
+
+---
+
+## 🎯 Resultado Final
+
+### Antes del Fix:
+```
+RANK #17: youGupo | 519 | 1 | 6 Cuadrante Derecho | 1:21
+                          ↑ Incorrecto (debería ser 6)
+```
+
+### Después del Fix:
+```
+RANK #17: youGupo | 519 | 6 | 6 Cuadrante Derecho | 1:21
+                          ✅ Correcto!
+```
+
+### Logs Correctos:
+```
+📊 Last session stats saved: {sequenceLength: 6, ...}
+✅ window.lastSessionStats exposed: {sequenceLength: 6, ...}
+🔍 [DEBUG] window.lastSessionStats: {sequenceLength: 6, ...}  ← Ya NO es undefined
+   - sequenceLength: 6  ← Valor correcto
+```
+
+---
+
+## 📚 Lecciones Aprendidas (Master Sequence)
+
+### 1. Variables Locales vs Globales
+
+Si una variable necesita ser compartida entre módulos:
+- ✅ **Opción 1:** Exponerla en `window`
+- ✅ **Opción 2:** Exportarla correctamente con ES6 modules
+- ❌ **Incorrecto:** Asumir que estará disponible automáticamente
+
+```javascript
+// ❌ MAL: Variable local
+let myData = { value: 123 };
+
+// ✅ BIEN: Expuesta globalmente
+window.myData = { value: 123 };
+```
+
+### 2. Debugging de Variables entre Módulos
+
+Cuando una variable "desaparece" entre archivos:
+1. Verificar que esté expuesta en `window` o exportada
+2. Agregar logs ANTES y DESPUÉS de acceder a la variable
+3. Verificar el scope y el contexto de ejecución
+
+### 3. Defaulting de Valores
+
+```javascript
+// Esto puede ocultar bugs:
+const value = stats.sequenceLength || 1;  // Si stats es {}, devuelve 1
+
+// Mejor logging:
+console.log('stats:', stats);  // Ver si stats existe
+console.log('stats.sequenceLength:', stats.sequenceLength);  // Ver el valor
+const value = stats.sequenceLength || 1;
+```
+
+### 4. Usar masterSequence en Juegos Acumulativos
+
+En juegos tipo "Simon Says" donde la secuencia crece:
+- `gameState.sequence` = Copia temporal del nivel actual
+- `gameState.masterSequence` = **Secuencia acumulativa completa** ✅
+
+Siempre usar `masterSequence.length` para el tracking de progreso.
+
+---
+
+## 🚨 Checklist para Debugging (Actualizado)
+
+Agregar estos checks al debugging anterior:
+
+- [ ] **Variables Compartidas:** ¿La variable está expuesta en `window`?
+  - Verificar: `console.log('window.myVar:', window.myVar)`
+
+- [ ] **Scope:** ¿Las variables locales están accesibles desde otros módulos?
+  - Si no: Exponer en `window` o exportar correctamente
+
+- [ ] **Defaults:** ¿Los valores por defecto ocultan el problema real?
+  - Verificar qué sucede cuando la variable es `undefined`
+
+- [ ] **Secuencias Acumulativas:** ¿Se usa la secuencia correcta?
+  - `sequence` vs `masterSequence`
+  - Verificar cuál contiene el historial completo
+
+---
+
+## 📝 Commits Relacionados (Master Sequence)
+
+1. `e3ef596` - feat: Add custom leaderboard for Master Sequence with time tracking
+2. `f98207a` - fix: Use masterSequence.length for accurate sequence length
+3. `852b188` - debug: Add detailed console logs for length tracking
+4. `e1d9cda` - debug: Add detailed metadata inspection logs
+5. `950aa66` - fix: Expose lastSessionStats to window for leaderboard integration ✅
+
+---
+
+## 🎓 Comparación de Bugs
+
+| Aspecto | Knight Quest | Master Sequence |
+|---------|-------------|-----------------|
+| **Síntoma** | Columnas BOARD/SQUARES con "-" | Columna LENGTH siempre "1" |
+| **Causa** | Metadata no en SELECT/response | Variable no expuesta en window |
+| **Capa afectada** | Backend (API) | Frontend (scope de variables) |
+| **Tiempo debug** | 3 horas | 4 horas |
+| **Dificultad** | Alta | Alta |
+| **Lección clave** | Verificar TODOS los SELECTs | Exponer variables compartidas |
+
+---
+
 **Documento creado:** 16 Noviembre 2025
 **Autor:** Claude Code (con debugging de FAS)
-**Juego afectado:** Knight Quest
-**Estado:** ✅ Resuelto
+**Juegos afectados:** Knight Quest, Master Sequence
+**Estado:** ✅ Ambos Resueltos
