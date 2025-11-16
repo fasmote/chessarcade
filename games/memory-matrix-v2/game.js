@@ -29,9 +29,14 @@ let startTime = null; // Tiempo de inicio del intento
 // Cantidad limitada de hints por nivel
 let hintsLeft = 6; // Hints disponibles por nivel
 const HINTS_PER_LEVEL = 6; // Hints que se otorgan al comenzar un nivel
+let totalHintsUsedSession = 0; // ✅ NUEVO: Trackear hints usados totales en la sesión
 
 // Export to window for leaderboard integration
 window.HINTS_PER_LEVEL = HINTS_PER_LEVEL;
+// Exponer totalHintsUsedSession mediante getter para que sea siempre actual
+Object.defineProperty(window, 'totalHintsUsedSession', {
+    get: () => totalHintsUsedSession
+});
 
 // SISTEMA DE DESHACER/LIMPIAR
 // Stack de movimientos para poder deshacer
@@ -777,13 +782,18 @@ function onGameOver() {
 
     // Show game over modal with current stats
     if (window.showGameOverModal) {
-        const totalHintsUsed = (HINTS_PER_LEVEL * 8) - hintsLeft;
+        console.log('💀 Showing game over modal with stats:', {
+            levelReached: currentLevel,
+            successfulAttempts: successfulAttempts,
+            failedAttempts: failedAttempts,
+            hintsUsed: totalHintsUsedSession
+        });
 
         window.showGameOverModal({
             levelReached: currentLevel,
             successfulAttempts: successfulAttempts,
             failedAttempts: failedAttempts,
-            hintsUsed: totalHintsUsed
+            hintsUsed: totalHintsUsedSession // ✅ USAR contador global
         });
 
         // The modal will handle the game reset when closed
@@ -804,6 +814,7 @@ function onGameOver() {
         successfulAttempts = 0;
         failedAttempts = 0;
         hintsLeft = HINTS_PER_LEVEL;
+        totalHintsUsedSession = 0; // ✅ RESETEAR contador de hints
 
         // Resetear timer global
         resetGlobalTimer();
@@ -1081,13 +1092,14 @@ function showHint() {
 
     // Consumir hint
     hintsLeft--;
+    totalHintsUsedSession++; // ✅ INCREMENTAR contador global
     updateHintButton();
 
     // Mensaje actualizado
     const pieceCount = missingPieces.length;
     const plural = pieceCount > 1 ? 's' : '';
     updateStatus(`💡 Pista (${hintsLeft} restante${hintsLeft !== 1 ? 's' : ''}): ${pieceCount} pieza${plural} mostrada${plural}`);
-    console.log(`💡 Hint shown: ${pieceCount} pieces displayed (${hintsLeft} hints left)`);
+    console.log(`💡 Hint shown: ${pieceCount} pieces displayed (${hintsLeft} hints left, total used: ${totalHintsUsedSession})`);
 }
 
 /**

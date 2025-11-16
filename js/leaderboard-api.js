@@ -38,6 +38,13 @@
 const API_BASE_URL = (() => {
     const hostname = window.location.hostname;
     const port = window.location.port;
+    const protocol = window.location.protocol;
+
+    // ✅ file:// protocol (desarrollo local sin servidor) → apuntar a Vercel
+    if (protocol === 'file:') {
+        console.log('[leaderboard-api] Running from file:// → using Vercel API');
+        return 'https://chessarcade.vercel.app/api/scores';
+    }
 
     // Desarrollo local con vercel dev
     if (hostname === 'localhost' && port === '3000') {

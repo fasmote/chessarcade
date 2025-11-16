@@ -172,9 +172,7 @@
         // Get game stats from global variables (defined in game.js)
         const totalSuccessful = window.successfulAttempts || 0;
         const totalFailed = window.failedAttempts || 0;
-        const hintsPerLevel = window.HINTS_PER_LEVEL || 3;
-        const hintsLeft = window.hintsLeft || 0;
-        const totalHintsUsed = (hintsPerLevel * 8) - hintsLeft;
+        const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ USAR contador global correcto
 
         // Get total time (globalElapsedTime + current session if timer is running)
         let totalTimeMs = window.globalElapsedTime || 0;
@@ -182,14 +180,34 @@
             totalTimeMs += Date.now() - window.globalStartTime;
         }
 
-        // Calculate score: more successes and fewer failures = better score
-        // Formula: (successful * 1000) - (failed * 100) - (hints * 50)
-        // Minimum score of 1 (backend requires positive integer)
-        const calculatedScore = (totalSuccessful * 1000) - (totalFailed * 100) - (totalHintsUsed * 50);
+        // Calculate score with improved formula that considers level, success, failures, hints, and time
+        // Formula components:
+        // - Level completion is most important (completed all 8 levels = 16,000 points)
+        // - Successful attempts matter (each success = 200 points)
+        // - Failures heavily penalized (each error = -300 points)
+        // - Hints moderately penalized (each hint = -100 points)
+        // - Time bonus for speed (faster completion = more points)
+
+        const levelScore = 8 * 2000; // Completed all levels
+        const successScore = totalSuccessful * 200;
+        const failuresPenalty = totalFailed * 300;
+        const hintsPenalty = totalHintsUsed * 100;
+
+        // Time bonus: max 1000 points for completing in < 5 minutes, -100 per extra minute
+        const timeLimitMs = 5 * 60 * 1000; // 5 minutes
+        const timeBonus = Math.max(0, Math.min(1000, 1000 - Math.floor(Math.max(0, totalTimeMs - timeLimitMs) / 60000) * 100));
+
+        const calculatedScore = levelScore + successScore - failuresPenalty - hintsPenalty + timeBonus;
         const finalScore = Math.max(1, calculatedScore);
 
-        console.log('📊 Submitting score:', {
+        console.log('📊 Submitting score (VICTORY):', {
             playerName,
+            levelScore,
+            successScore,
+            failuresPenalty,
+            hintsPenalty,
+            timeBonus,
+            calculatedScore,
             finalScore,
             totalSuccessful,
             totalFailed,
@@ -388,9 +406,7 @@
         const totalSuccessful = window.successfulAttempts || 0;
         const totalFailed = window.failedAttempts || 0;
         const levelReached = window.currentLevel || 1;
-        const hintsPerLevel = window.HINTS_PER_LEVEL || 3;
-        const hintsLeft = window.hintsLeft || 0;
-        const totalHintsUsed = (hintsPerLevel * 8) - hintsLeft;
+        const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ USAR contador global correcto
 
         // Get total time (globalElapsedTime + current session if timer is running)
         let totalTimeMs = window.globalElapsedTime || 0;
@@ -398,14 +414,34 @@
             totalTimeMs += Date.now() - window.globalStartTime;
         }
 
-        // Calculate score: more successes and fewer failures = better score
-        // Formula: (successful * 1000) - (failed * 100) - (hints * 50)
-        // Minimum score of 1 (backend requires positive integer)
-        const calculatedScore = (totalSuccessful * 1000) - (totalFailed * 100) - (totalHintsUsed * 50);
+        // Calculate score with improved formula that considers level, success, failures, hints, and time
+        // Formula components:
+        // - Level reached (each level = 2000 points)
+        // - Successful attempts matter (each success = 200 points)
+        // - Failures heavily penalized (each error = -300 points)
+        // - Hints moderately penalized (each hint = -100 points)
+        // - Time bonus for speed (faster completion = more points)
+
+        const levelScore = levelReached * 2000; // Points for level reached
+        const successScore = totalSuccessful * 200;
+        const failuresPenalty = totalFailed * 300;
+        const hintsPenalty = totalHintsUsed * 100;
+
+        // Time bonus: max 1000 points for completing in < 5 minutes, -100 per extra minute
+        const timeLimitMs = 5 * 60 * 1000; // 5 minutes
+        const timeBonus = Math.max(0, Math.min(1000, 1000 - Math.floor(Math.max(0, totalTimeMs - timeLimitMs) / 60000) * 100));
+
+        const calculatedScore = levelScore + successScore - failuresPenalty - hintsPenalty + timeBonus;
         const finalScore = Math.max(1, calculatedScore);
 
-        console.log('📊 Submitting game over score:', {
+        console.log('📊 Submitting score (GAME OVER):', {
             playerName,
+            levelScore,
+            successScore,
+            failuresPenalty,
+            hintsPenalty,
+            timeBonus,
+            calculatedScore,
             finalScore,
             totalSuccessful,
             totalFailed,
@@ -539,7 +575,7 @@
                         totalLevels: window.MemoryMatrixLevels?.getTotalLevels() || 8,
                         successfulAttempts: window.successfulAttempts || 0,
                         failedAttempts: window.failedAttempts || 0,
-                        hintsUsed: (window.HINTS_PER_LEVEL * 8) - (window.hintsLeft || 0)
+                        hintsUsed: window.totalHintsUsedSession || 0 // ✅ USAR contador global correcto
                     };
                     showVictoryModal(stats);
                 }
