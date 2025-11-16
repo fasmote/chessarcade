@@ -113,6 +113,7 @@ export default async function handler(req, res) {
           time_ms,
           country_code,
           country_name,
+          metadata,
           created_at,
           ROW_NUMBER() OVER (ORDER BY score DESC, created_at ASC) as rank
         FROM scores
@@ -157,6 +158,7 @@ export default async function handler(req, res) {
         code: score.country_code,
         name: score.country_name
       },
+      metadata: score.metadata || {},
       created_at: score.created_at
     }));
 
