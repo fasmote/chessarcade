@@ -24,6 +24,17 @@ let currentPosition = []; // Posición actual a memorizar
 let placedPieces = []; // Piezas que el jugador ha colocado
 let startTime = null; // Tiempo de inicio del intento
 
+// Exponer a window para que leaderboard-integration.js pueda acceder
+Object.defineProperty(window, 'currentLevel', {
+    get: () => currentLevel
+});
+Object.defineProperty(window, 'successfulAttempts', {
+    get: () => successfulAttempts
+});
+Object.defineProperty(window, 'failedAttempts', {
+    get: () => failedAttempts
+});
+
 // SISTEMA DE HINTS
 // Cada hint muestra TODAS las piezas del banco (no solo una)
 // Cantidad limitada de hints por nivel

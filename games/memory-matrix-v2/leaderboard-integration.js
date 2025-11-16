@@ -417,10 +417,24 @@
         localStorage.setItem(STORAGE_KEY, playerName);
 
         // Get game stats from global variables (defined in game.js)
+        console.log('📊 [DEBUG] Reading game stats from window:', {
+            successfulAttempts: window.successfulAttempts,
+            failedAttempts: window.failedAttempts,
+            currentLevel: window.currentLevel,
+            totalHintsUsedSession: window.totalHintsUsedSession
+        });
+
         const totalSuccessful = window.successfulAttempts || 0;
         const totalFailed = window.failedAttempts || 0;
         const levelReached = window.currentLevel || 1;
         const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ USAR contador global correcto
+
+        console.log('📊 [DEBUG] Final values to submit:', {
+            totalSuccessful,
+            totalFailed,
+            levelReached,
+            totalHintsUsed
+        });
 
         // Get total time (globalElapsedTime + current session if timer is running)
         console.log('🕐 [DEBUG] Time tracking variables:', {
