@@ -421,8 +421,8 @@
                 throw new Error('Please enter admin password first');
             }
 
-            // URL del admin endpoint (actualizada - fixed list_backups)
-            const ADMIN_API_URL = 'https://chessarcade-ccwcszqbh-claudios-projects.vercel.app/api/admin';
+            // URL del admin endpoint - usa URL relativa para funcionar en cualquier deployment
+            const ADMIN_API_URL = '/api/admin';
 
             const payload = {
                 action: action,
