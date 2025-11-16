@@ -56,6 +56,14 @@ let globalStartTime = null; // Tiempo de inicio de la sesión global
 let globalElapsedTime = 0; // Tiempo total acumulado (en ms)
 let globalTimerInterval = null; // Intervalo del timer global
 
+// Exponer a window para que leaderboard-integration.js pueda acceder
+Object.defineProperty(window, 'globalElapsedTime', {
+    get: () => globalElapsedTime
+});
+Object.defineProperty(window, 'globalStartTime', {
+    get: () => globalStartTime
+});
+
 // ============================================
 // INICIALIZACIÓN
 // Esperar a que el DOM esté cargado
