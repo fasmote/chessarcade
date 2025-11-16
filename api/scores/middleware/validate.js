@@ -39,12 +39,13 @@ export function validateScoreSubmission(data) {
     };
   }
 
-  // Only allow alphanumeric, spaces, and common safe characters
-  const nameRegex = /^[a-zA-Z0-9\s._-]+$/;
+  // Allow alphanumeric, spaces, and common safe special characters
+  // Permitidos: letras, números, espacios, . _ - ! @ # $ % & * ( ) + =
+  const nameRegex = /^[a-zA-Z0-9\s._\-!@#$%&*()+=]+$/;
   if (!nameRegex.test(player_name)) {
     return {
       valid: false,
-      error: 'player_name contains invalid characters'
+      error: 'player_name contains invalid characters. Allowed: letters, numbers, spaces, and . _ - ! @ # $ % & * ( ) + ='
     };
   }
 
