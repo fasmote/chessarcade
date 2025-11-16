@@ -2405,3 +2405,20 @@ function togglePause() {
         console.log('⏸ Juego pausado');
     }
 }
+
+/**
+ * Permite cambiar el estado del juego desde fuera (usado por leaderboard-integration.js)
+ * @param {string} newState - Nuevo estado ('idle', 'memorizing', 'solving', 'completed', 'failed')
+ */
+function setGameState(newState) {
+    const validStates = ['idle', 'playing', 'memorizing', 'solving', 'completed', 'failed'];
+    if (!validStates.includes(newState)) {
+        console.error(`❌ Invalid game state: ${newState}`);
+        return;
+    }
+    gameState = newState;
+    console.log(`🎮 Game state changed to: ${newState}`);
+}
+
+// Exponer función a window para uso externo
+window.setGameState = setGameState;

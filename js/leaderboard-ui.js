@@ -702,6 +702,16 @@ function renderMemoryMatrixScoreRow(score, highlightTop3 = true) {
   // Score formateado con separadores de miles
   const scoreDisplay = score.score.toLocaleString('en-US');
 
+  // 🔍 DEBUG: Log metadata para diagnosticar
+  console.log('🔍 [DEBUG] Memory Matrix score row:', {
+    rank: score.rank,
+    player: score.player_name,
+    score: score.score,
+    metadata: score.metadata,
+    metadata_type: typeof score.metadata,
+    metadata_keys: score.metadata ? Object.keys(score.metadata) : 'null'
+  });
+
   // LEVEL - nivel alcanzado (1-8, o "ALL" si completó todos)
   let levelDisplay = '-';
   if (score.metadata) {

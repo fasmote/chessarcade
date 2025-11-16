@@ -497,6 +497,12 @@
     function resetGameAfterGameOver() {
         console.log('🔄 Resetting game after game over modal closed');
 
+        // ✅ CRITICAL: Reset game state to 'idle' so player can start again
+        if (window.setGameState) {
+            window.setGameState('idle');
+            console.log('✅ Game state reset to idle');
+        }
+
         // Clear board
         if (window.clearBoard) window.clearBoard();
         if (window.clearBankPieces) window.clearBankPieces();
@@ -514,7 +520,7 @@
         if (window.resetGlobalTimer) window.resetGlobalTimer();
 
         // Update UI
-        if (window.updateStatus) window.updateStatus('Game Over. Reiniciando desde Nivel 1...');
+        if (window.updateStatus) window.updateStatus('Game Over. Presiona COMENZAR para jugar de nuevo');
 
         // Re-enable start button
         const btnStart = document.getElementById('btnStart');
