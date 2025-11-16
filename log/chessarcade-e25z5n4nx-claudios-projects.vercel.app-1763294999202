@@ -1,0 +1,258 @@
+ ♟️ ChessGameLibrary - BoardUtils loaded
+ 🔊 Coordinate Sequence - Audio system loaded
+ 📊 Coordinate Sequence - Levels V2 loaded
+    Total predefined levels: 10
+    Infinite mode: Level 11+
+    Colors available: 8
+ 🎮 Coordinate Sequence - Game logic loaded
+ [leaderboard-api.js] API client loaded successfully
+ [leaderboard-api.js] API Base URL: /api/scores
+ [leaderboard-ui.js] UI components loaded successfully
+ ✅ Game Over Submit Score button connected
+ ✅ Game Over View Leaderboard button connected
+ ✅ Header Leaderboard button connected
+ ✅ Master Sequence Leaderboard Integration loaded
+ 🧠 Coordinate Sequence - Initializing...
+ ♟️ Board created with 64 squares
+ 💾 High scores loaded: Object
+ 🎮 Game initialized
+ 🎯 Event listeners configured
+ ✅ Coordinate Sequence - Ready!
+/favicon.ico:1   Failed to load resource: the server responded with a status of 404 ()
+ 🎮 Starting game...
+ 📹 Recording started
+ 📊 Starting level 1...
+    🎬 Primera secuencia generada
+    Sequence length: 1 (config says 1)
+    Restricted area: ring (2x2)
+    Sequence: Array(1)
+    Use colors: true
+ 📹 Recording level 1
+ 👀 Showing sequence...
+/favicon.ico:1   Failed to load resource: the server responded with a status of 404 ()
+ ✅ Sequence shown
+ 🖱️ Player clicked: e4
+ ✅ Correct! (1/1)
+ 🎉 Level complete!
+ ⏱️ Level completed in 0.25s
+ ⚡ Speed Bonus: +100 pts
+ 💰 Base: 15 + Speed: 100 = 115 × 1 = 115 pts
+ 🏆 NEW TOP SCORE: 115!
+ 🏆 NEW LONGEST STREAK: 1!
+ 🏆 NEW FASTEST LEVEL: 1 in 0.25s!
+ 💾 High scores saved
+ 🎊 ¡NUEVO RECORD!
+ 📹 Level 1 recorded: SUCCESS in 0.25s
+ 📊 Starting level 2...
+    📊 Casillas disponibles después de filtrar saturadas: 3
+    ➕ Casilla agregada: d4 (desde e4 con movimiento rey/caballo) - Color: magenta
+    Sequence length: 2 (config says 2)
+    Restricted area: ring (2x2)
+    Sequence: Array(2)
+    Use colors: true
+ 📹 Recording level 2
+ 👀 Showing sequence...
+ ✅ Sequence shown
+ 🖱️ Player clicked: e4
+ ✅ Correct! (1/2)
+ 🖱️ Player clicked: d4
+ ✅ Correct! (2/2)
+ 🎉 Level complete!
+ ⏱️ Level completed in 1.21s
+ ⚡ Speed Bonus: +100 pts
+ 💰 Base: 30 + Speed: 100 = 130 × 1 = 130 pts
+ 🏆 NEW TOP SCORE: 245!
+ 🏆 NEW BEST LEVEL: 2!
+ 🏆 NEW LONGEST STREAK: 2!
+ 💾 High scores saved
+ 🎊 ¡NUEVO RECORD!
+ 📹 Level 2 recorded: SUCCESS in 1.21s
+ 📊 Starting level 3...
+    📊 Casillas disponibles después de filtrar saturadas: 3
+    ➕ Casilla agregada: d5 (desde d4 con movimiento rey/caballo) - Color: green
+    Sequence length: 3 (config says 3)
+    Restricted area: ring (2x2)
+    Sequence: Array(3)
+    Use colors: true
+ 📹 Recording level 3
+ 👀 Showing sequence...
+ ✅ Sequence shown
+ 🖱️ Player clicked: e4
+ ✅ Correct! (1/3)
+ 🖱️ Player clicked: d4
+ ✅ Correct! (2/3)
+ 🖱️ Player clicked: d5
+ ✅ Correct! (3/3)
+ 🎉 Level complete!
+ ⏱️ Level completed in 1.69s
+ ⚡ Speed Bonus: +100 pts
+ 🔥 Perfect Streak x3 = Multiplier x1.5
+ 💰 Base: 45 + Speed: 100 = 145 × 1.5 = 218 pts
+ 🏆 NEW TOP SCORE: 463!
+ 🏆 NEW BEST LEVEL: 3!
+ 🏆 NEW LONGEST STREAK: 3!
+ 💾 High scores saved
+ 🎊 ¡NUEVO RECORD!
+ 📹 Level 3 recorded: SUCCESS in 1.69s
+ 📊 Starting level 4...
+    📊 Casillas disponibles después de filtrar saturadas: 12
+    ➕ Casilla agregada: c4 (desde d5 con movimiento rey/caballo) - Color: orange
+    Sequence length: 4 (config says 3)
+    Restricted area: ring (4x4)
+    Sequence: Array(4)
+    Use colors: true
+ 📹 Recording level 4
+ 👀 Showing sequence...
+ ✅ Sequence shown
+ 🖱️ Player clicked: e4
+ ✅ Correct! (1/4)
+ 🖱️ Player clicked: d4
+ ✅ Correct! (2/4)
+ 🖱️ Player clicked: d5
+ ✅ Correct! (3/4)
+ 🖱️ Player clicked: c4
+ ✅ Correct! (4/4)
+ 🎉 Level complete!
+ ⏱️ Level completed in 2.25s
+ ⚡ Speed Bonus: +100 pts
+ 🔥 Perfect Streak x4 = Multiplier x1.5
+ 💰 Base: 60 + Speed: 100 = 160 × 1.5 = 240 pts
+ 🏆 NEW TOP SCORE: 703!
+ 🏆 NEW BEST LEVEL: 4!
+ 🏆 NEW LONGEST STREAK: 4!
+ 💾 High scores saved
+ 🎊 ¡NUEVO RECORD!
+ 📹 Level 4 recorded: SUCCESS in 2.25s
+ 📊 Starting level 5...
+    📊 Casillas disponibles después de filtrar saturadas: 8
+    ➕ Casilla agregada: c3 (desde c4 con movimiento rey/caballo) - Color: purple
+    Sequence length: 5 (config says 4)
+    Restricted area: ring (4x4)
+    Sequence: Array(5)
+    Use colors: true
+ 📹 Recording level 5
+ 👀 Showing sequence...
+ ✅ Sequence shown
+ 🖱️ Player clicked: e4
+ ✅ Correct! (1/5)
+ 🖱️ Player clicked: d4
+ ✅ Correct! (2/5)
+ 🖱️ Player clicked: d5
+ ✅ Correct! (3/5)
+ 🖱️ Player clicked: c4
+ ✅ Correct! (4/5)
+ 🖱️ Player clicked: c3
+ ✅ Correct! (5/5)
+ 🎉 Level complete!
+ ⏱️ Level completed in 2.73s
+ ⚡ Speed Bonus: +100 pts
+ 🔥 Perfect Streak x5 = Multiplier x2
+ 💰 Base: 75 + Speed: 100 = 175 × 2 = 350 pts
+ 🏆 NEW TOP SCORE: 1053!
+ 🏆 NEW BEST LEVEL: 5!
+game.js:2053 🏆 NEW LONGEST STREAK: 5!
+game.js:2017 💾 High scores saved
+game.js:742 🎊 ¡NUEVO RECORD!
+game.js:2151 📹 Level 5 recorded: SUCCESS in 2.73s
+game.js:327 📊 Starting level 6...
+game.js:398    📊 Casillas disponibles después de filtrar saturadas: 2
+game.js:496    ➕ Casilla agregada: e4 (desde c3 con movimiento rey/caballo) - Color: yellow
+game.js:504    Sequence length: 6 (config says 4)
+game.js:505    Restricted area: quadrant (bottom-right)
+game.js:506    Sequence: Array(6)
+game.js:507    Use colors: true
+game.js:2117 📹 Recording level 6
+game.js:525 👀 Showing sequence...
+game.js:560 ✅ Sequence shown
+game.js:634 🖱️ Player clicked: h3
+game.js:672 ❌ Incorrect! Expected e4, got h3
+game.js:770 💔 Level failed
+game.js:850 🔄 Retrying level 6 with same sequence: Array(6)
+game.js:525 👀 Showing sequence...
+game.js:560 ✅ Sequence shown
+game.js:634 🖱️ Player clicked: h3
+game.js:672 ❌ Incorrect! Expected e4, got h3
+game.js:770 💔 Level failed
+game.js:850 🔄 Retrying level 6 with same sequence: Array(6)
+game.js:525 👀 Showing sequence...
+game.js:560 ✅ Sequence shown
+game.js:634 🖱️ Player clicked: h3
+game.js:672 ❌ Incorrect! Expected e4, got h3
+game.js:770 💔 Level failed
+game.js:850 🔄 Retrying level 6 with same sequence: Array(6)
+game.js:525 👀 Showing sequence...
+game.js:560 ✅ Sequence shown
+game.js:634 🖱️ Player clicked: h3
+game.js:672 ❌ Incorrect! Expected e4, got h3
+game.js:770 💔 Level failed
+game.js:850 🔄 Retrying level 6 with same sequence: Array(6)
+game.js:525 👀 Showing sequence...
+game.js:560 ✅ Sequence shown
+game.js:634 🖱️ Player clicked: h3
+game.js:672 ❌ Incorrect! Expected e4, got h3
+game.js:770 💔 Level failed
+game.js:794 💀 Game Over
+game.js:808 📊 Last session stats saved: Object
+game.js:2162 📹 Recording finished: Level 6, Score 1053
+game.js:2200 💾 Best replay saved to localStorage
+game.js:2168 💾 New best replay saved!
+game.js:813 🎬 ¡Nuevo mejor replay guardado!
+leaderboard-integration.js:80 🔍 [DEBUG] window.lastSessionStats: undefined
+leaderboard-integration.js:86 🔍 [DEBUG] Extracted values:
+leaderboard-integration.js:87    - sequenceLength: 1
+leaderboard-integration.js:88    - streak: 0
+leaderboard-integration.js:89    - totalTimeMs: 0
+leaderboard-integration.js:91 📊 Submitting score: Object
+leaderboard-integration.js:115 🔍 [DEBUG] Data being sent to submitScore API: Object
+leaderboard-api.js:124 [detectUserCountry] Country detected: Object
+leaderboard-ui.js:769 [DEBUG] Current game: master-sequence
+leaderboard-ui.js:770 [DEBUG] renderKnightQuestLeaderboardTable exists? function
+leaderboard-ui.js:777 [DEBUG] Using Master Sequence custom leaderboard
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 1
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 2
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 3
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 4
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 5
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 6
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 7
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 8
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 9
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 10
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 11
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: 1
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 12
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: 1
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 13
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: 1
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 14
+leaderboard-ui.js:547    - score.metadata: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: 1
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 15
+leaderboard-ui.js:547    - score.metadata: Objectlevel_reached: 5perfect_streak: 0sequence_length: 1[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
+leaderboard-ui.js:548    - score.metadata.sequence_length: 1
+leaderboard-ui.js:546 🔍 [DEBUG] Rendering Master Sequence row for rank 16
+leaderboard-ui.js:547    - score.metadata: Object[[Prototype]]: Object
+leaderboard-ui.js:548    - score.metadata.sequence_length: undefined
