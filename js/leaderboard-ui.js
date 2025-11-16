@@ -490,6 +490,154 @@ function renderKnightQuestLeaderboardTable(scores) {
   return table;
 }
 
+/**
+ * Renderiza una fila de score ESPECÍFICA para Master Sequence
+ * Columnas: RANK | PLAYER | SCORE | LENGTH | LEVEL | TIME
+ *
+ * @param {object} score - Score object del backend
+ * @param {boolean} highlightTop3 - Si destacar top 3 (default: true)
+ * @returns {string} - HTML de la fila <tr>
+ */
+function renderMasterSequenceScoreRow(score, highlightTop3 = true) {
+  // Clases CSS según el rank
+  const rowClasses = ['score-row'];
+  if (highlightTop3 && score.rank <= 3) {
+    rowClasses.push('top-three');
+    rowClasses.push(`rank-${score.rank}`);
+  }
+
+  // Emoji para el top 3
+  let rankDisplay = `#${score.rank}`;
+  if (score.rank === 1) rankDisplay = '🥇 #1';
+  else if (score.rank === 2) rankDisplay = '🥈 #2';
+  else if (score.rank === 3) rankDisplay = '🥉 #3';
+
+  // Player name con primeras 3 letras destacadas + BANDERA AL LADO
+  const playerName = score.player_name || 'UNKNOWN';
+  const initials = playerName.substring(0, 3);
+  const rest = playerName.substring(3);
+
+  // Bandera inline (al lado del nombre)
+  let flagHTML = '';
+  if (score.country && score.country.code) {
+    const countryCode = score.country.code.toLowerCase();
+    const countryName = score.country.name || score.country.code;
+    flagHTML = `
+      <img
+        src="https://flagcdn.com/16x12/${countryCode}.png"
+        srcset="https://flagcdn.com/32x24/${countryCode}.png 2x,
+                https://flagcdn.com/48x36/${countryCode}.png 3x"
+        width="16"
+        height="12"
+        alt="${countryName}"
+        title="${countryName}"
+        class="country-flag"
+        style="margin-left: 6px; vertical-align: middle;"
+      >
+    `;
+  }
+
+  const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
+
+  // Score formateado con separadores de miles
+  const scoreDisplay = score.score.toLocaleString('en-US');
+
+  // LENGTH - longitud de la secuencia (solo número)
+  const lengthDisplay = (score.metadata && score.metadata.sequence_length) ? score.metadata.sequence_length : '-';
+
+  // LEVEL - número + nombre del nivel
+  let levelDisplay = '-';
+  if (score.metadata && score.metadata.level_reached) {
+    const level = score.metadata.level_reached;
+
+    // Obtener nombre del nivel basado en el número
+    let levelName = '';
+    if (level === 1) levelName = 'Primera Casilla';
+    else if (level === 2) levelName = 'Centro - Inicio';
+    else if (level === 3) levelName = 'Centro - Básico';
+    else if (level === 4) levelName = 'Anillo Pequeño';
+    else if (level === 5) levelName = 'Anillo Ampliado';
+    else if (level === 6) levelName = 'Cuadrante Derecho';
+    else if (level === 7) levelName = 'Mitad Inferior';
+    else if (level === 8) levelName = 'Anillo Grande';
+    else if (level === 9) levelName = 'Anillo Extendido';
+    else if (level === 10) levelName = 'Tablero Completo';
+    else if (level >= 11) levelName = 'Infinito';
+
+    levelDisplay = `${level} ${levelName}`;
+  }
+
+  // Time formateado (MM:SS)
+  let timeDisplay = '-';
+  if (score.time_ms) {
+    const seconds = Math.floor(score.time_ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    timeDisplay = `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Construir la fila: RANK | PLAYER | SCORE | LENGTH | LEVEL | TIME
+  return `
+    <tr class="${rowClasses.join(' ')}" data-score-id="${score.id}">
+      <td class="rank">${rankDisplay}</td>
+      <td class="player-name">${playerNameHTML}</td>
+      <td class="score">${scoreDisplay}</td>
+      <td class="level">${lengthDisplay}</td>
+      <td class="level">${levelDisplay}</td>
+      <td class="time">${timeDisplay}</td>
+    </tr>
+  `;
+}
+
+/**
+ * Renderiza una tabla completa de leaderboard ESPECÍFICA para Master Sequence
+ * Headers personalizados: RANK | PLAYER | SCORE | LENGTH | LEVEL | TIME
+ * (sin columna COUNTRY separada, la bandera va al lado del nombre)
+ *
+ * @param {array} scores - Array de scores del backend
+ * @returns {HTMLElement} - Elemento table
+ */
+function renderMasterSequenceLeaderboardTable(scores) {
+  // Crear elemento table
+  const table = document.createElement('table');
+  table.className = 'leaderboard-table';
+
+  // Crear thead con headers específicos de Master Sequence
+  const thead = document.createElement('thead');
+  thead.innerHTML = `
+    <tr>
+      <th class="rank">Rank</th>
+      <th class="player-name">Player</th>
+      <th class="score">Score</th>
+      <th class="level">Length</th>
+      <th class="level">Level</th>
+      <th class="time">Time</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+
+  // Crear tbody
+  const tbody = document.createElement('tbody');
+
+  if (scores.length === 0) {
+    // Si no hay scores, mostrar mensaje
+    tbody.innerHTML = `
+      <tr class="no-scores">
+        <td colspan="6" class="text-center">
+          No scores yet. Be the first! 🏆
+        </td>
+      </tr>
+    `;
+  } else {
+    // Renderizar cada score usando la función específica de Master Sequence
+    tbody.innerHTML = scores.map(score => renderMasterSequenceScoreRow(score, true)).join('');
+  }
+
+  table.appendChild(tbody);
+
+  return table;
+}
+
 // ===========================================================================
 // LEADERBOARD MODAL
 // ===========================================================================
@@ -621,6 +769,9 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
       if (state.currentGame === 'knight-quest') {
         console.log('[DEBUG] Using Knight Quest custom leaderboard');
         table = renderKnightQuestLeaderboardTable(data.scores);
+      } else if (state.currentGame === 'master-sequence') {
+        console.log('[DEBUG] Using Master Sequence custom leaderboard');
+        table = renderMasterSequenceLeaderboardTable(data.scores);
       } else {
         console.log('[DEBUG] Using generic leaderboard');
         table = renderLeaderboardTable(data.scores, true);

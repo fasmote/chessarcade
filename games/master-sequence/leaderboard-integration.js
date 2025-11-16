@@ -75,16 +75,19 @@
         const finalLevel = parseInt(finalLevelElement.textContent) || 1;
         const finalScore = parseInt(finalScoreElement.textContent) || 0;
 
-        // Get additional stats from global variables if available
-        const sequenceLength = window.currentSequenceLength || 3;
-        const streak = window.perfectStreak || 0;
+        // Get stats from lastSessionStats (set by game.js in gameOver())
+        const stats = window.lastSessionStats || {};
+        const sequenceLength = stats.sequenceLength || 1;
+        const streak = stats.streak || 0;
+        const totalTimeMs = stats.totalTimeMs || 0;
 
         console.log('📊 Submitting score:', {
             playerName,
             finalScore,
             finalLevel,
             sequenceLength,
-            streak
+            streak,
+            totalTimeMs
         });
 
         try {
@@ -98,9 +101,12 @@
                 playerName,
                 finalScore,
                 {
-                    level_reached: finalLevel,
-                    sequence_length: sequenceLength,
-                    perfect_streak: streak
+                    time_ms: totalTimeMs,
+                    metadata: {
+                        level_reached: finalLevel,
+                        sequence_length: sequenceLength,
+                        perfect_streak: streak
+                    }
                 }
             );
 

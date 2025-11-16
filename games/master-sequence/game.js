@@ -49,6 +49,9 @@ let gameState = {
     levelStartTime: 0,      // Timestamp cuando empieza la fase de input
     levelEndTime: 0,        // Timestamp cuando completa el nivel
 
+    // Timing del juego completo (para leaderboard)
+    gameStartTime: 0,       // Timestamp cuando inicia la partida completa
+
     // Perfect Streak (rachas sin errores)
     perfectStreak: 0,       // Contador de niveles perfectos consecutivos
 
@@ -300,6 +303,7 @@ function startGame() {
     gameState.masterSequence = []; // Resetear secuencia acumulativa
     gameState.sequenceColors = []; // Resetear colores
     gameState.squareUsageCount = {}; // Resetear contador de uso
+    gameState.gameStartTime = Date.now(); // Iniciar cronómetro de partida completa
 
     // Limpiar líneas de replay si quedaron como residuo
     clearReplayConnectingLines();
@@ -789,13 +793,17 @@ function onLevelFailed() {
 function gameOver() {
     console.log('💀 Game Over');
 
+    // Calcular tiempo total de juego
+    const totalTimeMs = Date.now() - gameState.gameStartTime;
+
     // Preservar estadísticas de la sesión para mostrar en STATS después
     lastSessionStats = {
         level: gameState.currentLevel,
         score: gameState.score,
         lives: gameState.lives,
         streak: gameState.perfectStreak,
-        sequenceLength: gameState.sequence.length
+        sequenceLength: gameState.sequence.length,
+        totalTimeMs: totalTimeMs  // Tiempo total de la partida
     };
     console.log('📊 Last session stats saved:', lastSessionStats);
 
