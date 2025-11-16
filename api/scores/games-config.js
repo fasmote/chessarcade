@@ -26,11 +26,11 @@ export const GAME_LIMITS = {
 
   'memory-matrix': {
     name: 'Memory Matrix',
-    max_score: 50000,       // Formula: (exitosos × 1000) - penalizaciones
+    max_score: 100000,      // Formula: (exitosos × 1000) - penalizaciones (máx ~80,000)
     max_time_ms: 3600000,   // 1 hora máximo
     score_type: 'points',   // Puntos acumulativos, no nivel alcanzado
     has_levels: true,
-    has_time: false
+    has_time: true          // Tiene timer global
   },
 
   'master-sequence': {

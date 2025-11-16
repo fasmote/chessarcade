@@ -647,6 +647,163 @@ function renderMasterSequenceLeaderboardTable(scores) {
 }
 
 // ===========================================================================
+// MEMORY MATRIX CUSTOM LEADERBOARD
+// ===========================================================================
+
+/**
+ * Renderiza una sola fila de score ESPECÍFICA para Memory Matrix
+ * Columnas: RANK | PLAYER 🇦🇷 | SCORE | LEVEL | SUCCESS | ERRORS | HINTS | TIME
+ *
+ * @param {object} score - Score del backend
+ * @param {boolean} highlightTop3 - Si destacar top 3 (default: true)
+ * @returns {string} - HTML de la fila <tr>
+ */
+function renderMemoryMatrixScoreRow(score, highlightTop3 = true) {
+  // Clases CSS según el rank
+  const rowClasses = ['score-row'];
+  if (highlightTop3 && score.rank <= 3) {
+    rowClasses.push('top-three');
+    rowClasses.push(`rank-${score.rank}`);
+  }
+
+  // Emoji para el top 3
+  let rankDisplay = `#${score.rank}`;
+  if (score.rank === 1) rankDisplay = '🥇 #1';
+  else if (score.rank === 2) rankDisplay = '🥈 #2';
+  else if (score.rank === 3) rankDisplay = '🥉 #3';
+
+  // Player name con primeras 3 letras destacadas + BANDERA AL LADO
+  const playerName = score.player_name || 'UNKNOWN';
+  const initials = playerName.substring(0, 3);
+  const rest = playerName.substring(3);
+
+  // Bandera inline (al lado del nombre)
+  let flagHTML = '';
+  if (score.country && score.country.code) {
+    const countryCode = score.country.code.toLowerCase();
+    const countryName = score.country.name || score.country.code;
+    flagHTML = `
+      <img
+        src="https://flagcdn.com/16x12/${countryCode}.png"
+        srcset="https://flagcdn.com/32x24/${countryCode}.png 2x,
+                https://flagcdn.com/48x36/${countryCode}.png 3x"
+        width="16"
+        height="12"
+        alt="${countryName}"
+        title="${countryName}"
+        class="country-flag"
+        style="margin-left: 6px; vertical-align: middle;"
+      >
+    `;
+  }
+
+  const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
+
+  // Score formateado con separadores de miles
+  const scoreDisplay = score.score.toLocaleString('en-US');
+
+  // LEVEL - nivel alcanzado (1-8, o "ALL" si completó todos)
+  let levelDisplay = '-';
+  if (score.metadata) {
+    // Si levels_completed = 8, mostró "ALL 🏆"
+    if (score.metadata.levels_completed === 8) {
+      levelDisplay = 'ALL 🏆';
+    } else if (score.metadata.level_reached) {
+      levelDisplay = score.metadata.level_reached;
+    }
+  }
+
+  // SUCCESS - intentos exitosos
+  const successDisplay = (score.metadata && score.metadata.successful_attempts !== undefined)
+    ? score.metadata.successful_attempts
+    : '-';
+
+  // ERRORS - intentos fallidos
+  const errorsDisplay = (score.metadata && score.metadata.failed_attempts !== undefined)
+    ? score.metadata.failed_attempts
+    : '-';
+
+  // HINTS - hints usados
+  const hintsDisplay = (score.metadata && score.metadata.hints_used !== undefined)
+    ? score.metadata.hints_used
+    : '-';
+
+  // TIME - tiempo total formateado (MM:SS)
+  let timeDisplay = '-';
+  if (score.time_ms) {
+    const seconds = Math.floor(score.time_ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    timeDisplay = `${minutes}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Construir la fila: RANK | PLAYER | SCORE | LEVEL | SUCCESS | ERRORS | HINTS | TIME
+  return `
+    <tr class="${rowClasses.join(' ')}" data-score-id="${score.id}">
+      <td class="rank">${rankDisplay}</td>
+      <td class="player-name">${playerNameHTML}</td>
+      <td class="score">${scoreDisplay}</td>
+      <td class="level">${levelDisplay}</td>
+      <td class="level">${successDisplay}</td>
+      <td class="level">${errorsDisplay}</td>
+      <td class="level">${hintsDisplay}</td>
+      <td class="time">${timeDisplay}</td>
+    </tr>
+  `;
+}
+
+/**
+ * Renderiza una tabla completa de leaderboard ESPECÍFICA para Memory Matrix
+ * Headers personalizados: RANK | PLAYER | SCORE | LEVEL | SUCCESS | ERRORS | HINTS | TIME
+ * (sin columna COUNTRY separada, la bandera va al lado del nombre)
+ *
+ * @param {array} scores - Array de scores del backend
+ * @returns {HTMLElement} - Elemento table
+ */
+function renderMemoryMatrixLeaderboardTable(scores) {
+  // Crear elemento table
+  const table = document.createElement('table');
+  table.className = 'leaderboard-table';
+
+  // Crear thead con headers específicos de Memory Matrix
+  const thead = document.createElement('thead');
+  thead.innerHTML = `
+    <tr>
+      <th class="rank">Rank</th>
+      <th class="player-name">Player</th>
+      <th class="score">Score</th>
+      <th class="level">Level</th>
+      <th class="level">Success</th>
+      <th class="level">Errors</th>
+      <th class="level">Hints</th>
+      <th class="time">Time</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+
+  // Crear tbody
+  const tbody = document.createElement('tbody');
+
+  if (scores.length === 0) {
+    // Si no hay scores, mostrar mensaje
+    tbody.innerHTML = `
+      <tr class="no-scores">
+        <td colspan="8" class="text-center">
+          No scores yet. Be the first! 🏆
+        </td>
+      </tr>
+    `;
+  } else {
+    // Renderizar cada score usando la función específica de Memory Matrix
+    tbody.innerHTML = scores.map(score => renderMemoryMatrixScoreRow(score, true)).join('');
+  }
+
+  table.appendChild(tbody);
+
+  return table;
+}
+
+// ===========================================================================
 // LEADERBOARD MODAL
 // ===========================================================================
 
@@ -780,6 +937,9 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
       } else if (state.currentGame === 'master-sequence') {
         console.log('[DEBUG] Using Master Sequence custom leaderboard');
         table = renderMasterSequenceLeaderboardTable(data.scores);
+      } else if (state.currentGame === 'memory-matrix') {
+        console.log('[DEBUG] Using Memory Matrix custom leaderboard');
+        table = renderMemoryMatrixLeaderboardTable(data.scores);
       } else {
         console.log('[DEBUG] Using generic leaderboard');
         table = renderLeaderboardTable(data.scores, true);

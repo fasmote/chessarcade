@@ -176,6 +176,12 @@
         const hintsLeft = window.hintsLeft || 0;
         const totalHintsUsed = (hintsPerLevel * 8) - hintsLeft;
 
+        // Get total time (globalElapsedTime + current session if timer is running)
+        let totalTimeMs = window.globalElapsedTime || 0;
+        if (window.globalStartTime) {
+            totalTimeMs += Date.now() - window.globalStartTime;
+        }
+
         // Calculate score: more successes and fewer failures = better score
         // Formula: (successful * 1000) - (failed * 100) - (hints * 50)
         // Minimum score of 1 (backend requires positive integer)
@@ -187,7 +193,8 @@
             finalScore,
             totalSuccessful,
             totalFailed,
-            totalHintsUsed
+            totalHintsUsed,
+            totalTimeMs
         });
 
         try {
@@ -201,10 +208,13 @@
                 playerName,
                 finalScore,
                 {
-                    successful_attempts: totalSuccessful,
-                    failed_attempts: totalFailed,
-                    hints_used: totalHintsUsed,
-                    levels_completed: 8
+                    time_ms: totalTimeMs,
+                    metadata: {
+                        successful_attempts: totalSuccessful,
+                        failed_attempts: totalFailed,
+                        hints_used: totalHintsUsed,
+                        levels_completed: 8
+                    }
                 }
             );
 
@@ -382,6 +392,12 @@
         const hintsLeft = window.hintsLeft || 0;
         const totalHintsUsed = (hintsPerLevel * 8) - hintsLeft;
 
+        // Get total time (globalElapsedTime + current session if timer is running)
+        let totalTimeMs = window.globalElapsedTime || 0;
+        if (window.globalStartTime) {
+            totalTimeMs += Date.now() - window.globalStartTime;
+        }
+
         // Calculate score: more successes and fewer failures = better score
         // Formula: (successful * 1000) - (failed * 100) - (hints * 50)
         // Minimum score of 1 (backend requires positive integer)
@@ -394,7 +410,8 @@
             totalSuccessful,
             totalFailed,
             levelReached,
-            totalHintsUsed
+            totalHintsUsed,
+            totalTimeMs
         });
 
         try {
@@ -408,10 +425,13 @@
                 playerName,
                 finalScore,
                 {
-                    successful_attempts: totalSuccessful,
-                    failed_attempts: totalFailed,
-                    hints_used: totalHintsUsed,
-                    level_reached: levelReached
+                    time_ms: totalTimeMs,
+                    metadata: {
+                        successful_attempts: totalSuccessful,
+                        failed_attempts: totalFailed,
+                        hints_used: totalHintsUsed,
+                        level_reached: levelReached
+                    }
                 }
             );
 
