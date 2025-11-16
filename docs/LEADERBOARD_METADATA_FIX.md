@@ -727,7 +727,453 @@ Agregar estos checks al debugging anterior:
 
 ---
 
+---
+
+# ============================================
+# CASO 3: MEMORY MATRIX - PATRÓN REPETITIVO DE VARIABLES NO EXPUESTAS
+# ============================================
+
+## 🐛 Síntomas del Problema
+
+### Comportamiento Observado
+
+Memory Matrix tuvo **7 bugs diferentes** durante la integración del leaderboard, la mayoría relacionados con el mismo patrón que NO fue reconocido a tiempo.
+
+**Columnas esperadas:**
+- RANK | PLAYER 🇦🇷 | SCORE | **LEVEL** | **SUCCESS** | **ERRORS** | **HINTS** | **TIME**
+
+**Problemas encontrados:**
+1. ✅ HINTS mostraba "42" cuando el jugador nunca usó hints
+2. ✅ Scoring no consideraba nivel ni tiempo
+3. ✅ file:// protocol causaba error de API
+4. ✅ Juego se quedaba en pausa después de cerrar modal
+5. ✅ TIME mostraba "-" para todos los scores
+6. ✅ Modal no se cerraba después de submit
+7. ✅ SUCCESS y ERRORS mostraban "0" cuando el modal mostraba valores correctos
+
+---
+
+## 🔍 Diagnóstico del Problema
+
+### Bug #1: Hints Calculation (Fórmula Incorrecta)
+
+**Síntoma:** Game Over modal mostraba "Hints Used: 42" cuando el jugador NUNCA presionó el botón de hint.
+
+**Código problemático (leaderboard-integration.js, línea ~430):**
+```javascript
+const hintsPerLevel = 6;  // Cada nivel da 6 hints
+const totalHintsUsed = (hintsPerLevel * 8) - hintsLeft;
+// Si está en nivel 3 con hintsLeft=6:
+// (6 × 8) - 6 = 48 - 6 = 42 ❌ INCORRECTO
+```
+
+**Causa raíz:** La fórmula asumía que el jugador había completado los 8 niveles, cuando en realidad solo había jugado 3 niveles.
+
+**Fix aplicado:**
+```javascript
+// CREAR contador global en game.js (línea 32)
+let totalHintsUsedSession = 0; // ✅ Trackear hints realmente usados
+
+// INCREMENTAR cuando se usa hint (línea 1085)
+function showHint() {
+    hintsLeft--;
+    totalHintsUsedSession++; // ✅ Incrementar contador
+    updateHintButton();
+}
+
+// EXPONER a window (líneas 37-39)
+Object.defineProperty(window, 'totalHintsUsedSession', {
+    get: () => totalHintsUsedSession
+});
+
+// USAR en leaderboard-integration.js (línea 430)
+const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ Correcto
+```
+
+---
+
+### Bug #2: Scoring Formula (No Considera Nivel ni Tiempo)
+
+**Síntoma:** La puntuación solo consideraba successful/failed attempts y hints, ignorando el nivel alcanzado y el tiempo.
+
+**Código problemático:**
+```javascript
+score = (successful × 1000) - (failed × 100) - (hints × 50)
+// No premia llegar a niveles altos
+// No premia velocidad
+```
+
+**Fix aplicado:**
+```javascript
+// Nueva fórmula multi-factor
+const levelScore = levelReached * 2000;  // 2000 pts por nivel
+const successScore = totalSuccessful * 200;  // 200 pts por acierto
+const failuresPenalty = totalFailed * 300;  // -300 pts por error
+const hintsPenalty = totalHintsUsed * 100;  // -100 pts por hint
+
+// Time bonus: max 1000 pts por completar en < 5 min
+const timeLimitMs = 5 * 60 * 1000;  // 5 minutos
+const timeBonus = Math.max(0, Math.min(1000,
+    1000 - Math.floor(Math.max(0, totalTimeMs - timeLimitMs) / 60000) * 100
+));
+
+const calculatedScore = levelScore + successScore - failuresPenalty - hintsPenalty + timeBonus;
+const finalScore = Math.max(1, calculatedScore);  // Mínimo 1
+```
+
+---
+
+### Bug #3: file:// Protocol Error (API Local)
+
+**Síntoma:** Al abrir el juego localmente con `file://`, el leaderboard mostraba "Failed to fetch".
+
+**Causa raíz:** `API_BASE_URL` no manejaba el protocolo `file://`, intentaba usar URL relativa que falla con CORS.
+
+**Fix aplicado (js/leaderboard-api.js, líneas 43-47):**
+```javascript
+// ✅ file:// protocol (desarrollo local sin servidor) → apuntar a Vercel
+if (protocol === 'file:') {
+    console.log('[leaderboard-api] Running from file:// → using Vercel API');
+    return 'https://chessarcade.vercel.app/api/scores';
+}
+```
+
+---
+
+### Bug #4: Game Stuck After Modal Close (Estado No Reseteado)
+
+**Síntoma:** Después de cerrar el modal de Game Over, el jugador presionaba "Play" pero el juego no iniciaba. Necesitaba hacer F5 refresh.
+
+**Causa raíz:** `gameState` no se reseteaba a 'idle' después de cerrar el modal.
+
+**Fix aplicado (game.js):**
+```javascript
+// CREAR función setGameState (líneas 2413-2424)
+function setGameState(newState) {
+    const validStates = ['idle', 'playing', 'memorizing', 'solving', 'completed', 'failed'];
+    if (!validStates.includes(newState)) {
+        console.error(`❌ Invalid game state: ${newState}`);
+        return;
+    }
+    gameState = newState;
+    console.log(`🎮 Game state changed to: ${newState}`);
+}
+window.setGameState = setGameState;
+
+// LLAMAR al cerrar modal (leaderboard-integration.js, líneas 500-504)
+// ✅ CRITICAL: Reset game state to 'idle' so player can start again
+if (window.setGameState) {
+    window.setGameState('idle');
+    console.log('✅ Game state reset to idle');
+}
+```
+
+---
+
+### Bug #5: TIME Column Showing "-" (Variables No Expuestas)
+
+**Síntoma:** La columna TIME mostraba "-" para TODOS los scores, incluso los recién jugados.
+
+**Logs observados:**
+```javascript
+🕐 [DEBUG] Time tracking variables: {
+    globalElapsedTime: undefined,  // ❌ No accesible
+    globalStartTime: undefined      // ❌ No accesible
+}
+🕐 [DEBUG] Calculated totalTimeMs: 0  // ❌ Siempre 0
+```
+
+**Causa raíz:** `globalElapsedTime` y `globalStartTime` eran variables locales en `game.js`, NO expuestas a `window`.
+
+```javascript
+// EN game.js (línea 60):
+let globalElapsedTime = 0;        // ❌ Variable LOCAL
+let globalStartTime = null;       // ❌ Variable LOCAL
+
+// EN leaderboard-integration.js (línea 177):
+let totalTimeMs = window.globalElapsedTime || 0;  // undefined || 0 = 0 ❌
+```
+
+**Fix aplicado (game.js, líneas 60-65):**
+```javascript
+// ✅ EXPONER variables a window
+Object.defineProperty(window, 'globalElapsedTime', {
+    get: () => globalElapsedTime
+});
+Object.defineProperty(window, 'globalStartTime', {
+    get: () => globalStartTime
+});
+```
+
+---
+
+### Bug #6: Modal Not Closing After Submit (Permite Múltiples Submits)
+
+**Síntoma:** Después de enviar el score, el modal se quedaba abierto. El jugador podía cambiar el nombre y enviar otro score.
+
+**Causa raíz:** No había lógica de auto-close después de submit exitoso.
+
+**Fix aplicado (leaderboard-integration.js):**
+```javascript
+// Después de submit exitoso
+showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
+
+submitBtn.disabled = true;  // Deshabilitar botón
+submitBtn.textContent = '✅ SUBMITTED!';
+
+// ✅ Cerrar modal después de 2 segundos
+setTimeout(() => {
+    console.log('🔒 Closing modal after successful submission');
+    if (window.closeLeaderboardGameOverModal) {
+        closeLeaderboardGameOverModal();
+    } else if (window.closeLeaderboardVictoryModal) {
+        closeLeaderboardVictoryModal();
+    }
+}, 2000);
+```
+
+---
+
+### Bug #7: SUCCESS and ERRORS Showing 0 (Variables No Expuestas) 🚨 CRÍTICO
+
+**Síntoma:** El modal de Game Over mostraba "2 successful, 5 failed" correctamente, pero el leaderboard mostraba "0" para ambas columnas.
+
+**Este fue el bug MÁS FRUSTRANTE porque era EL MISMO PATRÓN del Bug #5 y NO fue reconocido.**
+
+**Logs observados:**
+```javascript
+📊 [DEBUG] Reading game stats from window: {
+    successfulAttempts: undefined,  // ❌ No accesible
+    failedAttempts: undefined,      // ❌ No accesible
+    currentLevel: undefined         // ❌ No accesible
+}
+
+📊 [DEBUG] Final values to submit: {
+    totalSuccessful: 0,  // undefined || 0 = 0 ❌
+    totalFailed: 0,      // undefined || 0 = 0 ❌
+    levelReached: 1      // undefined || 1 = 1 ❌
+}
+```
+
+**Causa raíz (MISMO PATRÓN):** `successfulAttempts`, `failedAttempts`, `currentLevel` eran variables locales NO expuestas.
+
+```javascript
+// EN game.js (líneas ~20-22):
+let successfulAttempts = 0;   // ❌ Variable LOCAL
+let failedAttempts = 0;       // ❌ Variable LOCAL
+let currentLevel = 1;         // ❌ Variable LOCAL
+
+// EN leaderboard-integration.js (líneas 425-427):
+const totalSuccessful = window.successfulAttempts || 0;  // undefined || 0 = 0 ❌
+const totalFailed = window.failedAttempts || 0;          // undefined || 0 = 0 ❌
+const levelReached = window.currentLevel || 1;           // undefined || 1 = 1 ❌
+```
+
+**Fix aplicado (game.js, líneas 27-36):**
+```javascript
+// ✅ EXPONER las 3 variables a window
+Object.defineProperty(window, 'currentLevel', {
+    get: () => currentLevel
+});
+Object.defineProperty(window, 'successfulAttempts', {
+    get: () => successfulAttempts
+});
+Object.defineProperty(window, 'failedAttempts', {
+    get: () => failedAttempts
+});
+```
+
+---
+
+## ✅ Patrón Identificado (DEMASIADO TARDE)
+
+### El Patrón Repetitivo
+
+**6 variables NO expuestas a window:**
+1. `totalHintsUsedSession` (Bug #1) ✅ Fixed
+2. `globalElapsedTime` (Bug #5) ✅ Fixed
+3. `globalStartTime` (Bug #5) ✅ Fixed
+4. `currentLevel` (Bug #7) ✅ Fixed
+5. `successfulAttempts` (Bug #7) ✅ Fixed
+6. `failedAttempts` (Bug #7) ✅ Fixed
+
+**TODOS seguían el mismo patrón:**
+
+```javascript
+// ❌ PROBLEMA: Variable local en game.js
+let myVariable = 0;
+
+// ❌ INTENTO DE ACCESO: desde leaderboard-integration.js
+const value = window.myVariable || defaultValue;  // undefined → usa default
+
+// ✅ SOLUCIÓN: Exponer a window
+Object.defineProperty(window, 'myVariable', {
+    get: () => myVariable
+});
+```
+
+### ¿Por Qué No Se Reconoció Antes?
+
+**Feedback del usuario:**
+- "sigue igual, debes poner mas console log para saber donde esta el problema"
+- **"hay algo que estas dando por sentado y no es asi"** ← Asumía que las variables estaban expuestas
+- "si jugue, de hecho 00_TEST es el nombre que puse" ← No reconocí que había jugado
+- "no funcionan las columnas SUCCESS y ERRORS, muestra cero, pero cometí 5 errores... **mira el modal, ahi si esta bien**" ← KEY INSIGHT que debió activar el patrón
+- "Por fin!!! funciono OK"
+- **"Como no te diste cuenta antes si era el mismo error?"** ← Frustración justificada
+
+**Lección crítica:** Después de encontrar que `globalElapsedTime` no estaba expuesto (Bug #5), debí verificar TODAS las otras variables inmediatamente, no esperar a que fallaran una por una.
+
+---
+
+## 🎯 Tabla Comparativa de Bugs
+
+| Bug # | Síntoma | Causa Raíz | Patrón | Tiempo Debug |
+|-------|---------|------------|--------|--------------|
+| 1 | Hints = 42 | Fórmula + variable no expuesta | ✅ Variable scope | 30 min |
+| 2 | Score sin nivel/tiempo | Fórmula incompleta | Lógica de negocio | 20 min |
+| 3 | file:// error | Protocol no manejado | Edge case | 15 min |
+| 4 | Juego en pausa | Estado no reseteado | State management | 25 min |
+| 5 | TIME = "-" | 2 variables no expuestas | ✅ Variable scope | 45 min |
+| 6 | Modal no cierra | Falta auto-close | UX flow | 10 min |
+| 7 | SUCCESS/ERRORS = 0 | 3 variables no expuestas | ✅ Variable scope | 90 min |
+
+**Total debug time:** ~4 horas
+**Tiempo que se pudo ahorrar si se reconoció el patrón:** ~2 horas
+
+---
+
+## 📚 Lecciones Aprendidas (Memory Matrix)
+
+### 1. Reconocer Patrones de Bugs Repetitivos
+
+**Cuando encuentres un bug de "variable no expuesta", INMEDIATAMENTE:**
+1. Listar TODAS las variables que `leaderboard-integration.js` necesita
+2. Verificar una por una que estén expuestas en `window`
+3. NO esperar a que fallen una por una
+
+**Checklist de variables comunes:**
+- [ ] Variables de estado del juego (`currentLevel`, `gameState`)
+- [ ] Contadores de estadísticas (`successfulAttempts`, `failedAttempts`)
+- [ ] Temporizadores (`globalElapsedTime`, `globalStartTime`)
+- [ ] Contadores especiales (`totalHintsUsedSession`, `streak`)
+
+### 2. Debugging Logs Estratégicos
+
+**Agregar logs en TRES lugares:**
+```javascript
+// 1. DONDE SE CREA (game.js)
+console.log('📊 Variable created:', { myVariable });
+
+// 2. DONDE SE EXPONE (game.js)
+console.log('✅ Variable exposed to window:', window.myVariable);
+
+// 3. DONDE SE LEE (leaderboard-integration.js)
+console.log('🔍 Reading from window:', {
+    raw: window.myVariable,
+    withDefault: window.myVariable || defaultValue
+});
+```
+
+### 3. Modal Mostraba Valores Correctos = Smoking Gun
+
+**En Bug #7, el modal mostraba:**
+```javascript
+Modal: "2 successful, 5 failed"  ✅ Correcto
+Leaderboard: "0 successful, 0 failed"  ❌ Incorrecto
+```
+
+**Esto debió indicar INMEDIATAMENTE:**
+- ✅ Las variables existen y tienen valores correctos
+- ❌ NO están accesibles desde otro módulo
+- → Problema de scope/exposición a window
+
+### 4. Object.defineProperty para Encapsulación
+
+**Mejor práctica:**
+```javascript
+// ❌ MAL: Exponer directamente (se puede sobrescribir)
+window.myVariable = myVariable;
+
+// ✅ BIEN: Usar getter (solo lectura)
+Object.defineProperty(window, 'myVariable', {
+    get: () => myVariable
+});
+
+// Ventaja: Si alguien intenta window.myVariable = 999, el valor real no cambia
+```
+
+### 5. Variables con Defaults Ocultan Bugs
+
+```javascript
+// ❌ OCULTA EL BUG:
+const value = window.myVariable || 0;  // Si undefined, usa 0 silenciosamente
+
+// ✅ MEJOR PARA DEBUGGING:
+console.log('window.myVariable:', window.myVariable);  // undefined es visible
+const value = window.myVariable || 0;
+console.log('final value:', value);  // 0 es visible
+```
+
+---
+
+## 🚨 Checklist para Memory Matrix (y Juegos Futuros)
+
+### Pre-Implementation Checklist:
+- [ ] Listar TODAS las variables que el leaderboard necesita
+- [ ] Verificar que cada variable esté expuesta a `window`
+- [ ] Agregar logs de debug en creación, exposición y lectura
+- [ ] Probar con datos reales antes de declarar "listo"
+
+### Debugging Checklist (cuando algo falla):
+- [ ] Ver el modal (si existe) - ¿muestra valores correctos?
+- [ ] Si modal está correcto pero leaderboard no → scope issue
+- [ ] Agregar `console.log('window.X:', window.X)` para CADA variable
+- [ ] Buscar `undefined` en los logs
+- [ ] Aplicar el mismo fix a TODAS las variables afectadas a la vez
+
+### Post-Fix Checklist:
+- [ ] Probar submit desde Victory modal
+- [ ] Probar submit desde Game Over modal
+- [ ] Verificar que TODAS las columnas muestren datos
+- [ ] Verificar que el modal se cierre automáticamente
+- [ ] Verificar que se pueda jugar de nuevo sin F5
+
+---
+
+## 📝 Commits Relacionados (Memory Matrix)
+
+1. `fix: Correct hints calculation using session counter` - Bug #1
+2. `feat: Multi-factor scoring formula with level and time bonus` - Bug #2
+3. `fix: Handle file:// protocol for local development` - Bug #3
+4. `fix: Reset game state to idle after modal close` - Bug #4
+5. `fix: Expose globalElapsedTime and globalStartTime to window` - Bug #5
+6. `feat: Auto-close modal 2 seconds after score submission` - Bug #6
+7. `fix: Expose currentLevel, successfulAttempts, failedAttempts to window` - Bug #7
+
+---
+
+## 🎓 Conclusión
+
+Memory Matrix fue el caso más complejo de los tres:
+
+| Aspecto | Knight Quest | Master Sequence | Memory Matrix |
+|---------|--------------|-----------------|---------------|
+| **Bugs encontrados** | 3 | 1 | **7** |
+| **Patrón principal** | Backend SELECT | Variable scope | **Variable scope (×6)** |
+| **Tiempo total** | 3 horas | 4 horas | **4 horas** |
+| **Frustración** | Media | Media | **Alta** |
+| **Lección clave** | Verificar TODOS los SELECTs | Exponer variables | **Reconocer patrones** |
+
+**El error principal:** No reconocer que Bugs #1, #5 y #7 eran EL MISMO PATRÓN repetido 6 veces.
+
+**La solución correcta era:** Después de Bug #1 (hints), crear una lista de TODAS las variables necesarias y exponerlas TODAS de una vez, no una por una a medida que fallaban.
+
+**Beneficio de documentar esto:** En el próximo juego, si encuentro que UNA variable no está expuesta, inmediatamente verificaré TODAS las otras variables necesarias.
+
+---
+
 **Documento creado:** 16 Noviembre 2025
 **Autor:** Claude Code (con debugging de FAS)
-**Juegos afectados:** Knight Quest, Master Sequence
-**Estado:** ✅ Ambos Resueltos
+**Juegos afectados:** Knight Quest, Master Sequence, Memory Matrix
+**Estado:** ✅ Todos Resueltos

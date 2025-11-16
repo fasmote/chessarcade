@@ -170,9 +170,10 @@
         localStorage.setItem(STORAGE_KEY, playerName);
 
         // Get game stats from global variables (defined in game.js)
-        const totalSuccessful = window.successfulAttempts || 0;
-        const totalFailed = window.failedAttempts || 0;
-        const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ USAR contador global correcto
+        // ✅ USAR CONTADORES ACUMULATIVOS de toda la partida (todos los niveles)
+        const totalSuccessful = window.totalSuccessfulAttemptsSession || 0;
+        const totalFailed = window.totalFailedAttemptsSession || 0;
+        const totalHintsUsed = window.totalHintsUsedSession || 0;
 
         // Get total time (globalElapsedTime + current session if timer is running)
         console.log('🕐 [DEBUG] Time tracking variables:', {
@@ -193,13 +194,18 @@
         // - Level completion is most important (completed all 8 levels = 16,000 points)
         // - Successful attempts matter (each success = 200 points)
         // - Failures heavily penalized (each error = -300 points)
-        // - Hints moderately penalized (each hint = -100 points)
+        // - Hints PROGRESSIVE penalty (each hint costs DOUBLE the previous one)
+        //   * 1st hint: -100, 2nd: -200, 3rd: -400, 4th: -800, etc.
+        //   * Formula: 100 * (2^n - 1) where n = hints used
         // - Time bonus for speed (faster completion = more points)
 
         const levelScore = 8 * 2000; // Completed all levels
         const successScore = totalSuccessful * 200;
         const failuresPenalty = totalFailed * 300;
-        const hintsPenalty = totalHintsUsed * 100;
+
+        // ✅ PENALIZACIÓN PROGRESIVA DE HINTS: cada hint cuesta el doble que el anterior
+        // 0 hints: 0, 1 hint: 100, 2 hints: 300, 3 hints: 700, 4 hints: 1500, etc.
+        const hintsPenalty = totalHintsUsed > 0 ? 100 * (Math.pow(2, totalHintsUsed) - 1) : 0;
 
         // Time bonus: max 1000 points for completing in < 5 minutes, -100 per extra minute
         const timeLimitMs = 5 * 60 * 1000; // 5 minutes
@@ -249,14 +255,29 @@
             submitBtn.disabled = true;  // Keep disabled to prevent multiple submissions
             submitBtn.textContent = '✅ SUBMITTED!';
 
-            // Close modal after 2 seconds to prevent multiple submissions
+            // Close modal after 2 seconds and open leaderboard
             setTimeout(() => {
                 console.log('🔒 Closing modal after successful submission');
-                if (window.closeLeaderboardGameOverModal) {
-                    closeLeaderboardGameOverModal();
-                } else if (window.closeLeaderboardVictoryModal) {
-                    closeLeaderboardVictoryModal();
+
+                // ✅ Detectar qué modal está abierto y cerrarlo
+                const victoryModal = document.getElementById('leaderboardVictoryModal');
+                const gameOverModal = document.getElementById('leaderboardGameOverModal');
+
+                if (victoryModal && victoryModal.style.display !== 'none') {
+                    console.log('📊 Closing Victory modal');
+                    victoryModal.style.display = 'none';
+                } else if (gameOverModal && gameOverModal.style.display !== 'none') {
+                    console.log('📊 Closing Game Over modal');
+                    gameOverModal.style.display = 'none';
                 }
+
+                // ✅ Open leaderboard after closing modal
+                setTimeout(() => {
+                    console.log('📊 Opening leaderboard after score submission');
+                    if (window.showLeaderboardModal) {
+                        window.showLeaderboardModal('memory-matrix');
+                    }
+                }, 300); // Small delay to ensure modal is fully closed
             }, 2000);
 
         } catch (error) {
@@ -418,16 +439,17 @@
 
         // Get game stats from global variables (defined in game.js)
         console.log('📊 [DEBUG] Reading game stats from window:', {
-            successfulAttempts: window.successfulAttempts,
-            failedAttempts: window.failedAttempts,
+            totalSuccessfulAttemptsSession: window.totalSuccessfulAttemptsSession,
+            totalFailedAttemptsSession: window.totalFailedAttemptsSession,
             currentLevel: window.currentLevel,
             totalHintsUsedSession: window.totalHintsUsedSession
         });
 
-        const totalSuccessful = window.successfulAttempts || 0;
-        const totalFailed = window.failedAttempts || 0;
+        // ✅ USAR CONTADORES ACUMULATIVOS de toda la partida (todos los niveles)
+        const totalSuccessful = window.totalSuccessfulAttemptsSession || 0;
+        const totalFailed = window.totalFailedAttemptsSession || 0;
         const levelReached = window.currentLevel || 1;
-        const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ USAR contador global correcto
+        const totalHintsUsed = window.totalHintsUsedSession || 0;
 
         console.log('📊 [DEBUG] Final values to submit:', {
             totalSuccessful,
@@ -455,13 +477,18 @@
         // - Level reached (each level = 2000 points)
         // - Successful attempts matter (each success = 200 points)
         // - Failures heavily penalized (each error = -300 points)
-        // - Hints moderately penalized (each hint = -100 points)
+        // - Hints PROGRESSIVE penalty (each hint costs DOUBLE the previous one)
+        //   * 1st hint: -100, 2nd: -200, 3rd: -400, 4th: -800, etc.
+        //   * Formula: 100 * (2^n - 1) where n = hints used
         // - Time bonus for speed (faster completion = more points)
 
         const levelScore = levelReached * 2000; // Points for level reached
         const successScore = totalSuccessful * 200;
         const failuresPenalty = totalFailed * 300;
-        const hintsPenalty = totalHintsUsed * 100;
+
+        // ✅ PENALIZACIÓN PROGRESIVA DE HINTS: cada hint cuesta el doble que el anterior
+        // 0 hints: 0, 1 hint: 100, 2 hints: 300, 3 hints: 700, 4 hints: 1500, etc.
+        const hintsPenalty = totalHintsUsed > 0 ? 100 * (Math.pow(2, totalHintsUsed) - 1) : 0;
 
         // Time bonus: max 1000 points for completing in < 5 minutes, -100 per extra minute
         const timeLimitMs = 5 * 60 * 1000; // 5 minutes
@@ -512,14 +539,29 @@
             submitBtn.disabled = true;  // Keep disabled to prevent multiple submissions
             submitBtn.textContent = '✅ SUBMITTED!';
 
-            // Close modal after 2 seconds to prevent multiple submissions
+            // Close modal after 2 seconds and open leaderboard
             setTimeout(() => {
                 console.log('🔒 Closing modal after successful submission');
-                if (window.closeLeaderboardGameOverModal) {
-                    closeLeaderboardGameOverModal();
-                } else if (window.closeLeaderboardVictoryModal) {
-                    closeLeaderboardVictoryModal();
+
+                // ✅ Detectar qué modal está abierto y cerrarlo
+                const victoryModal = document.getElementById('leaderboardVictoryModal');
+                const gameOverModal = document.getElementById('leaderboardGameOverModal');
+
+                if (victoryModal && victoryModal.style.display !== 'none') {
+                    console.log('📊 Closing Victory modal');
+                    victoryModal.style.display = 'none';
+                } else if (gameOverModal && gameOverModal.style.display !== 'none') {
+                    console.log('📊 Closing Game Over modal');
+                    gameOverModal.style.display = 'none';
                 }
+
+                // ✅ Open leaderboard after closing modal
+                setTimeout(() => {
+                    console.log('📊 Opening leaderboard after score submission');
+                    if (window.showLeaderboardModal) {
+                        window.showLeaderboardModal('memory-matrix');
+                    }
+                }, 300); // Small delay to ensure modal is fully closed
             }, 2000);
 
         } catch (error) {
@@ -549,14 +591,13 @@
         if (window.clearBoard) window.clearBoard();
         if (window.clearBankPieces) window.clearBankPieces();
 
-        // Reset global variables
-        window.placedPieces = [];
-        window.moveHistory = [];
-        window.currentLevel = 1;
-        window.currentAttempt = 1;
-        window.successfulAttempts = 0;
-        window.failedAttempts = 0;
-        window.hintsLeft = window.HINTS_PER_LEVEL || 3;
+        // ✅ Reset session counters (hints, success, errors)
+        // NOTA: No intentamos setear variables con getters directamente
+        // window.resetGameCounters() maneja el reset interno
+        if (window.resetGameCounters) {
+            window.resetGameCounters();
+            console.log('✅ Session counters reset');
+        }
 
         // Reset timer
         if (window.resetGlobalTimer) window.resetGlobalTimer();

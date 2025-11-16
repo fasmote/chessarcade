@@ -42,11 +42,23 @@ let hintsLeft = 6; // Hints disponibles por nivel
 const HINTS_PER_LEVEL = 6; // Hints que se otorgan al comenzar un nivel
 let totalHintsUsedSession = 0; // ✅ NUEVO: Trackear hints usados totales en la sesión
 
+// CONTADORES ACUMULATIVOS DE TODA LA PARTIDA
+// Estos NO se resetean al cambiar de nivel, solo al iniciar nueva partida
+let totalSuccessfulAttemptsSession = 0; // ✅ Aciertos totales de todos los niveles
+let totalFailedAttemptsSession = 0;     // ✅ Errores totales de todos los niveles
+
 // Export to window for leaderboard integration
 window.HINTS_PER_LEVEL = HINTS_PER_LEVEL;
 // Exponer totalHintsUsedSession mediante getter para que sea siempre actual
 Object.defineProperty(window, 'totalHintsUsedSession', {
     get: () => totalHintsUsedSession
+});
+// Exponer contadores acumulativos
+Object.defineProperty(window, 'totalSuccessfulAttemptsSession', {
+    get: () => totalSuccessfulAttemptsSession
+});
+Object.defineProperty(window, 'totalFailedAttemptsSession', {
+    get: () => totalFailedAttemptsSession
 });
 
 // SISTEMA DE DESHACER/LIMPIAR
@@ -615,6 +627,7 @@ function onAttemptSuccess() {
     console.log('✅ ¡Intento correcto!');
 
     successfulAttempts++;
+    totalSuccessfulAttemptsSession++; // ✅ INCREMENTAR contador acumulativo de toda la partida
     gameState = 'completed';
 
     const levelConfig = window.MemoryMatrixLevels.getLevelConfig(currentLevel);
@@ -679,6 +692,7 @@ function onAttemptFailed(incorrectPieces) {
     // INCREMENTAR CONTADOR DE ERRORES
     // ==========================================
     failedAttempts++;
+    totalFailedAttemptsSession++; // ✅ INCREMENTAR contador acumulativo de toda la partida
     console.log(`❌ Error #${failedAttempts}/${MAX_FAILED_ATTEMPTS}`);
 
     const levelConfig = window.MemoryMatrixLevels.getLevelConfig(currentLevel);
@@ -711,7 +725,10 @@ function onAttemptFailed(incorrectPieces) {
     const incorrectSquares = incorrectPieces.map(item => item.square);
     flashIncorrectPieces(incorrectSquares);
 
-    // 3. Actualizar mensaje de estado con animación de error
+    // 3. ✅ Cambiar título "MEMORY MATRIX" a rojo
+    flashTitleRed();
+
+    // 4. Actualizar mensaje de estado con animación de error
     updateStatus(
         `❌ Incorrecto - Errores: ${failedAttempts}/${MAX_FAILED_ATTEMPTS} | Correctos: ${successfulAttempts}/${levelConfig.attemptsRequired}`,
         'error' // Activa animación rosa + inflado
@@ -834,6 +851,8 @@ function onGameOver() {
         failedAttempts = 0;
         hintsLeft = HINTS_PER_LEVEL;
         totalHintsUsedSession = 0; // ✅ RESETEAR contador de hints
+        totalSuccessfulAttemptsSession = 0; // ✅ RESETEAR contador acumulativo
+        totalFailedAttemptsSession = 0;     // ✅ RESETEAR contador acumulativo
 
         // Resetear timer global
         resetGlobalTimer();
@@ -897,7 +916,7 @@ function onLevelComplete() {
             successfulAttempts = 0;
         } else {
             const nextLevel = window.MemoryMatrixLevels.getLevelConfig(currentLevel);
-            updateStatus(`Siguiente: Nivel ${currentLevel} - ${nextLevel.name}. Presiona COMENZAR`);
+            updateStatus(`Siguiente: Nivel ${currentLevel} - ${nextLevel.name}. Comenzando en 5s...`);
         }
 
         // Re-habilitar botón
@@ -919,6 +938,16 @@ function onLevelComplete() {
         showInitialPosition();
 
         gameState = 'idle';
+
+        // ✅ INICIO AUTOMÁTICO después de 5 segundos
+        if (currentLevel <= totalLevels) {
+            setTimeout(() => {
+                console.log('🚀 Auto-starting next level after 5 seconds');
+                if (gameState === 'idle') {  // Solo si sigue en idle (no pausado ni jugando)
+                    startGame();
+                }
+            }, 5000);
+        }
     }, 3000);
 }
 
@@ -2132,6 +2161,28 @@ function flashIncorrectPieces(squares) {
     console.log(`🔴 ${squares.length} pieza${squares.length > 1 ? 's' : ''} parpadeando en rojo`);
 }
 
+/**
+ * Cambia el título "MEMORY MATRIX" a color rojo cuando hay error
+ * Vuelve al color normal después de 2 segundos
+ */
+function flashTitleRed() {
+    const titleText = document.querySelector('.title-text');
+    if (!titleText) return;
+
+    // Cambiar a rojo
+    titleText.style.color = '#ff5252';
+    titleText.style.textShadow = '0 0 20px #ff5252, 0 0 40px #ff5252';
+    titleText.style.transition = 'all 0.3s ease';
+
+    // Volver al color original después de 2 segundos
+    setTimeout(() => {
+        titleText.style.color = '';
+        titleText.style.textShadow = '';
+    }, 2000);
+
+    console.log('🔴 Título cambiado a rojo');
+}
+
 // ==========================================
 // CONFETI - Celebración de victoria
 // ==========================================
@@ -2441,3 +2492,29 @@ function setGameState(newState) {
 
 // Exponer función a window para uso externo
 window.setGameState = setGameState;
+
+/**
+ * Resetea todos los contadores de sesión (usado cuando se reinicia el juego después de Game Over)
+ */
+function resetGameCounters() {
+    // Resetear contadores acumulativos de sesión
+    totalHintsUsedSession = 0;
+    totalSuccessfulAttemptsSession = 0;
+    totalFailedAttemptsSession = 0;
+
+    // Resetear contadores del nivel actual
+    currentLevel = 1;
+    currentAttempt = 1;
+    successfulAttempts = 0;
+    failedAttempts = 0;
+    hintsLeft = HINTS_PER_LEVEL;
+
+    // Resetear arrays
+    placedPieces = [];
+    moveHistory = [];
+
+    console.log('🔄 All game counters and variables reset');
+}
+
+// Exponer función a window para uso externo
+window.resetGameCounters = resetGameCounters;
