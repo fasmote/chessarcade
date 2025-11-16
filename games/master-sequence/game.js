@@ -805,7 +805,13 @@ function gameOver() {
         sequenceLength: gameState.masterSequence.length,  // Usar masterSequence (secuencia acumulativa completa)
         totalTimeMs: totalTimeMs  // Tiempo total de la partida
     };
+
+    // ✅ CRÍTICO: Exponer en window para que leaderboard-integration.js pueda acceder
+    window.lastSessionStats = lastSessionStats;
+
     console.log('📊 Last session stats saved:', lastSessionStats);
+    console.log('🔍 [DEBUG] Sequence length saved:', lastSessionStats.sequenceLength);
+    console.log('✅ [DEBUG] window.lastSessionStats exposed:', window.lastSessionStats);
 
     // Finalizar grabación y decidir si guardar
     const savedNewRecord = finishRecording();
