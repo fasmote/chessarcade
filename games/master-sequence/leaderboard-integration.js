@@ -77,9 +77,16 @@
 
         // Get stats from lastSessionStats (set by game.js in gameOver())
         const stats = window.lastSessionStats || {};
+        console.log('🔍 [DEBUG] window.lastSessionStats:', window.lastSessionStats);
+
         const sequenceLength = stats.sequenceLength || 1;
         const streak = stats.streak || 0;
         const totalTimeMs = stats.totalTimeMs || 0;
+
+        console.log('🔍 [DEBUG] Extracted values:');
+        console.log('   - sequenceLength:', sequenceLength);
+        console.log('   - streak:', streak);
+        console.log('   - totalTimeMs:', totalTimeMs);
 
         console.log('📊 Submitting score:', {
             playerName,
@@ -96,18 +103,22 @@
             submitBtn.textContent = 'SUBMITTING...';
 
             // Submit to leaderboard API
+            const submitData = {
+                time_ms: totalTimeMs,
+                metadata: {
+                    level_reached: finalLevel,
+                    sequence_length: sequenceLength,
+                    perfect_streak: streak
+                }
+            };
+
+            console.log('🔍 [DEBUG] Data being sent to submitScore API:', submitData);
+
             const result = await submitScore(
                 GAME_ID,
                 playerName,
                 finalScore,
-                {
-                    time_ms: totalTimeMs,
-                    metadata: {
-                        level_reached: finalLevel,
-                        sequence_length: sequenceLength,
-                        perfect_streak: streak
-                    }
-                }
+                submitData
             );
 
             showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
