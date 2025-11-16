@@ -614,10 +614,15 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
       });
 
       // Renderizar tabla (usar función específica para Knight Quest)
+      console.log('[DEBUG] Current game:', state.currentGame);
+      console.log('[DEBUG] renderKnightQuestLeaderboardTable exists?', typeof renderKnightQuestLeaderboardTable);
+
       let table;
       if (state.currentGame === 'knight-quest') {
+        console.log('[DEBUG] Using Knight Quest custom leaderboard');
         table = renderKnightQuestLeaderboardTable(data.scores);
       } else {
+        console.log('[DEBUG] Using generic leaderboard');
         table = renderLeaderboardTable(data.scores, true);
       }
       contentArea.innerHTML = '';
