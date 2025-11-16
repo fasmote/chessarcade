@@ -246,11 +246,17 @@
 
             showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
 
-            submitBtn.disabled = false;
+            submitBtn.disabled = true;  // Keep disabled to prevent multiple submissions
             submitBtn.textContent = '✅ SUBMITTED!';
 
+            // Close modal after 2 seconds to prevent multiple submissions
             setTimeout(() => {
-                submitBtn.textContent = '🏆 SUBMIT SCORE';
+                console.log('🔒 Closing modal after successful submission');
+                if (window.closeLeaderboardGameOverModal) {
+                    closeLeaderboardGameOverModal();
+                } else if (window.closeLeaderboardVictoryModal) {
+                    closeLeaderboardVictoryModal();
+                }
             }, 2000);
 
         } catch (error) {
@@ -489,11 +495,17 @@
 
             showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
 
-            submitBtn.disabled = false;
+            submitBtn.disabled = true;  // Keep disabled to prevent multiple submissions
             submitBtn.textContent = '✅ SUBMITTED!';
 
+            // Close modal after 2 seconds to prevent multiple submissions
             setTimeout(() => {
-                submitBtn.textContent = '🏆 SUBMIT SCORE';
+                console.log('🔒 Closing modal after successful submission');
+                if (window.closeLeaderboardGameOverModal) {
+                    closeLeaderboardGameOverModal();
+                } else if (window.closeLeaderboardVictoryModal) {
+                    closeLeaderboardVictoryModal();
+                }
             }, 2000);
 
         } catch (error) {
