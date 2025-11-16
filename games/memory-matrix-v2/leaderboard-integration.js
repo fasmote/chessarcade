@@ -175,10 +175,18 @@
         const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ USAR contador global correcto
 
         // Get total time (globalElapsedTime + current session if timer is running)
+        console.log('🕐 [DEBUG] Time tracking variables:', {
+            globalElapsedTime: window.globalElapsedTime,
+            globalStartTime: window.globalStartTime,
+            currentTime: Date.now()
+        });
+
         let totalTimeMs = window.globalElapsedTime || 0;
         if (window.globalStartTime) {
             totalTimeMs += Date.now() - window.globalStartTime;
         }
+
+        console.log('🕐 [DEBUG] Calculated totalTimeMs:', totalTimeMs);
 
         // Calculate score with improved formula that considers level, success, failures, hints, and time
         // Formula components:
@@ -409,10 +417,18 @@
         const totalHintsUsed = window.totalHintsUsedSession || 0; // ✅ USAR contador global correcto
 
         // Get total time (globalElapsedTime + current session if timer is running)
+        console.log('🕐 [DEBUG] Time tracking variables:', {
+            globalElapsedTime: window.globalElapsedTime,
+            globalStartTime: window.globalStartTime,
+            currentTime: Date.now()
+        });
+
         let totalTimeMs = window.globalElapsedTime || 0;
         if (window.globalStartTime) {
             totalTimeMs += Date.now() - window.globalStartTime;
         }
+
+        console.log('🕐 [DEBUG] Calculated totalTimeMs:', totalTimeMs);
 
         // Calculate score with improved formula that considers level, success, failures, hints, and time
         // Formula components:
