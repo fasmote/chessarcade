@@ -802,7 +802,7 @@ function gameOver() {
         score: gameState.score,
         lives: gameState.lives,
         streak: gameState.perfectStreak,
-        sequenceLength: gameState.sequence.length,
+        sequenceLength: gameState.masterSequence.length,  // Usar masterSequence (secuencia acumulativa completa)
         totalTimeMs: totalTimeMs  // Tiempo total de la partida
     };
     console.log('📊 Last session stats saved:', lastSessionStats);
