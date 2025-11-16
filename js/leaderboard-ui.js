@@ -545,7 +545,11 @@ function renderMasterSequenceScoreRow(score, highlightTop3 = true) {
   // LENGTH - longitud de la secuencia (solo número)
   console.log('🔍 [DEBUG] Rendering Master Sequence row for rank', score.rank);
   console.log('   - score.metadata:', score.metadata);
+  console.log('   - score.metadata (JSON):', JSON.stringify(score.metadata, null, 2));
   console.log('   - score.metadata.sequence_length:', score.metadata?.sequence_length);
+  console.log('   - score.metadata.level_reached:', score.metadata?.level_reached);
+  console.log('   - score.metadata.perfect_streak:', score.metadata?.perfect_streak);
+  console.log('   - Object.keys(score.metadata):', score.metadata ? Object.keys(score.metadata) : 'no metadata');
 
   const lengthDisplay = (score.metadata && score.metadata.sequence_length) ? score.metadata.sequence_length : '-';
 
