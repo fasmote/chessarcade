@@ -147,20 +147,37 @@ export default async function handler(req, res) {
     const total = parseInt(totalResult[0].total);
 
     // 5. Format scores
-    const formattedScores = scores.map((score, index) => ({
-      rank: offset + index + 1,
-      id: score.id,
-      player_name: score.player_name,
-      score: score.score,
-      level: score.level,
-      time_ms: score.time_ms,
-      country: {
-        code: score.country_code,
-        name: score.country_name
-      },
-      metadata: score.metadata || {},
-      created_at: score.created_at
-    }));
+    const formattedScores = scores.map((score, index) => {
+      // Parse metadata if it's a string (from JSONB column)
+      let metadata = {};
+      if (score.metadata) {
+        if (typeof score.metadata === 'string') {
+          try {
+            metadata = JSON.parse(score.metadata);
+          } catch (e) {
+            console.error('Failed to parse metadata:', e);
+            metadata = {};
+          }
+        } else {
+          metadata = score.metadata;
+        }
+      }
+
+      return {
+        rank: offset + index + 1,
+        id: score.id,
+        player_name: score.player_name,
+        score: score.score,
+        level: score.level,
+        time_ms: score.time_ms,
+        country: {
+          code: score.country_code,
+          name: score.country_name
+        },
+        metadata: metadata,
+        created_at: score.created_at
+      };
+    });
 
     // 6. Return response
     return res.status(200).json({
