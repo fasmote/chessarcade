@@ -256,16 +256,15 @@ function renderScoreRow(score, highlightTop3 = true) {
   const playerName = score.player_name || 'UNKNOWN';
   const initials = playerName.substring(0, 3);
   const rest = playerName.substring(3);
-  const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}`;
 
-  // Country flag (si existe)
-  let countryHTML = '-';
+  // Country flag INLINE (al lado del nombre, no columna separada)
+  let flagHTML = '';
   if (score.country && score.country.code) {
     const countryCode = score.country.code.toLowerCase();
     const countryName = score.country.name || score.country.code;
 
     // Usar flagcdn.com para las banderas (CDN gratis de flags)
-    countryHTML = `
+    flagHTML = `
       <img
         src="https://flagcdn.com/16x12/${countryCode}.png"
         srcset="https://flagcdn.com/32x24/${countryCode}.png 2x,
@@ -275,9 +274,13 @@ function renderScoreRow(score, highlightTop3 = true) {
         alt="${countryName}"
         title="${countryName}"
         class="country-flag"
+        style="margin-left: 6px; vertical-align: middle;"
       >
     `;
   }
+
+  // Player name HTML con bandera inline
+  const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
 
   // Level (si existe)
   const levelDisplay = score.level || '-';
@@ -294,7 +297,7 @@ function renderScoreRow(score, highlightTop3 = true) {
     timeHTML = `<td class="time">${minutes}:${secs.toString().padStart(2, '0')}</td>`;
   }
 
-  // Construir la fila
+  // Construir la fila (bandera va inline con nombre, no columna separada)
   return `
     <tr class="${rowClasses.join(' ')}" data-score-id="${score.id}">
       <td class="rank">${rankDisplay}</td>
@@ -302,7 +305,6 @@ function renderScoreRow(score, highlightTop3 = true) {
       <td class="score">${scoreDisplay}</td>
       <td class="level">${levelDisplay}</td>
       ${timeHTML}
-      <td class="country">${countryHTML}</td>
     </tr>
   `;
 }
@@ -405,7 +407,7 @@ function renderLeaderboardTable(scores, showTime = false) {
   const table = document.createElement('table');
   table.className = 'leaderboard-table';
 
-  // Crear thead
+  // Crear thead (sin columna Country - bandera va inline con nombre)
   const thead = document.createElement('thead');
   thead.innerHTML = `
     <tr>
@@ -414,7 +416,6 @@ function renderLeaderboardTable(scores, showTime = false) {
       <th class="score">Score</th>
       <th class="level">Level</th>
       ${showTime ? '<th class="time">Time</th>' : ''}
-      <th class="country">Country</th>
     </tr>
   `;
   table.appendChild(thead);
@@ -426,7 +427,7 @@ function renderLeaderboardTable(scores, showTime = false) {
     // Si no hay scores, mostrar mensaje
     tbody.innerHTML = `
       <tr class="no-scores">
-        <td colspan="${showTime ? 6 : 5}" class="text-center">
+        <td colspan="${showTime ? 5 : 4}" class="text-center">
           No scores yet. Be the first! 🏆
         </td>
       </tr>
