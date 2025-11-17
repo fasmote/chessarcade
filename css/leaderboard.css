@@ -308,7 +308,7 @@
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-family, 'Orbitron', monospace);
-  font-size: 14px;
+  font-size: 16px;  /* ⬆️ Aumentado de 14px a 16px para mejor visibilidad */
 }
 
 /* Table header */
@@ -323,7 +323,7 @@
   text-transform: uppercase;
   color: var(--text-accent, #00ffff);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 14px;  /* ⬆️ Aumentado de 12px a 14px para mejor legibilidad */
   letter-spacing: 1px;
 }
 
@@ -383,7 +383,7 @@
 
 .score-row.top-three .rank {
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;  /* ⬆️ Aumentado de 16px a 18px */
 }
 
 .score-row.rank-1 .rank {
@@ -412,6 +412,7 @@
 /* Score con efecto glow */
 .score-row .score {
   font-weight: 700;
+  font-size: 18px;  /* 🆕 Score más grande y visible */
   color: var(--success-color, #00ff40);
   text-shadow: 0 0 5px rgba(0, 255, 64, 0.3);
 }

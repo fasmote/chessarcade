@@ -104,23 +104,11 @@
             <button class="btn btn-secondary" id="helpBtn">SHOW COORDINATES</button>
         </div>
         
-        <!-- Game Over Screen -->
-        <div class="game-over" id="gameOverScreen">
+        <!-- Game Over Overlay (Temporal - solo 2 segundos) -->
+        <div class="game-over" id="gameOverScreen" style="display: none;">
             <div class="game-over-content">
                 <div class="game-over-title" id="gameOverTitle">LEVEL COMPLETE!</div>
                 <div class="final-score" id="finalScore">Score: 0</div>
-
-                <!-- Player Name Input for Leaderboard -->
-                <div class="player-name-section" style="margin: 20px 0;">
-                    <label for="playerNameInput" style="display: block; margin-bottom: 8px; color: var(--neon-cyan); font-weight: bold;">Enter Your Name:</label>
-                    <input type="text" id="playerNameInput" maxlength="20" placeholder="Your Name"
-                           style="width: 100%; padding: 10px; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--neon-cyan); border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 16px; text-align: center;">
-                </div>
-
-                <button class="btn btn-primary" id="submitScoreBtn" style="margin-bottom: 10px;">🏆 SUBMIT SCORE</button>
-                <button class="btn btn-secondary" id="viewLeaderboardBtn" style="margin-bottom: 10px;">👁️ VIEW LEADERBOARD</button>
-                <button class="btn btn-primary" id="nextLevelBtn">NEXT LEVEL</button>
-                <button class="btn btn-secondary" id="playAgainBtn">PLAY AGAIN</button>
             </div>
         </div>
     </div>
@@ -164,6 +152,7 @@
     <link rel="stylesheet" href="../../css/leaderboard.css">
     <script src="../../js/leaderboard-api.js"></script>
     <script src="../../js/leaderboard-ui.js"></script>
+    <script src="leaderboard-integration.js"></script>
 
     <!-- Level Transition Library -->
     <script src="js/LevelTransition.js"></script>

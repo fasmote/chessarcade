@@ -14,6 +14,20 @@ let gameState = {
     soundEnabled: true
 };
 
+// ✅ Exponer gameState al scope global para leaderboard
+window.gameState = gameState;
+
+// ========================================
+// SESSION STATISTICS (for leaderboard)
+// ========================================
+// Estos contadores se acumulan durante toda la sesión de juego
+let maxComboAchieved = 1;      // Combo máximo alcanzado
+let totalTargetsFound = 0;     // Total de objetivos encontrados en todos los niveles
+
+// Exponer estadísticas al scope global para leaderboard
+window.maxComboAchieved = maxComboAchieved;
+window.totalTargetsFound = totalTargetsFound;
+
 // Level configuration
 const levels = {
     1: { name: "BABY STEPS", targets: 5, time: 12.0, theme: "retro" },
@@ -148,10 +162,18 @@ function handleSquareClick(coordinate) {
             playSound('correct');
 
             gameState.targetFound++;
+            totalTargetsFound++; // ✅ Incrementar contador de sesión
+            window.totalTargetsFound = totalTargetsFound;
+
             gameState.score += 100 * gameState.combo;
 
             if (gameState.combo < 3) {
                 gameState.combo++;
+                // ✅ Actualizar max combo si es mayor
+                if (gameState.combo > maxComboAchieved) {
+                    maxComboAchieved = gameState.combo;
+                    window.maxComboAchieved = maxComboAchieved;
+                }
             }
 
             // Check if level complete
@@ -183,11 +205,19 @@ function handleSquareClick(coordinate) {
         playSound('correct');
 
         gameState.targetFound++;
+        totalTargetsFound++; // ✅ Incrementar contador de sesión
+        window.totalTargetsFound = totalTargetsFound;
+
         gameState.score += 100 * gameState.combo;
 
         // Update combo
         if (gameState.combo < 3) {
             gameState.combo++;
+            // ✅ Actualizar max combo si es mayor
+            if (gameState.combo > maxComboAchieved) {
+                maxComboAchieved = gameState.combo;
+                window.maxComboAchieved = maxComboAchieved;
+            }
         }
 
         // Check if level complete
@@ -312,16 +342,32 @@ function completeLevel() {
 function gameOver() {
     clearInterval(gameState.timerInterval);
     gameState.gameActive = false;
-    
+
+    // ✅ CAPTURAR estadísticas ANTES de mostrar overlay (antes de cualquier reset)
+    if (window.captureGameStats) {
+        window.captureGameStats();
+    }
+
+    // ✅ Mostrar primero el overlay de "GAME OVER"
     document.getElementById('gameOverTitle').textContent = 'GAME OVER!';
     document.getElementById('finalScore').textContent = `Final Score: ${gameState.score}`;
     document.getElementById('gameOverScreen').style.display = 'flex';
-    
+
+    // ✅ Después de 2 segundos, ocultar overlay y mostrar modal de leaderboard
+    setTimeout(() => {
+        document.getElementById('gameOverScreen').style.display = 'none';
+
+        // Mostrar modal de Game Over con opciones de submit
+        if (window.showLeaderboardGameOverModal) {
+            window.showLeaderboardGameOverModal();
+        }
+    }, 2000);
+
     // Track game over
     gtag('event', 'game_over', {
         'level': gameState.level,
         'score': gameState.score,
-        'targets_found': gameState.targetFound
+        'targets_found': totalTargetsFound
     });
 }
 
@@ -398,27 +444,32 @@ function showGameCompleted() {
     clearInterval(gameState.timerInterval);
     gameState.gameActive = false;
 
+    // ✅ CAPTURAR estadísticas ANTES de mostrar overlay (antes de cualquier reset)
+    if (window.captureGameStats) {
+        window.captureGameStats();
+    }
+
+    // ✅ Mostrar primero el overlay de "GAME COMPLETED"
     document.getElementById('gameOverTitle').textContent = '🏆 GAME COMPLETED! 🏆';
     document.getElementById('finalScore').textContent = `Final Score: ${gameState.score}`;
     document.getElementById('gameOverScreen').style.display = 'flex';
 
-    // Cambiar texto del botón "Next Level" a "Play Again"
-    const nextLevelBtn = document.getElementById('nextLevelBtn');
-    if (nextLevelBtn) {
-        nextLevelBtn.textContent = 'PLAY AGAIN';
-        nextLevelBtn.style.display = 'none'; // Ocultar botón "Next Level"
-    }
+    // ✅ Después de 2 segundos, ocultar overlay y mostrar modal de victoria
+    setTimeout(() => {
+        document.getElementById('gameOverScreen').style.display = 'none';
 
-    // Mostrar solo "Play Again"
-    const playAgainBtn = document.getElementById('playAgainBtn');
-    if (playAgainBtn) {
-        playAgainBtn.style.display = 'block';
-    }
+        // Mostrar modal de Victoria con opciones de submit
+        if (window.showLeaderboardVictoryModal) {
+            window.showLeaderboardVictoryModal();
+        }
+    }, 2000);
 
     // Track game completion
     gtag('event', 'game_completed', {
         'score': gameState.score,
-        'final_level': gameState.level
+        'final_level': gameState.level,
+        'total_targets': totalTargetsFound,
+        'max_combo': maxComboAchieved
     });
 }
 
@@ -434,6 +485,13 @@ function playAgain() {
     document.getElementById('gameOverScreen').style.display = 'none';
     document.getElementById('startBtn').disabled = false;
     document.getElementById('pauseBtn').disabled = true;
+
+    // ✅ Resetear estadísticas de sesión
+    maxComboAchieved = 1;
+    totalTargetsFound = 0;
+    window.maxComboAchieved = maxComboAchieved;
+    window.totalTargetsFound = totalTargetsFound;
+    console.log('🔄 Session statistics reset');
 
     // Restaurar botón "Next Level" si estaba oculto
     const nextLevelBtn = document.getElementById('nextLevelBtn');
@@ -452,8 +510,12 @@ function playAgain() {
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('pauseBtn').addEventListener('click', pauseGame);
 document.getElementById('helpBtn').addEventListener('click', toggleCoordinates);
-document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
-document.getElementById('playAgainBtn').addEventListener('click', playAgain);
+
+// Los siguientes botones fueron removidos del HTML porque ahora usamos modales de leaderboard
+// Solo agregar listeners si los botones existen (para compatibilidad)
+document.getElementById('nextLevelBtn')?.addEventListener('click', nextLevel);
+document.getElementById('playAgainBtn')?.addEventListener('click', playAgain);
+
 document.getElementById('soundToggle').addEventListener('click', toggleSound);
 document.getElementById('btnHome').addEventListener('click', () => {
     window.location.href = '../../index.html';
@@ -475,77 +537,6 @@ document.addEventListener('animationend', (e) => {
 // ========================================
 // LEADERBOARD INTEGRATION
 // ========================================
-
-/**
- * Cargar nombre del jugador desde localStorage al iniciar
- */
-window.addEventListener('DOMContentLoaded', () => {
-    const savedName = localStorage.getItem('squareRushPlayerName');
-    const playerInput = document.getElementById('playerNameInput');
-    if (savedName && playerInput) {
-        playerInput.value = savedName;
-    }
-});
-
-/**
- * Botón "Submit Score" - Enviar score al leaderboard
- */
-document.getElementById('submitScoreBtn')?.addEventListener('click', async () => {
-    const playerNameInput = document.getElementById('playerNameInput');
-    const playerName = playerNameInput.value.trim() || 'PLAYER';
-
-    // Guardar nombre para futuras sesiones
-    localStorage.setItem('squareRushPlayerName', playerName);
-
-    const finalScore = gameState.score;
-
-    try {
-        // Deshabilitar botón mientras se envía
-        const submitBtn = document.getElementById('submitScoreBtn');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'SUBMITTING...';
-
-        // Enviar score al backend
-        // No enviamos level porque Square Rush usa niveles numéricos (1-10)
-        // y el backend espera strings específicos (NOVICE, INTERMEDIATE, etc.)
-        const result = await submitScore(
-            'square-rush',
-            playerName,
-            finalScore,
-            {
-                // level: gameState.level  // Removed - incompatible format
-            }
-        );
-
-        // Mostrar toast de éxito
-        showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
-
-        // Rehabilitar botón
-        submitBtn.disabled = false;
-        submitBtn.textContent = '✅ SUBMITTED!';
-
-        // Después de 2 segundos, volver al texto original
-        setTimeout(() => {
-            submitBtn.textContent = '🏆 SUBMIT SCORE';
-        }, 2000);
-
-    } catch (error) {
-        console.error('Error submitting score:', error);
-        showToast(`Error: ${error.message}`, 'error');
-
-        // Rehabilitar botón
-        const submitBtn = document.getElementById('submitScoreBtn');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '🏆 SUBMIT SCORE';
-    }
-});
-
-/**
- * Botón "View Leaderboard" - Mostrar modal del leaderboard
- */
-document.getElementById('viewLeaderboardBtn')?.addEventListener('click', () => {
-    showLeaderboardModal('square-rush');
-});
 
 /**
  * Botón "Leaderboard" del header - Mostrar modal

@@ -90,6 +90,29 @@ const GameState = {
     // Position history (for loop detection)
     positionHistory: [], // Array of board hashes
 
+    // ========================================
+    // ⏱️ TIMER SYSTEM (Sistema de Cronómetro)
+    // ========================================
+    // PROPÓSITO: Medir cuánto tiempo tarda el juego
+    // LECCIÓN APRENDIDA: Necesario para scoring justo (menos tiempo = mejor score)
+
+    /**
+     * Timestamp cuando empezó el juego (Date.now())
+     * null = no ha empezado todavía
+     */
+    startTime: null,
+
+    /**
+     * Tiempo acumulado en milisegundos (para pausas futuras)
+     * Por ahora no se usa, pero útil para futuras funcionalidades
+     */
+    elapsedTime: 0,
+
+    /**
+     * Flag para pausar el timer (futuro)
+     */
+    timerPaused: false,
+
     /**
      * Initialize or reset game state
      */
@@ -111,6 +134,11 @@ const GameState = {
         this.winner = null;
         this.lastMove = null;
         this.positionHistory = [];
+
+        // ⏱️ Reset timer
+        this.startTime = null;
+        this.elapsedTime = 0;
+        this.timerPaused = false;
 
         console.log('🎮 Game state initialized');
     },
@@ -140,6 +168,10 @@ const GameState = {
      * Place a piece on the board (gravity phase)
      */
     placePiece(col, pieceType) {
+        // ⏱️ Iniciar el timer en el PRIMER movimiento del juego
+        // LECCIÓN APRENDIDA: El timer debe empezar cuando el jugador hace su primera acción
+        this.startTimer();
+
         // Find lowest empty row in this column
         for (let row = 7; row >= 0; row--) {
             if (this.board[row][col] === null) {
@@ -175,6 +207,9 @@ const GameState = {
         const piece = this.board[fromRow][fromCol];
 
         if (!piece) return false;
+
+        // ⏱️ Asegurar que el timer está corriendo (por si acaso)
+        this.startTimer();
 
         // Move piece
         this.board[toRow][toCol] = piece;
@@ -300,5 +335,68 @@ const GameState = {
     getPositionCount(hash) {
         if (!hash) hash = this.getBoardHash();
         return this.positionHistory.filter(h => h === hash).length;
+    },
+
+    // ========================================
+    // ⏱️ TIMER METHODS (Métodos del Cronómetro)
+    // ========================================
+
+    /**
+     * Iniciar el cronómetro
+     * Se llama cuando se hace el primer movimiento
+     */
+    startTimer() {
+        if (!this.startTime) {
+            this.startTime = Date.now();
+            console.log('⏱️ Timer started at:', new Date(this.startTime).toLocaleTimeString());
+        }
+    },
+
+    /**
+     * Obtener tiempo transcurrido en SEGUNDOS
+     * LECCIÓN APRENDIDA: Devolver segundos (no milisegundos) para scoring más legible
+     *
+     * @returns {number} Segundos transcurridos desde el inicio (entero)
+     */
+    getElapsedTimeSeconds() {
+        if (!this.startTime) return 0;
+
+        const now = Date.now();
+        const milliseconds = now - this.startTime + this.elapsedTime;
+        const seconds = Math.floor(milliseconds / 1000);
+
+        return seconds;
+    },
+
+    /**
+     * Pausar el cronómetro (para futuro)
+     * Por ahora no se usa, pero está listo para implementar
+     */
+    pauseTimer() {
+        if (this.startTime && !this.timerPaused) {
+            this.elapsedTime += Date.now() - this.startTime;
+            this.startTime = null;
+            this.timerPaused = true;
+            console.log('⏸️ Timer paused at:', this.elapsedTime, 'ms');
+        }
+    },
+
+    /**
+     * Resumir el cronómetro (para futuro)
+     */
+    resumeTimer() {
+        if (this.timerPaused) {
+            this.startTime = Date.now();
+            this.timerPaused = false;
+            console.log('▶️ Timer resumed');
+        }
     }
 };
+
+// ========================================
+// EXPONER A WINDOW (IMPORTANTE!)
+// ========================================
+// LECCIÓN APRENDIDA de Square Rush:
+// Si no exponemos GameState a window, otros módulos (como leaderboard-integration.js)
+// no pueden acceder a él porque cada archivo .js tiene su propio scope
+window.GameState = GameState;

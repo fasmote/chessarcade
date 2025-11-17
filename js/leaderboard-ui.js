@@ -30,7 +30,7 @@ const GAME_NAMES = {
   'knight-quest': 'Knight Quest',
   'memory-matrix': 'Memory Matrix',
   'master-sequence': 'Master Sequence',
-  'chessinfive': 'ChessFive'
+  'chessinfive': 'ChessInFive'
 };
 
 /**
@@ -951,6 +951,12 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
       } else if (state.currentGame === 'memory-matrix') {
         console.log('[DEBUG] Using Memory Matrix custom leaderboard');
         table = renderMemoryMatrixLeaderboardTable(data.scores);
+      } else if (state.currentGame === 'square-rush') {
+        console.log('[DEBUG] Using Square Rush custom leaderboard');
+        table = renderSquareRushLeaderboardTable(data.scores);
+      } else if (state.currentGame === 'chessinfive') {
+        console.log('[DEBUG] Using ChessInFive custom leaderboard');
+        table = window.renderChessInFiveLeaderboardTable(data.scores);
       } else {
         console.log('[DEBUG] Using generic leaderboard');
         table = renderLeaderboardTable(data.scores, true);

@@ -1589,8 +1589,24 @@ function clearPiece(square) {
  * Limpiar todas las piezas del tablero
  */
 function clearBoard() {
-    const pieces = document.querySelectorAll('.piece');
-    pieces.forEach(piece => piece.remove());
+    // Buscar piezas en el tablero Y en el banco
+    const boardPieces = document.querySelectorAll('#chessBoard .piece');
+    const bankPieces = document.querySelectorAll('.piece-bank .piece');
+
+    // Remover piezas del tablero
+    boardPieces.forEach(piece => {
+        piece.remove();
+    });
+
+    // También limpiar piezas sueltas que puedan estar fuera del tablero
+    const allPieces = document.querySelectorAll('.piece');
+    allPieces.forEach(piece => {
+        // Solo remover si NO está en el banco (las del banco se manejan con clearBankPieces)
+        if (!piece.closest('.piece-bank')) {
+            piece.remove();
+        }
+    });
+
     console.log('🗑️ Tablero limpiado');
 }
 

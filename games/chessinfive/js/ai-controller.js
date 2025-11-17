@@ -268,4 +268,12 @@ const AIController = {
     }
 };
 
+// ========================================
+// EXPONER A WINDOW (IMPORTANTE!)
+// ========================================
+// LECCIÓN APRENDIDA: Necesario para que leaderboard-integration.js
+// pueda detectar si los jugadores son AI o humanos
+window.AIController = AIController;
+
 console.log('🤖 AI Controller loaded');
+console.log('✅ AIController exposed to window for leaderboard integration');

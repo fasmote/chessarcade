@@ -271,6 +271,9 @@
                     gameOverModal.style.display = 'none';
                 }
 
+                // ✅ IMPORTANTE: Resetear el juego después de cerrar el modal
+                resetGameAfterGameOver();
+
                 // ✅ Open leaderboard after closing modal
                 setTimeout(() => {
                     console.log('📊 Opening leaderboard after score submission');
@@ -555,6 +558,9 @@
                     gameOverModal.style.display = 'none';
                 }
 
+                // ✅ IMPORTANTE: Resetear el juego después de cerrar el modal
+                resetGameAfterGameOver();
+
                 // ✅ Open leaderboard after closing modal
                 setTimeout(() => {
                     console.log('📊 Opening leaderboard after score submission');
@@ -603,15 +609,15 @@
         if (window.resetGlobalTimer) window.resetGlobalTimer();
 
         // Update UI
-        if (window.updateStatus) window.updateStatus('Game Over. Presiona COMENZAR para jugar de nuevo');
+        if (window.updateStatus) window.updateStatus('Game Over. Presiona NUEVO JUEGO para empezar desde el principio');
 
-        // Re-enable start button
+        // Re-enable start button - cambiar texto a "NUEVO JUEGO" para que sea claro que resetea todo
         const btnStart = document.getElementById('btnStart');
         if (btnStart) {
             btnStart.classList.remove('disabled');
             btnStart.style.opacity = '1';
             btnStart.style.cursor = 'pointer';
-            btnStart.textContent = '▶ Comenzar';
+            btnStart.textContent = '🎮 NUEVO JUEGO';
         }
 
         // Update buttons
