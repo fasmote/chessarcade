@@ -20,11 +20,12 @@
 - **⚔️ ChessInFive** - Connect Four meets Chess! Two-player tactical strategy **+ AI Opponent!** *(Available Now!)*
 
 #### 🎯 **Features:**
+- **🏆 Global Leaderboards**: Compete with players worldwide across all games
 - **Responsive Design**: Optimized for desktop and mobile
 - **Progressive Difficulty**: From beginner-friendly to expert challenges
 - **Smart Learning**: Educational gameplay with immediate feedback
 - **Audio Control**: Immersive sound effects with easy toggle
-- **Local Storage**: Save your best scores and progress
+- **Cross-Game Viewing**: View any game's leaderboard from anywhere
 - **Modern CSS**: Smooth animations and neon visual effects
 
 #### 📁 **Project Structure:**
@@ -57,16 +58,29 @@ ChessArcade/
 - **⚔️ ChessInFive** - ¡Conecta Cuatro conoce al Ajedrez! Estrategia táctica para dos jugadores **+ ¡Oponente IA!** *(¡Disponible Ahora!)*
 
 #### 🎯 **Características:**
+- **🏆 Ranking Global**: Compite con jugadores de todo el mundo en todos los juegos
 - **Diseño Responsivo**: Optimizado para escritorio y móvil
 - **Dificultad Progresiva**: Desde principiante hasta desafíos expertos
 - **Aprendizaje Inteligente**: Gameplay educativo con feedback inmediato
 - **Control de Audio**: Efectos de sonido inmersivos con toggle fácil
-- **Almacenamiento Local**: Guarda tus mejores puntuaciones y progreso
+- **Vista Cross-Game**: Ve el ranking de cualquier juego desde cualquier lugar
 - **CSS Moderno**: Animaciones fluidas y efectos visuales neón
 
 ---
 
 ## 🆕 Recent Updates (Enero 2025)
+
+### 🏆 Global Leaderboard System - Live Now! (NEW!)
+- ✅ **5 Games Integrated** - ChessInFive, Square Rush, Memory Matrix, Knight Quest, Master Sequence
+- ✅ **Global Rankings** - Compete with players worldwide with live scoreboards
+- ✅ **Country Flags** - Display your nationality next to your name (🇦🇷 🇺🇸 🇧🇷 etc.)
+- ✅ **Custom Game Renderers** - Each game displays its unique scoring metadata
+- ✅ **Cross-Game Viewing** - View any game's leaderboard from anywhere
+- ✅ **Trophy Icons** - Consistent 🏆 leaderboard button across all games
+- ✅ **Enhanced Readability** - Increased font sizes (16px base, 18px scores with glow)
+- ✅ **Seamless UX** - Auto-close/auto-open flow after score submission
+- ✅ **Backend Integration** - Vercel serverless + Supabase database
+- 📖 **Full Documentation** - See `/games/chessinfive/docs/LEADERBOARD_INTEGRATION.md`
 
 ### ChessInFive AI v1.0.4 - Depth-2 Search + UX Improvements 🤖
 - ✅ **Depth-2 AI Search** - AI now anticipates opponent threats BEFORE they happen
