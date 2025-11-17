@@ -851,6 +851,8 @@ button:disabled {
     display: flex;
     gap: 15px;
     justify-content: center;
+    flex-wrap: wrap;  /* Permite que los botones se apilen si no hay espacio */
+    max-width: 100%;  /* Evita que se salgan del modal */
 }
 
 .modal-close {

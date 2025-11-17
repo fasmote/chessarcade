@@ -459,6 +459,15 @@ const UIController = {
         // Hide game over modal
         document.getElementById('gameOverModal').style.display = 'none';
 
+        // Reset Submit Score button to initial state
+        // LECCIÓN APRENDIDA: El botón quedaba deshabilitado de la partida anterior
+        const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🏆 SUBMIT SCORE';
+            console.log('🔄 [CHESSINFIVE] Submit Score button reset for new game');
+        }
+
         // Remove game-over class to hide NEW GAME button in mobile Phase 2
         const gameContainer = document.querySelector('.game-container');
         if (gameContainer) {
