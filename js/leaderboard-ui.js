@@ -282,18 +282,35 @@ function renderScoreRow(score, highlightTop3 = true) {
   // Player name HTML con bandera inline
   const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
 
-  // Level (si existe)
-  const levelDisplay = score.level || '-';
+  // Level (buscar en múltiples lugares para compatibilidad con todos los juegos)
+  let levelDisplay = '-';
+  if (score.level !== undefined && score.level !== null) {
+    // Algunos juegos usan score.level directamente
+    levelDisplay = score.level;
+  } else if (score.metadata) {
+    // Square Rush usa metadata.level_reached, ChessInFive usa metadata.moves
+    levelDisplay = score.metadata.level_reached
+                || score.metadata.moves
+                || score.metadata.phase
+                || '-';
+  }
 
   // Score formateado con separadores de miles
   const scoreDisplay = score.score.toLocaleString('en-US');
 
-  // Time (si existe y es relevante)
+  // Time (buscar en time_ms o metadata.time)
   let timeHTML = '';
-  if (score.time_ms) {
-    const seconds = Math.floor(score.time_ms / 1000);
+  const timeValue = score.time_ms || (score.metadata && score.metadata.time);
+  if (timeValue) {
+    const seconds = Math.floor(timeValue / 1000);
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
+    timeHTML = `<td class="time">${minutes}:${secs.toString().padStart(2, '0')}</td>`;
+  } else if (score.metadata && score.metadata.time !== undefined) {
+    // ChessInFive guarda tiempo en segundos directo
+    const totalSeconds = score.metadata.time;
+    const minutes = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
     timeHTML = `<td class="time">${minutes}:${secs.toString().padStart(2, '0')}</td>`;
   }
 
@@ -1080,6 +1097,245 @@ function showScoreResult(result) {
     closeable: true
   });
 }
+
+// ===========================================================================
+// CUSTOM GAME RENDERERS (Cross-Game Compatibility)
+// ===========================================================================
+
+/**
+ * Helper: Get rank emoji for top 3
+ */
+function getRankEmoji(rank) {
+  if (rank === 1) return '🥇 ';
+  if (rank === 2) return '🥈 ';
+  if (rank === 3) return '🥉 ';
+  return '';
+}
+
+/**
+ * Custom renderer for Square Rush leaderboard
+ * Columnas: RANK | PLAYER | SCORE | LEVEL | TARGETS | COMBO
+ *
+ * IMPORTANTE: Esta función está en leaderboard-ui.js (global) para estar
+ * disponible desde CUALQUIER juego, permitiendo cross-game viewing.
+ */
+function renderSquareRushLeaderboardTable(scores) {
+  console.log('🎯 [CUSTOM] Rendering Square Rush leaderboard with', scores.length, 'scores');
+
+  if (!scores || scores.length === 0) {
+    return '<p class="no-scores">No scores yet. Be the first!</p>';
+  }
+
+  let html = `
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>RANK</th>
+          <th>PLAYER</th>
+          <th>SCORE</th>
+          <th>LEVEL</th>
+          <th>TARGETS</th>
+          <th>COMBO</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  scores.forEach((entry, index) => {
+    const rank = entry.rank || (index + 1);
+    const playerName = entry.player_name || 'PLAYER';
+    const score = entry.score || 0;
+
+    // Player name con iniciales destacadas + bandera
+    const initials = playerName.substring(0, 3).toUpperCase();
+    const rest = playerName.substring(3);
+
+    // Bandera inline
+    let flagHTML = '';
+    if (entry.country && entry.country.code) {
+      const countryCode = entry.country.code.toLowerCase();
+      const countryName = entry.country.name || entry.country.code;
+      flagHTML = `
+        <img
+          src="https://flagcdn.com/16x12/${countryCode}.png"
+          srcset="https://flagcdn.com/32x24/${countryCode}.png 2x,
+                  https://flagcdn.com/48x36/${countryCode}.png 3x"
+          width="16"
+          height="12"
+          alt="${countryName}"
+          title="${countryName}"
+          class="country-flag"
+          style="margin-left: 6px; vertical-align: middle;"
+        >
+      `;
+    }
+
+    const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
+
+    // Metadata
+    const metadata = entry.metadata || {};
+    const levelReached = metadata.level_reached || '-';
+    const maxCombo = metadata.max_combo ? `x${metadata.max_combo}` : '-';
+    const targetsFound = metadata.targets_found || '-';
+
+    // Clase especial para top 3
+    let rowClass = 'score-row';
+    if (rank === 1) rowClass += ' rank-1';
+    else if (rank === 2) rowClass += ' rank-2';
+    else if (rank === 3) rowClass += ' rank-3';
+
+    html += `
+      <tr class="${rowClass}">
+        <td class="rank">${getRankEmoji(rank)}${rank}</td>
+        <td class="player-name">${playerNameHTML}</td>
+        <td class="score">${score.toLocaleString()}</td>
+        <td class="level">${levelReached}</td>
+        <td class="level">${targetsFound}</td>
+        <td class="level">${maxCombo}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  // Crear elemento tabla desde HTML string
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  return container.firstElementChild;
+}
+
+/**
+ * Custom renderer for ChessInFive leaderboard
+ * Columnas: RANK | PLAYER | SCORE | MOVES | TIME | PHASE | TYPE
+ *
+ * IMPORTANTE: Esta función está en leaderboard-ui.js (global) para estar
+ * disponible desde CUALQUIER juego, permitiendo cross-game viewing.
+ */
+function renderChessInFiveLeaderboardTable(scores) {
+  console.log('♟️ [CUSTOM] Rendering ChessInFive leaderboard with', scores.length, 'scores');
+
+  if (!scores || scores.length === 0) {
+    return '<p class="no-scores">No scores yet. Be the first!</p>';
+  }
+
+  let html = `
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th class="rank">Rank</th>
+          <th class="player-name">Player</th>
+          <th class="score">Score</th>
+          <th class="level">Moves</th>
+          <th class="time">Time</th>
+          <th class="level">Phase</th>
+          <th class="level">Type</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  scores.forEach((entry, index) => {
+    const rank = entry.rank || (index + 1);
+    const score = entry.score || 0;
+
+    // Player name con iniciales destacadas + bandera
+    const playerName = entry.player_name || 'UNKNOWN';
+    const initials = playerName.substring(0, 3).toUpperCase();
+    const rest = playerName.substring(3);
+
+    // Bandera inline
+    let flagHTML = '';
+    if (entry.country && entry.country.code) {
+      const countryCode = entry.country.code.toLowerCase();
+      const countryName = entry.country.name || entry.country.code;
+      flagHTML = `
+        <img
+          src="https://flagcdn.com/16x12/${countryCode}.png"
+          srcset="https://flagcdn.com/32x24/${countryCode}.png 2x,
+                  https://flagcdn.com/48x36/${countryCode}.png 3x"
+          width="16"
+          height="12"
+          alt="${countryName}"
+          title="${countryName}"
+          class="country-flag"
+          style="margin-left: 6px; vertical-align: middle;"
+        >
+      `;
+    }
+
+    const playerNameHTML = `<span class="player-initials">${initials}</span>${rest}${flagHTML}`;
+
+    // Metadata
+    const metadata = entry.metadata || {};
+    const moveCount = metadata.moves || metadata.move_count || '-';
+    const timeSeconds = metadata.time || metadata.time_seconds || 0;
+    const finalPhase = metadata.phase || metadata.final_phase || '-';
+    const playerType = metadata.player_type || 'Unknown';
+
+    // Format time as MM:SS
+    let timeDisplay = '-';
+    if (timeSeconds > 0) {
+      const minutes = Math.floor(timeSeconds / 60);
+      const secs = timeSeconds % 60;
+      timeDisplay = `${minutes}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Format phase with emoji
+    let phaseDisplay = '-';
+    if (finalPhase === 1 || finalPhase === 'gravity') {
+      phaseDisplay = '🪂 1';
+    } else if (finalPhase === 2 || finalPhase === 'chess') {
+      phaseDisplay = '♟️ 2';
+    }
+
+    // Format player type with emoji
+    let typeDisplay = playerType;
+    if (playerType.includes('Human')) {
+      typeDisplay = '👤';
+    } else if (playerType.includes('AI vs AI')) {
+      typeDisplay = '🤖🤖';
+    } else if (playerType.includes('AI')) {
+      typeDisplay = '🤖';
+    }
+
+    // Clase especial para top 3
+    let rowClass = 'score-row';
+    if (rank === 1) rowClass += ' rank-1';
+    else if (rank === 2) rowClass += ' rank-2';
+    else if (rank === 3) rowClass += ' rank-3';
+
+    html += `
+      <tr class="${rowClass}">
+        <td class="rank">${getRankEmoji(rank)}${rank}</td>
+        <td class="player-name">${playerNameHTML}</td>
+        <td class="score">${score.toLocaleString()}</td>
+        <td class="level">${moveCount}</td>
+        <td class="time">${timeDisplay}</td>
+        <td class="level">${phaseDisplay}</td>
+        <td class="level">${typeDisplay}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  // Crear elemento tabla desde HTML string
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  return container.firstElementChild;
+}
+
+// Exponer custom renderers a window para acceso cross-game
+window.renderSquareRushLeaderboardTable = renderSquareRushLeaderboardTable;
+window.renderChessInFiveLeaderboardTable = renderChessInFiveLeaderboardTable;
+
+console.log('✅ [CUSTOM RENDERERS] Square Rush and ChessInFive renderers loaded globally');
 
 // ===========================================================================
 // EXPORTS
