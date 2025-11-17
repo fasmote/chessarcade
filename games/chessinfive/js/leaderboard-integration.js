@@ -209,8 +209,20 @@
 
         try {
             const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
+
+            console.log('🔄 [SUBMIT] BEFORE disabling - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'SUBMITTING...';
+
+            console.log('🔄 [SUBMIT] AFTER disabling - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+            console.log('⏳ [SUBMIT] Button disabled, showing SUBMITTING...');
 
             // ========================================
             // 🎯 LECCIÓN APRENDIDA: Usar wrapper "metadata"
@@ -249,8 +261,19 @@
 
             showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
 
+            console.log('🔄 [SUBMIT SUCCESS] BEFORE marking as submitted - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+
             submitBtn.disabled = true;  // Keep disabled to prevent multiple submissions
             submitBtn.textContent = '✅ SUBMITTED!';
+
+            console.log('🔄 [SUBMIT SUCCESS] AFTER marking as submitted - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+            console.log('✅ [SUBMIT SUCCESS] Button marked as SUBMITTED and disabled');
 
             // ========================================
             // 🎯 LECCIÓN APRENDIDA: Auto-close modal + auto-open leaderboard
@@ -260,23 +283,34 @@
             // 2. Close modal
             // 3. Open leaderboard automatically
             setTimeout(() => {
-                console.log('🔒 [CHESSINFIVE] Closing Game Over modal after successful submission');
+                console.log('⏰ [AUTO-CLOSE] ========================================');
+                console.log('⏰ [AUTO-CLOSE] 2 seconds passed, auto-closing modal...');
+                console.log('🔒 [AUTO-CLOSE] Closing Game Over modal after successful submission');
+
+                // Check button state before closing
+                const submitBtnBeforeClose = document.getElementById('gameOverSubmitScoreBtn');
+                if (submitBtnBeforeClose) {
+                    console.log('🔍 [AUTO-CLOSE] Button state BEFORE closing modal:', {
+                        disabled: submitBtnBeforeClose.disabled,
+                        textContent: submitBtnBeforeClose.textContent
+                    });
+                }
 
                 // Close the Game Over modal
                 const gameOverModal = document.getElementById('gameOverModal');
                 if (gameOverModal) {
                     gameOverModal.style.display = 'none';
-                    console.log('✅ [CHESSINFIVE] Game Over modal closed');
+                    console.log('✅ [AUTO-CLOSE] Game Over modal closed');
                 }
 
                 // Wait a bit, then open leaderboard
                 setTimeout(() => {
-                    console.log('📊 [CHESSINFIVE] Opening leaderboard after score submission');
+                    console.log('📊 [AUTO-OPEN] Opening leaderboard after score submission');
                     if (window.showLeaderboardModal) {
                         window.showLeaderboardModal('chessinfive');
-                        console.log('✅ [CHESSINFIVE] Leaderboard opened');
+                        console.log('✅ [AUTO-OPEN] Leaderboard opened');
                     } else {
-                        console.error('❌ [CHESSINFIVE] showLeaderboardModal not found');
+                        console.error('❌ [AUTO-OPEN] showLeaderboardModal not found');
                     }
                 }, 300);  // Small delay for smooth transition
             }, 2000);  // 2 seconds to let user see "SUBMITTED!" message

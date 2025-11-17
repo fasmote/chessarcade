@@ -456,16 +456,32 @@ const UIController = {
      * Start new game
      */
     newGame() {
+        console.log('🆕 [NEW GAME] ========================================');
+        console.log('🆕 [NEW GAME] newGame() called - Starting fresh game');
+
         // Hide game over modal
         document.getElementById('gameOverModal').style.display = 'none';
+        console.log('📖 [NEW GAME] Game Over modal hidden');
 
         // Reset Submit Score button to initial state
         // LECCIÓN APRENDIDA: El botón quedaba deshabilitado de la partida anterior
         const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
         if (submitBtn) {
+            console.log('🔄 [NEW GAME] BEFORE reset - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+
             submitBtn.disabled = false;
             submitBtn.textContent = '🏆 SUBMIT SCORE';
-            console.log('🔄 [CHESSINFIVE] Submit Score button reset for new game');
+
+            console.log('🔄 [NEW GAME] AFTER reset - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+            console.log('✅ [NEW GAME] Submit Score button RESET for new game');
+        } else {
+            console.error('❌ [NEW GAME] Submit Score button NOT FOUND!');
         }
 
         // Remove game-over class to hide NEW GAME button in mobile Phase 2
@@ -475,6 +491,7 @@ const UIController = {
         }
 
         // Reset game state
+        console.log('🔄 [NEW GAME] Resetting GameState...');
         GameState.init();
 
         // Clear board highlights
@@ -507,6 +524,9 @@ const UIController = {
      * Show game over modal
      */
     showGameOver(winner) {
+        console.log('🏁 [GAME OVER] ========================================');
+        console.log('🏁 [GAME OVER] showGameOver() called for winner:', winner);
+
         const modal = document.getElementById('gameOverModal');
         const title = document.getElementById('winnerTitle');
         const message = document.getElementById('winnerMessage');
@@ -521,9 +541,32 @@ const UIController = {
             gameContainer.classList.add('game-over');
         }
 
+        // CRITICAL: Reset Submit Score button BEFORE showing modal
+        // LECCIÓN APRENDIDA: El botón debe resetearse CADA VEZ que se muestra el modal
+        const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
+        if (submitBtn) {
+            console.log('🔄 [GAME OVER] BEFORE reset - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🏆 SUBMIT SCORE';
+
+            console.log('🔄 [GAME OVER] AFTER reset - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+            console.log('✅ [GAME OVER] Submit Score button RESET when showing modal');
+        } else {
+            console.error('❌ [GAME OVER] Submit Score button NOT FOUND!');
+        }
+
         // Delay de 2 segundos para que el usuario disfrute la victoria
         setTimeout(() => {
+            console.log('📖 [GAME OVER] Opening modal after 2s delay...');
             modal.style.display = 'flex';
+            console.log('✅ [GAME OVER] Modal is now visible');
         }, 2000);
 
         // Track in analytics
@@ -552,6 +595,26 @@ const UIController = {
      * Hide game over modal (allows user to analyze the game)
      */
     hideGameOver() {
+        console.log('❌ [HIDE MODAL] hideGameOver() called - User closed modal with X button');
+
+        // Reset button when closing modal with X
+        const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
+        if (submitBtn) {
+            console.log('🔄 [HIDE MODAL] BEFORE reset - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🏆 SUBMIT SCORE';
+
+            console.log('🔄 [HIDE MODAL] AFTER reset - Button state:', {
+                disabled: submitBtn.disabled,
+                textContent: submitBtn.textContent
+            });
+            console.log('✅ [HIDE MODAL] Submit Score button RESET when closing modal');
+        }
+
         document.getElementById('gameOverModal').style.display = 'none';
         console.log('📊 Game over modal closed - analyzing game');
     }
