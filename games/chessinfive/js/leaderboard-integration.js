@@ -55,11 +55,11 @@
                     // Verificar estado del botón Submit
                     const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
                     if (submitBtn) {
-                        console.log('🔘 [CHESSINFIVE] Submit button state:', {
-                            disabled: submitBtn.disabled,
-                            textContent: submitBtn.textContent,
-                            style: submitBtn.style.display
-                        });
+                        console.log('🔘 [CHESSINFIVE] Submit button found!');
+                        console.log('   - disabled:', submitBtn.disabled);
+                        console.log('   - textContent:', submitBtn.textContent);
+                        console.log('   - display:', submitBtn.style.display);
+                        console.log('   - classList:', submitBtn.classList.toString());
                     } else {
                         console.error('❌ [CHESSINFIVE] Submit button NOT FOUND in modal!');
                     }

@@ -625,4 +625,13 @@ function getRankEmoji(rank) {
     return '';
 }
 
+// ========================================
+// EXPONER FUNCIÓN AL SCOPE GLOBAL
+// ========================================
+// LECCIÓN APRENDIDA: leaderboard-ui.js busca funciones con nombre específico
+// window.render[GameName]LeaderboardTable()
+// Esto permite ver el leaderboard de Square Rush desde otros juegos
+window.renderSquareRushLeaderboardTable = renderSquareRushLeaderboardTable;
+
 console.log('✅ Square Rush Leaderboard Integration ready');
+console.log('✅ Square Rush custom leaderboard rendering registered');

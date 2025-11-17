@@ -953,10 +953,20 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
         table = renderMemoryMatrixLeaderboardTable(data.scores);
       } else if (state.currentGame === 'square-rush') {
         console.log('[DEBUG] Using Square Rush custom leaderboard');
-        table = renderSquareRushLeaderboardTable(data.scores);
+        if (typeof window.renderSquareRushLeaderboardTable === 'function') {
+          table = window.renderSquareRushLeaderboardTable(data.scores);
+        } else {
+          console.warn('[DEBUG] Square Rush custom renderer not available, using generic');
+          table = renderLeaderboardTable(data.scores, true);
+        }
       } else if (state.currentGame === 'chessinfive') {
         console.log('[DEBUG] Using ChessInFive custom leaderboard');
-        table = window.renderChessInFiveLeaderboardTable(data.scores);
+        if (typeof window.renderChessInFiveLeaderboardTable === 'function') {
+          table = window.renderChessInFiveLeaderboardTable(data.scores);
+        } else {
+          console.warn('[DEBUG] ChessInFive custom renderer not available, using generic');
+          table = renderLeaderboardTable(data.scores, true);
+        }
       } else {
         console.log('[DEBUG] Using generic leaderboard');
         table = renderLeaderboardTable(data.scores, true);
