@@ -15,6 +15,7 @@
 3. [Centrado de Elementos en Desktop](#3-centrado-de-elementos-en-desktop)
 4. [innerHTML Borra Elementos que Queremos Preservar](#4-innerhtml-borra-elementos-que-queremos-preservar)
 5. [Inconsistencia de Tiempo en Leaderboards](#5-inconsistencia-de-tiempo-en-leaderboards)
+6. [Solapamiento del Contador de Monedas en ChessInFive](#6-solapamiento-del-contador-de-monedas-en-chessinfive)
 
 ---
 
@@ -759,6 +760,278 @@ Antes de implementar leaderboard:
 
 ---
 
+## 6. Solapamiento del Contador de Monedas en ChessInFive
+
+### 🔴 Síntoma
+El contador de monedas flotante (coin counter) con el menú de juegos presenta problemas de solapamiento en ChessInFive:
+
+1. **Desktop:** El contador cubre completamente los botones de sonido (🔊) y leaderboard (🏆) en el header
+2. **Mobile:** El contador "¢ JUEGOS" se solapa con el título y subtítulo del juego, además de ocupar demasiado espacio
+
+**Capturas del problema:**
+- `screenshot_errores/135_solape.png` - Desktop: Botones invisibles
+- `screenshot_errores/136_solape_celular.png` - Mobile: Texto solapado
+- `screenshot_errores/138_solape_celular.png` - Mobile con DevTools: Layout roto
+
+### 🔍 Causa Raíz
+
+**Problema 1: Header con columnas insuficientes (Desktop)**
+
+El header de ChessInFive usa un grid de 3 columnas:
+```css
+.game-header {
+    grid-template-columns: 100px 1fr 100px;
+}
+```
+
+La columna derecha (100px) debe contener DOS botones (sound + leaderboard), pero:
+- Los botones tienen `width: 100%`
+- No hay flexbox en `.header-controls` para organizarlos
+- Resultado: Los botones se apilan o solo uno es visible
+- El coin counter (`position: fixed, top: 20px, right: 20px`) se posiciona encima y cubre todo
+
+**Problema 2: Coin counter demasiado grande (Mobile)**
+
+En mobile, el contador muestra "¢ JUEGOS" con texto completo:
+- Ocupa mucho ancho (~120px)
+- Se posiciona en `top: 20px` cerca del título
+- Se solapa con el subtítulo "Place. Move. Align Five. Win."
+- Estéticamente se ve mal en pantallas pequeñas
+
+### 🎯 Diferencia con Otros Juegos
+
+ChessInFive tiene un **header diferente** a Knight Quest, Square Rush, etc:
+
+| Aspecto | Otros Juegos | ChessInFive |
+|---------|--------------|-------------|
+| Estructura | Header simple con botones laterales | Grid de 3 columnas con controles agrupados |
+| Botones header | Individual (HOME izq, SOUND der) | Agrupados en `.header-controls` |
+| Layout | Más espacio vertical | Header más compacto |
+| Subtítulo | Corto o inexistente | "Place. Move. Align Five. Win." (largo) |
+
+Por esto la solución que funcionó en otros juegos (simplemente mover `top: 70px`) no es suficiente en ChessInFive.
+
+### ✅ Soluciones Implementadas
+
+#### Fix 1: Expandir y Organizar Header Controls (Desktop)
+
+**Cambio 1: Ampliar columna de controles**
+```css
+.game-header {
+    /* Antes */
+    grid-template-columns: 100px 1fr 100px;
+
+    /* Después */
+    grid-template-columns: 100px 1fr 140px;  /* +40px para 2 botones */
+}
+```
+
+**Cambio 2: Flexbox para organizar botones**
+```css
+/* Nuevo: Container flex para sound + leaderboard */
+.header-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+}
+```
+
+**Cambio 3: Ajustar tamaño de botones**
+```css
+.btn-icon {
+    /* Antes */
+    width: 100%;  /* Cada botón quería 100% del parent */
+
+    /* Después */
+    min-width: 50px;  /* Tamaño mínimo, flex ajusta */
+    padding: 10px 15px;  /* Reducido de 20px a 15px */
+}
+```
+
+**Resultado:** Ambos botones visibles lado a lado, coin counter posicionado debajo sin solaparse.
+
+#### Fix 2: Compactar Coin Counter en Mobile
+
+**Estrategia:** Mostrar solo el ícono "¢" en mobile, ocultar texto "JUEGOS"
+
+```css
+@media (max-width: 767px) {
+    .neon-coin-counter {
+        top: 20px;           /* Volver a posición original */
+        right: 10px;
+        padding: 0.6rem;     /* Más compacto (era 0.8rem 1.5rem) */
+        gap: 0;              /* Sin espacio entre ícono y texto */
+    }
+
+    /* Ocultar texto "JUEGOS" en mobile */
+    .neon-coin-counter span {
+        display: none;
+    }
+
+    .floating-games-menu {
+        top: 70px;           /* Dropdown justo debajo del ícono */
+        right: 10px;
+    }
+}
+```
+
+**Resultado esperado:**
+- Desktop: "¢ JUEGOS" completo debajo de los botones del header
+- Mobile: Solo "¢" circular, compacto, sin solapar título
+
+#### Fix 3: Posicionar Coin Counter Debajo del Header (Desktop)
+
+**Movido de top: 20px a top: 85px**
+```css
+.neon-coin-counter {
+    position: fixed;
+    top: 85px;  /* Antes: 20px - Ahora debajo del header (~70-80px alto) */
+    right: 20px;
+    /* ... */
+}
+
+.floating-games-menu {
+    top: 145px;  /* Dropdown ajustado proporcionalmente */
+    right: 20px;
+}
+```
+
+### 📊 Archivos Modificados
+
+**`games/chessinfive/css/chessinfive.css`**
+- Línea 31-46: Grid del header expandido + flexbox en `.header-controls`
+- Línea 120-124: Botones `.btn-icon` ajustados (min-width en vez de width: 100%)
+- Línea 1336: Coin counter desktop movido a `top: 85px`
+- Línea 1395: Dropdown menu movido a `top: 145px`
+- Línea 1366-1384: Media query mobile con coin solo ícono
+
+### 🐛 Estado Actual (Pendiente de Verificación)
+
+**✅ Desktop:** FUNCIONANDO - Botones visibles, coin counter debajo sin solaparse
+
+**❌ Mobile:** PENDIENTE - Necesita prueba en dispositivo real
+
+**Últimos ajustes mobile:**
+- Ícono solo (sin texto) ✅ Implementado
+- Posición `top: 20px` ✅ Implementado
+- Padding compacto `0.6rem` ✅ Implementado
+- Dropdown en `top: 70px` ✅ Implementado
+
+**Posibles ajustes adicionales si persiste el problema:**
+- Reducir tamaño del ícono en mobile (25px → 20px)
+- Ocultar contador completamente en mobile (solo mostrar al hacer click)
+- Mover contador a posición inferior derecha en mobile (bottom: 20px)
+
+### 📚 Lecciones Aprendidas
+
+**1. Cada juego puede tener requisitos únicos de layout**
+- No asumir que una solución funciona en todos los juegos
+- ChessInFive tiene header diferente → requiere solución específica
+- Siempre revisar la estructura HTML antes de ajustar CSS
+
+**2. Grid columns deben acomodar su contenido real**
+- Si una columna tiene 2 elementos, necesita al menos 2x el ancho de 1 elemento
+- `grid-template-columns: 100px 1fr 100px` NO puede contener 2 botones de 50px+ cada uno
+- Usar flexbox dentro de grid columns para organizar múltiples elementos
+
+**3. Mobile requiere UI más compacta**
+- Texto largo puede causar problemas en espacios pequeños
+- Considerar versiones "icon-only" para mobile
+- `display: none` en spans específicos es una solución limpia
+
+**4. Position fixed debe considerar otros elementos fixed**
+- Múltiples elementos `position: fixed` en la misma zona → conflictos
+- Calcular alturas acumuladas: header (~70px) + padding → coin debe estar en 80-90px+
+- Usar variables CSS para mantener consistencia:
+  ```css
+  :root {
+      --header-height: 70px;
+      --coin-counter-top: calc(var(--header-height) + 15px);
+  }
+  ```
+
+**5. Probar en dispositivo real es crucial**
+- DevTools mobile emulation NO siempre replica comportamiento exacto
+- Aspectos que pueden diferir: rendering de fuentes, tamaño de controles touch, scrolling
+- Siempre hacer prueba final en dispositivo físico antes de marcar como completo
+
+### 🔧 Debugging Tools Usados
+
+**1. Screenshots comparativas:**
+- Desktop vs Mobile
+- Antes vs Después
+- Diferentes breakpoints (767px, 600px)
+
+**2. DevTools Inspector:**
+```javascript
+// Verificar qué elemento cubre cuál
+document.elementFromPoint(x, y)  // Coordenadas del click
+
+// Ver z-index stack
+getComputedStyle(element).zIndex
+
+// Medir dimensiones reales
+element.getBoundingClientRect()
+```
+
+**3. Responsive Design Mode (F12):**
+- Probar en 360px (mobile), 768px (tablet), 1440px (desktop)
+- Toggle device toolbar para ver diferentes viewports
+- Throttling para simular conexión lenta
+
+### 🎯 Checklist para Próximo Juego con Coin Counter
+
+Antes de implementar contador flotante:
+
+- [ ] Identificar estructura del header (simple vs grid vs flex)
+- [ ] Medir altura real del header en desktop y mobile
+- [ ] Calcular posición `top` del contador (altura header + padding)
+- [ ] Diseñar versión mobile compacta (icon-only si es necesario)
+- [ ] Verificar que no hay otros elementos `position: fixed` en la misma zona
+- [ ] Probar en DevTools con múltiples breakpoints (360, 768, 1024, 1440px)
+- [ ] Verificar z-index no cubre elementos importantes
+- [ ] Hacer prueba en dispositivo móvil real
+- [ ] Documentar ajustes específicos del juego en comentarios CSS
+
+### 💡 Mejoras Futuras (Consideraciones)
+
+**Opción 1: Variables CSS para posicionamiento**
+```css
+:root {
+    --header-height: 70px;
+    --coin-top-desktop: 85px;
+    --coin-top-mobile: 20px;
+}
+
+.neon-coin-counter {
+    top: var(--coin-top-desktop);
+}
+
+@media (max-width: 767px) {
+    .neon-coin-counter {
+        top: var(--coin-top-mobile);
+    }
+}
+```
+
+**Opción 2: Contador adaptativo automático**
+```javascript
+// Calcular posición dinámica según altura del header
+const header = document.querySelector('.game-header');
+const headerHeight = header.offsetHeight;
+const coinCounter = document.querySelector('.neon-coin-counter');
+coinCounter.style.top = `${headerHeight + 15}px`;
+```
+
+**Opción 3: Menú hamburguesa completo en mobile**
+- Mover todos los controles (sound, leaderboard, juegos) a un menú único
+- Botón hamburguesa en top-right
+- Drawer lateral o modal con todas las opciones
+- Liberar espacio en header para título
+
+---
+
 ## 🎓 Lecciones Generales del Proyecto
 
 ### 1. Cache Busting es OBLIGATORIO
@@ -871,3 +1144,10 @@ Antes de implementar nuevos componentes UI, verificar:
 **Última actualización:** Enero 2025
 **Mantenido por:** Equipo ChessArcade
 **Contribuciones:** Bienvenidas vía pull request
+
+**Nuevas lecciones agregadas (Enero 2025 - Sesión 2):**
+- Solapamiento del contador de monedas en ChessInFive
+- Grid columns deben acomodar su contenido real (flexbox dentro de grid)
+- Mobile UI compacta: icon-only patterns para espacios reducidos
+- Position fixed con múltiples elementos flotantes requiere cálculo de alturas
+- Importancia de testing en dispositivo real vs DevTools emulation
