@@ -910,6 +910,7 @@ function onLevelComplete() {
 
         if (currentLevel > totalLevels) {
             // Juego completado
+            stopGlobalTimer(); // ✅ Detener el timer global al completar todos los niveles
             updateStatus('🏆 ¡FELICIDADES! Completaste todos los niveles');
             currentLevel = 1; // Volver al nivel 1
             currentAttempt = 1;

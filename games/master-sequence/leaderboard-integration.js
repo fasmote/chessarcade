@@ -126,9 +126,26 @@
             submitBtn.disabled = false;
             submitBtn.textContent = '✅ SUBMITTED!';
 
+            // ✅ PATRÓN ESTÁNDAR: Auto-cerrar modal y abrir leaderboard
             setTimeout(() => {
-                submitBtn.textContent = '🏆 SUBMIT SCORE';
-            }, 2000);
+                console.log('🔒 Closing modal after successful submission');
+
+                // Cerrar el modal de Game Over
+                const gameOverModal = document.getElementById('gameOverOverlay');
+                if (gameOverModal) {
+                    console.log('📊 Closing Game Over modal');
+                    gameOverModal.classList.add('hidden');
+                }
+
+                // Abrir leaderboard después de cerrar modal
+                setTimeout(() => {
+                    console.log('📊 Opening leaderboard after score submission');
+                    if (window.showLeaderboardModal) {
+                        window.showLeaderboardModal('master-sequence');
+                    }
+                }, 300); // Small delay to ensure modal is fully closed
+
+            }, 2000); // 2 segundos para que el usuario vea el mensaje de éxito
 
         } catch (error) {
             console.error('Error submitting score:', error);

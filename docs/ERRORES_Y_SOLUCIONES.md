@@ -14,6 +14,7 @@
 2. [Posicionamiento de Botones UI](#2-posicionamiento-de-botones-ui)
 3. [Centrado de Elementos en Desktop](#3-centrado-de-elementos-en-desktop)
 4. [innerHTML Borra Elementos que Queremos Preservar](#4-innerhtml-borra-elementos-que-queremos-preservar)
+5. [Inconsistencia de Tiempo en Leaderboards](#5-inconsistencia-de-tiempo-en-leaderboards)
 
 ---
 
@@ -452,6 +453,312 @@ Este mismo problema ocurre con:
 
 ---
 
+## 5. Inconsistencia de Tiempo en Leaderboards
+
+### 🔴 Síntoma
+El tiempo mostrado en la pantalla de victoria no coincide con el tiempo registrado en el leaderboard, causando confusión y desconfianza en los jugadores.
+
+**Ejemplo real detectado en Knight Quest:**
+- **Pantalla de victoria:** "TIME: 0:41" (41 segundos)
+- **Leaderboard:** "TIME: 0:54" (54 segundos)
+- **Diferencia:** 13 segundos extra sin explicación
+
+### 🔍 Causa Raíz
+
+El tiempo se calculaba **DOS VECES** en momentos diferentes:
+
+1. **Al lograr la victoria** (CORRECTO): Se calcula el tiempo transcurrido y se muestra en pantalla
+2. **Al presionar "SUBMIT SCORE"** (INCORRECTO): Se recalcula el tiempo desde el inicio, incluyendo:
+   - Tiempo que el usuario tarda en leer el modal
+   - Tiempo escribiendo su nombre
+   - Tiempo pensando si enviar el score o no
+   - Delay de detección de país (~13 segundos en el ejemplo)
+
+**Código problemático (Knight Quest):**
+
+```javascript
+// showVictory() - Línea 1895
+function showVictory() {
+    clearInterval(gameState.gameTimer);
+    const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+    // ✅ Tiempo correcto: 41 segundos
+    // ❌ PROBLEMA: No se guarda en gameState
+}
+
+// submitKnightScore() - Línea 2204 (ORIGINAL)
+async function submitKnightScore() {
+    const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+    // ❌ Recalcula tiempo AHORA (victoria + delay modal)
+    // Resultado: 41 + 13 = 54 segundos
+}
+```
+
+**Análisis del log (161.log):**
+```
+06:35:41.895 - 🚀 New game started on 8x8 board
+06:36:23.740 - 🏆 VICTORY!          (41 segundos después)
+06:36:36.947 - [detectUserCountry]  (13 segundos después)
+```
+
+### 🔍 Juegos Afectados
+
+**Auditoría completa realizada:**
+
+| Juego | Estado | Problema |
+|-------|--------|----------|
+| **Knight Quest** | ❌ → ✅ FIXED | Calculaba tiempo en submit |
+| **Memory Matrix** | ❌ → ✅ FIXED | Timer no se detenía al completar |
+| **Master Sequence** | ✅ OK | Ya guardaba tiempo correctamente |
+| **Square Rush** | ✅ OK | No registra tiempo en leaderboard |
+| **ChessInFive** | ✅ OK | Sin sistema de leaderboard |
+
+### ✅ Solución Implementada
+
+#### Knight Quest - Guardar Tiempo Final
+
+**Paso 1: Guardar tiempo al lograr victoria**
+```javascript
+// showVictory() - Línea 1895 (MODIFICADO)
+function showVictory() {
+    console.log('🏆 VICTORY!');
+    clearInterval(gameState.gameTimer);
+
+    const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    const totalSquares = gameState.boardRows * gameState.boardCols;
+
+    // ✅ SOLUCIÓN: Guardar tiempo final
+    gameState.finalTime = elapsed;
+
+    // Mostrar en pantalla...
+}
+```
+
+**Paso 2: Usar tiempo guardado al enviar score**
+```javascript
+// submitKnightScore() - Línea 2208 (MODIFICADO)
+async function submitKnightScore(playerNameInputId, submitBtnId) {
+    // ...
+
+    // ✅ SOLUCIÓN: Usar tiempo guardado, con fallback
+    const elapsed = gameState.finalTime || Math.floor((Date.now() - gameState.startTime) / 1000);
+    const moves = gameState.moveHistory.length;
+    const boardSize = `${gameState.boardRows}x${gameState.boardCols}`;
+
+    // Calcular score con tiempo correcto...
+}
+```
+
+#### Memory Matrix - Detener Timer Global
+
+**Problema específico:**
+```javascript
+// game.js - Línea 911 (ORIGINAL)
+if (currentLevel > totalLevels) {
+    // Juego completado
+    updateStatus('🏆 ¡FELICIDADES! Completaste todos los niveles');
+    // ❌ Timer global sigue corriendo
+    currentLevel = 1;
+}
+```
+
+**Solución:**
+```javascript
+// game.js - Línea 911 (MODIFICADO)
+if (currentLevel > totalLevels) {
+    // Juego completado
+    stopGlobalTimer(); // ✅ Detener timer ANTES del mensaje
+    updateStatus('🏆 ¡FELICIDADES! Completaste todos los niveles');
+    currentLevel = 1;
+}
+```
+
+**Cómo funciona `stopGlobalTimer()`:**
+```javascript
+// game.js - Línea 2436
+function stopGlobalTimer() {
+    if (globalTimerInterval) {
+        clearInterval(globalTimerInterval);
+        globalTimerInterval = null;
+    }
+
+    if (globalStartTime) {
+        // ✅ Acumula tiempo transcurrido
+        globalElapsedTime += Date.now() - globalStartTime;
+        globalStartTime = null;  // ✅ Previene recálculo
+    }
+}
+```
+
+**Al enviar score:**
+```javascript
+// leaderboard-integration.js - Línea 185
+let totalTimeMs = window.globalElapsedTime || 0;
+if (window.globalStartTime) {
+    // Solo suma si el timer NO fue detenido
+    totalTimeMs += Date.now() - window.globalStartTime;
+}
+// Si stopGlobalTimer() se llamó, globalStartTime = null
+// → No se suma tiempo extra del modal ✅
+```
+
+### 🎯 Patrón Recomendado (Template para Futuros Juegos)
+
+```javascript
+// ============================================
+// 1. Al completar el juego/nivel
+// ============================================
+function onGameComplete() {
+    // PASO 1: Detener timer/interval
+    clearInterval(gameState.gameTimer);
+
+    // PASO 2: Calcular y GUARDAR tiempo final
+    gameState.finalTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+
+    // PASO 3: Mostrar modal de victoria
+    showVictoryModal();
+
+    console.log(`🏆 Victory! Time: ${gameState.finalTime}s`);
+}
+
+// ============================================
+// 2. Al enviar score al leaderboard
+// ============================================
+async function submitScore() {
+    // ✅ USAR tiempo guardado (con fallback por seguridad)
+    const elapsed = gameState.finalTime || Math.floor((Date.now() - gameState.startTime) / 1000);
+
+    // Enviar al API con tiempo correcto
+    const result = await submitScore(gameName, playerName, score, {
+        time_ms: elapsed * 1000,
+        metadata: { /* ... */ }
+    });
+}
+```
+
+### 📊 Resumen Visual del Problema
+
+**Antes (INCORRECTO):**
+```
+Timeline:
+┌─────────────┬──────────────┬───────────────────────┬──────────────┐
+│ Game Start  │   Playing    │ Victory Modal Open    │ Submit Score │
+│ t=0         │ t=0 → t=41s  │ t=41s → t=54s        │ t=54s        │
+└─────────────┴──────────────┴───────────────────────┴──────────────┘
+                              ↑                       ↑
+                              Tiempo correcto: 41s    Tiempo enviado: 54s ❌
+```
+
+**Después (CORRECTO):**
+```
+Timeline:
+┌─────────────┬──────────────┬───────────────────────┬──────────────┐
+│ Game Start  │   Playing    │ Victory Modal Open    │ Submit Score │
+│ t=0         │ t=0 → t=41s  │ (timer DETENIDO)     │ usar t=41s   │
+└─────────────┴──────────────┴───────────────────────┴──────────────┘
+                              ↑                       ↑
+                              Guardar: 41s ✅         Enviar: 41s ✅
+```
+
+### 📚 Lecciones Aprendidas
+
+**1. NUNCA calcular métricas en el momento del submit**
+- Las métricas (tiempo, score, movimientos) deben capturarse cuando ocurre el evento
+- El submit solo debe **enviar** datos ya calculados
+
+**2. Siempre detener timers al completar**
+```javascript
+// ❌ MAL
+function onVictory() {
+    showModal();  // Timer sigue corriendo
+}
+
+// ✅ BIEN
+function onVictory() {
+    stopTimer();           // 1. Detener primero
+    gameState.finalTime = elapsed;  // 2. Guardar
+    showModal();           // 3. Mostrar UI
+}
+```
+
+**3. Logs son tu mejor amigo para debugging**
+```javascript
+console.log('🏆 Victory achieved at:', Date.now());
+console.log('⏱️ Final time saved:', gameState.finalTime);
+console.log('📤 Submitting time:', elapsed);
+```
+
+**4. Prueba con delays artificiales**
+```javascript
+// Durante desarrollo, agregar delay intencional
+setTimeout(() => submitScore(), 10000);
+// Si el tiempo salta 10s, tienes el bug
+```
+
+### 🐛 Señales de que tenés este problema
+
+1. ✅ Tiempo en pantalla es consistente
+2. ✅ Tiempo en logs parece correcto
+3. ❌ Tiempo en leaderboard es siempre mayor
+4. ❌ La diferencia varía según cuánto tarde el usuario
+5. ❌ Usuarios reportan "el tiempo está mal"
+
+### 🔧 Cómo Verificar
+
+**Test manual:**
+1. Completar juego rápidamente
+2. **Esperar 20 segundos** sin hacer nada en el modal
+3. Enviar score
+4. Verificar si el tiempo aumentó 20 segundos
+
+**Test automático:**
+```javascript
+// Agregar temporalmente en producción
+function submitScore() {
+    const timeInModal = Date.now() - victoryTimestamp;
+    console.warn('⚠️ Time spent in modal:', timeInModal / 1000, 'seconds');
+
+    if (timeInModal > 5000) {
+        console.error('❌ BUG: Modal delay included in time!');
+    }
+}
+```
+
+### 📦 Commits Relacionados
+
+| Commit | Juego | Descripción |
+|--------|-------|-------------|
+| `fix: Save final time at victory in Knight Quest` | Knight Quest | Guardar tiempo en victoria |
+| `fix: Stop global timer when completing all levels` | Memory Matrix | Detener timer al completar |
+
+### 💡 Impacto en Usuarios
+
+**Antes:**
+- 🙁 Confusión: "¿Por qué mi tiempo es diferente?"
+- 😠 Desconfianza: "El juego está trucado"
+- 😤 Frustración: "Sé que terminé más rápido"
+
+**Después:**
+- 😊 Confianza: Tiempo consistente
+- 🏆 Competencia justa: Todos miden igual
+- ✅ Experiencia profesional
+
+### 🎯 Checklist para Futuros Juegos con Timer
+
+Antes de implementar leaderboard:
+
+- [ ] Timer se detiene al completar juego/nivel
+- [ ] Tiempo final se guarda en gameState/variable persistente
+- [ ] Submit usa tiempo guardado (no recalcula)
+- [ ] Fallback a cálculo actual solo si tiempo no existe
+- [ ] Logs verifican que tiempo es consistente
+- [ ] Test manual con delay en modal (20s+)
+- [ ] Código revisado por otra persona
+- [ ] Documentación actualizada con patrón correcto
+
+---
+
 ## 🎓 Lecciones Generales del Proyecto
 
 ### 1. Cache Busting es OBLIGATORIO
@@ -539,7 +846,7 @@ Antes de implementar nuevos componentes UI, verificar:
 
 ## 📝 Notas Finales
 
-**Tiempo invertido en bugs documentados:** ~6 horas
+**Tiempo invertido en bugs documentados:** ~8 horas
 **Tiempo que ahorrará este documento:** Inestimable
 
 **Nuevas lecciones agregadas (Octubre 2025):**
@@ -547,13 +854,20 @@ Antes de implementar nuevos componentes UI, verificar:
 - Creación del módulo BoardCoordinates.js ("coordenadas taxi" 🚕)
 - Patrón preservar-limpiar-restaurar para contenido dinámico
 
+**Nuevas lecciones agregadas (Enero 2025):**
+- Inconsistencia de tiempo en leaderboards (Knight Quest + Memory Matrix)
+- Patrón correcto: Guardar métricas al ocurrir evento, NO al enviar
+- Template reutilizable para juegos con timer y leaderboard
+- Checklist de verificación para evitar el problema en futuros juegos
+
 **Conclusión:** Los bugs más frustrantes suelen tener soluciones simples. La clave es:
 1. Diagnosticar correctamente (no asumir)
 2. Verificar cada paso (servidor, caché, código)
 3. Documentar la solución para el futuro
+4. Crear patterns reutilizables para evitar repetir errores
 
 ---
 
-**Última actualización:** Octubre 2025
+**Última actualización:** Enero 2025
 **Mantenido por:** Equipo ChessArcade
 **Contribuciones:** Bienvenidas vía pull request

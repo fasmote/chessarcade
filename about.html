@@ -118,10 +118,49 @@
             color: var(--dark-bg);
             box-shadow: 0 0 20px var(--neon-cyan);
         }
+
+        /* Hover effect for game name links */
+        .about-content h3 a:hover {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        /* Floating back button */
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(0, 217, 255, 0.2);
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 217, 255, 0.4);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        @media (max-width: 768px) {
+            .back-button {
+                position: static;
+                display: block;
+                width: fit-content;
+                margin: 1rem auto;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="neon-container neon-grid-bg" style="min-height: 100vh;">
+
+    <!-- Floating Back Button -->
+    <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
 
     <div class="neon-container">
         <div class="about-content">
@@ -175,17 +214,20 @@
             <h2>Nuestros Juegos</h2>
             <p>Cada juego en ChessArcade está diseñado cuidadosamente para desarrollar habilidades específicas de ajedrez:</p>
 
-            <h3>🐴 Knight Quest</h3>
+            <h3>🐴 <a href="games/knight-quest/index.html" style="color: var(--neon-orange); text-decoration: none; transition: all 0.3s ease;">Knight Quest</a></h3>
             <p>Domina el movimiento del caballo completando el recorrido del caballo en tableros de diferentes tamaños. Perfecto para mejorar tu visión táctica y comprensión de patrones.</p>
 
-            <h3>🎯 Square Rush</h3>
+            <h3>🎯 <a href="games/square-rush/index.html" style="color: var(--neon-orange); text-decoration: none; transition: all 0.3s ease;">Square Rush</a></h3>
             <p>Entrena tu velocidad y precisión identificando casillas en el tablero contra reloj. Esencial para mejorar la notación algebraica y la orientación espacial.</p>
 
-            <h3>🧠 Memory Matrix</h3>
+            <h3>🧠 <a href="games/memory-matrix-v2/index.html" style="color: var(--neon-orange); text-decoration: none; transition: all 0.3s ease;">Memory Matrix</a></h3>
             <p>Desarrolla tu memoria visual recordando posiciones de piezas. Una herramienta fundamental para mejorar tu cálculo y visualización de variantes.</p>
 
-            <h3>🟦 Master Sequence</h3>
+            <h3>🟦 <a href="games/master-sequence/index.html" style="color: var(--neon-orange); text-decoration: none; transition: all 0.3s ease;">Master Sequence</a></h3>
             <p>Simon Says meets chess! Mejora tu memoria secuencial y reconocimiento de patrones siguiendo secuencias cada vez más largas de movimientos.</p>
+
+            <h3>⚔️ <a href="games/chessinfive/index.html" style="color: var(--neon-orange); text-decoration: none; transition: all 0.3s ease;">ChessInFive</a></h3>
+            <p>Combina estrategia profunda con mecánicas únicas en este juego híbrido para dos jugadores. Coloca piezas con gravedad estilo Connect Four y muévelas usando reglas de ajedrez para alinear 5 en raya. Desarrolla pensamiento estratégico, planificación a largo plazo, anticipación de movimientos del oponente y táctica posicional. Ideal para mejorar tu capacidad de adaptación y lectura del tablero en situaciones dinámicas.</p>
 
             <h2>Nuestra Historia</h2>
             <p>ChessArcade comenzó en 2025 como un proyecto personal para combinar dos pasiones: el ajedrez y los videojuegos retro. Lo que empezó como un simple juego del recorrido del caballo se ha convertido en una plataforma completa de mini-juegos diseñados para hacer el aprendizaje del ajedrez más entretenido.</p>
@@ -255,6 +297,7 @@
             <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 1.5rem;">
                 <a href="index.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Inicio</a>
                 <a href="articles.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Artículos</a>
+                <a href="chess_rules.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Reglas del Ajedrez</a>
                 <a href="about.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Acerca de</a>
                 <a href="contact.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Contacto</a>
                 <a href="privacy-policy.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Política de Privacidad</a>

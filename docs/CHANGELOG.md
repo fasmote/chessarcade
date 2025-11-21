@@ -15,6 +15,125 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - **ChessInFive**: Depth-3 search con optimizaciones (Alpha-Beta, Threat Space)
 - **General**: Sistema de cuentas y rankings globales
 
+## [2.2.0] - 2025-01-21 🐛 Time Tracking Fix + UX Improvements
+
+### 🐛 Fixed - Time Inconsistency in Leaderboards
+**Objetivo**: Corregir inconsistencia entre tiempo mostrado en pantalla vs tiempo enviado al leaderboard
+
+#### ⏱️ Knight Quest - Time Tracking Issue
+- **Problema**: Tiempo mostrado en victoria (41s) ≠ tiempo en leaderboard (54s)
+- **Causa raíz**: Tiempo calculado en momento de submit en lugar de al lograr victoria
+  - Incluía tiempo de usuario escribiendo nombre en modal (+13s extra)
+- **Solución implementada**:
+  - Guardar `gameState.finalTime` al lograr victoria (index.html:1901)
+  - Usar tiempo guardado en `submitKnightScore()` (index.html:2208)
+  - Fallback a cálculo actual si no existe tiempo guardado
+- **Resultado**: Tiempo consistente entre victoria y leaderboard
+
+#### 🧠 Memory Matrix - Global Timer Issue
+- **Problema**: Timer global no se detenía al completar todos los niveles
+- **Causa raíz**: `stopGlobalTimer()` nunca se llamaba al mostrar mensaje de victoria
+- **Solución implementada**:
+  - Agregado `stopGlobalTimer()` en game.js:913
+  - Timer se congela correctamente antes de mostrar modal
+  - Tiempo acumulado en `globalElapsedTime` se usa al enviar score
+- **Resultado**: Tiempo correcto sin incluir delay del modal
+
+#### ✅ Games Audited
+- ✅ **Knight Quest** - FIXED (tiempo calculado en submit)
+- ✅ **Memory Matrix** - FIXED (timer no se detenía)
+- ✅ **Master Sequence** - OK (ya guardaba tiempo correctamente)
+- ✅ **Square Rush** - OK (no registra tiempo en leaderboard)
+- ✅ **ChessInFive** - OK (sin leaderboard)
+
+### ✨ Added - Chess Rules Page Integration
+**Objetivo**: Agregar página de reglas del ajedrez con diseño ChessArcade
+
+#### 📚 Chess Rules Page (chess_rules.html)
+- **Página completa de reglas**: Manual de ajedrez con diseño NeonChess
+- **Tarjetas de piezas**: Grid responsive con iconos animados
+  - Imágenes PNG profesionales (`assets/images/chess-rules/`)
+  - Efectos hover con rotación 360° y glow neon
+  - Diseño "selección de personaje" arcade
+- **Reglas especiales**: Enroque, Coronación, Captura al Paso
+- **Botón flotante**: "🏠 VOLVER AL INICIO" superior izquierda
+- **Footer consistente**: Links de navegación estandarizados
+- **SEO optimizado**: Meta tags y Open Graph completos
+
+#### 🔗 Navigation Updates
+- **Footer links agregados** en todas las páginas:
+  - index.html, articles.html, about.html, contact.html, privacy-policy.html
+  - Todos los juegos (5 archivos)
+- **Link "Reglas del Ajedrez"** entre "Artículos" y "Acerca de"
+- **Botones flotantes** agregados:
+  - contact.html: Botón "Volver al Inicio" flotante
+  - privacy-policy.html: Botón "Volver al Inicio" flotante
+  - chess_rules.html: Botón "Volver al Inicio" flotante
+
+### 🎨 Visual Enhancements
+
+#### 🕹️ Homepage Title Update
+- **Joysticks agregados**: `🕹️ ChessArcade 🕹️`
+- Diseño arcade retro en título principal
+- Separación visual entre iconos y texto
+
+#### 📝 About Page Updates
+- **ChessInFive agregado** a lista de juegos
+- **Descripción completa** de habilidades que desarrolla:
+  - Pensamiento estratégico
+  - Planificación a largo plazo
+  - Anticipación de movimientos
+  - Táctica posicional
+  - Capacidad de adaptación
+- **Nombres de juegos clickeables**:
+  - Knight Quest → `games/knight-quest/index.html`
+  - Square Rush → `games/square-rush/index.html`
+  - Memory Matrix → `games/memory-matrix-v2/index.html`
+  - Master Sequence → `games/master-sequence/index.html`
+  - ChessInFive → `games/chessinfive/index.html`
+- **Hover effect**: Color cyan con text-shadow neon
+
+### 📦 Files Modified
+- `games/knight-quest/index.html` - Time tracking fix
+- `games/memory-matrix-v2/game.js` - Global timer fix
+- `chess_rules.html` - Complete redesign + integration
+- `index.html` - Joysticks + footer link
+- `about.html` - ChessInFive + clickable game names
+- `contact.html` - Floating back button
+- `privacy-policy.html` - Floating back button
+- `articles.html` - Footer link to chess rules
+- All game pages (5 files) - Footer links updated
+
+### 📊 Technical Details
+**Time Tracking Pattern (Recommended)**:
+```javascript
+// ✅ CORRECTO: Guardar tiempo al completar
+function onVictory() {
+    gameState.finalTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+    showVictoryModal();
+}
+
+// ✅ CORRECTO: Usar tiempo guardado al enviar
+function submitScore() {
+    const elapsed = gameState.finalTime || calculateCurrentTime();
+    // ...
+}
+```
+
+**Time Tracking Anti-Pattern (Evitar)**:
+```javascript
+// ❌ INCORRECTO: Calcular tiempo en momento de submit
+function submitScore() {
+    const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+    // Problema: Incluye tiempo del modal
+}
+```
+
+### 🎯 Performance Impact
+- Time tracking fix: 0ms overhead (solo variable assignment)
+- Memory Matrix timer stop: Previene drift en tiempo acumulado
+- No performance degradation en ningún juego
+
 ## [2.1.0] - 2025-11-07 🔐 Admin Endpoint + Backup System
 
 ### ✨ Added - Sistema de Administración

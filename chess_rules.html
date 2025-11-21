@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>Reglas del Ajedrez - ChessArcade Manual | Aprende a Jugar</title>
+    <meta name="description" content="Aprende las reglas básicas del ajedrez con ChessArcade. Guía visual completa de cómo se mueven las piezas, reglas especiales y objetivos del juego.">
+    <meta name="keywords" content="reglas ajedrez, aprender ajedrez, cómo jugar ajedrez, movimiento piezas ajedrez, manual ajedrez">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Reglas del Ajedrez - ChessArcade Manual">
+    <meta property="og:description" content="Aprende las reglas básicas del ajedrez con nuestra guía visual completa.">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♔</text></svg>">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N3EKXHPD5Y"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-N3EKXHPD5Y');
+    </script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2472413468382197"
+            crossorigin="anonymous"></script>
+
+    <!-- NeonChess System Styles -->
+    <link rel="stylesheet" href="assets/css/neonchess-style.css">
+
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <style>
+        /* Custom styles for chess rules page */
+        .rules-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .intro-text {
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            padding: 1.5rem;
+            background: rgba(0, 188, 212, 0.1);
+            border-left: 4px solid var(--neon-cyan);
+            border-radius: 0 10px 10px 0;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .section-title {
+            color: var(--neon-orange);
+            font-size: 2rem;
+            margin: 3rem 0 1.5rem;
+            padding-left: 1rem;
+            border-left: 5px solid var(--neon-orange);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 128, 0, 0.5);
+        }
+
+        /* Grid de las piezas (Estilo "Selección de Personaje") */
+        .pieces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .piece-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 188, 212, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .piece-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta), var(--neon-orange));
+            border-radius: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .piece-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(0, 188, 212, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 188, 212, 0.4);
+        }
+
+        .piece-card:hover::before {
+            opacity: 0.3;
+        }
+
+        .piece-icon-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .piece-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            padding: 10px;
+            background: linear-gradient(135deg, rgba(0, 188, 212, 0.2), rgba(255, 0, 255, 0.2));
+            border: 3px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .piece-card:hover .piece-icon {
+            transform: rotate(360deg) scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+            border-color: var(--neon-magenta);
+        }
+
+        .piece-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .piece-name {
+            color: var(--neon-magenta);
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+
+        .piece-move {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            padding-top: 1rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .piece-move strong {
+            color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .piece-move em {
+            display: block;
+            margin-top: 0.5rem;
+            color: var(--neon-orange);
+            font-style: italic;
+            opacity: 0.9;
+        }
+
+        /* Cajas de reglas especiales */
+        .special-moves-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .special-move {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(0, 188, 212, 0.1));
+            border-left: 5px solid var(--neon-magenta);
+            padding: 1.5rem;
+            border-radius: 0 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .special-move:hover {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(0, 188, 212, 0.2));
+            transform: translateX(10px);
+            box-shadow: -5px 0 20px rgba(255, 0, 255, 0.3);
+        }
+
+        .special-title {
+            color: var(--neon-magenta);
+            font-weight: bold;
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+            display: block;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+
+        .special-move p {
+            margin: 0;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Floating back button */
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(0, 217, 255, 0.2);
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 217, 255, 0.4);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .pieces-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .piece-name {
+                font-size: 1.3rem;
+            }
+
+            .back-button {
+                position: static;
+                display: block;
+                width: fit-content;
+                margin: 2rem auto 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container with Grid Background -->
+    <div class="neon-container neon-grid-bg">
+
+        <!-- Floating Back Button -->
+        <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
+
+        <!-- Background image in top-left corner -->
+        <div class="top-left-bg-image">
+            <img src="assets/images/chessarcade.jpg" alt="">
+        </div>
+
+        <!-- Hero Section -->
+        <section class="neon-section neon-center">
+            <header>
+                <h1 class="neon-title">Reglas Básicas del Ajedrez</h1>
+                <p class="neon-subtitle">// MANUAL DE INSTRUCCIONES v1.0 //</p>
+            </header>
+        </section>
+
+        <!-- Main Content -->
+        <div class="rules-container">
+
+            <div class="intro-text">
+                <p>Bienvenido al manual de <strong style="color: var(--neon-cyan);">ChessArcade</strong>. El ajedrez es el juego de estrategia definitivo. No hay suerte, no hay dados. Solo tú, tu oponente y 64 casillas de pura táctica. Aquí tienes las reglas para dominar la red (The Grid).</p>
+            </div>
+
+            <h2 class="section-title">01. La Misión (Objetivo)</h2>
+            <div class="intro-text" style="border-left-color: var(--neon-magenta); background: rgba(255, 0, 255, 0.1);">
+                <p>Tu objetivo es simple: <strong style="color: var(--neon-orange);">Capturar al Rey enemigo (Jaque Mate)</strong>. Si atacas al Rey y no tiene escapatoria, ganas la partida ("GAME OVER" para tu rival). Si no puedes dar mate, intenta no caer en tablas (empate).</p>
+            </div>
+
+            <h2 class="section-title">02. Las Unidades (Piezas)</h2>
+            <p style="text-align: center; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem;">
+                Tienes un ejército de 16 piezas. Cada una tiene un patrón de movimiento único.
+            </p>
+
+            <div class="pieces-grid">
+
+                <div class="piece-card">
+                    <div class="piece-icon-wrapper">
+                        <div class="piece-icon">
+                            <img src="assets/images/chess-rules/pawn.png" alt="Peón">
+                        </div>
+                    </div>
+                    <div class="piece-name">El Peón</div>
+                    <div class="piece-move">
+                        <strong>Movimiento:</strong> 1 casilla adelante (2 en su primer movimiento).<br>
+                        <strong>Ataque:</strong> 1 casilla en diagonal.<br>
+                        <em>"La infantería. Pequeños pero valientes. Si llegan al final, ascienden."</em>
+                    </div>
+                </div>
+
+                <div class="piece-card">
+                    <div class="piece-icon-wrapper">
+                        <div class="piece-icon">
+                            <img src="assets/images/chess-rules/rook.png" alt="Torre">
+                        </div>
+                    </div>
+                    <div class="piece-name">La Torre</div>
+                    <div class="piece-move">
+                        <strong>Movimiento:</strong> Líneas rectas infinitas (horizontal o vertical).<br>
+                        <em>"El Tanque. Devastadora en columnas abiertas y finales."</em>
+                    </div>
+                </div>
+
+                <div class="piece-card">
+                    <div class="piece-icon-wrapper">
+                        <div class="piece-icon">
+                            <img src="assets/images/chess-rules/knight.png" alt="Caballo">
+                        </div>
+                    </div>
+                    <div class="piece-name">El Caballo</div>
+                    <div class="piece-move">
+                        <strong>Movimiento:</strong> Forma de "L" (2 casillas en una dirección, 1 al lado).<br>
+                        <strong>Habilidad:</strong> Puede saltar sobre otras piezas.<br>
+                        <em>"El Tramposo. Impredecible y peligroso en el centro."</em>
+                    </div>
+                </div>
+
+                <div class="piece-card">
+                    <div class="piece-icon-wrapper">
+                        <div class="piece-icon">
+                            <img src="assets/images/chess-rules/bishop.png" alt="Alfil">
+                        </div>
+                    </div>
+                    <div class="piece-name">El Alfil</div>
+                    <div class="piece-move">
+                        <strong>Movimiento:</strong> Diagonales infinitas.<br>
+                        <em>"El Francotirador. Ataca desde lejos, pero atado a su color."</em>
+                    </div>
+                </div>
+
+                <div class="piece-card">
+                    <div class="piece-icon-wrapper">
+                        <div class="piece-icon">
+                            <img src="assets/images/chess-rules/queen.png" alt="Dama">
+                        </div>
+                    </div>
+                    <div class="piece-name">La Dama</div>
+                    <div class="piece-move">
+                        <strong>Movimiento:</strong> Combina Torre + Alfil. Cualquier dirección.<br>
+                        <em>"La Jefa. La pieza más poderosa del tablero. Úsala con cuidado."</em>
+                    </div>
+                </div>
+
+                <div class="piece-card">
+                    <div class="piece-icon-wrapper">
+                        <div class="piece-icon">
+                            <img src="assets/images/chess-rules/king.png" alt="Rey">
+                        </div>
+                    </div>
+                    <div class="piece-name">El Rey</div>
+                    <div class="piece-move">
+                        <strong>Movimiento:</strong> 1 casilla en cualquier dirección.<br>
+                        <em>"El VIP. Si cae, pierdes. Protégelo a toda costa."</em>
+                    </div>
+                </div>
+
+            </div>
+
+            <h2 class="section-title">03. Combos Especiales</h2>
+
+            <div class="special-moves-grid">
+                <div class="special-move">
+                    <span class="special-title">⚡ EL ENROQUE (Castling)</span>
+                    <p>El único movimiento donde mueves dos piezas a la vez. Mueves el Rey dos casillas hacia una Torre, y la Torre salta sobre el Rey. Sirve para proteger a tu VIP y activar tu Tanque.</p>
+                </div>
+
+                <div class="special-move">
+                    <span class="special-title">⏫ LA CORONACIÓN (Promotion)</span>
+                    <p>Si un Peón llega a la última fila enemiga, ¡sube de nivel! Puedes cambiarlo por cualquier pieza (normalmente una Dama).</p>
+                </div>
+
+                <div class="special-move">
+                    <span class="special-title">👻 CAPTURA AL PASO (En Passant)</span>
+                    <p>Un movimiento extraño. Si un peón enemigo avanza dos casillas y queda al lado del tuyo, puedes capturarlo como si solo hubiera movido una. Es como un "glitch" en la matrix del ajedrez.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer style="background: rgba(26, 0, 51, 0.9); padding: 2rem 1rem; margin-top: 4rem; border-top: 2px solid var(--neon-cyan); text-align: center;">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 1.5rem;">
+                    <a href="index.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Inicio</a>
+                    <a href="articles.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Artículos</a>
+                    <a href="about.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Acerca de</a>
+                    <a href="contact.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Contacto</a>
+                    <a href="privacy-policy.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Política de Privacidad</a>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                    © 2025 ChessArcade. Todos los derechos reservados.
+                </p>
+                <p style="color: var(--neon-magenta); font-size: 0.85rem; margin-top: 0.5rem;">
+                    Hecho con 💜 para la comunidad de ajedrez
+                </p>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- NeonChess Interactive System -->
+    <script src="assets/js/neonchess-effects.js"></script>
+
+</body>
+</html>

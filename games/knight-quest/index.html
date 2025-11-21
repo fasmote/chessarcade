@@ -1891,11 +1891,14 @@
         function showVictory() {
             console.log('🏆 VICTORY!');
             clearInterval(gameState.gameTimer);
-            
+
             const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
             const minutes = Math.floor(elapsed / 60);
             const seconds = elapsed % 60;
             const totalSquares = gameState.boardRows * gameState.boardCols;
+
+            // Guardar el tiempo final para usarlo al enviar el score
+            gameState.finalTime = elapsed;
             
             document.getElementById('finalStats').innerHTML = `
                 <p><span class="stat-label">🎯 Board Size:</span> <span class="stat-value">${gameState.boardRows}x${gameState.boardCols} (${totalSquares} squares)</span></p>
@@ -2201,7 +2204,8 @@
             // - Movimientos (menos movimientos = mejor)
             const visited = gameState.visitedSquares.size;
             const totalSquares = gameState.boardRows * gameState.boardCols;
-            const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+            // Usar el tiempo guardado al lograr la victoria, no el tiempo actual
+            const elapsed = gameState.finalTime || Math.floor((Date.now() - gameState.startTime) / 1000);
             const moves = gameState.moveHistory.length;
             const boardSize = `${gameState.boardRows}x${gameState.boardCols}`;
 
@@ -2243,9 +2247,32 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = '✅ SUBMITTED!';
 
+                // ✅ PATRÓN ESTÁNDAR: Auto-cerrar modal y abrir leaderboard
                 setTimeout(() => {
-                    submitBtn.textContent = '🏆 SUBMIT SCORE';
-                }, 2000);
+                    console.log('🔒 Closing modal after successful submission');
+
+                    // Cerrar el modal apropiado (Victory o Game Over)
+                    const victoryModal = document.getElementById('victoryMessage');
+                    const gameOverModal = document.getElementById('gameOverMessage');
+
+                    if (victoryModal && victoryModal.style.display !== 'none') {
+                        console.log('📊 Closing Victory modal');
+                        victoryModal.style.display = 'none';
+                    }
+                    if (gameOverModal && gameOverModal.style.display !== 'none') {
+                        console.log('📊 Closing Game Over modal');
+                        gameOverModal.style.display = 'none';
+                    }
+
+                    // Abrir leaderboard después de cerrar modal
+                    setTimeout(() => {
+                        console.log('📊 Opening leaderboard after score submission');
+                        if (window.showLeaderboardModal) {
+                            window.showLeaderboardModal('knight-quest');
+                        }
+                    }, 300); // Small delay to ensure modal is fully closed
+
+                }, 2000); // 2 segundos para que el usuario vea el mensaje de éxito
 
             } catch (error) {
                 console.error('Error submitting score:', error);
@@ -2299,6 +2326,7 @@
         <div style="max-width: 1200px; margin: 0 auto;">
             <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 1.5rem;">
                 <a href="../../articles.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Artículos</a>
+                <a href="../../chess_rules.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Reglas del Ajedrez</a>
                 <a href="../../about.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Acerca de</a>
                 <a href="../../contact.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Contacto</a>
                 <a href="../../privacy-policy.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Política de Privacidad</a>

@@ -156,10 +156,43 @@
             margin-bottom: 1rem;
             text-align: center;
         }
+
+        /* Floating back button */
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(0, 217, 255, 0.2);
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 217, 255, 0.4);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        @media (max-width: 768px) {
+            .back-button {
+                position: static;
+                display: block;
+                width: fit-content;
+                margin: 2rem auto 1rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="neon-container neon-grid-bg" style="min-height: 100vh;">
+
+    <!-- Floating Back Button -->
+    <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
 
     <div class="neon-container">
         <div class="contact-content">
@@ -334,6 +367,7 @@
             <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-bottom: 1.5rem;">
                 <a href="index.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Inicio</a>
                 <a href="articles.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Artículos</a>
+                <a href="chess_rules.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Reglas del Ajedrez</a>
                 <a href="about.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Acerca de</a>
                 <a href="contact.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Contacto</a>
                 <a href="privacy-policy.html" style="color: var(--neon-cyan); text-decoration: none; font-weight: bold; transition: all 0.3s ease;">Política de Privacidad</a>
