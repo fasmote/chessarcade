@@ -121,6 +121,175 @@
     <!-- Floating Back Button -->
     <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
 
+    <!-- Floating Games Menu -->
+    <div class="floating-games-menu">
+        <button class="games-menu-btn" id="gamesMenuBtn" aria-label="Menú de juegos">
+            🎮 JUEGOS
+        </button>
+        <div class="games-menu-dropdown" id="gamesMenuDropdown">
+            <a href="games/knight-quest/index.html" class="game-menu-item">
+                <span class="game-icon">🐴</span>
+                <span class="game-name">Knight Quest</span>
+            </a>
+            <a href="games/square-rush/index.html" class="game-menu-item">
+                <span class="game-icon">🎯</span>
+                <span class="game-name">Square Rush</span>
+            </a>
+            <a href="games/memory-matrix-v2/index.html" class="game-menu-item">
+                <span class="game-icon">🧠</span>
+                <span class="game-name">Memory Matrix</span>
+            </a>
+            <a href="games/master-sequence/index.html" class="game-menu-item">
+                <span class="game-icon">🟦</span>
+                <span class="game-name">Master Sequence</span>
+            </a>
+            <a href="games/chessinfive/index.html" class="game-menu-item">
+                <span class="game-icon">⚔️</span>
+                <span class="game-name">ChessInFive</span>
+            </a>
+        </div>
+    </div>
+
+    <style>
+        /* Floating Games Menu */
+        .floating-games-menu {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .games-menu-btn {
+            background: rgba(255, 128, 0, 0.2);
+            border: 2px solid var(--neon-orange);
+            color: var(--neon-orange);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 0.05em;
+            box-shadow: 0 0 10px rgba(255, 128, 0, 0.3);
+        }
+
+        .games-menu-btn:hover {
+            background: rgba(255, 128, 0, 0.4);
+            box-shadow: 0 0 20px var(--neon-orange);
+            transform: translateY(-2px);
+        }
+
+        .games-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 1rem);
+            right: 0;
+            background: rgba(26, 0, 51, 0.95);
+            border: 2px solid var(--neon-orange);
+            border-radius: 10px;
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(255, 128, 0, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .games-menu-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .game-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 128, 0, 0.2);
+        }
+
+        .game-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .game-menu-item:hover {
+            background: rgba(255, 128, 0, 0.1);
+            color: var(--neon-orange);
+            padding-left: 2rem;
+        }
+
+        .game-icon {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 0 5px rgba(255, 128, 0, 0.5));
+        }
+
+        .game-name {
+            font-weight: 600;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 768px) {
+            .floating-games-menu {
+                position: static;
+                display: block;
+                text-align: center;
+                margin: 1rem auto;
+                width: 100%;
+            }
+
+            .games-menu-btn {
+                width: auto;
+                display: inline-block;
+            }
+
+            .games-menu-dropdown {
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            .games-menu-dropdown.active {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    </style>
+
+    <script>
+        // Toggle games menu
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById('gamesMenuBtn');
+            const menuDropdown = document.getElementById('gamesMenuDropdown');
+
+            if (menuBtn && menuDropdown) {
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    menuDropdown.classList.toggle('active');
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!menuBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+                        menuDropdown.classList.remove('active');
+                    }
+                });
+
+                // Close menu when pressing Escape
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        menuDropdown.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
+
     <div class="neon-container">
         <div class="legal-content">
             <h1>Política de Privacidad</h1>

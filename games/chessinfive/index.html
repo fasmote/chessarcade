@@ -143,6 +143,38 @@
                 <span class="icon-leaderboard">🏆</span>
             </button>
         </div>
+
+        <!-- Coin Counter (Now opens Games Menu) -->
+        <div class="neon-coin-counter" id="gamesMenuBtn" style="cursor: pointer;">
+            <div class="neon-coin-icon">¢</div>
+            <span>JUEGOS</span>
+        </div>
+
+        <!-- Floating Games Menu Dropdown -->
+        <div class="floating-games-menu">
+            <div class="games-menu-dropdown" id="gamesMenuDropdown">
+                <a href="../knight-quest/index.html" class="game-menu-item">
+                    <span class="game-icon">🐴</span>
+                    <span class="game-name">Knight Quest</span>
+                </a>
+                <a href="../square-rush/index.html" class="game-menu-item">
+                    <span class="game-icon">🎯</span>
+                    <span class="game-name">Square Rush</span>
+                </a>
+                <a href="../memory-matrix-v2/index.html" class="game-menu-item">
+                    <span class="game-icon">🧠</span>
+                    <span class="game-name">Memory Matrix</span>
+                </a>
+                <a href="../master-sequence/index.html" class="game-menu-item">
+                    <span class="game-icon">🟦</span>
+                    <span class="game-name">Master Sequence</span>
+                </a>
+                <a href="../chessinfive/index.html" class="game-menu-item">
+                    <span class="game-icon">⚔️</span>
+                    <span class="game-name">ChessInFive</span>
+                </a>
+            </div>
+        </div>
     </header>
 
     <!-- Main Game Container -->
@@ -452,5 +484,33 @@
     <script src="js/ai-controller.js"></script>
     <script src="js/main.js"></script>
     <script src="js/leaderboard-integration.js"></script>
+
+    <!-- Games Menu Toggle Script -->
+    <script>
+        // Toggle games menu from coin counter
+        const gamesMenuBtn = document.getElementById('gamesMenuBtn');
+        const gamesMenuDropdown = document.getElementById('gamesMenuDropdown');
+
+        if (gamesMenuBtn && gamesMenuDropdown) {
+            gamesMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                gamesMenuDropdown.classList.toggle('active');
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!gamesMenuBtn.contains(e.target) && !gamesMenuDropdown.contains(e.target)) {
+                    gamesMenuDropdown.classList.remove('active');
+                }
+            });
+
+            // Close menu when pressing Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    gamesMenuDropdown.classList.remove('active');
+                }
+            });
+        }
+    </script>
 </body>
 </html>
