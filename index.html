@@ -214,6 +214,28 @@
                     margin: 0 auto !important;
                     gap: 1.5rem !important;
                 }
+
+                /* Logo as subtle background behind title */
+                .neon-title {
+                    position: relative;
+                }
+
+                .neon-title::before {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 150px;
+                    height: 150px;
+                    background-image: url('assets/images/logo-chessarcade.png');
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    opacity: 0.15;
+                    z-index: -1;
+                    pointer-events: none;
+                }
             }
         </style>
 
