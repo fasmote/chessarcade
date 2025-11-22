@@ -196,7 +196,24 @@
                 <p class="neon-subtitle">Level Up Your Chess Game</p>
             </header>
         </section>
-        
+
+        <!-- Mobile-specific styles -->
+        <style>
+            /* Hide joysticks on all mobile devices (portrait and landscape) */
+            @media (max-width: 768px) {
+                .joystick-icon {
+                    display: none !important;
+                }
+            }
+
+            /* Hide Knight Quest icon only on mobile portrait */
+            @media (max-width: 768px) and (orientation: portrait) {
+                .knight-quest-card .neon-card-icon {
+                    display: none !important;
+                }
+            }
+        </style>
+
         <!-- Navigation Pills - TEMPORALMENTE OCULTO (sin funcionalidad aún) -->
         <section class="neon-section" style="display: none;">
             <nav class="neon-flex" role="navigation" aria-label="Main navigation">
