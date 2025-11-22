@@ -89,12 +89,13 @@ body {
     position: relative;
 }
 
-/* Mobile-specific scroll fixes */
-@media (max-width: 768px) {
+/* Mobile-specific scroll fixes - UNIFIED */
+@media (max-width: 1024px) {
     html {
         /* No horizontal scroll whatsoever */
         overflow-x: hidden;
         max-width: 100vw;
+        height: auto;
     }
 
     body {
@@ -106,22 +107,11 @@ body {
         overscroll-behavior-x: none;
         /* Remove position relative for smoother scroll */
         position: static;
-        /* Ensure smooth scrolling on mobile */
-        overflow-y: auto;
-        -webkit-overflow-scrolling: auto;
-    }
-}
-
-/* Additional fix for mobile landscape */
-@media (max-width: 1024px) and (orientation: landscape) {
-    html, body {
-        height: auto;
-        min-height: 100vh;
-    }
-
-    body {
+        /* Enable momentum scrolling on all mobile */
         overflow-y: scroll;
         -webkit-overflow-scrolling: touch;
+        /* Allow natural scroll without jerky stops */
+        scroll-behavior: auto;
     }
 }
 
