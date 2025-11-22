@@ -206,17 +206,12 @@
                 }
             }
 
-            /* Game cards grid: Try to fit 3 per row on mobile landscape/tablets */
-            @media (max-width: 768px) and (min-width: 481px) {
-                .neon-grid-auto {
+            /* Chess pieces floating: 2 rows of 3 on mobile portrait */
+            @media (max-width: 768px) and (orientation: portrait) {
+                .neon-pieces {
                     grid-template-columns: repeat(3, 1fr) !important;
-                }
-            }
-
-            /* Smaller phones: 2 columns (better than 1) */
-            @media (max-width: 480px) {
-                .neon-grid-auto {
-                    grid-template-columns: repeat(2, 1fr) !important;
+                    max-width: 300px !important;
+                    margin: 0 auto !important;
                 }
             }
         </style>
