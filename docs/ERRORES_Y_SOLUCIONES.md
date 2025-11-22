@@ -16,6 +16,7 @@
 4. [innerHTML Borra Elementos que Queremos Preservar](#4-innerhtml-borra-elementos-que-queremos-preservar)
 5. [Inconsistencia de Tiempo en Leaderboards](#5-inconsistencia-de-tiempo-en-leaderboards)
 6. [Solapamiento del Contador de Monedas en ChessInFive](#6-solapamiento-del-contador-de-monedas-en-chessinfive)
+7. [Scroll Mobile: Sobre-ingeniería y Efectos Secundarios](#7-scroll-mobile-sobre-ingeniería-y-efectos-secundarios)
 
 ---
 
@@ -1032,6 +1033,373 @@ coinCounter.style.top = `${headerHeight + 15}px`;
 
 ---
 
+## 7. Scroll Mobile: Sobre-ingeniería y Efectos Secundarios
+
+### 🔴 Síntoma
+Múltiples problemas de scroll en mobile que fueron empeorando con cada intento de solución:
+
+1. **Problema Original (Usuario):** Scroll vertical permite ir demasiado abajo, mostrando pantalla negra
+2. **Problema Original (Usuario):** Scroll horizontal permitido (contenido se mueve a los lados)
+3. **Bug Introducido #1:** Scroll bloqueado completamente en Square Rush (no se puede bajar más)
+4. **Bug Introducido #2:** Scroll bloqueado en Memory Matrix (mismo problema)
+5. **Bug Introducido #3:** Scroll fluye pero hace "paradas" como escaleras (jerky/stepped)
+
+### 🔍 Causa Raíz: Sobre-ingeniería
+
+**Problema inicial simple:**
+- Usuario quiere bloquear scroll horizontal
+- Usuario quiere evitar pantalla negra al final (overscroll)
+
+**Error del desarrollador:**
+- Intentar solucionar 3 problemas simultáneamente
+- Aplicar "fixes preventivos" sin entender el comportamiento del navegador
+- No probar cada cambio antes de agregar el siguiente
+- Asumir que más propiedades CSS = mejor solución
+
+### 📊 Evolución del Problema (Timeline de Commits)
+
+#### Commit 1: `0fe3c36` - Intento inicial (MALO)
+```css
+/* Lo que se agregó */
+html {
+    overflow-x: hidden;
+    width: 100%;
+    height: 100%;  /* ← ERROR CRÍTICO */
+}
+
+body {
+    overscroll-behavior-y: contain;  /* ← BLOQUEÓ SCROLL */
+    overscroll-behavior-x: none;
+    max-width: 100vw;
+}
+
+@media (max-width: 768px) {
+    html, body {
+        overscroll-behavior: contain;  /* ← MÁS BLOQUEO */
+        -webkit-overflow-scrolling: touch;  /* ← INNECESARIO */
+    }
+}
+```
+
+**Resultado:**
+- ✅ Bloqueó scroll horizontal (correcto)
+- ❌ Bloqueó scroll vertical completamente (error grave)
+- ❌ Pantalla se queda en Square Rush, no deja scrollear más
+
+#### Commit 2: `a2634e4` - Fix parcial
+```css
+html {
+    overflow-x: hidden;
+    width: 100%;
+    /* Removed height: 100% */  /* ← BIEN */
+}
+```
+
+**Resultado:**
+- ✅ Scroll vertical parcialmente restaurado
+- ❌ Aún bloqueado en Memory Matrix
+- Problema: `overscroll-behavior: contain` aún presente
+
+#### Commit 3: `f19c6ca` - Simplificación
+```css
+/* Removido TODO overscroll-behavior: contain */
+/* Removido -webkit-overflow-scrolling: touch */
+
+/* Solo queda: */
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    overscroll-behavior-x: none;  /* Solo horizontal */
+}
+```
+
+**Resultado:**
+- ✅ Scroll vertical fluye
+- ❌ Scroll "jerky" (hace paradas como escaleras)
+
+#### Commit 4: `6969eba` - Fix de fluidez (FINAL)
+```css
+@media (max-width: 768px) {
+    body {
+        position: static;  /* Quita relative */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: auto;
+    }
+}
+```
+
+**Resultado:**
+- ✅ Scroll vertical fluido y natural
+- ✅ Scroll horizontal bloqueado
+- ❌ Pantalla negra al final sigue presente (ISSUE PENDIENTE)
+
+### ✅ Solución Final (Estado Actual)
+
+**Lo que funciona:**
+```css
+/* Desktop y Mobile */
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* Solo Mobile */
+@media (max-width: 768px) {
+    body {
+        position: static;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-x: none;
+        -webkit-overflow-scrolling: auto;
+    }
+}
+```
+
+**Archivos modificados:**
+- `assets/css/neonchess-style.css` (líneas 72-113)
+
+### 🐛 Issues Pendientes (Documentados para el Futuro)
+
+#### Issue #1: Pantalla Negra al Final del Scroll
+
+**Estado:** ❌ SIN RESOLVER (Decisión: Dejar para después)
+
+**Descripción:**
+- En mobile, si scrolleas muy al fondo, puedes ver pantalla negra
+- El contenido termina pero el scroll permite ir más allá
+- No afecta funcionalidad, solo estética
+
+**Posibles causas:**
+1. Body background no cubre todo el espacio scrolleable
+2. Contenido tiene altura fija y scroll es ilimitado
+3. Navegador permite overscroll natural (comportamiento por defecto)
+
+**Posibles soluciones (NO implementadas aún):**
+```css
+/* Opción 1: Extender background */
+body::after {
+    content: '';
+    display: block;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-secondary) 50%, var(--dark-accent) 100%);
+}
+
+/* Opción 2: Limitar altura scrolleable */
+html {
+    overflow-y: scroll;
+    max-height: 100%;
+}
+
+/* Opción 3: Usar overscroll-behavior (pero puede causar jerky scroll) */
+body {
+    overscroll-behavior-y: contain;  /* Probamos esto y causó problemas */
+}
+```
+
+**⚠️ ADVERTENCIA:**
+Antes de implementar cualquier fix para la pantalla negra:
+1. Probar SOLO ese fix, sin combinar con otros
+2. Verificar que no bloquea scroll vertical
+3. Verificar que no causa scroll jerky
+4. Probar en dispositivo real (no solo DevTools)
+5. Commitear solo ese cambio para poder revertir fácilmente
+
+### 📚 Lecciones Aprendidas
+
+#### 1. **KISS Principle: Keep It Simple, Stupid**
+
+**Error:**
+```css
+/* Intenté arreglar 3 cosas a la vez */
+overscroll-behavior: contain;
+overscroll-behavior-y: contain;
+-webkit-overflow-scrolling: touch;
+height: 100%;
+```
+
+**Correcto:**
+```css
+/* Solo arregla lo que está roto */
+overflow-x: hidden;
+```
+
+**Regla:**
+- 1 problema = 1 solución
+- No agregar "fixes preventivos"
+- Si funciona, no lo toques
+
+#### 2. **Probar Cada Cambio Antes del Siguiente**
+
+**Error:**
+- Agregué 5 propiedades CSS en un solo commit
+- No probé en mobile hasta después
+- Cuando falló, no sabía cuál propiedad era el problema
+
+**Correcto:**
+- Commit 1: Agregar `overflow-x: hidden`
+- Probar
+- Commit 2: Si no funciona, agregar siguiente fix
+- Probar
+- Repetir
+
+#### 3. **DevTools Mobile Emulation ≠ Dispositivo Real**
+
+**Problema:**
+- En DevTools parecía funcionar
+- En celular real tenía scroll jerky
+
+**Lección:**
+- SIEMPRE probar en dispositivo real antes de commitear
+- DevTools es para desarrollo rápido
+- Dispositivo real es la única fuente de verdad
+
+#### 4. **Entender Antes de Aplicar**
+
+**Error:**
+```css
+overscroll-behavior: contain;  /* ¿Qué hace esto exactamente? No sé, pero suena bien */
+```
+
+**Correcto:**
+- Leer MDN docs sobre la propiedad
+- Entender casos de uso
+- Verificar compatibilidad del navegador
+- Probar en aislamiento
+
+#### 5. **Commits Pequeños y Revertibles**
+
+**Bien hecho en este caso:**
+- 4 commits separados (0fe3c36, a2634e4, f19c6ca, 6969eba)
+- Cada uno con mensaje descriptivo
+- Fácil de rastrear qué cambio causó qué problema
+- Fácil de revertir si fuera necesario
+
+**Si hubiera sido 1 solo commit:**
+- Imposible saber qué propiedad causó el bug
+- Revertir = perder TODO el trabajo
+- Debug mucho más difícil
+
+### 🎯 Checklist para Futuros Fixes de Scroll
+
+Antes de modificar scroll behavior:
+
+- [ ] Identificar el problema EXACTO (horizontal? vertical? bounce? jerky?)
+- [ ] Buscar la solución MÁS SIMPLE para ese problema específico
+- [ ] Leer MDN docs de la propiedad que vas a usar
+- [ ] Agregar UNA propiedad a la vez
+- [ ] Commitear ese cambio solo
+- [ ] Probar en DevTools mobile emulation
+- [ ] Probar en dispositivo real (crítico!)
+- [ ] Si funciona, PARAR. No agregar más fixes
+- [ ] Si no funciona, revertir e intentar otra solución
+- [ ] Documentar el intento fallido para referencia
+
+### 💡 Alternativas Consideradas (Para el Futuro)
+
+Si el problema de pantalla negra se vuelve prioritario:
+
+**Opción A: JavaScript scroll limiter**
+```javascript
+window.addEventListener('scroll', () => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    if (window.scrollY > maxScroll) {
+        window.scrollTo(0, maxScroll);
+    }
+});
+```
+
+**Pros:** Control total del scroll
+**Contras:** Performance, puede causar jank
+
+**Opción B: Agregar sección footer grande**
+```html
+<footer style="min-height: 100vh; background: var(--dark-bg);">
+    <!-- Contenido del footer extendido -->
+</footer>
+```
+
+**Pros:** Simple, no afecta scroll
+**Contras:** Usuario ve footer vacío innecesario
+
+**Opción C: Usar intersection observer + CSS**
+```javascript
+// Detectar cuando llega al final, agregar clase
+// Clase cambia overscroll-behavior dinámicamente
+```
+
+**Pros:** Más control, mejor UX
+**Contras:** Complejidad, más código a mantener
+
+### 📝 Estado Actual y Próximos Pasos
+
+**Estado actual (Enero 2025):**
+- ✅ Scroll horizontal bloqueado
+- ✅ Scroll vertical fluido
+- ⚠️ Pantalla negra al final (baja prioridad)
+
+**Decisión:**
+- Dejar así por ahora
+- Hay tareas más importantes
+- Revisar cuando tengamos tiempo
+- No sobre-optimizar
+
+**Cuando retomemos este issue:**
+1. Leer esta documentación completa
+2. Probar solución MÁS SIMPLE primero
+3. Un cambio a la vez
+4. Probar en dispositivo real
+5. Documentar resultado
+
+### 🔧 Debugging Tools Utilizados
+
+**Para diagnosticar scroll issues:**
+```javascript
+// En DevTools console
+console.log('scrollHeight:', document.documentElement.scrollHeight);
+console.log('clientHeight:', document.documentElement.clientHeight);
+console.log('scrollY:', window.scrollY);
+console.log('maxScroll:', document.documentElement.scrollHeight - window.innerHeight);
+
+// Ver qué propiedades están aplicadas
+getComputedStyle(document.body).overflowX;
+getComputedStyle(document.body).overflowY;
+getComputedStyle(document.body).overscrollBehavior;
+```
+
+**Chrome DevTools:**
+- Rendering tab → "Scrolling Performance Issues" checkbox
+- Performance tab → Record scroll interaction
+- Mobile emulation → Toggle device toolbar
+
+### 📦 Commits Relacionados
+
+| Commit | Descripción | Resultado |
+|--------|-------------|-----------|
+| `0fe3c36` | Remove coin counter + initial scroll fixes | ❌ Bloqueó scroll vertical |
+| `a2634e4` | Remove html height:100% | ⚠️ Mejora parcial |
+| `f19c6ca` | Simplify - remove overscroll-behavior | ⚠️ Scroll jerky |
+| `6969eba` | Fix jerky scroll with position:static | ✅ Funciona (con issue menor) |
+
+### ⚠️ ADVERTENCIAS IMPORTANTES
+
+**Para el próximo desarrollador (o yo mismo en 6 meses):**
+
+1. **NO agregar más propiedades de scroll sin leer esta sección completa**
+2. **NO intentar "mejorar" el scroll actual sin problema reportado**
+3. **NO aplicar fixes de Stack Overflow sin entender qué hacen**
+4. **SÍ probar en dispositivo real antes de commitear**
+5. **SÍ hacer commits pequeños y revertibles**
+6. **SÍ documentar cualquier cambio en este archivo**
+
+**Frase clave:** "Si no está roto, no lo arregles. Si está roto, arregla SOLO lo roto."
+
+---
+
 ## 🎓 Lecciones Generales del Proyecto
 
 ### 1. Cache Busting es OBLIGATORIO
@@ -1151,3 +1519,14 @@ Antes de implementar nuevos componentes UI, verificar:
 - Mobile UI compacta: icon-only patterns para espacios reducidos
 - Position fixed con múltiples elementos flotantes requiere cálculo de alturas
 - Importancia de testing en dispositivo real vs DevTools emulation
+
+**Nuevas lecciones agregadas (Enero 2025 - Sesión 3):**
+- Scroll mobile: Los peligros de la sobre-ingeniería
+- KISS Principle aplicado a CSS (Keep It Simple, Stupid)
+- Commits pequeños permiten debugging efectivo
+- Probar cada cambio antes del siguiente (iteración incremental)
+- DevTools mobile emulation NO reemplaza testing en dispositivo real
+- height: 100% en html bloquea scroll vertical en mobile
+- overscroll-behavior: contain puede bloquear scroll normal
+- position: relative en body causa scroll jerky en mobile
+- Entender propiedades CSS antes de aplicarlas "preventivamente"
