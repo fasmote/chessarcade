@@ -112,6 +112,19 @@ body {
     }
 }
 
+/* Additional fix for mobile landscape */
+@media (max-width: 1024px) and (orientation: landscape) {
+    html, body {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    body {
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 /* ===============================
    🎮 LAYOUT COMPONENTS
 =============================== */
