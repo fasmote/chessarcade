@@ -84,9 +84,6 @@ body {
     overflow-x: hidden;
     line-height: 1.6;
     width: 100%;
-    /* Prevent overscroll bounce/rubber-band effect on mobile */
-    overscroll-behavior-y: contain;
-    overscroll-behavior-x: none;
     /* Prevent horizontal scroll on all devices */
     max-width: 100vw;
     position: relative;
@@ -94,16 +91,10 @@ body {
 
 /* Mobile-specific scroll fixes */
 @media (max-width: 768px) {
-    html, body {
-        /* Prevent bounce/elastic scrolling that shows black screen */
-        overscroll-behavior: contain;
-        /* Prevent pull-to-refresh on mobile browsers */
-        overscroll-behavior-y: contain;
+    html {
         /* No horizontal scroll whatsoever */
         overflow-x: hidden;
         max-width: 100vw;
-        /* Improve momentum scrolling on iOS */
-        -webkit-overflow-scrolling: touch;
     }
 
     body {
@@ -111,6 +102,8 @@ body {
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
+        /* Only prevent horizontal overscroll, allow vertical */
+        overscroll-behavior-x: none;
     }
 }
 
