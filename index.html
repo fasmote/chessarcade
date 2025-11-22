@@ -206,10 +206,17 @@
                 }
             }
 
-            /* Hide Knight Quest icon only on mobile portrait */
-            @media (max-width: 768px) and (orientation: portrait) {
-                .knight-quest-card .neon-card-icon {
-                    display: none !important;
+            /* Game cards grid: Try to fit 3 per row on mobile landscape/tablets */
+            @media (max-width: 768px) and (min-width: 481px) {
+                .neon-grid-auto {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                }
+            }
+
+            /* Smaller phones: 2 columns (better than 1) */
+            @media (max-width: 480px) {
+                .neon-grid-auto {
+                    grid-template-columns: repeat(2, 1fr) !important;
                 }
             }
         </style>
