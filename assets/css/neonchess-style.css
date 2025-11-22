@@ -104,6 +104,11 @@ body {
         overflow-x: hidden;
         /* Only prevent horizontal overscroll, allow vertical */
         overscroll-behavior-x: none;
+        /* Remove position relative for smoother scroll */
+        position: static;
+        /* Ensure smooth scrolling on mobile */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: auto;
     }
 }
 
