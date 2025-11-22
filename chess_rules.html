@@ -370,29 +370,24 @@
             }
 
             @media (max-width: 768px) {
-                .floating-games-menu {
-                    position: static;
-                    display: block;
-                    text-align: center;
-                    margin: 1rem auto;
-                    width: 100%;
-                }
-
-                .games-menu-btn {
-                    width: auto;
-                    display: inline-block;
-                }
-
-                .games-menu-dropdown {
-                    right: auto;
-                    left: 50%;
-                    transform: translateX(-50%) translateY(-10px);
-                }
-
-                .games-menu-dropdown.active {
-                    transform: translateX(-50%) translateY(0);
-                }
+            /* Keep games menu fixed on mobile */
+            .floating-games-menu {
+                top: 5.5rem;
+                right: 50%;
+                transform: translateX(50%);
             }
+
+            .games-menu-btn {
+                width: fit-content;
+                font-size: 0.85rem;
+                padding: 0.8rem 1.5rem;
+            }
+
+            .games-menu-dropdown {
+                right: 0;
+                left: auto;
+            }
+        }
         </style>
 
         <script>
