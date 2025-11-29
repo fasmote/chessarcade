@@ -17,6 +17,16 @@
 5. [Inconsistencia de Tiempo en Leaderboards](#5-inconsistencia-de-tiempo-en-leaderboards)
 6. [Solapamiento del Contador de Monedas en ChessInFive](#6-solapamiento-del-contador-de-monedas-en-chessinfive)
 7. [Scroll Mobile: Sobre-ingeniería y Efectos Secundarios](#7-scroll-mobile-sobre-ingeniería-y-efectos-secundarios)
+8. [Botones Flotantes Solapados en Páginas del Footer](#8-botones-flotantes-solapados-en-páginas-del-footer)
+9. [Scroll Completamente Bloqueado en Mobile - Solución Definitiva](#9-scroll-completamente-bloqueado-en-mobile-solución-definitiva)
+10. [Scroll Trabado por `min-height: 100vh;` en Estilos Inline](#10-scroll-trabado-por-min-height-100vh-en-estilos-inline)
+11. [Scroll Bloqueado en Firefox Mobile (pero funciona en Chrome Mobile)](#11-scroll-bloqueado-en-firefox-mobile-pero-funciona-en-chrome-mobile)
+12. [Palabras Largas Rompen el Container en Firefox (pero no en Chrome)](#12-palabras-largas-rompen-el-container-en-firefox-pero-no-en-chrome)
+13. [Botones No Clickeables en Mobile Portrait por `pointer-events` en Dropdown Invisible](#13-botones-no-clickeables-en-mobile-portrait-por-pointer-events-en-dropdown-invisible)
+14. ["Unexpected end of JSON input" al Cargar Leaderboard sin Backend](#14-unexpected-end-of-json-input-al-cargar-leaderboard-sin-backend)
+15. [Sidebar Desalineado con el Tablero en Desktop (CSS Grid)](#15-sidebar-desalineado-con-el-tablero-en-desktop-css-grid)
+16. [Layout de Sidebar Desktop: El Patrón "Auto-Center Grid" (Square Rush)](#16-layout-de-sidebar-desktop-el-patrón-auto-center-grid-square-rush)
+17. [Botón UNDO No Se Habilita Después de Hacer un Movimiento (Knight Quest)](#17-botón-undo-no-se-habilita-después-de-hacer-un-movimiento-knight-quest)
 
 ---
 
@@ -1485,6 +1495,313 @@ Antes de implementar nuevos componentes UI, verificar:
 
 ---
 
+## 8. Botones Flotantes Solapados en Páginas del Footer
+
+### 🔴 Problema
+
+En las páginas del footer (articles.html, about.html, chess_rules.html, contact.html, privacy-policy.html), los botones "VOLVER AL INICIO" y "JUEGOS" estaban **solapados** en mobile (portrait y landscape):
+
+**Síntomas:**
+- Ambos botones aparecían en la misma posición (esquina superior izquierda)
+- Los botones no tenían el mismo ancho visual
+- Los botones flotantes (position: fixed) no funcionan bien en mobile
+
+**Imagen del problema:** `140_articulos.png`, `141_botones.png`
+
+### 🔍 Causa Raíz
+
+**Problema 1: Estilos inline sobrescribiendo media queries**
+```html
+<!-- ❌ MALO: Estilos inline impiden que CSS responsive funcione -->
+<a href="index.html" class="back-button"
+   style="position: fixed; top: 2rem; left: 2rem; ...">
+    🏠 VOLVER AL INICIO
+</a>
+```
+
+Los estilos inline tienen mayor especificidad que los media queries, por lo que el botón seguía siendo `fixed` en mobile aunque el CSS intentaba cambiarlo a `static`.
+
+**Problema 2: Position fixed no funciona bien en mobile**
+- Los botones flotantes ocupan espacio en el viewport y cubren contenido
+- En pantallas pequeñas no hay espacio para 2 botones flotantes
+- La navegación touch se complica con elementos fixed
+
+**Problema 3: Ancho inconsistente**
+- A pesar de tener el mismo `min-width: 220px`, el texto diferente hacía que los botones tuvieran anchos distintos
+- "🏠 VOLVER AL INICIO" (más largo) vs "🎮 JUEGOS" (más corto)
+
+**Problema 4: Media query sobrescribiendo width con fit-content**
+- En mobile, el media query tenía `width: fit-content` que sobrescribía el `width: 280px` del CSS principal
+- Resultado: en desktop ambos botones tenían 280px, pero en mobile el botón cyan se ajustaba al contenido (más angosto)
+- El box-shadow también afectaba la percepción visual del ancho
+
+### ✅ Solución Aplicada (articles.html)
+
+#### Paso 1: Remover estilos inline
+
+```html
+<!-- ✅ BUENO: Dejar que CSS maneje el responsive -->
+<a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
+```
+
+#### Paso 2: Cambiar botones a static en mobile
+
+```css
+/* Desktop: Botones flotantes en las esquinas */
+.back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 0.8rem 1.5rem;
+    width: 280px;  /* ← width fijo, NO min-width */
+    text-align: center;
+    /* ... otros estilos ... */
+}
+
+.floating-games-menu {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    /* ... */
+}
+
+.games-menu-btn {
+    padding: 0.8rem 1.5rem;
+    width: 280px;  /* ← width fijo, NO min-width */
+    text-align: center;
+    letter-spacing: 0.3em;  /* ← Estirar palabra "JUEGOS" */
+    /* ... otros estilos ... */
+}
+
+/* Mobile: Botones estáticos al inicio de la página */
+@media (max-width: 1024px) {
+    .back-button {
+        position: static;
+        display: block;
+        width: fit-content;
+        margin: 1rem auto 0.5rem;
+    }
+
+    .floating-games-menu {
+        position: static;
+        transform: none;
+        display: block;
+        width: fit-content;
+        margin: 0 auto 1rem;
+    }
+
+    .games-menu-btn {
+        /* Mantener mismo padding y min-width */
+        font-size: 0.85rem;
+        padding: 0.8rem 1.5rem;
+    }
+
+    .games-menu-dropdown {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    .games-menu-dropdown.active {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+```
+
+#### Paso 3: Igualar ancho visual de botones
+
+Para que ambos botones tengan el mismo ancho visual:
+
+**Opción elegida:** Estirar la palabra "JUEGOS" con `letter-spacing`
+```css
+.games-menu-btn {
+    letter-spacing: 0.3em;  /* Antes: 0.05em */
+}
+```
+
+**Opciones alternativas (no usadas):**
+- Agregar más iconos: "🎮🕹️ JUEGOS 🎯"
+- Usar `width` fijo en lugar de `min-width`
+
+#### Paso 4: Agregar botón al final de la página
+
+```html
+<!-- Botón VOLVER AL INICIO al final, antes del footer -->
+<div style="text-align: center; margin: 3rem auto 2rem; padding: 0 2rem;">
+    <a href="index.html" class="back-button"
+       style="position: static; display: inline-block; margin: 0;">
+        🏠 VOLVER AL INICIO
+    </a>
+</div>
+
+<!-- Footer -->
+<footer>...</footer>
+```
+
+### 📋 Checklist para Replicar en Otras Páginas
+
+**Páginas pendientes:**
+- [ ] about.html
+- [ ] chess_rules.html
+- [ ] contact.html
+- [ ] privacy-policy.html
+
+**Cambios a realizar en cada página:**
+
+1. **Remover estilos inline del botón "VOLVER AL INICIO"**
+   - Buscar: `<a href="index.html" class="back-button" style="..."`
+   - Reemplazar: `<a href="index.html" class="back-button">`
+
+2. **Agregar ancho FIJO y centrado a ambos botones**
+   ```css
+   .back-button {
+       width: 280px;  /* ← IMPORTANTE: width fijo, NO min-width */
+       text-align: center;
+       /* ... mantener otros estilos ... */
+   }
+
+   .games-menu-btn {
+       width: 280px;  /* ← IMPORTANTE: width fijo, NO min-width */
+       text-align: center;
+       letter-spacing: 0.3em;  /* ← Cambiar de 0.05em */
+       /* ... mantener otros estilos ... */
+   }
+   ```
+
+3. **Actualizar media query de 768px a 1024px**
+   ```css
+   /* Cambiar AMBOS media queries */
+   @media (max-width: 768px) { }  /* ❌ Viejo */
+   @media (max-width: 1024px) { } /* ✅ Nuevo */
+   ```
+
+4. **Cambiar botón VOLVER AL INICIO a static en mobile**
+   ```css
+   @media (max-width: 1024px) {
+       .back-button {
+           position: static;
+           display: block;
+           /* ❌ NO incluir width: fit-content aquí! */
+           /* Dejar que mantenga width: 280px del CSS principal */
+           margin: 1rem auto 0.5rem;
+       }
+   }
+   ```
+
+5. **Cambiar menú JUEGOS a static en mobile**
+   ```css
+   @media (max-width: 1024px) {
+       .floating-games-menu {
+           position: static;
+           transform: none;
+           display: block;
+           /* ❌ NO incluir width: fit-content aquí! */
+           /* Dejar que el botón interno mantenga width: 280px */
+           margin: 0 auto 1rem;
+       }
+
+       .games-menu-btn {
+           /* ❌ NO incluir width: fit-content aquí tampoco! */
+           /* Mantener width: 280px del CSS principal */
+           font-size: 0.85rem;
+           padding: 0.8rem 1.5rem;
+       }
+
+       .games-menu-dropdown {
+           right: auto;
+           left: 50%;
+           transform: translateX(-50%) translateY(-10px);
+       }
+
+       .games-menu-dropdown.active {
+           transform: translateX(-50%) translateY(0);
+       }
+   }
+   ```
+
+6. **Agregar botón "VOLVER AL INICIO" al final antes del footer**
+   ```html
+   </div>  <!-- Cierre del contenedor principal -->
+
+   <!-- Bottom Back Button -->
+   <div style="text-align: center; margin: 3rem auto 2rem; padding: 0 2rem;">
+       <a href="index.html" class="back-button"
+          style="position: static; display: inline-block; margin: 0;">
+           🏠 VOLVER AL INICIO
+       </a>
+   </div>
+
+   <!-- Footer -->
+   <footer>...</footer>
+   ```
+
+### 🎯 Lecciones Aprendidas
+
+1. **Estilos inline bloquean responsive design**
+   - Los estilos inline tienen la mayor especificidad
+   - Impiden que media queries funcionen correctamente
+   - Solo usar inline styles para overrides muy específicos
+
+2. **Position fixed problemático en mobile**
+   - Ocupan espacio visual valioso en pantallas pequeñas
+   - Dificultan navegación touch
+   - Mejor usar `position: static` o `relative` en mobile
+
+3. **Media queries deben cubrir tablets**
+   - Mobile portrait: ~320-480px
+   - Mobile landscape: ~480-768px
+   - Tablet portrait: ~768-1024px
+   - Usar `max-width: 1024px` para cubrir todo "mobile/tablet"
+
+4. **Letter-spacing para igualar anchos**
+   - Más elegante que agregar iconos extra
+   - Mantiene el diseño limpio
+   - `letter-spacing: 0.3em` vs `0.05em` hace gran diferencia
+
+5. **Botón al final mejora UX**
+   - En páginas largas, el usuario necesita volver arriba
+   - Evita hacer scroll largo para regresar
+   - Especialmente importante en mobile
+
+6. **Media queries NO deben sobrescribir width con fit-content**
+   - Si defines `width: 280px` en el CSS principal, NO lo sobrescribas con `width: fit-content` en media queries
+   - `width: fit-content` hace que el elemento se ajuste al contenido, causando anchos inconsistentes
+   - **Solución:** Omitir la propiedad `width` en media queries para que herede el valor del CSS principal
+   - Los media queries solo deben cambiar lo necesario (position, margin, padding), no resetear anchos
+
+7. **Box-shadow afecta percepción visual del ancho**
+   - Aunque el box-shadow no afecta el layout, SÍ afecta cómo el usuario percibe el ancho
+   - Para que dos elementos se vean del mismo ancho, deben tener el mismo box-shadow
+   - Agregar `box-shadow: 0 0 10px` a ambos botones con sus respectivos colores
+
+### 📊 Resultado
+
+**Antes:**
+- ❌ Botones solapados en mobile
+- ❌ Anchos diferentes
+- ❌ Position fixed molesto en pantallas pequeñas
+- ❌ Estilos inline bloqueando responsive
+
+**Después:**
+- ✅ Botones centrados uno debajo del otro en mobile
+- ✅ Mismo ancho exacto (280px fijo)
+- ✅ Position static en mobile (no flotantes)
+- ✅ Botón adicional al final para mejor UX
+- ✅ Funciona en portrait y landscape (max-width: 1024px)
+
+### 🔧 Archivos Modificados
+
+**Completados:**
+- ✅ `articles.html` (commit pendiente)
+
+**Pendientes:**
+- [ ] `about.html`
+- [ ] `chess_rules.html`
+- [ ] `contact.html`
+- [ ] `privacy-policy.html`
+
+---
+
 ## 📝 Notas Finales
 
 **Tiempo invertido en bugs documentados:** ~8 horas
@@ -1513,6 +1830,13 @@ Antes de implementar nuevos componentes UI, verificar:
 **Mantenido por:** Equipo ChessArcade
 **Contribuciones:** Bienvenidas vía pull request
 
+**Nuevas lecciones agregadas (Enero 2025 - Sesión 5):**
+- Scroll bloqueado en dispositivos móviles reales (chess_rules.html)
+- DevTools mobile emulation NO replica comportamiento táctil real
+- touch-action: pan-y necesario para scroll en dispositivos reales
+- min-height: 100vh en contenedores puede bloquear scroll
+- Diferencia entre simulador desktop y dispositivo real (PENDIENTE resolver)
+
 **Nuevas lecciones agregadas (Enero 2025 - Sesión 2):**
 - Solapamiento del contador de monedas en ChessInFive
 - Grid columns deben acomodar su contenido real (flexbox dentro de grid)
@@ -1530,3 +1854,1940 @@ Antes de implementar nuevos componentes UI, verificar:
 - overscroll-behavior: contain puede bloquear scroll normal
 - position: relative en body causa scroll jerky en mobile
 - Entender propiedades CSS antes de aplicarlas "preventivamente"
+
+**Nuevas lecciones agregadas (Enero 2025 - Sesión 4):**
+- Botones flotantes solapados en páginas del footer
+- Estilos inline bloquean media queries (especificidad CSS)
+- Position fixed problemático en mobile (mejor usar static)
+- Media queries deben cubrir tablets (max-width: 1024px)
+- Letter-spacing para igualar anchos visuales de botones
+- Botón "volver al inicio" al final mejora UX en páginas largas
+- Documentar patrones para replicar en múltiples páginas
+
+**Nuevas lecciones agregadas (Enero 2025 - Sesión 5):**
+- Scroll completamente bloqueado en mobile por display:flex + min-height:100vh
+- Containers anidados con min-height duplican el problema
+- display:block funciona mejor que display:flex para scroll en mobile
+- Grid animado de fondo (::before) puede interferir con scroll
+- Probar en dispositivo real ES CRÍTICO (emulador puede engañar)
+- No modificar CSS compartido sin pruebas exhaustivas
+- Crear página de prueba antes de aplicar fixes globales
+
+---
+
+## 9. Scroll Completamente Bloqueado en Mobile - Solución Definitiva
+
+### 🔴 Síntoma
+- **Páginas afectadas:** chess_rules.html, about.html
+- **Problema:** Scroll vertical completamente bloqueado o muy difícil en dispositivos móviles reales
+- **Manifestación:**
+  - En chess_rules.html: el scroll apenas se mueve unos milímetros
+  - En about.html: el scroll se traba frecuentemente
+  - Se requiere deslizar con 2 dedos para que funcione parcialmente
+  - El emulador de Chrome DevTools mostraba scroll normal (engañoso)
+
+### 🔍 Diagnóstico - Proceso de Eliminación
+
+#### Falsa Pista #1: Los Botones Flotantes
+**Hipótesis inicial:** Los botones "VOLVER AL INICIO" y "JUEGOS" estaban bloqueando eventos táctiles.
+
+**Prueba:** Eliminamos completamente ambos botones de las páginas.
+
+**Resultado:** ❌ El problema persistió. No eran los botones.
+
+**Lección:** No asumir causas sin evidencia. Probar sistemáticamente.
+
+#### Falsa Pista #2: Propiedades touch-action
+**Hipótesis:** Agregar `touch-action: pan-y` ayudaría al scroll.
+
+**Prueba:** Agregamos touch-action a html, body, y containers.
+
+**Resultado:** ❌ No mejoró. En algunos casos empeoró.
+
+**Lección:** "Fixes" preventivos pueden causar más problemas.
+
+#### Pista Correcta #1: min-height: 100vh
+**Descubrimiento:** En `neonchess-style.css` línea 126:
+```css
+.neon-container {
+    min-height: 100vh;  /* ← PROBLEMA */
+    display: flex;
+    flex-direction: column;
+}
+```
+
+**Prueba:** Agregamos override en media query mobile:
+```css
+@media (max-width: 1024px) {
+    .neon-container {
+        min-height: 0;
+    }
+}
+```
+
+**Resultado:** ⚠️ Mejoró ligeramente, pero el problema persistió.
+
+#### Pista Correcta #2: Containers Anidados
+**Descubrimiento:** about.html tenía DOS `.neon-container` anidados (líneas 130 y 133).
+
+```html
+<div class="neon-container neon-grid-bg">  <!-- Exterior -->
+    <div class="neon-container">           <!-- Interior - PROBLEMA -->
+        <div class="about-content">
+```
+
+**Efecto:** Cada container tenía `min-height: 100vh`, duplicando la restricción.
+
+**Prueba:** Eliminamos el container interior.
+
+**Resultado:** ⚠️ Mejoró a ~50%, pero aún se trababa.
+
+#### Pista Correcta #3: display: flex
+**Descubrimiento:** `display: flex` con `flex-direction: column` causa problemas de altura en mobile cuando se combina con `min-height: 100vh`.
+
+**Prueba:** Cambiamos a `display: block` en mobile:
+```css
+@media (max-width: 1024px) {
+    .neon-container {
+        display: block !important;
+        min-height: auto !important;
+    }
+}
+```
+
+**Resultado:** ✅ Mejoró a ~80%. Scroll funcional pero aún se trababa ocasionalmente.
+
+#### Solución Final Completa
+
+Después de crear página de prueba `chess_rules2.html`, encontramos la combinación ganadora:
+
+```css
+@media (max-width: 1024px) {
+    /* 1. HTML y Body configuración base */
+    html {
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    body {
+        height: auto;
+        min-height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: static;              /* No 'relative' */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 2. Container principal - CAMBIO CRÍTICO */
+    .neon-container {
+        min-height: auto !important;
+        height: auto !important;
+        display: block !important;     /* No 'flex' */
+        overflow: visible !important;
+        position: static !important;
+    }
+
+    /* 3. Elementos hijos - Liberar restricciones */
+    .neon-section,
+    .rules-container,
+    .pieces-grid,
+    .piece-card,
+    .special-moves-grid,
+    .about-content,
+    .highlight-box,
+    .stats-grid {
+        overflow: visible !important;
+        position: relative !important;
+    }
+
+    /* 4. Desactivar grid animado - IMPORTANTE */
+    .neon-grid-bg::before {
+        display: none !important;
+    }
+
+    /* 5. Backgrounds fijos seguros */
+    .top-left-bg-image {
+        position: fixed !important;
+        pointer-events: none !important;
+    }
+
+    /* 6. Pseudo-elementos no deben interferir */
+    .piece-card::before {
+        pointer-events: none !important;
+    }
+
+    /* 7. Remover tap highlights molestos */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+```
+
+**Resultado:** ✅ 100% - Scroll perfectamente fluido en dispositivos reales.
+
+### ✅ Solución Aplicada
+
+**Archivos modificados:**
+1. ✅ `chess_rules.html` (líneas 220-270)
+2. ✅ `about.html` (líneas 128-169)
+3. ✅ `chess_rules2.html` (página de prueba - conservar para referencia)
+
+**IMPORTANTE:** La solución se aplicó como CSS inline en cada página, NO en el CSS compartido (`neonchess-style.css`), para evitar efectos secundarios en otras páginas.
+
+### 🎯 Causa Raíz Identificada
+
+**Problema principal:** Combinación letal de:
+1. `display: flex` + `flex-direction: column`
+2. `min-height: 100vh`
+3. Container anidados (en about.html)
+4. Grid animado (`::before`) con `position: absolute`
+5. `position: relative` en body (agregado en fixes previos)
+
+**Por qué bloqueaba scroll:**
+- Flexbox + min-height fuerza al container a ser exactamente 100vh
+- El contenido que excede 100vh queda "atrapado" dentro del flex container
+- En mobile, esto previene scroll natural del body
+- El grid animado agregaba otra capa de bloqueo
+
+### 📝 Checklist para Aplicar Fix en Otras Páginas
+
+Si otras páginas (articles.html, contact.html, privacy-policy.html) tienen el mismo problema:
+
+```markdown
+- [ ] Leer la página completa para entender estructura
+- [ ] Verificar si usa `.neon-container` con flexbox
+- [ ] Buscar containers anidados duplicados
+- [ ] Agregar el bloque CSS completo en media query (max-width: 1024px)
+- [ ] Adaptar selectores de elementos hijos según contenido de la página
+- [ ] Probar en emulador Chrome (debe funcionar)
+- [ ] **CRÍTICO:** Probar en dispositivo móvil real (Chrome y Firefox)
+- [ ] Verificar que el scroll sea fluido al 100%
+- [ ] Hard refresh en mobile (Ctrl+Shift+R o borrar caché)
+```
+
+### 🎓 Lecciones Aprendidas
+
+#### Lección 1: Emulador vs Dispositivo Real
+**Error:** Confiar en el emulador de Chrome DevTools para validar scroll.
+
+**Realidad:** El emulador mostró scroll funcionando correctamente, pero en dispositivos reales estaba completamente bloqueado.
+
+**Aprendizaje:** SIEMPRE probar funcionalidad crítica (scroll, touch events) en dispositivo real antes de considerar un fix como exitoso.
+
+#### Lección 2: Flexbox No es Ideal para Layouts de Página Completa en Mobile
+**Error:** Usar `display: flex` con `flex-direction: column` para layout principal.
+
+**Problema:** Flex containers con `min-height: 100vh` fuerzan altura fija, bloqueando scroll natural.
+
+**Aprendizaje:** Para layouts de páginas largas en mobile, `display: block` es más confiable que flexbox.
+
+#### Lección 3: Containers Anidados Duplican Problemas
+**Error:** Tener dos `.neon-container` uno dentro del otro en about.html.
+
+**Efecto:** Cada uno con `min-height: 100vh` creó doble restricción de altura.
+
+**Aprendizaje:** Evitar containers anidados con clases idénticas. Usar clases específicas para niveles diferentes.
+
+#### Lección 4: CSS Compartido Requiere Extrema Precaución
+**Error:** Modificar `neonchess-style.css` con `!important` afectando todas las páginas.
+
+**Riesgo:** Un fix para una página puede romper otras 10 páginas.
+
+**Aprendizaje:** Para fixes específicos de página, usar CSS inline. Solo modificar CSS compartido después de pruebas exhaustivas en TODAS las páginas del sitio.
+
+#### Lección 5: Página de Prueba es una Herramienta Invaluable
+**Estrategia exitosa:** Crear `chess_rules2.html` para experimentar sin riesgo.
+
+**Beneficio:** Pudimos probar múltiples soluciones hasta encontrar la correcta, sin romper la página original.
+
+**Aprendizaje:** Para problemas complejos, siempre crear una copia de prueba primero.
+
+#### Lección 6: Proceso de Eliminación Sistemático
+**Método que funcionó:**
+1. Eliminar botones (probar)
+2. Remover containers anidados (probar)
+3. Cambiar display flex a block (probar)
+4. Agregar overflow properties (probar)
+5. Deshabilitar grid animado (probar)
+6. Combinar todo en solución final (probar)
+
+**Aprendizaje:** No aplicar todos los fixes al mismo tiempo. Ir uno por uno para identificar qué realmente funciona.
+
+#### Lección 7: El Grid Animado Puede Interferir con Scroll
+**Descubrimiento:** El `::before` pseudo-elemento con animación en `.neon-grid-bg` interfería con touch events.
+
+**Solución temporal:** `display: none` en mobile.
+
+**Pendiente:** Encontrar forma de mantener el grid sin bloquear scroll (próxima tarea).
+
+**Aprendizaje:** Efectos visuales (animaciones, pseudo-elementos) deben tener `pointer-events: none` y no bloquear interacción.
+
+### 🔄 Trabajo Pendiente
+
+**NOTA DEL USUARIO:** "Después quiero recuperar el grid, pierde estilo."
+
+#### Tarea 1: Restaurar el grid de fondo animado en mobile
+**Objetivo:** Restaurar el grid de fondo animado de forma que:
+- No interfiera con scroll
+- Mantenga la estética visual del sitio
+- Use `position: fixed` en vez de `absolute`
+- Tenga `pointer-events: none` garantizado
+
+**Ideas para explorar:**
+1. Cambiar grid::before a `position: fixed` con `z-index` bajo
+2. Reducir opacidad en mobile para menos impacto visual
+3. Desactivar animación pero mantener grid estático
+4. Usar CSS `will-change` para optimizar rendering
+
+#### Tarea 2: Restaurar los botones flotantes
+**Objetivo:** Restaurar los 2 botones que fueron eliminados durante el debugging:
+1. Botón "🏠 VOLVER AL INICIO" (cyan)
+2. Botón "🎮 JUEGOS" con dropdown (naranja)
+
+**Páginas afectadas:**
+- ✅ chess_rules.html - botones eliminados (líneas 280-310 originalmente)
+- ✅ about.html - botones eliminados (líneas 167-196 originalmente)
+
+**Requisitos para restauración:**
+- Aplicar los fixes aprendidos en Sesión 4 (Sección #8):
+  - `width: 280px` en ambos botones (desktop y mobile)
+  - `box-sizing: border-box`
+  - `box-shadow` idéntico en ambos para percepción visual igual
+  - Media query `max-width: 1024px` (incluir tablets)
+  - En mobile: `.back-button` con `position: static`
+  - En mobile: `.floating-games-menu` con `position: relative`
+  - **NUEVO:** Asegurar que no interfieran con el scroll (ya confirmamos que NO eran la causa)
+
+**Código de referencia:** Ver Sección #8 de este documento para el CSS exacto que funcionó.
+
+### 📊 Resumen de Cambios por Archivo
+
+#### chess_rules.html
+```
+Líneas 220-270: Media query mobile scroll fix
+- display: block (override flex)
+- min-height: auto
+- Grid animado desactivado
+- Scroll fluido al 100%
+```
+
+#### about.html
+```
+Líneas 128-169: Media query mobile scroll fix
+Línea 133: Eliminado container anidado duplicado
+- display: block (override flex)
+- min-height: auto
+- Grid animado desactivado
+- Scroll fluido al 100%
+```
+
+#### chess_rules2.html
+```
+Página de prueba - CONSERVAR PARA REFERENCIA
+Líneas 220-270: Solución experimental que funcionó
+- No eliminar este archivo
+- Usar como template para futuras páginas con problemas similares
+```
+
+### ⚠️ Advertencias para el Futuro
+
+1. **NO modificar neonchess-style.css sin pruebas exhaustivas** en index.html, articles.html, games, etc.
+
+2. **NO confiar en emuladores** para validar scroll mobile.
+
+3. **NO usar flexbox con min-height: 100vh** para layouts de página completa en mobile.
+
+4. **NO anidar containers** con la misma clase que tenga restricciones de altura.
+
+5. **SIEMPRE crear página de prueba** antes de aplicar fixes a múltiples páginas.
+
+6. **SIEMPRE probar en dispositivo real** (Chrome y Firefox mobile) antes de cerrar issue.
+
+7. **DOCUMENTAR inmediatamente** cuando encuentres la solución, antes de que se apague la PC o termine la sesión.
+
+---
+
+## 10. Scroll Trabado por `min-height: 100vh;` en Estilos Inline
+
+### 🔴 Síntoma
+En la página `contact.html`, el scroll se trababa en dispositivos móviles. El usuario podía scrollear un poco pero luego se quedaba "pegado" y no permitía ver todo el contenido de la página.
+
+### 🔍 Análisis del Problema
+
+**¿Qué es `min-height: 100vh;`?**
+- `100vh` = 100% del viewport height (altura visible de la pantalla)
+- `min-height: 100vh;` significa: "este elemento debe tener MÍNIMO la altura de la pantalla completa"
+
+**¿Para qué se usa normalmente?**
+```html
+<!-- Uso CORRECTO: Página con poco contenido -->
+<div class="hero-section" style="min-height: 100vh;">
+    <h1>Bienvenido</h1>
+    <p>Contenido corto</p>
+</div>
+```
+✅ **Beneficio:** Evita espacios blancos en páginas con poco contenido, asegura que la sección ocupe toda la pantalla.
+
+**¿Por qué causaba problemas en nuestro caso?**
+
+```html
+<!-- PROBLEMA en contact.html línea 309 -->
+<div class="neon-container neon-grid-bg" style="min-height: 100vh;">
+    <!-- Contenido LARGO (formulario + preguntas frecuentes + footer) -->
+    <!-- El contenido real mide más de 100vh -->
+</div>
+```
+
+### 🐛 Causa Raíz
+
+**Conflicto de especificidad CSS:**
+
+1. **CSS Global** (neonchess-style.css líneas 118-122):
+```css
+@media (max-width: 1024px) {
+    .neon-container {
+        min-height: 0 !important;  /* ← Intenta quitar el min-height */
+        height: auto !important;
+        overflow: visible !important;
+    }
+}
+```
+
+2. **Estilo Inline** (contact.html):
+```html
+<div class="neon-container" style="min-height: 100vh;">
+    ☝️ Los estilos inline tienen MAYOR especificidad que las clases
+    ☝️ Incluso con !important, el inline puede ganar en algunos navegadores
+</div>
+```
+
+**Resultado:**
+- El contenedor se fuerza a ser `min-height: 100vh;`
+- El contenido real es más alto (formulario + FAQ + footer)
+- En mobile, el navegador se confunde entre:
+  - La restricción `min-height: 100vh;` del inline style
+  - Los fixes de scroll del CSS global que intentan liberarlo
+  - La altura real del contenido
+- **El scroll se traba** porque el navegador no puede reconciliar estas contradicciones
+
+### ✅ Solución
+
+**Antes (INCORRECTO):**
+```html
+<div class="neon-container neon-grid-bg" style="min-height: 100vh;">
+```
+
+**Después (CORRECTO):**
+```html
+<div class="neon-container neon-grid-bg">
+```
+
+**Por qué funciona:**
+1. El CSS global ya define `min-height: 100vh;` en la clase `.neon-container` (línea 147)
+2. En mobile, el media query lo anula con `min-height: 0 !important;`
+3. **Sin el inline style**, el CSS global tiene el control total
+4. El scroll funciona natural y suavemente
+
+### 🔧 Archivos Corregidos
+- `contact.html` (línea 309)
+- `privacy-policy.html` (línea 89)
+
+### 📚 Comparación con Archivos Funcionales
+
+**chess_rules.html (FUNCIONA BIEN):**
+```html
+<div class="neon-container neon-grid-bg">  <!-- ← Sin inline style -->
+```
+
+**about.html (FUNCIONA BIEN):**
+```html
+<div class="neon-container neon-grid-bg">  <!-- ← Sin inline style -->
+```
+
+**contact.html ANTES (SCROLL TRABADO):**
+```html
+<div class="neon-container neon-grid-bg" style="min-height: 100vh;">
+```
+
+**contact.html DESPUÉS (FUNCIONA BIEN):**
+```html
+<div class="neon-container neon-grid-bg">
+```
+
+### 💡 Lecciones Aprendidas
+
+1. **NUNCA uses estilos inline para propiedades de layout** si hay CSS global manejando responsive design.
+
+2. **Los estilos inline tienen especificidad máxima** y pueden romper los fixes de media queries.
+
+3. **`min-height: 100vh;` es útil SOLO para:**
+   - Hero sections / Landing pages con poco contenido
+   - Páginas que garantizadamente tienen menos contenido que la pantalla
+   - Desktop donde el scroll siempre funciona bien
+
+4. **`min-height: 100vh;` es PROBLEMÁTICO para:**
+   - Páginas con contenido variable/dinámico
+   - Páginas con mucho contenido (formularios, texto largo)
+   - Mobile, especialmente en combinación con fixed/absolute positioning
+
+5. **SIEMPRE compara con archivos que funcionan** antes de agregar estilos inline.
+
+6. **Si una página hermana funciona y otra no**, busca diferencias en:
+   - Estilos inline
+   - Clases CSS aplicadas
+   - Estructura del HTML
+
+### 🎯 Regla de Oro
+
+**Si el CSS global ya maneja el layout responsive, NO agregues estilos inline que lo contradigan.**
+
+```css
+/* CSS global YA tiene esto: */
+.neon-container {
+    min-height: 100vh;  /* ← Desktop */
+}
+
+@media (max-width: 1024px) {
+    .neon-container {
+        min-height: 0 !important;  /* ← Mobile: libera el scroll */
+    }
+}
+```
+
+```html
+<!-- ❌ MAL: Rompe el responsive -->
+<div class="neon-container" style="min-height: 100vh;"></div>
+
+<!-- ✅ BIEN: Deja que el CSS global trabaje -->
+<div class="neon-container"></div>
+```
+
+---
+
+## 11. Scroll Bloqueado en Firefox Mobile (pero funciona en Chrome Mobile)
+
+### 🔴 Síntoma
+En dispositivos móviles:
+- **Chrome:** Scroll funciona perfectamente
+- **Firefox:** El scroll apenas se mueve unos milímetros, está casi bloqueado
+
+### 🔍 Causa Raíz
+
+**Firefox Mobile NO soporta `-webkit-overflow-scrolling: touch`**
+
+```css
+/* ❌ Esto funciona en Chrome pero NO en Firefox */
+body {
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;  /* ← Firefox lo ignora */
+}
+```
+
+Firefox Mobile necesita la propiedad **`touch-action`** para permitir el scroll táctil:
+
+```css
+/* ✅ Esto funciona en AMBOS navegadores */
+body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;  /* ← Para Chrome/Safari */
+    touch-action: pan-y pinch-zoom;     /* ← Para Firefox */
+}
+```
+
+### 💡 ¿Qué es `touch-action`?
+
+La propiedad CSS `touch-action` controla qué gestos táctiles están permitidos:
+
+- `touch-action: none;` → Bloquea TODOS los gestos táctiles
+- `touch-action: pan-y;` → Permite scroll vertical SOLAMENTE
+- `touch-action: pan-y pinch-zoom;` → Permite scroll vertical Y zoom con pellizco
+- `touch-action: manipulation;` → Permite scroll y zoom (más permisivo)
+
+### ✅ Solución
+
+**Archivo:** `assets/css/neonchess-style.css` (líneas 93-152)
+
+Agregamos `touch-action: pan-y pinch-zoom;` a todos los elementos clave en mobile:
+
+```css
+@media (max-width: 1024px) {
+    html {
+        overflow-y: auto;
+        touch-action: pan-y pinch-zoom;  /* ← Firefox fix */
+    }
+
+    body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;  /* ← Chrome/Safari */
+        touch-action: pan-y pinch-zoom;     /* ← Firefox fix */
+        overscroll-behavior-y: auto;
+    }
+
+    .neon-container {
+        touch-action: pan-y pinch-zoom;  /* ← Permite scroll en contenedores */
+    }
+
+    .neon-section,
+    .rules-container,
+    .about-content,
+    .legal-content {
+        touch-action: pan-y pinch-zoom;  /* ← Permite scroll en contenido */
+    }
+
+    /* Backgrounds animados NO deben bloquear touch */
+    .neon-grid-bg::before {
+        pointer-events: none;
+        touch-action: none;  /* ← No interfiere con scroll */
+    }
+}
+```
+
+### 🎯 Cambios Clave
+
+1. **`overflow-y: scroll` → `overflow-y: auto`**
+   - `auto` funciona mejor en Firefox (solo muestra scrollbar cuando es necesario)
+
+2. **Agregado `touch-action: pan-y pinch-zoom;` en:**
+   - `html` (línea 102)
+   - `body` (línea 121)
+   - `.neon-container` (línea 130)
+   - `.legal-content` y otros contenedores (línea 141)
+
+3. **Agregado `overscroll-behavior-y: auto;`** (línea 112)
+   - Permite el comportamiento natural de overscroll en Firefox
+
+4. **Agregado `pointer-events: none;` al background animado** (línea 149)
+   - Asegura que el grid animado no capture eventos táctiles
+
+### 📱 Testing
+
+**Antes:**
+- Chrome Mobile: ✅ Scroll funciona
+- Firefox Mobile: ❌ Scroll trabado (solo se mueve milímetros)
+
+**Después:**
+- Chrome Mobile: ✅ Scroll funciona
+- Firefox Mobile: ✅ Scroll funciona perfectamente
+
+### 💡 Lecciones Aprendidas
+
+1. **NUNCA asumas que `-webkit-*` funciona en todos los navegadores**
+   - `-webkit-overflow-scrolling` es solo para WebKit (Chrome, Safari, Edge)
+   - Firefox necesita `touch-action`
+
+2. **SIEMPRE prueba en múltiples navegadores mobile:**
+   - Chrome Mobile
+   - Firefox Mobile
+   - Safari Mobile (si es posible)
+
+3. **`touch-action` es CRÍTICO para Firefox Mobile**
+   - Sin `touch-action: pan-y`, Firefox puede bloquear el scroll
+   - Siempre agrégalo en media queries mobile
+
+4. **`overflow-y: auto` es mejor que `scroll` en mobile**
+   - `auto` solo muestra scrollbar cuando hay overflow
+   - Funciona más consistente entre navegadores
+
+5. **Backgrounds animados pueden bloquear touch events**
+   - Siempre usa `pointer-events: none` en elementos decorativos
+   - Y `touch-action: none` para que no interfieran
+
+### 🔧 Páginas Afectadas (Ahora Corregidas)
+
+- ✅ `privacy-policy.html`
+- ✅ `contact.html`
+- ✅ `about.html`
+- ✅ `chess_rules.html`
+- ✅ `articles.html`
+- ✅ Todas las páginas del sitio
+
+### 🎯 Regla de Oro
+
+**Cuando uses scroll en mobile, SIEMPRE incluye ambos:**
+
+```css
+@media (max-width: 1024px) {
+    body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;  /* ← Para Chrome/Safari */
+        touch-action: pan-y pinch-zoom;     /* ← Para Firefox */
+    }
+}
+```
+
+**NO hagas esto:**
+```css
+/* ❌ MAL: Solo funciona en Chrome */
+body {
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+```
+
+**HAZ esto:**
+```css
+/* ✅ BIEN: Funciona en todos los navegadores */
+body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
+}
+```
+
+---
+
+## 12. Palabras Largas Rompen el Container en Firefox (pero no en Chrome)
+
+### 🔴 Síntoma
+En Firefox Mobile/Desktop:
+- Palabras largas como "ChessArcade", "compromiso", "agradecimientos" se salen del container
+- Los títulos (h1, h2, h3) rompen el layout y sobrepasan el borde del contenedor
+- En Chrome funciona perfectamente, el texto se ajusta automáticamente
+
+### 🔍 Causa Raíz
+
+**Firefox y Chrome manejan el word-wrapping de forma diferente.**
+
+Chrome es más "inteligente" y automáticamente hace word-wrap en palabras largas, incluso sin propiedades CSS específicas.
+
+Firefox es más estricto con el CSS estándar y **requiere propiedades explícitas** para romper palabras largas.
+
+**Ejemplo del problema:**
+```html
+<div style="max-width: 300px; border: 1px solid red;">
+    <h2>ChessArcade</h2>
+</div>
+```
+
+**En Chrome:** ✅ "ChessArcade" se ajusta dentro del contenedor
+**En Firefox:** ❌ "ChessArcade" se sale del contenedor
+
+### ✅ Solución (Doble Estrategia)
+
+**Estrategia 1: Permitir word-wrap solo cuando sea necesario**
+```css
+.about-content h1,
+.about-content h2,
+.about-content h3 {
+    /* Firefox fix: Break only when necessary, not mid-word */
+    overflow-wrap: break-word;    /* Break solo si no cabe */
+    word-wrap: break-word;        /* Legacy support */
+    hyphens: manual;              /* No cortar sin guiones explícitos */
+}
+
+.about-content {
+    /* Also apply to container */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+```
+
+⚠️ **IMPORTANTE:** NO usar `word-break: break-word;` - es muy agresivo y corta palabras en cualquier parte ("ChessArc" + "ade").
+
+**Estrategia 2: Reducir font-size SOLO en Firefox Mobile**
+
+Si las palabras siguen cortándose, reducir el tamaño de fuente solo en Firefox:
+
+```css
+/* Firefox Desktop: Ligeramente más chico */
+@supports (-moz-appearance:none) {
+    .about-content h1 {
+        font-size: 2.2rem;  /* Original: 2.5rem */
+    }
+    .about-content h2 {
+        font-size: 1.6rem;  /* Original: 1.8rem */
+    }
+    .about-content h3 {
+        font-size: 1.2rem;  /* Original: 1.3rem */
+    }
+}
+
+/* Firefox Mobile: Aún más chico para pantallas angostas */
+@supports (-moz-appearance:none) {
+    @media (max-width: 768px) {
+        .about-content h1 {
+            font-size: 1.8rem;
+        }
+        .about-content h2 {
+            font-size: 1.4rem;
+        }
+        .about-content h3 {
+            font-size: 1.1rem;
+        }
+    }
+}
+```
+
+✅ **Ventajas de esta solución:**
+- Chrome queda SIN CAMBIOS (funciona perfecto)
+- Firefox Desktop: solo un poco más chico
+- Firefox Mobile: tamaño optimizado para evitar word breaks
+- Usa feature detection nativo (`@supports -moz-appearance`)
+
+
+### 📚 Explicación de las Propiedades
+
+1. **`word-wrap: break-word;`** (Legacy, pero necesario para Firefox antiguo)
+   - Permite romper palabras largas
+   - Propiedad antigua pero bien soportada
+
+2. **`overflow-wrap: break-word;`** (Estándar moderno)
+   - Reemplazo moderno de `word-wrap`
+   - Mejor semántica, mismo efecto
+
+3. **`word-break: break-word;`** (Fuerza el break)
+   - Fuerza el rompimiento de palabras si es necesario
+   - Más agresivo que `overflow-wrap`
+
+4. **`hyphens: auto;`** (Opcional, mejora legibilidad)
+   - Agrega guiones cuando rompe palabras
+   - Requiere `lang="es"` en el HTML
+   - Mejora la apariencia visual
+
+### 🎯 ¿Por qué usar las tres propiedades?
+
+**Máxima compatibilidad cross-browser:**
+- `word-wrap`: Firefox antiguo, IE
+- `overflow-wrap`: Chrome, Safari, Firefox moderno
+- `word-break`: Asegura que funcione en todos los casos edge
+
+**Estrategia de defensa en profundidad:**
+```css
+/* ✅ MEJOR PRÁCTICA: Usar las tres */
+h1, h2, h3 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+```
+
+### 🔧 Archivos Corregidos
+
+- `about.html` (líneas 35-68)
+  - Agregado a `.about-content` (contenedor)
+  - Agregado a `h1`, `h2`, `h3` (títulos)
+
+### 📱 Testing
+
+**Antes:**
+- Chrome: ✅ Títulos dentro del container
+- Firefox: ❌ Títulos se salen del container
+
+**Después:**
+- Chrome: ✅ Títulos dentro del container (sin cambios)
+- Firefox: ✅ Títulos dentro del container (ARREGLADO)
+
+### 💡 Lecciones Aprendidas
+
+1. **NUNCA asumas que Chrome y Firefox manejan text igual**
+   - Chrome es más permisivo y "adivina" mejor
+   - Firefox sigue el estándar CSS al pie de la letra
+
+2. **NO uses `word-break: break-word;` - es DEMASIADO agresivo**
+   - Corta palabras en cualquier parte: "ChessArc" + "ade"
+   - Usa solo `overflow-wrap: break-word;` que es más inteligente
+   - `overflow-wrap` solo rompe cuando la palabra NO cabe
+
+3. **Si overflow-wrap no es suficiente, reduce font-size solo en Firefox:**
+   ```css
+   /* ✅ Afecta SOLO a Firefox, Chrome intacto */
+   @supports (-moz-appearance:none) {
+       h1 { font-size: 2.2rem; }  /* En vez de 2.5rem */
+   }
+   ```
+
+4. **Para Firefox Mobile específicamente, combina @supports con @media:**
+   ```css
+   /* ✅ Solo Firefox Mobile */
+   @supports (-moz-appearance:none) {
+       @media (max-width: 768px) {
+           h1 { font-size: 1.8rem; }
+       }
+   }
+   ```
+
+5. **PRIORIDAD: No romper lo que funciona en Chrome**
+   - Si Chrome se ve bien, NO cambiar el CSS general
+   - Usar feature detection para fixes específicos de Firefox
+   - Siempre probar en ambos navegadores
+
+6. **`hyphens: manual;` es mejor que `hyphens: auto;` para evitar cortes inesperados**
+   - `manual`: solo corta donde hay guiones explícitos
+   - `auto`: puede cortar en lugares raros
+
+7. **PRUEBA en ambos navegadores** (Chrome Y Firefox)
+   - Las diferencias pueden ser sutiles
+   - Mobile vs Desktop se comportan MUY diferente
+
+### 🎯 Regla de Oro
+
+**Paso 1: Agrega overflow-wrap (NO word-break)**
+
+```css
+.text-container,
+.text-container h1,
+.text-container h2,
+.text-container h3 {
+    overflow-wrap: break-word;  /* ✅ Inteligente */
+    word-wrap: break-word;      /* ✅ Legacy support */
+    hyphens: manual;            /* ✅ No cortar sin guiones */
+    /* ❌ NO usar word-break: break-word; - muy agresivo */
+}
+```
+
+**Paso 2: Si Firefox sigue cortando palabras, reduce font-size solo en Firefox**
+
+```css
+/* Firefox Desktop */
+@supports (-moz-appearance:none) {
+    .text-container h1 { font-size: 2.2rem; }  /* Original: 2.5rem */
+}
+
+/* Firefox Mobile (aún más chico) */
+@supports (-moz-appearance:none) {
+    @media (max-width: 768px) {
+        .text-container h1 { font-size: 1.8rem; }
+    }
+}
+```
+
+**NO hagas esto:**
+```css
+/* ❌ MAL: word-break rompe en cualquier parte */
+h1 {
+    word-break: break-word;  /* ← Corta "ChessArc" + "ade" */
+}
+```
+
+**HAZ esto:**
+```css
+/* ✅ BIEN: overflow-wrap solo rompe si es necesario */
+h1 {
+    overflow-wrap: break-word;  /* ← Solo rompe si NO cabe */
+    word-wrap: break-word;
+    hyphens: manual;
+}
+
+/* ✅ MEJOR: Si sigue rompiendo, achica solo en Firefox */
+@supports (-moz-appearance:none) {
+    h1 { font-size: 2.2rem; }
+}
+```
+
+### 📖 Referencias
+
+- [MDN: overflow-wrap](https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap)
+- [MDN: word-break](https://developer.mozilla.org/en-US/docs/Web/CSS/word-break)
+- [MDN: hyphens](https://developer.mozilla.org/en-US/docs/Web/CSS/hyphens)
+
+---
+
+## 13. Botones No Clickeables en Mobile Portrait por `pointer-events` en Dropdown Invisible
+
+### 🔴 Síntoma
+En Knight Quest, los botones de selección de tamaño de tablero (6x6, 8x8, 10x10) **NO responden** a clicks en mobile portrait. El botón 3x4 sí funciona.
+
+**Comportamiento observado:**
+- ❌ Mobile portrait: Los botones 6x6, 8x8, 10x10 no hacen nada al hacer click
+- ✅ Mobile landscape: Todos los botones funcionan correctamente
+- ✅ Desktop: Todos los botones funcionan correctamente
+
+### 🔍 Causa Raíz
+**Problema doble:** Tanto el contenedor `.floating-games-menu` como su hijo `.games-menu-dropdown` estaban bloqueando clicks:
+
+1. **El contenedor padre** (`.floating-games-menu`) tenía `position: fixed` y `z-index: 1000` sin `pointer-events: none`
+2. **El dropdown** (`.games-menu-dropdown`) estaba invisible (`opacity: 0`, `visibility: hidden`) pero también **sin `pointer-events: none`**
+
+Esto significa que **ambos elementos invisibles** seguían capturando eventos de click, bloqueando los botones que estaban debajo.
+
+**Elementos problemáticos:**
+```css
+/* ANTES - PROBLEMÁTICO */
+.floating-games-menu {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    /* ❌ PROBLEMA #1: Falta pointer-events: none */
+}
+
+.games-menu-dropdown {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    /* ❌ PROBLEMA #2: Falta pointer-events: none */
+}
+```
+
+**¿Por qué afectaba específicamente a mobile portrait?**
+
+En mobile portrait, el layout se reorganiza (via `order` en flexbox), colocando el `.size-selector` más arriba en la página. Esto hace que los botones 6x6, 8x8, 10x10 queden espacialmente **debajo** del área ocupada por el menú flotante invisible (que está en `top: 130px, right: 10px` en mobile), bloqueando los clicks.
+
+### ✅ Solución
+La solución requirió **3 fixes** para resolver completamente el problema:
+
+#### Fix #1: Agregar `pointer-events: none` al contenedor padre
+El contenedor `.floating-games-menu` también estaba bloqueando clicks:
+
+```css
+/* games\knight-quest\index.html - Líneas 1117-1123 */
+.floating-games-menu {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    pointer-events: none; /* ✅ FIX: No bloquear clicks, dejar que el dropdown controle */
+}
+```
+
+#### Fix #2: Agregar `pointer-events: none` al dropdown oculto
+```css
+/* games\knight-quest\index.html - Líneas 1125-1137 */
+.games-menu-dropdown {
+    background: rgba(26, 0, 51, 0.95);
+    border: 2px solid var(--neon-yellow);
+    border-radius: 10px;
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* ✅ FIX: No bloquear clicks cuando está oculto */
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+    backdrop-filter: blur(10px);
+}
+```
+
+#### Fix #3: Usar `pointer-events: all` en el dropdown activo
+Usar `all` en lugar de `auto` permite que el dropdown funcione incluso si el padre tiene `none`:
+
+```css
+/* games\knight-quest\index.html - Líneas 1139-1144 */
+.games-menu-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all; /* ✅ FIX: Permitir clicks cuando está visible (ignora el none del padre) */
+    transform: translateY(0);
+}
+```
+
+#### Fix #4 (Mejora defensiva): Asegurar z-index del selector
+```css
+/* games\knight-quest\index.html - Líneas 253-267 */
+.size-selector {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    /* ... otros estilos ... */
+    position: relative; /* ✅ FIX: Crear stacking context */
+    z-index: 10; /* ✅ FIX: Asegurar que esté por encima de elementos estáticos */
+}
+```
+
+### 📋 Archivos Modificados
+- `games/knight-quest/index.html` - Líneas 1117-1123 (CSS del contenedor floating-games-menu)
+- `games/knight-quest/index.html` - Líneas 1125-1144 (CSS del dropdown)
+- `games/knight-quest/index.html` - Líneas 253-267 (CSS del size-selector)
+
+### ✅ Validación
+**Pruebas realizadas:**
+- ✅ Mobile portrait (360px): Todos los botones responden
+- ✅ Mobile landscape: Todos los botones responden
+- ✅ Desktop: Todos los botones responden
+- ✅ Dropdown funciona correctamente al abrirse/cerrarse
+
+### 📚 Lecciones Aprendidas
+
+#### 1. **`opacity: 0` y `visibility: hidden` NO previenen eventos de click**
+   - Un elemento invisible puede seguir capturando clicks
+   - SIEMPRE agregar `pointer-events: none` a elementos ocultos con high z-index
+   - Esto aplica TANTO al elemento como a sus contenedores
+
+#### 2. **Los contenedores padres también necesitan `pointer-events: none`**
+   - No basta con aplicar el fix solo al elemento hijo
+   - Si un contenedor con `position: fixed` y alto z-index no tiene `pointer-events: none`, bloqueará clicks
+   - Usar `pointer-events: all` en el hijo activo para ignorar el `none` del padre
+
+#### 3. **Elementos `position: fixed` con alto z-index son peligrosos**
+   - Pueden bloquear clicks en toda la página, incluso cuando son invisibles
+   - Usar `pointer-events: none` cuando no deben ser interactivos
+   - Especialmente peligrosos en mobile donde el layout es más compacto
+
+#### 4. **El problema puede ser específico de orientación en mobile**
+   - En landscape, el dropdown puede no superponerse a los botones
+   - En portrait, el layout se reorganiza (via `order`) y pueden superponerse
+   - Probar AMBAS orientaciones en mobile es CRÍTICO
+
+#### 5. **DevTools mobile emulation puede no mostrar el problema**
+   - La posición exacta de los elementos puede variar
+   - El comportamiento de `position: fixed` puede diferir
+   - Probar en dispositivo real es crucial
+
+#### 6. **`pointer-events: all` vs `pointer-events: auto`**
+   - `auto`: hereda el comportamiento del padre
+   - `all`: ignora el `pointer-events: none` del padre
+   - Usar `all` cuando necesitas que un hijo sea clickeable mientras el padre tiene `none`
+
+### 🛠️ Patrón de Solución General
+
+Cuando uses dropdowns/modales con `position: fixed` y alto `z-index`:
+
+```css
+/* ✅ PATRÓN CORRECTO - Contenedor + Hijo */
+
+/* Contenedor: SIEMPRE pointer-events: none */
+.dropdown-container {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;  /* ← Contenedor NO bloquea clicks */
+}
+
+/* Dropdown hijo: pointer-events controlado por estado */
+.dropdown-menu {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;  /* ← Hijo oculto NO bloquea clicks */
+    transition: all 0.3s ease;
+}
+
+/* Dropdown activo: usar 'all' para ignorar el 'none' del padre */
+.dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;  /* ← Usar 'all' para ignorar padre */
+}
+```
+
+**Alternativa si NO tienes contenedor padre:**
+```css
+.dropdown-menu {
+    position: fixed;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;  /* ← 'auto' funciona si no hay padre con 'none' */
+}
+```
+
+### 🔗 Relacionado con
+- [Error #8: Botones Flotantes Solapados en Páginas del Footer](#8-botones-flotantes-solapados-en-páginas-del-footer)
+- Lección: `position: fixed` problemático en mobile
+- Lección: DevTools mobile emulation NO replica comportamiento exacto
+
+---
+
+## 14. "Unexpected end of JSON input" al Cargar Leaderboard sin Backend
+
+### 🔴 Síntoma
+Al intentar acceder al leaderboard global, la aplicación muestra:
+```
+❌ Error loading leaderboard
+Error al obtener leaderboard.
+Unexpected end of JSON input
+```
+
+**Contexto:**
+- Ocurre cuando se corre la aplicación localmente con `npx http-server -p 8000`
+- El error aparece al hacer click en el botón "Leaderboard" o "View Leaderboard"
+- La consola muestra: `SyntaxError: Unexpected end of JSON input`
+
+### 🔍 Causa Raíz
+El código del leaderboard intenta hacer `fetch` al endpoint `/api/scores` que no existe cuando se ejecuta localmente sin backend.
+
+**Flujo del error:**
+1. `leaderboard-api.js` hace `fetch('/api/scores/knight-quest')`
+2. El servidor local devuelve **404 Not Found** con HTML
+3. `processResponse()` intenta parsear la respuesta con `response.json()`
+4. Como la respuesta es HTML (o vacía), `JSON.parse()` falla con "Unexpected end of JSON input"
+
+**Código problemático original:**
+```javascript
+// leaderboard-api.js - ANTES
+async function processResponse(response) {
+  // ❌ PROBLEMA: No verifica response.ok antes de parsear
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Error desconocido en la API');
+  }
+
+  return data.data;
+}
+```
+
+### ✅ Solución
+Se implementaron **2 fixes**:
+
+#### Fix #1: Mejorar validación en `processResponse()` (leaderboard-api.js)
+Agregar validación de `response.ok` y manejo robusto de errores de parsing JSON:
+
+```javascript
+// js/leaderboard-api.js - Líneas 197-236
+async function processResponse(response) {
+  // ✅ FIX: Verificar primero si la respuesta fue exitosa (status 200-299)
+  if (!response.ok) {
+    // Si es 404, significa que el endpoint no existe (probablemente corriendo localmente)
+    if (response.status === 404) {
+      throw new Error('API no disponible. El servidor backend no está corriendo.');
+    }
+
+    // Otros errores HTTP
+    throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  // ✅ FIX: Intentar parsear JSON con manejo de errores
+  let data;
+  try {
+    const text = await response.text();
+
+    // Verificar que no esté vacío
+    if (!text || text.trim() === '') {
+      throw new Error('Respuesta vacía del servidor');
+    }
+
+    // Intentar parsear como JSON
+    data = JSON.parse(text);
+  } catch (error) {
+    // Si falla el parsing, dar error más descriptivo
+    if (error instanceof SyntaxError) {
+      throw new Error('El servidor devolvió una respuesta inválida (no es JSON válido)');
+    }
+    throw error;
+  }
+
+  // Si la API devolvió success: false, lanzar error
+  if (!data.success) {
+    throw new Error(data.error || 'Error desconocido en la API');
+  }
+
+  // Si todo OK, devolver solo la data útil
+  return data.data;
+}
+```
+
+#### Fix #2: Mejorar mensaje de error en UI (leaderboard-ui.js)
+Detectar cuando la API no está disponible y mostrar un mensaje claro y amigable:
+
+```javascript
+// js/leaderboard-ui.js - Líneas 1003-1038
+} catch (error) {
+  console.error('Error loading leaderboard:', error);
+
+  // ✅ FIX: Si la API no está disponible (corriendo localmente), mostrar mensaje específico
+  const isAPIUnavailable = error.message.includes('API no disponible') ||
+                            error.message.includes('404') ||
+                            error.message.includes('backend');
+
+  if (isAPIUnavailable) {
+    contentArea.innerHTML = `
+      <div class="error" style="text-align: center; padding: 2rem;">
+        <p style="font-size: 3rem; margin-bottom: 1rem;">🌐</p>
+        <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem;">Backend no disponible</p>
+        <p style="color: #888; margin-bottom: 1.5rem;">
+          El leaderboard global requiere un servidor backend.<br>
+          Estás corriendo la aplicación localmente sin backend.
+        </p>
+        <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">
+          💡 Tus scores locales se guardan automáticamente en tu navegador.
+        </p>
+        <button class="retry-btn" onclick="location.reload()" style="margin-top: 1rem;">Recargar Página</button>
+      </div>
+    `;
+  } else {
+    // Otros errores
+    contentArea.innerHTML = `
+      <div class="error" style="text-align: center; padding: 2rem;">
+        <p>❌ Error loading leaderboard</p>
+        <p class="error-message" style="color: #888; margin: 1rem 0;">${error.message}</p>
+        <button class="retry-btn" onclick="loadLeaderboard()">Retry</button>
+      </div>
+    `;
+  }
+}
+```
+
+### 📋 Archivos Modificados
+- `js/leaderboard-api.js` - Líneas 197-236 (función `processResponse`)
+- `js/leaderboard-ui.js` - Líneas 1003-1038 (manejo de errores en UI)
+
+### ✅ Validación
+
+**Antes del fix:**
+- ❌ Error críptico: "Unexpected end of JSON input"
+- ❌ Usuario no sabe qué pasó
+- ❌ Botón "Retry" inútil (siempre fallará sin backend)
+
+**Después del fix:**
+- ✅ Mensaje claro: "Backend no disponible"
+- ✅ Explica que se requiere servidor backend
+- ✅ Informa que los scores locales se guardan igualmente
+- ✅ Botón "Recargar" en lugar de "Retry" inútil
+
+### 📚 Lecciones Aprendidas
+
+#### 1. **SIEMPRE validar `response.ok` antes de parsear JSON**
+   - `response.json()` intenta parsear sin importar el status HTTP
+   - Un 404 puede devolver HTML que no es JSON válido
+   - Verificar `response.ok` primero evita errores crípticos
+
+#### 2. **Usar `response.text()` antes de `JSON.parse()` para mejor debugging**
+   - Permite verificar si el contenido está vacío
+   - Permite ver exactamente qué está devolviendo el servidor
+   - Da mensajes de error más descriptivos
+
+#### 3. **"Unexpected end of JSON input" significa:**
+   - String vacío pasado a `JSON.parse()`
+   - Respuesta HTTP que no es JSON (HTML, texto plano, etc.)
+   - Respuesta truncada/incompleta
+
+#### 4. **Mensajes de error deben ser accionables**
+   - ❌ MAL: "Unexpected end of JSON input" (¿qué hago?)
+   - ✅ BIEN: "Backend no disponible. Corriendo localmente sin backend."
+   - El usuario debe entender QUÉ pasó y POR QUÉ
+
+#### 5. **Diferenciar entre errores esperados vs inesperados**
+   - API no disponible (corriendo localmente) → Mensaje amigable
+   - Error de red/timeout → Botón "Retry"
+   - Error de servidor (500) → Mensaje técnico + contacto soporte
+
+### 🛠️ Patrón de Solución General
+
+Cuando hagas `fetch` a APIs, SIEMPRE sigue este patrón:
+
+```javascript
+async function fetchAPI(url) {
+  try {
+    const response = await fetch(url);
+
+    // ✅ PASO 1: Verificar status HTTP
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Endpoint no encontrado');
+      }
+      if (response.status === 500) {
+        throw new Error('Error interno del servidor');
+      }
+      throw new Error(`Error HTTP ${response.status}`);
+    }
+
+    // ✅ PASO 2: Obtener texto primero
+    const text = await response.text();
+
+    // ✅ PASO 3: Verificar que no esté vacío
+    if (!text || text.trim() === '') {
+      throw new Error('Respuesta vacía del servidor');
+    }
+
+    // ✅ PASO 4: Parsear JSON con try-catch
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      throw new Error('Respuesta no es JSON válido');
+    }
+
+  } catch (error) {
+    // ✅ PASO 5: Manejar errores de red
+    if (error.name === 'TypeError') {
+      throw new Error('Error de red. Verifica tu conexión.');
+    }
+    throw error;
+  }
+}
+```
+
+### 🔗 Relacionado con
+- Lección: Validar responses antes de parsear
+- Lección: Mensajes de error descriptivos mejoran UX
+- Lección: Diferenciar entre desarrollo local vs producción
+
+---
+
+## 15. Sidebar Desalineado con el Tablero en Desktop (CSS Grid)
+
+### 🔴 Síntoma
+Al implementar un sidebar lateral en desktop (estilo Memory Matrix) para Square Rush, el sidebar no quedaba alineado a la altura del tablero, sino que aparecía más arriba o más abajo.
+
+**Contexto:**
+- En **Memory Matrix** se usa flexbox con `align-items: flex-start` para alinear board y sidebar
+- En **Square Rush** se intentó usar CSS Grid para mayor control
+- El sidebar debe estar exactamente a la misma altura que el tablero (`board-container`)
+
+### 🔍 Causa Raíz
+En CSS Grid, asignar mal el número de fila (`grid-row`) hace que el sidebar se posicione incorrectamente.
+
+**Estructura del Grid:**
+```
+Row 1: game-header
+Row 2: progress-container
+Row 3: target-display
+Row 4: board-container  ← El sidebar debe alinearse CON ESTA FILA
+Row 5: progress-text
+Row 6: game-controls
+```
+
+**Error inicial:**
+```css
+/* ❌ MAL: Sidebar empieza en fila 2 */
+.game-ui {
+    grid-column: 2;
+    grid-row: 2 / span 6;  /* Muy arriba */
+}
+```
+
+**Segundo intento (todavía mal):**
+```css
+/* ❌ MAL: Sidebar empieza en fila 3 (target-display) */
+.game-ui {
+    grid-column: 2;
+    grid-row: 3 / span 4;  /* A la altura del target, no del board */
+}
+```
+
+### ✅ Solución
+El sidebar debe empezar en la **misma fila que el board-container** (fila 4):
+
+```css
+/* ✅ BIEN: Sidebar alineado con board-container */
+.game-ui {
+    grid-column: 2;
+    grid-row: 4;  /* Exactamente en la fila del tablero */
+
+    position: sticky;
+    top: 2rem;
+    width: 300px;
+    /* ... resto de estilos ... */
+}
+```
+
+### 🎯 Lecciones Aprendidas
+
+#### 1. **CSS Grid vs Flexbox para Sidebars**
+   - **Flexbox** (`align-items: flex-start`): Automático, elementos se alinean naturalmente
+   - **CSS Grid**: Más control, pero requiere especificar filas exactas
+   - Ambos son válidos, pero Grid necesita más precisión
+
+#### 2. **Debuggear Grid Layout**
+   Para identificar qué fila corresponde a cada elemento:
+
+   ```css
+   /* Temporal: visualizar el grid */
+   .game-container {
+       display: grid;
+       grid-template-columns: 1fr 300px;
+       /* Agregar bordes temporales */
+   }
+
+   * {
+       outline: 1px solid red; /* Ver todos los elementos */
+   }
+   ```
+
+   O usar DevTools: **Grid Inspector** (Firefox) / **Grid Overlay** (Chrome)
+
+#### 3. **Patron: Alinear Sidebar con Elemento Principal**
+
+   **Paso 1:** Identificar el elemento principal (el tablero)
+   ```css
+   .board-container {
+       grid-row: 4;  /* Anotar el número de fila */
+   }
+   ```
+
+   **Paso 2:** Asignar sidebar a la misma fila
+   ```css
+   .game-ui {
+       grid-row: 4;  /* Mismo número que board-container */
+   }
+   ```
+
+#### 4. **Ajustes Adicionales Necesarios**
+
+   Después de alinear el sidebar, también se ajustaron:
+
+   **a) Botón de Leaderboard:**
+   - Problema: Centrado (`left: 50%`) se sobreponía con el título
+   - Solución: Mover a la izquierda con responsive
+
+   ```css
+   .btn-leaderboard {
+       left: 2rem !important;  /* Izquierda en vez de centrado */
+       transform: none !important;
+   }
+
+   /* Responsive: Pantallas más chicas */
+   @media (min-width: 768px) and (max-width: 1000px) {
+       .btn-leaderboard {
+           left: 1rem !important;
+       }
+   }
+   ```
+
+   **b) Espaciado entre elementos:**
+   - Target display tenía mucho margen superior
+   - Reducir de `1rem` a `0.5rem`
+
+   ```css
+   .target-display {
+       margin: 0.5rem auto 2rem;  /* Antes: 1rem */
+   }
+   ```
+
+### 🛠️ Checklist para Implementar Sidebar Desktop
+
+Cuando agregues un sidebar lateral estilo Memory Matrix:
+
+- [ ] Decidir: ¿Flexbox o CSS Grid?
+- [ ] Si Grid: Listar qué fila ocupa cada elemento
+- [ ] Asignar sidebar a la misma fila que el elemento principal (board)
+- [ ] Usar `position: sticky` para que sidebar siga al scroll
+- [ ] Verificar botones flotantes no se superpongan con el título
+- [ ] Ajustar márgenes entre elementos para que no queden muy separados
+- [ ] Probar responsive (pantallas medianas: 768px-1000px)
+- [ ] Comparar visualmente con Memory Matrix como referencia
+
+### 📁 Archivos Modificados
+- `games/square-rush/css/square-rush.css` (líneas 765-795, 800-802)
+
+### 🔗 Relacionado con
+- Error #3: Centrado de Elementos en Desktop
+- Patrón: Memory Matrix usa flexbox con `align-items: flex-start`
+- Lección: CSS Grid necesita números de fila exactos
+
+---
+
+## 16. Layout de Sidebar Desktop: El Patrón "Auto-Center Grid" (Square Rush)
+
+### 🎯 Nombre del Patrón
+**"Auto-Center Grid"** - Layout de sidebar con contenido principal auto-ajustado y centrado
+
+### 🔴 Problema Original
+Al implementar un sidebar lateral en Square Rush estilo Memory Matrix, surgieron varios problemas de espaciado y alineación:
+
+1. **Espacio excesivo** entre el tablero y el sidebar
+2. **Tablero descentrado** cuando se intentaba reducir el espacio
+3. **Columna izquierda ocupando todo el espacio** disponible (`1fr`)
+
+**Intentos fallidos:**
+- `grid-template-columns: 1fr 300px` + `column-gap: 0.25rem` → Espacio enorme entre elementos
+- `justify-self: end` en board → Tablero pegado a la derecha, pero descentrado visualmente
+- `column-gap: 0.25rem` → No tuvo efecto por `1fr` ocupando todo el espacio
+
+### ✅ Solución: Patrón "Auto-Center Grid"
+
+El patrón consiste en 3 elementos clave:
+
+#### 1. **Columna Auto-Ajustada + Columna Fija**
+```css
+.game-container {
+    display: grid;
+    grid-template-columns: auto 300px; /* ✅ auto en vez de 1fr */
+    column-gap: 1rem; /* Gap razonable */
+}
+```
+
+**Por qué funciona:**
+- `auto`: La columna izquierda se ajusta al ancho del contenido (tablero)
+- `300px`: Sidebar tiene ancho fijo
+- La columna `auto` NO ocupa todo el espacio disponible, solo lo necesario
+
+#### 2. **Centrado Global del Grid**
+```css
+.game-container {
+    justify-content: center; /* ✅ Centra todo el grid */
+}
+```
+
+**Por qué funciona:**
+- El grid completo (tablero + sidebar) se centra en la pantalla
+- Mantiene el tablero visualmente centrado
+- El sidebar queda pegado al tablero con el `gap` especificado
+
+#### 3. **Elemento Principal Centrado en su Columna**
+```css
+.board-container {
+    justify-self: center; /* ✅ Centrado dentro de su columna auto */
+}
+```
+
+**Por qué funciona:**
+- El tablero está centrado dentro de su columna `auto`
+- Esto asegura alineación perfecta incluso si el contenido cambia
+
+### 🎨 Resultado Visual
+
+```
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│         ┌──────────┐ gap:1rem ┌─────────┐         │
+│         │          │◄────────►│         │         │
+│         │          │          │ Sidebar │         │
+│         │  Tablero │          │  300px  │         │
+│         │   auto   │          │  fixed  │         │
+│         │ centrado │          │         │         │
+│         └──────────┘          └─────────┘         │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+         ◄──────────────────────────────────►
+              justify-content: center
+```
+
+### 📊 Comparación con Memory Matrix
+
+| Aspecto | Memory Matrix | Square Rush |
+|---------|---------------|-------------|
+| **Layout** | Flexbox (`flex-direction: row`) | CSS Grid |
+| **Alineación** | `align-items: flex-start` | `justify-content: center` |
+| **Columnas** | Implícitas (flex items) | Explícitas (`auto 300px`) |
+| **Gap** | Manual con márgenes | `column-gap: 1rem` |
+| **Centrado** | Automático (flexbox) | Explícito (`justify-content: center`) |
+
+**Ambos logran el mismo resultado visual**, pero con técnicas diferentes.
+
+### 🎯 Código Completo del Patrón
+
+```css
+@media (min-width: 768px) {
+    /* PASO 1: Grid con columna auto y sidebar fijo */
+    .game-container {
+        display: grid;
+        grid-template-columns: auto 300px;
+        grid-template-rows: auto;
+        column-gap: 1rem; /* Espacio entre board y sidebar */
+        row-gap: 1rem;
+        align-items: start;
+        justify-content: center; /* PASO 2: Centrar todo */
+        padding: 2rem;
+        max-width: 1400px;
+    }
+
+    /* PASO 3: Tablero centrado en su columna */
+    .board-container {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: center;
+        margin-bottom: 0 !important;
+        padding: 0.75rem !important;
+    }
+
+    /* Sidebar en columna 2 */
+    .game-ui {
+        grid-column: 2;
+        grid-row: 3;
+        width: 300px;
+        height: 500px;
+        /* ... resto de estilos ... */
+    }
+}
+```
+
+### 💡 Cuándo Usar Este Patrón
+
+✅ **Usar "Auto-Center Grid" cuando:**
+- Quieres un sidebar de ancho fijo pegado al contenido principal
+- El contenido principal debe estar centrado visualmente
+- Necesitas control preciso del gap entre elementos
+- Prefieres CSS Grid sobre Flexbox
+
+❌ **No usar cuando:**
+- El sidebar debe ocupar el espacio restante (usa `1fr`)
+- Quieres que los elementos se alineen a un lado (usa flexbox)
+- Necesitas sidebar responsive que cambie de ancho
+
+### 🛠️ Ajustes Adicionales Aplicados
+
+#### **Botón Leaderboard Visible**
+```css
+.btn-leaderboard {
+    border-color: #ffd700 !important; /* Dorado */
+    color: #ffd700 !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+}
+
+.btn-leaderboard:hover {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
+    background: rgba(255, 215, 0, 0.1) !important;
+}
+```
+
+**Problema:** El botón heredaba estilos de `.btn-icon` pero sin color de borde específico.
+**Solución:** Agregar borde dorado explícito con hover glow.
+
+#### **Target Display Cuadrado (300x300px)**
+```css
+.target-display {
+    width: 100%;
+    height: 300px; /* Mismo ancho que sidebar */
+}
+```
+
+#### **Level Info Compacto pero Legible**
+```css
+.level-info {
+    padding: 0.5rem 1rem;
+    line-height: 1.2;
+}
+
+.level-number {
+    font-size: 1.1rem !important;
+    display: inline !important;
+}
+
+.level-name {
+    font-size: 0.8rem !important;
+    display: inline !important;
+}
+```
+
+### 📁 Archivos Modificados
+- `games/square-rush/css/square-rush.css` (líneas 755-782, 965-970)
+- `games/square-rush/index.html` (target-display movido dentro de game-ui)
+
+### 🔗 Relacionado con
+- Error #15: Sidebar Desalineado con el Tablero en Desktop
+- Patrón: Memory Matrix usa flexbox, Square Rush usa CSS Grid
+- Lección: `auto` vs `1fr` en grid-template-columns cambia completamente el comportamiento
+
+### 📚 Lecciones para Futuros Proyectos
+
+1. **`auto` es tu amigo** cuando quieres que una columna se ajuste al contenido
+2. **`justify-content: center`** centra todo el grid, no solo un elemento
+3. **`column-gap`** solo funciona si hay espacio real entre columnas (no con `1fr`)
+4. **Combinar Grid + Flexbox** está bien - usa cada uno para lo que es mejor
+5. **Siempre documenta patrones exitosos** para reutilizarlos
+
+---
+
+## 17. Botón UNDO No Se Habilita Después de Hacer un Movimiento (Knight Quest)
+
+### 🔴 Síntoma
+El botón UNDO permanece deshabilitado después de hacer un movimiento válido en el juego. Solo se habilita después de presionar el botón HINT, lo cual no tiene sentido desde la perspectiva del usuario.
+
+**Comportamiento esperado:**
+- Hacer primer movimiento → UNDO se habilita
+- Hacer segundo movimiento → UNDO sigue habilitado
+- Presionar UNDO → Si solo queda un movimiento, UNDO se deshabilita
+
+**Comportamiento actual (bug):**
+- Hacer primer movimiento → UNDO sigue deshabilitado ❌
+- Presionar HINT → UNDO se habilita ✅
+- El botón solo funcionaba después de usar HINT
+
+### 🔍 Causa Raíz
+
+La función `updateControls()` actualiza el estado de los botones (HINT y UNDO):
+
+```javascript
+function updateControls() {
+    document.getElementById('hintBtn').textContent = `💡 HINT (${gameState.hintsLeft})`;
+    document.getElementById('hintBtn').disabled = gameState.hintsLeft <= 0;
+    document.getElementById('undoBtn').disabled = gameState.moveHistory.length <= 1;
+}
+```
+
+**El problema:** `updateControls()` se llamaba en:
+- ✅ `newGame()` - Al iniciar nuevo juego
+- ✅ `getHint()` - Al usar pista
+- ✅ `undoMove()` - Al deshacer movimiento
+- ❌ `makeMove()` - **NO se llamaba** al hacer un movimiento
+
+**Código problemático en `makeMove()`:**
+
+```javascript
+// Primer movimiento
+if (gameState.currentPos === null) {
+    gameState.moveHistory.push(targetIndex);
+    // ...
+    playSound('move');
+    updateDisplay();
+    // ❌ Falta updateControls()
+    addCoins(10);
+    return;
+}
+
+// Movimientos subsecuentes
+gameState.moveHistory.push(targetIndex);
+// ...
+playSound('move');
+updateDisplay();
+// ❌ Falta updateControls()
+addCoins(25);
+```
+
+### ✅ Solución
+
+Agregar `updateControls()` en la función `makeMove()` en dos lugares:
+
+**1. Después del primer movimiento:**
+```javascript
+// First move - place knight
+if (gameState.currentPos === null) {
+    gameState.moveHistory.push(targetIndex);
+    gameState.gameStarted = true;
+
+    playSound('move');
+    updateDisplay();
+    updateControls();  // ← FIX: Actualizar estado de botones
+    addCoins(10);
+    return;
+}
+```
+
+**2. Después de movimientos subsecuentes:**
+```javascript
+// Make the move
+gameState.moveHistory.push(targetIndex);
+
+playSound('move');
+updateDisplay();
+updateControls();  // ← FIX: Actualizar estado de botones
+addCoins(25);
+```
+
+### 📚 Lección Aprendida
+
+**Patrón: Actualizar UI después de cambios de estado**
+
+Cuando cambias el estado del juego que afecta la UI, **siempre actualiza la UI inmediatamente**:
+
+```javascript
+// ❌ MAL: Cambiar estado sin actualizar UI
+function doAction() {
+    gameState.someValue = newValue;
+    // Usuario no ve el cambio hasta otra acción
+}
+
+// ✅ BIEN: Cambiar estado y actualizar UI
+function doAction() {
+    gameState.someValue = newValue;
+    updateUI();  // Reflejar cambio inmediatamente
+}
+```
+
+**Checklist para acciones de usuario:**
+
+Después de cualquier acción que modifique `gameState`:
+- [ ] ¿Se actualiza el display? (`updateDisplay()`)
+- [ ] ¿Se actualizan los controles? (`updateControls()`)
+- [ ] ¿Se actualizan las estadísticas? (`updateStats()`)
+- [ ] ¿Se reproduce sonido? (`playSound()`)
+- [ ] ¿Se otorgan monedas? (`addCoins()`)
+
+**Lugares comunes donde olvidamos actualizar UI:**
+1. **Movimientos del jugador** - Como en este caso
+2. **Cambios de configuración** - Cambiar tamaño de tablero, dificultad, etc.
+3. **Acciones automáticas** - AI moves, timer ticks, etc.
+4. **Cargar estado guardado** - Restaurar partida
+
+### 🔧 Debugging Tips
+
+Si un botón no se habilita/deshabilita correctamente:
+
+1. **Verificar que la función de actualización existe:**
+   ```javascript
+   console.log('updateControls existe?', typeof updateControls === 'function');
+   ```
+
+2. **Verificar que se llama después de cambios de estado:**
+   ```javascript
+   function makeMove(index) {
+       gameState.moveHistory.push(index);
+       console.log('Move history length:', gameState.moveHistory.length);
+       updateControls();  // ← Asegurar que se llama
+       console.log('UNDO disabled?', document.getElementById('undoBtn').disabled);
+   }
+   ```
+
+3. **Buscar todas las llamadas a la función:**
+   ```bash
+   grep -n "updateControls()" archivo.html
+   ```
+
+4. **Verificar la lógica de habilitación:**
+   ```javascript
+   // ¿La condición es correcta?
+   undoBtn.disabled = gameState.moveHistory.length <= 1;
+   // Traducción: Deshabilitar si hay 1 o menos movimientos
+   // (porque necesitas al menos 2 para poder deshacer)
+   ```
+
+### 💡 Mejoras Adicionales Implementadas
+
+Junto con el fix, se implementaron mejoras de UX:
+
+**1. Botones HINT y UNDO con mismo tamaño:**
+```css
+.game-controls-secondary .btn-secondary {
+    min-width: 150px;  /* Mismo tamaño para ambos botones */
+}
+```
+
+**2. Reordenamiento flexible de controles (Mobile Portrait):**
+
+Se separaron los controles en dos contenedores para reordenamiento independiente:
+
+```html
+<!-- Primary: NEW GAME -->
+<div class="game-controls game-controls-primary">
+    <button class="btn btn-primary" onclick="newGame()">🎮 NEW GAME</button>
+</div>
+
+<!-- Secondary: HINT, UNDO -->
+<div class="game-controls game-controls-secondary">
+    <button class="btn btn-secondary" onclick="getHint()">💡 HINT</button>
+    <button class="btn btn-secondary" onclick="undoMove()">↩️ UNDO</button>
+</div>
+```
+
+**Orden en Mobile Portrait:**
+1. Header (JUEGOS)
+2. Título
+3. Size selector
+4. Tablero
+5. NEW GAME (`order: 5`)
+6. HINT + UNDO lado a lado (`order: 6`)
+7. Stats (Moves, Visited, etc.) (`order: 7`)
+8. How to Play
+
+**3. Optimización de espaciado vertical (Mobile Portrait):**
+
+Para mejorar la visibilidad del botón NEW GAME al entrar:
+
+```css
+@media (max-width: 767px) and (orientation: portrait) {
+    .game-subtitle {
+        margin-bottom: 0.5rem;  /* Reducido de 1rem */
+    }
+
+    .size-selector {
+        margin: 0.5rem auto 1rem auto;  /* Reducido margen superior */
+    }
+}
+```
+
+Ahorro total: ~16px de espacio vertical
+
+### 📊 Resumen
+
+| Aspecto | Antes | Después |
+|---------|-------|---------|
+| UNDO después de mover | ❌ Deshabilitado | ✅ Habilitado |
+| UNDO solo funciona después de HINT | ❌ Sí | ✅ No |
+| Tamaño botones HINT/UNDO | ❌ Diferentes | ✅ Iguales (150px) |
+| Orden mobile portrait | Stats antes de controles | NEW GAME → HINT/UNDO → Stats |
+| Espacio vertical mobile | Normal | Optimizado (-16px) |
+
+**Commits relacionados:**
+- `fix: Enable UNDO button after moves + separate controls for flexible ordering`
+- `style: Match HINT/UNDO button sizes + optimize vertical spacing`
+
+---

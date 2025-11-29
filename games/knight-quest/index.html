@@ -202,7 +202,8 @@
             .size-selector { order: 3; }
             #chessboard { order: 4; }
             .game-stats { order: 5; margin: 1rem 0; gap: 0.75rem; }
-            .game-controls { order: 6; }
+            .game-controls-primary { order: 6; }
+            .game-controls-secondary { order: 6; }
             .neon-section { order: 99; } /* How to Play al final */
 
             .game-title {
@@ -262,6 +263,8 @@
             box-shadow: var(--glow-small) var(--neon-cyan);
             margin: 2rem 0;
             flex-wrap: wrap;
+            position: relative; /* FIX: Crear stacking context */
+            z-index: 10; /* FIX: Asegurar que esté por encima de elementos estáticos */
         }
 
         .size-btn {
@@ -675,10 +678,32 @@
             margin: 2rem 0;
         }
 
+        /* Estilos base para controls separados */
+        .game-controls-primary,
+        .game-controls-secondary {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        /* HINT y UNDO mismo tamaño en desktop */
+        .game-controls-secondary .btn-secondary {
+            min-width: 150px;
+        }
+
         @media (max-width: 767px) {
             .game-controls {
                 gap: 0.75rem;
                 margin: 1rem 0;
+                padding: 0 1rem;
+            }
+
+            .game-controls-primary,
+            .game-controls-secondary {
+                gap: 0.75rem;
+                margin: 0.5rem 0;
                 padding: 0 1rem;
             }
         }
@@ -1117,6 +1142,7 @@
             top: 80px;
             right: 20px;
             z-index: 1000;
+            pointer-events: none; /* FIX: No bloquear clicks, dejar que el dropdown controle */
         }
 
         .games-menu-dropdown {
@@ -1126,6 +1152,7 @@
             min-width: 220px;
             opacity: 0;
             visibility: hidden;
+            pointer-events: none; /* FIX: No bloquear clicks cuando está oculto */
             transform: translateY(-10px);
             transition: all 0.3s ease;
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
@@ -1135,6 +1162,7 @@
         .games-menu-dropdown.active {
             opacity: 1;
             visibility: visible;
+            pointer-events: all; /* FIX: Permitir clicks cuando está visible (ignora el none del padre) */
             transform: translateY(0);
         }
 
@@ -1229,10 +1257,17 @@
                 font-size: 1.5rem;
             }
 
-            .game-controls {
+            .game-controls,
+            .game-controls-primary,
+            .game-controls-secondary {
                 flex-direction: column;
                 align-items: center;
                 gap: 1rem;
+            }
+
+            .game-controls-secondary .btn-secondary {
+                width: 100%;
+                max-width: 300px;
             }
 
             .size-selector {
@@ -1250,6 +1285,96 @@
 
         .shake {
             animation: shake 0.5s ease;
+        }
+
+        /* ========================================
+           MOBILE PORTRAIT SPECIFIC ADJUSTMENTS
+           ======================================== */
+        @media (max-width: 767px) and (orientation: portrait) {
+
+            /* Reducir espacio entre subtitle y size-selector */
+            .game-subtitle {
+                margin-bottom: 0.5rem;
+            }
+
+            /* Reordenar: NEW GAME después del tablero, luego HINT/UNDO, luego Stats */
+            .game-controls-primary {
+                order: 5 !important; /* NEW GAME después del tablero */
+            }
+            .game-controls-secondary {
+                order: 6 !important; /* HINT, UNDO después de NEW GAME */
+            }
+            .game-stats {
+                order: 7 !important; /* Stats después de HINT/UNDO */
+            }
+
+            /* Botones de tamaño: 2x2 grid */
+            .size-selector {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 0.75rem;
+                max-width: 400px;
+                margin: 0.5rem auto 1rem auto;
+            }
+
+            .size-btn {
+                width: 100%;
+                min-width: unset;
+            }
+
+            /* Stats: 2x2 grid */
+            .game-stats {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 0.75rem;
+                max-width: 400px;
+                margin: 1rem auto;
+                padding: 0 1rem;
+            }
+
+            .stat {
+                width: 100%;
+            }
+
+            /* Controles primary (NEW GAME) */
+            .game-controls-primary {
+                display: flex;
+                justify-content: center;
+                gap: 0.75rem;
+                margin: 0.5rem 0;
+                padding: 0 1rem;
+            }
+
+            /* NEW GAME ocupa toda la fila */
+            .game-controls-primary .btn-primary {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            /* Controles secondary (HINT y UNDO en fila) */
+            .game-controls-secondary {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                gap: 0.75rem;
+                margin: 0.5rem 0 1rem 0;
+                padding: 0 1rem;
+            }
+
+            /* HINT y UNDO lado a lado */
+            .game-controls-secondary .btn-secondary {
+                flex: 1;
+                min-width: 0;
+                max-width: calc(50% - 0.375rem);
+            }
+
+            /* Botones SHOW STATS/RESULT cuando aparezcan */
+            .game-controls-primary .btn-secondary {
+                width: 100%;
+                max-width: 400px;
+            }
         }
     </style>
 </head>
@@ -1372,13 +1497,17 @@
         </div>
         -->
 
-        <!-- Game Controls -->
-        <div class="game-controls">
+        <!-- Game Controls - Primary (NEW GAME) -->
+        <div class="game-controls game-controls-primary">
             <button class="btn btn-primary" onclick="newGame()">🎮 NEW GAME</button>
-            <button class="btn btn-secondary" onclick="getHint()" id="hintBtn">💡 HINT (3)</button>
-            <button class="btn btn-secondary" onclick="undoMove()" id="undoBtn" disabled>↩️ UNDO</button>
             <button class="btn btn-secondary" onclick="showVictoryModal()" id="showVictoryBtn" style="display: none;">📊 SHOW STATS</button>
             <button class="btn btn-secondary" onclick="showGameOverModal()" id="showGameOverBtn" style="display: none;">⚔️ SHOW RESULT</button>
+        </div>
+
+        <!-- Game Controls - Secondary (HINT, UNDO) -->
+        <div class="game-controls game-controls-secondary">
+            <button class="btn btn-secondary" onclick="getHint()" id="hintBtn">💡 HINT (3)</button>
+            <button class="btn btn-secondary" onclick="undoMove()" id="undoBtn" disabled>↩️ UNDO</button>
         </div>
         
         <!-- Instructions -->
@@ -1707,9 +1836,10 @@
                 gameState.moveHistory.push(targetIndex);
                 gameState.board[targetIndex] = gameState.moveHistory.length;
                 gameState.gameStarted = true;
-                
+
                 playSound('move');
                 updateDisplay();
+                updateControls();
                 addCoins(10);
                 return;
             }
@@ -1736,9 +1866,10 @@
             gameState.visitedSquares.add(targetIndex);
             gameState.moveHistory.push(targetIndex);
             gameState.board[targetIndex] = gameState.moveHistory.length;
-            
+
             playSound('move');
             updateDisplay();
+            updateControls();
             addCoins(25);
             
             // Check for victory
