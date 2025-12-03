@@ -27,6 +27,7 @@
 15. [Sidebar Desalineado con el Tablero en Desktop (CSS Grid)](#15-sidebar-desalineado-con-el-tablero-en-desktop-css-grid)
 16. [Layout de Sidebar Desktop: El Patrón "Auto-Center Grid" (Square Rush)](#16-layout-de-sidebar-desktop-el-patrón-auto-center-grid-square-rush)
 17. [Botón UNDO No Se Habilita Después de Hacer un Movimiento (Knight Quest)](#17-botón-undo-no-se-habilita-después-de-hacer-un-movimiento-knight-quest)
+18. [Menú Dropdown Invisible Bloquea Clics en el Tablero](#18-menú-dropdown-invisible-bloquea-clics-en-el-tablero)
 
 ---
 
@@ -3789,5 +3790,242 @@ Ahorro total: ~16px de espacio vertical
 **Commits relacionados:**
 - `fix: Enable UNDO button after moves + separate controls for flexible ordering`
 - `style: Match HINT/UNDO button sizes + optimize vertical spacing`
+
+---
+
+## 18. Menú Dropdown Invisible Bloquea Clics en el Tablero
+
+### 🔴 Síntoma
+
+En Master Sequence (y posiblemente otros juegos), algunas casillas del tablero no respondían al clic, especialmente en la parte superior derecha. El usuario tenía que **desplazar el tablero hacia abajo** para poder hacer clic en esas casillas.
+
+**Síntomas específicos:**
+- Casillas superiores del tablero no clickeables
+- El problema era más notorio en mobile
+- Bajando el tablero con scroll, las casillas sí funcionaban
+- El menú "JUEGOS" no se veía, pero su espacio bloqueaba los clics
+
+### 🔍 Causa Raíz
+
+El menú dropdown `.games-menu-dropdown` tiene las siguientes propiedades cuando **NO está activo**:
+
+```css
+.games-menu-dropdown {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    /* ❌ FALTA: pointer-events: none; */
+}
+```
+
+**El problema:**
+
+Aunque el menú es **invisible** (`opacity: 0` y `visibility: hidden`), sigue siendo **interactivo** porque no tiene `pointer-events: none`. Esto significa que:
+
+1. El menú ocupa espacio en la posición `top: 80px, right: 20px`
+2. Tiene `min-width: 220px` de ancho y ~5 items × 50px = ~250px de alto
+3. Aunque invisible, **captura todos los eventos de clic** en esa área
+4. Cualquier casilla del tablero que esté **debajo** del área del menú queda bloqueada
+
+**Diagrama del problema:**
+
+```
+┌─────────────────────────────────────┐
+│  [HOME]  [START]  [SOUND]  [JUEGOS] │
+│                                     │
+│         ┌──────────────┐            │
+│         │ INVISIBLE    │            │  ← Menú invisible
+│         │ DROPDOWN     │            │     pero captura clics
+│         │ (220×250px)  │            │
+│         └──────────────┘            │
+│                                     │
+│    ┌────────────────────┐           │
+│    │ ░▓░▓░▓░▓ ← Bloqueado│          │  ← Casillas del tablero
+│    │ ▓░▓░▓░▓░            │          │     no responden
+│    │ ░▓░▓░▓░▓            │          │
+│    └────────────────────┘           │
+└─────────────────────────────────────┘
+```
+
+### 🔍 Juegos Afectados
+
+Revisión completa de todos los juegos:
+
+| Juego | Afectado | Archivo CSS |
+|-------|----------|-------------|
+| **Master Sequence** | ✅ Sí | `games/master-sequence/styles.css:2019` |
+| **Square Rush** | ✅ Sí | `games/square-rush/css/square-rush.css:697` |
+| **Memory Matrix** | ✅ Sí | `games/memory-matrix-v2/styles.css:2330` |
+| **ChessInFive** | ✅ Sí | `games/chessinfive/css/chessinfive.css:1413` |
+| **Knight Quest** | ❌ No | No tiene menú dropdown |
+
+**4 juegos afectados** con el mismo problema.
+
+### ✅ Solución Implementada
+
+Agregar `pointer-events: none` cuando el menú **NO está activo**, y `pointer-events: auto` cuando **SÍ está activo**:
+
+**ANTES (Problemático):**
+
+```css
+.games-menu-dropdown {
+    background: rgba(26, 0, 51, 0.95);
+    border: 2px solid var(--neon-yellow);
+    border-radius: 10px;
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    /* ❌ Sin pointer-events */
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.games-menu-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+```
+
+**DESPUÉS (Correcto):**
+
+```css
+.games-menu-dropdown {
+    background: rgba(26, 0, 51, 0.95);
+    border: 2px solid var(--neon-yellow);
+    border-radius: 10px;
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;  /* ✅ No captura eventos cuando invisible */
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.games-menu-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;  /* ✅ Captura eventos cuando visible */
+    transform: translateY(0);
+}
+```
+
+### 🎯 Concepto Clave: `pointer-events`
+
+La propiedad `pointer-events` controla si un elemento puede ser el target de eventos del mouse/touch:
+
+| Valor | Efecto | Caso de uso |
+|-------|--------|-------------|
+| `auto` | Captura eventos (default) | Elementos interactivos normales |
+| `none` | NO captura eventos | Elementos invisibles, overlays decorativos |
+
+**Regla de oro para elementos invisibles:**
+
+```css
+/* ❌ MAL: Invisible pero bloquea clics */
+.overlay {
+    opacity: 0;
+    visibility: hidden;
+    /* Falta pointer-events: none */
+}
+
+/* ✅ BIEN: Invisible y NO bloquea clics */
+.overlay {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ✅ BIEN: Visible y captura clics */
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+```
+
+### 📚 Lección Aprendada
+
+**Siempre que ocultes elementos con `opacity: 0` o `visibility: hidden`, pregúntate:**
+
+1. ¿El elemento sigue capturando eventos de clic?
+2. ¿Puede estar bloqueando interacción con elementos debajo?
+3. ¿Debería agregar `pointer-events: none`?
+
+**Señales de que tenés este problema:**
+
+- Clics no funcionan en áreas específicas sin razón aparente
+- "Si desplazo la página, ahora sí funciona"
+- Elementos invisibles tienen `position: fixed` o `absolute` con `z-index` alto
+- DevTools muestra que un elemento invisible está recibiendo el evento
+
+**Casos comunes:**
+
+| Situación | Solución |
+|-----------|----------|
+| Menú dropdown oculto | `pointer-events: none` cuando no activo |
+| Modal cerrado | `pointer-events: none` cuando cerrado |
+| Tooltip oculto | `pointer-events: none` por defecto |
+| Overlay de loading | `pointer-events: auto` para bloquear interacción |
+| Background animado | `pointer-events: none` siempre |
+
+### 🔧 Cómo Debuggear
+
+**En DevTools:**
+
+1. Abre DevTools → Elements
+2. Click derecho en el área problemática → Inspect
+3. Verifica qué elemento está recibiendo el evento
+4. Si es un elemento invisible: agregar `pointer-events: none`
+
+**Console test:**
+
+```javascript
+// Ver qué elemento está en posición específica
+document.elementFromPoint(x, y);
+
+// Ver todos los elementos en esa posición (incluyendo los de abajo)
+document.elementsFromPoint(x, y);
+```
+
+### 📊 Resumen de Cambios
+
+**Archivos modificados:**
+
+1. `games/master-sequence/styles.css` - Líneas 2019-2036
+2. `games/square-rush/css/square-rush.css` - Líneas 697-714
+3. `games/memory-matrix-v2/styles.css` - Líneas 2330-2347
+4. `games/chessinfive/css/chessinfive.css` - Líneas 1413-1430
+
+**Cambios por archivo:** +2 líneas cada uno
+
+```diff
+ .games-menu-dropdown {
+     opacity: 0;
+     visibility: hidden;
++    pointer-events: none;
+     transform: translateY(-10px);
+ }
+
+ .games-menu-dropdown.active {
+     opacity: 1;
+     visibility: visible;
++    pointer-events: auto;
+     transform: translateY(0);
+ }
+```
+
+### ✅ Resultado
+
+- ✅ Todas las casillas del tablero ahora son clickeables
+- ✅ No es necesario desplazar el tablero para hacer clic
+- ✅ El menú dropdown sigue funcionando correctamente cuando se abre
+- ✅ Fix aplicado consistentemente en 4 juegos
+- ✅ Sin regresiones en funcionalidad
+
+**Commit:** `fix: Add pointer-events:none to invisible dropdown menu blocking board clicks`
 
 ---

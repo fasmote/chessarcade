@@ -701,6 +701,7 @@ body::before {
     min-width: 220px;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transform: translateY(-10px);
     transition: all 0.3s ease;
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
@@ -710,6 +711,7 @@ body::before {
 .games-menu-dropdown.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
     transform: translateY(0);
 }
 
@@ -744,4 +746,254 @@ body::before {
     font-family: 'Orbitron', monospace;
     font-size: 0.9rem;
     letter-spacing: 0.05em;
+}
+
+/* ============================================
+   DESKTOP LAYOUT: BARRA LATERAL (Memory Matrix Style)
+   Solo en desktop - No tocar mobile
+   ============================================ */
+@media (min-width: 768px) {
+    /* Container principal: Grid con 2 columnas - Espaciado mínimo */
+    .game-container {
+        display: grid;
+        grid-template-columns: auto 300px; /* Contenido auto-ajustado | Sidebar fijo */
+        grid-template-rows: auto;
+        column-gap: 1rem; /* Gap entre board y sidebar */
+        row-gap: 1rem; /* Gap vertical entre filas */
+        align-items: start;
+        justify-content: center; /* Centrar todo el contenido */
+        padding: 2rem;
+        max-width: 1400px;
+    }
+
+    /* Leaderboard button: Posicionar más a la derecha con borde visible */
+    .btn-leaderboard {
+        top: 1rem !important;
+        left: 60% !important; /* Más a la derecha */
+        transform: translateX(-50%) !important;
+        right: auto !important;
+        border-color: #ffd700 !important; /* Dorado visible */
+        color: #ffd700 !important;
+        border-width: 2px !important;
+        border-style: solid !important;
+    }
+
+    .btn-leaderboard:hover {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
+        background: rgba(255, 215, 0, 0.1) !important;
+    }
+
+    /* Responsive: Pantallas medianas - Ajustar para evitar solapamiento */
+    @media (min-width: 768px) and (max-width: 900px) {
+        .btn-leaderboard {
+            left: auto !important;
+            right: 5.5rem !important; /* Más a la derecha */
+            transform: none !important;
+        }
+    }
+
+    @media (min-width: 901px) and (max-width: 1100px) {
+        .btn-leaderboard {
+            left: 62% !important; /* Más a la derecha */
+        }
+    }
+
+    @media (min-width: 1101px) {
+        .btn-leaderboard {
+            left: 65% !important; /* Aún más a la derecha en pantallas grandes */
+        }
+    }
+
+    /* Game header: Reducir margen inferior */
+    .game-header {
+        margin-bottom: 0.5rem; /* Reducir espacio entre subtitle y board */
+    }
+
+    /* Target Display: Cuadrado dentro del sidebar en desktop (primera sección) */
+    .target-display {
+        width: 100%; /* Ocupa todo el ancho del sidebar */
+        height: 300px; /* Cuadrado: mismo ancho que sidebar (300px) */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0; /* Sin márgenes */
+        padding: 0;
+        background: rgba(0, 0, 0, 0.9);
+        border: 3px solid #00ff80;
+        border-radius: 17px 17px 0 0; /* Solo bordes superiores redondeados */
+        box-shadow: 0 0 40px rgba(0, 255, 128, 0.4);
+        border-bottom: 2px solid rgba(0, 255, 128, 0.3);
+        flex-shrink: 0; /* No reducir */
+    }
+
+    .target-label {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .target-coordinate {
+        font-size: 3rem;
+    }
+
+    /* Game UI: Barra lateral derecha estilo Memory Matrix */
+    .game-ui {
+        /* Grid positioning - Alineado con board-container (fila 3) */
+        grid-column: 2;
+        grid-row: 3;
+
+        /* Sticky positioning */
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+
+        /* Layout vertical limpio */
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between; /* Distribuir espacio */
+        gap: 0;
+
+        /* Tamaño fijo - Misma altura que board-container */
+        width: 300px;
+        max-width: 300px;
+        height: 500px; /* Aproximado al tablero max-width */
+        padding: 0;
+        margin: 0;
+
+        /* Fondo y borde limpio */
+        background: transparent;
+        border: 3px solid #ffd700;
+        border-radius: 20px;
+        box-shadow:
+            0 0 30px rgba(255, 215, 0, 0.4),
+            inset 0 0 30px rgba(255, 215, 0, 0.1);
+    }
+
+    /* Responsive height para diferentes pantallas */
+    @media (min-width: 900px) {
+        .game-ui {
+            height: 550px; /* Más grande en pantallas grandes */
+        }
+    }
+
+    /* Level Info: Movido abajo, altura reducida pero legible */
+    .level-info {
+        width: 100%;
+        padding: 0.5rem 1rem; /* Agrandado un poco */
+        background: linear-gradient(180deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3));
+        border-radius: 0 0 17px 17px; /* Ahora está abajo */
+        text-align: center;
+        border-top: 1px solid rgba(255, 215, 0, 0.3); /* Borde arriba en vez de abajo */
+        line-height: 1.2; /* Más espacio */
+        display: block !important; /* Override flex-direction: column */
+        flex-direction: unset !important;
+        min-height: auto !important;
+        height: auto !important;
+        flex-shrink: 0; /* No reducir */
+    }
+
+    .level-number {
+        font-size: 1.1rem !important; /* Agrandado */
+        font-weight: 700 !important;
+        color: #ff0080 !important;
+        text-shadow: 0 0 10px rgba(255, 0, 128, 0.6) !important;
+        margin: 0 !important; /* Sin márgenes */
+        padding: 0 !important;
+        display: inline !important; /* En línea con level-name */
+        margin-right: 0.4rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .level-name {
+        font-size: 0.8rem !important; /* Agrandado */
+        color: #ffd700 !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+        display: inline !important; /* En línea con level-number */
+        margin: 0 !important; /* Sin márgenes */
+        padding: 0 !important;
+        line-height: 1.2 !important;
+    }
+
+    /* Timer: Segunda sección - Ocupa espacio flexible */
+    .timer {
+        width: 100%;
+        padding: 2rem 1rem;
+        background: rgba(0, 0, 0, 0.6);
+        text-align: center;
+        font-size: 3rem;
+        font-weight: 900;
+        color: #00ffff;
+        text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        margin: 0;
+        border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        flex-grow: 1; /* Crecer para llenar espacio */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Score Info: Tercera sección */
+    .score-info {
+        width: 100%;
+        padding: 1.5rem 1rem;
+        background: linear-gradient(180deg, rgba(0, 100, 100, 0.3), rgba(0, 50, 50, 0.3));
+        border-radius: 0; /* Sin bordes redondeados */
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        flex-shrink: 0; /* No reducir */
+    }
+
+    .score {
+        font-size: 1.3rem;
+        color: #ffd700;
+        font-weight: 700;
+    }
+
+    .combo {
+        font-size: 1.1rem;
+        color: #ff8000;
+        font-weight: 600;
+    }
+
+    /* Posicionar otros elementos en la columna izquierda */
+    .game-header {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .progress-container {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    /* target-display ahora está dentro de game-ui, no necesita grid positioning */
+
+    .board-container {
+        grid-column: 1;
+        grid-row: 3; /* Cambió de 4 a 3 */
+        justify-self: center; /* Centrado en su columna */
+        margin-bottom: 0 !important; /* Eliminar margen inferior en desktop */
+        padding: 0.75rem !important; /* Reducir padding en desktop */
+    }
+
+    .progress-text {
+        grid-column: 1;
+        grid-row: 4; /* Cambió de 5 a 4 */
+    }
+
+    .game-controls {
+        grid-column: 1;
+        grid-row: 5; /* Cambió de 6 a 5 */
+    }
+
+    /* How to Play section: Ocupa ambas columnas */
+    .how-to-play-section {
+        grid-column: 1 / -1;
+        grid-row: 6; /* Cambió de 7 a 6 */
+    }
 }

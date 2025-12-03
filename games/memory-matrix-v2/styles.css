@@ -2334,6 +2334,7 @@ body::before {
     min-width: 220px;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transform: translateY(-10px);
     transition: all 0.3s ease;
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
@@ -2343,6 +2344,7 @@ body::before {
 .games-menu-dropdown.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
     transform: translateY(0);
 }
 
