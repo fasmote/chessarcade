@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CriptoCaballo - ADMIN Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Importamos Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&family=Courier+Prime:wght@700&display=swap');
+
+        body {
+            background-color: #0f172a;
+            font-family: 'Roboto Mono', monospace;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            touch-action: pan-y;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* --- PANEL ADMIN VISIBLE --- */
+        .admin-only {
+            display: block !important;
+        }
+
+        /* --- BOTONES ARCADE JUGADOR --- */
+        .arcade-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            color: #94a3b8;
+            transition: all 0.2s;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+        .arcade-btn:hover {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: #38bdf8;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .arcade-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+
+        /* --- ANIMACIONES --- */
+        /* Azul (Letras normales) */
+        @keyframes pulse-focus {
+            0% { transform: scale(1.05); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); border-color: #38bdf8; }
+            50% { transform: scale(1.15); box-shadow: 0 0 20px 5px rgba(14, 165, 233, 0); border-color: #ffffff; }
+            100% { transform: scale(1.05); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); border-color: #38bdf8; }
+        }
+        
+        /* Rojo (Relleno) */
+        @keyframes pulse-focus-red {
+            0% { transform: scale(1.05); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); border-color: #f87171; }
+            50% { transform: scale(1.15); box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0); border-color: #ffffff; }
+            100% { transform: scale(1.05); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: #f87171; }
+        }
+        
+        /* Cian (Separador) */
+        @keyframes pulse-focus-cyan {
+            0% { transform: scale(1.05); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); border-color: #22d3ee; }
+            50% { transform: scale(1.15); box-shadow: 0 0 20px 5px rgba(34, 211, 238, 0); border-color: #ffffff; }
+            100% { transform: scale(1.05); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); border-color: #22d3ee; }
+        }
+
+        /* --- ESTILOS DE CELDAS (CORREGIDOS PARA ANIMACIÓN) --- */
+        .cell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: clamp(0.6rem, 3vw, 1.5rem);
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            overflow: hidden;
+        }
+        .cell:hover:not(.active-msg):not(.active-filler):not(.user-selected):not(.user-selected-filler):not(.active-separator):not(.user-selected-separator) {
+            background: #334155;
+        }
+
+        /* Casilla de Inicio (Verde Fijo) */
+        .cell.start-cell {
+            border: 2px solid #4ade80 !important; 
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+            z-index: 35; 
+        }
+        /* IMPORTANTE: Si la casilla de inicio está seleccionada, FORZAR la animación azul */
+        .cell.start-cell.user-selected {
+            border-color: #38bdf8 !important;
+            animation: pulse-focus 1.5s infinite !important;
+        }
+
+        .cell.auto-solve-start {
+            box-shadow: 0 0 0 2px #ffffff, 0 0 15px rgba(255, 255, 255, 0.6) !important;
+            z-index: 40; 
+        }
+
+        .cell.message-final-char {
+            border: 2px dashed #f97316 !important; 
+            background-color: rgba(249, 115, 22, 0.15);
+            position: relative; 
+        }
+        .cell.message-final-char::after {
+            content: 'FIN';
+            position: absolute;
+            bottom: 1px;
+            right: 2px;
+            font-size: 0.5rem;
+            color: #f97316;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        /* --- ESTADOS DE SELECCIÓN MANUAL (CORREGIDOS) --- */
+        
+        /* 1. Selección Normal (Azul) - Ahora fuerza la animación */
+        .cell.user-selected {
+            background: #0284c7; 
+            color: white;
+            border: 2px solid #38bdf8;
+            animation: pulse-focus 1.5s infinite; 
+            z-index: 40; /* Más alto para asegurar visibilidad */
+        }
+
+        /* 2. Selección Relleno (Rojo) */
+        .cell.user-selected-filler {
+            background: #ef4444;
+            color: white;
+            border: 2px solid #f87171;
+            animation: pulse-focus-red 1.5s infinite;
+            z-index: 40;
+        }
+
+        /* 3. Selección Separador (Cian) */
+        .cell.user-selected-separator {
+            background: #0891b2;
+            color: white;
+            border: 2px solid #67e8f9;
+            animation: pulse-focus-cyan 1.5s infinite;
+            z-index: 40;
+        }
+
+        /* --- CAMINOS (RASTROS) --- */
+        .cell.user-path {
+            background: #0ea5e9; 
+            color: white;
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+            z-index: 15;
+        }
+        .cell.user-path-filler {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); 
+            color: white;
+            border-color: #f87171;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+            z-index: 15;
+        }
+        .cell.user-path-separator {
+            background: linear-gradient(135deg, #0891b2 0%, #155e75 100%);
+            color: white;
+            border-color: #22d3ee;
+            box-shadow: 0 0 10px rgba(8, 145, 178, 0.4);
+            z-index: 15;
+        }
+
+        /* --- OTROS ESTILOS --- */
+        .cell.cross-medium {
+            color: #ef4444; 
+            font-size: 1.8em; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 3px #ffffff, 0 0 5px #ffffff;
+            padding: 4px; 
+        }
+        .cell.cross-medium.active-msg, .cell.cross-medium.active-filler,
+        .cell.cross-medium.user-selected, .cell.cross-medium.user-path,
+        .cell.cross-medium.user-selected-filler, .cell.cross-medium.user-path-filler,
+        .cell.cross-medium.active-separator, .cell.cross-medium.user-selected-separator, .cell.cross-medium.user-path-separator {
+            color: #ffffff;
+            text-shadow: 0 0 3px rgba(0,0,0,0.5), 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .sign-perspective { perspective: 1000px; display: inline-block; }
+        .interactive-sign {
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-style: preserve-3d; 
+            user-select: none;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.6); 
+            border: 1px solid rgba(56, 189, 248, 0.15); 
+        }
+        .interactive-sign:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .flip-left { transform: rotateY(-90deg) !important; }
+        .flip-right { transform: rotateY(90deg) !important; }
+        .tilt-left { transform: rotateY(-15deg); }
+        .tilt-right { transform: rotateY(15deg); }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1400px; 
+            align-items: start;
+        }
+        
+        @media (min-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 24rem 1fr; 
+                padding-top: 2rem;
+            }
+        }
+
+        .board-wrapper {
+            position: relative;
+            display: inline-grid;
+            grid-template-columns: max-content auto; 
+            grid-template-rows: min-content min-content auto min-content;
+            gap: 0px; 
+            column-gap: 6px;
+            row-gap: 0px;
+            margin: 0 auto;
+            max-width: 100%; 
+            align-self: center;
+            overflow: visible; 
+        }
+
+        .game-header { grid-column: 2; grid-row: 1; text-align: center; margin-bottom: 0.5rem; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .timer-row { grid-column: 2; grid-row: 2; position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 6px; height: 40px; }
+        .ranks-col { grid-column: 1; grid-row: 3; display: flex; flex-direction: column; justify-content: space-around; padding-right: 4px; font-family: 'Orbitron', sans-serif; font-weight: bold; color: #64748b; min-width: 20px; z-index: 10; align-items: flex-end; }
+        .chess-grid { grid-column: 2; grid-row: 3; display: grid; gap: 2px; padding: 4px; background: rgba(30, 41, 59, 0.5); border: 3px solid #06b6d4; border-radius: 8px; box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); touch-action: pan-y; transition: box-shadow 0.5s ease, border-color 0.5s ease; z-index: 10; }
+        .files-row { grid-column: 2; grid-row: 4; display: flex; justify-content: space-around; padding-top: 2px; font-family: 'Orbitron', sans-serif; font-weight: bold; color: #64748b; z-index: 10; }
+        .chess-grid.success { border-color: #22c55e !important; box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); }
+
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; overflow: hidden; }
+        .confetti { position: absolute; width: 8px; height: 8px; top: -10px; z-index: 100; animation: fall linear forwards; }
+        @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        .rank-label { display: flex; align-items: center; justify-content: flex-end; height: 100%; font-size: clamp(0.6rem, 2.5vw, 0.9rem); line-height: 1; }
+        .file-label { flex: 1; text-align: center; font-size: clamp(0.6rem, 2.5vw, 0.9rem); }
+        
+        .cell.possible-move { border: 2px dashed #fbbf24; box-shadow: inset 0 0 10px rgba(251, 191, 36, 0.2); animation: pulse-yellow 2s infinite; z-index: 15; }
+        .cell.hint-end { border: 2px dashed #f97316; background-color: rgba(249, 115, 22, 0.25); color: #fdba74; z-index: 12; }
+        @keyframes pulse-yellow { 0% { box-shadow: inset 0 0 5px rgba(251, 191, 36, 0.1); } 50% { box-shadow: inset 0 0 15px rgba(251, 191, 36, 0.4); border-color: #fcd34d; } 100% { box-shadow: inset 0 0 5px rgba(251, 191, 36, 0.1); } }
+
+        /* Estilos Automáticos */
+        .cell.active-msg { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-color: #34d399; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); transform: scale(1.02); z-index: 10; }
+        .cell.active-filler { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; border-color: #f87171; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); transform: scale(1.02); z-index: 10; }
+        .cell.active-separator { background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white; border-color: #22d3ee; box-shadow: 0 0 10px rgba(8, 145, 178, 0.5); transform: scale(1.02); z-index: 10; }
+        
+        /* Resto de estilos */
+        .cell.knight-pos-msg { background: #22c55e; color: #000; border-color: #4ade80; box-shadow: 0 0 15px rgba(34, 197, 94, 0.8); transform: scale(1.1); z-index: 20; }
+        .cell.knight-pos-filler { background: #dc2626; color: #fff; border-color: #fca5a5; box-shadow: 0 0 15px rgba(220, 38, 38, 0.8); transform: scale(1.1); z-index: 20; }
+        .cell.crossed-out { background: linear-gradient(to top left, transparent 46%, #ef4444 48%, #ef4444 52%, transparent 54%), linear-gradient(to top right, transparent 46%, #ef4444 48%, #ef4444 52%, transparent 54%), #1e293b; color: transparent; }
+        .cell.white-block { background-color: #f8fafc; color: transparent; }
+        .cell.knight-decoration { color: #475569; font-size: 1.2em; display: flex; align-items: center; justify-content: center; }
+        .step-number { position: absolute; top: 0px; left: 1px; font-size: 0.75rem; font-weight: bold; opacity: 0.9; z-index: 25; text-shadow: 0px 0px 3px rgba(0,0,0,0.8); pointer-events: none; }
+        
+        .neon-input, .neon-select { background: #1e293b; border: 2px solid #334155; color: #fff; transition: all 0.3s; }
+        .neon-input:focus, .neon-select:focus { border-color: #06b6d4; outline: none; box-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
+        .neon-btn { transition: all 0.2s; }
+        .neon-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .toggle-checkbox:checked { transform: translateX(1.5rem); border-color: #22c55e; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #22c55e; }
+        .decoded-msg-char { color: #4ade80; text-shadow: 0 0 5px rgba(74, 222, 128, 0.5); font-weight: bold; }
+        .decoded-filler-char { color: #f87171; opacity: 0.7; font-weight: normal; }
+        .user-decoded-char { color: #38bdf8; text-shadow: 0 0 5px rgba(56, 189, 248, 0.5); font-weight: bold; }
+        .msg-separator { display: flex; align-items: center; justify-content: center; width: 100%; margin: 1rem 0; color: #fbbf24; font-size: 0.75rem; font-family: 'Orbitron', sans-serif; opacity: 0.9; text-shadow: 0 0 5px rgba(251, 191, 36, 0.5); }
+        .msg-separator::before, .msg-separator::after { content: ''; flex: 1; border-bottom: 1px dashed #fbbf24; margin: 0 10px; opacity: 0.5; }
+        
+        /* Botones IA y Otros */
+        .ai-btn { background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); border: 1px solid #8b5cf6; }
+        .ai-btn:hover { background: linear-gradient(90deg, #4338ca 0%, #6d28d9 100%); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
+        .ai-btn-famous { background: linear-gradient(90deg, #eab308 0%, #ca8a04 100%); border: 1px solid #facc15; }
+        .ai-btn-famous:hover { background: linear-gradient(90deg, #ca8a04 0%, #a16207 100%); box-shadow: 0 0 15px rgba(234, 179, 8, 0.4); }
+        .ai-btn-topic { background: linear-gradient(90deg, #ec4899 0%, #db2777 100%); border: 1px solid #f472b6; }
+        .ai-btn-topic:hover { background: linear-gradient(90deg, #db2777 0%, #be185d 100%); box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
+        .ai-complete-btn { background: linear-gradient(90deg, #059669 0%, #10b981 100%); border: 1px solid #34d399; }
+        .ai-complete-btn:hover { background: linear-gradient(90deg, #047857 0%, #059669 100%); box-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
+        .hint-btn { background: linear-gradient(90deg, #f97316 0%, #ea580c 100%); border: 1px solid #fb923c; transition: all 0.2s; }
+        .hint-btn:hover:not(:disabled) { background: linear-gradient(90deg, #ea580c 0%, #c2410c 100%); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
+        .hint-btn:disabled { background: #334155; border-color: #475569; color: #64748b; cursor: not-allowed; box-shadow: none; }
+        .db-btn { background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%); border: 1px solid #8b5cf6; transition: all 0.2s; }
+        .db-btn:hover:not(:disabled) { background: linear-gradient(90deg, #6d28d9 0%, #4338ca 100%); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
+        .db-btn:disabled { background: #334155; border-color: #475569; color: #64748b; cursor: not-allowed; }
+        .success-text { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); animation: bounce-in 0.5s ease; }
+        @keyframes bounce-in { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        .spaces-btn { background: rgba(30, 41, 59, 0.8); border: 1px solid #475569; font-size: 0.75rem; margin-top: 0.5rem; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
+        .spaces-btn:hover { color: #fff; border-color: #94a3b8; background: rgba(51, 65, 85, 0.8); }
+        .spaces-btn.active { color: #38bdf8; border-color: #38bdf8; background: rgba(14, 165, 233, 0.2); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content { background: #1e293b; border: 2px solid #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.3); border-radius: 1rem; padding: 2rem; width: 90%; max-width: 400px; transform: translateY(20px); transition: transform 0.3s; }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .timer-display { font-family: 'Courier Prime', 'Courier New', monospace; color: #fbbf24; font-weight: bold; font-size: 1.25rem; text-shadow: 0 0 5px rgba(251, 191, 36, 0.6); background: rgba(15, 23, 42, 0.8); padding: 4px 0; border-radius: 6px; border: 1px solid #d97706; display: flex; align-items: center; justify-content: center; width: 140px; font-variant-numeric: tabular-nums; }
+        .reset-btn-wrapper { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+        .reset-btn { color: #94a3b8; font-size: 1rem; padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; background: rgba(30, 41, 59, 0.5); transition: all 0.2s; cursor: pointer; }
+        .reset-btn:hover { color: #fff; border-color: #38bdf8; background: rgba(56, 189, 248, 0.2); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+        .date-input { background: #0f172a; border: 1px solid #334155; color: #22d3ee; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; outline: none; font-family: 'Roboto Mono', monospace; text-align: center; cursor: pointer; }
+        .date-input:hover { border-color: #06b6d4; }
+        .date-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-4 px-2 md:py-6 md:px-4">
+
+    <!-- MODAL LOGIN ADMIN -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[9999] flex items-center justify-center" style="display: flex;">
+        <div class="bg-slate-900 border-2 border-pink-500 rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="text-6xl mb-4">🔐</div>
+                <h2 class="text-2xl font-bold text-white mb-2">Panel de Administración</h2>
+                <p class="text-slate-400 text-sm">Ingresa la contraseña para continuar</p>
+            </div>
+            <input
+                type="password"
+                id="adminPasswordInput"
+                class="w-full bg-slate-800 border-2 border-slate-700 rounded-lg px-4 py-3 text-white text-center text-lg tracking-widest focus:border-pink-500 focus:outline-none mb-4"
+                placeholder="••••••••"
+                autocomplete="off"
+            />
+            <div id="loginError" class="text-red-400 text-sm text-center mb-4 hidden">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Contraseña incorrecta
+            </div>
+            <button
+                onclick="verifyAdminPassword()"
+                class="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-bold py-3 rounded-lg transition-all"
+            >
+                Acceder
+            </button>
+            <p class="text-slate-500 text-xs text-center mt-4">
+                <a href="index.html" class="text-cyan-400 hover:text-cyan-300">← Volver al juego</a>
+            </p>
+        </div>
+    </div>
+
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- MODAL SAVE -->
+    <div id="saveModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center"><i class="fa-solid fa-floppy-disk mr-2"></i> Guardar Nivel</h2>
+            <div class="mb-4">
+                <label class="block text-slate-400 text-xs font-bold mb-1">NOMBRE DEL NIVEL</label>
+                <input type="text" id="lvlName" class="neon-input w-full p-2 rounded text-sm" placeholder="Ej: El Despertar">
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-400 text-xs font-bold mb-1">AUTOR DE LA FRASE (Opcional)</label>
+                <input type="text" id="lvlAuthor" class="neon-input w-full p-2 rounded text-sm" placeholder="Ej: Albert Einstein">
+            </div>
+            <div class="mb-4">
+                <label class="block text-slate-400 text-xs font-bold mb-1">CAPÍTULO / ZONA</label>
+                <select id="lvlChapter" class="neon-select w-full p-2 rounded text-sm">
+                    <option value="1">Capítulo 1: Orígenes</option>
+                    <option value="2">Capítulo 2: Sabiduría</option>
+                    <option value="3">Capítulo 3: Desafío</option>
+                    <option value="daily">Desafío Diario</option>
+                </select>
+                <p class="text-[0.6rem] text-slate-500 mt-1">Categorías de ejemplo para tu sistema RPG.</p>
+            </div>
+            <div class="mb-6">
+                <label class="block text-slate-400 text-xs font-bold mb-1">DIFICULTAD</label>
+                <select id="lvlDifficulty" class="neon-select w-full p-2 rounded text-sm">
+                    <option value="easy">Fácil</option>
+                    <option value="medium">Normal</option>
+                    <option value="hard">Difícil</option>
+                    <option value="expert">Experto</option>
+                </select>
+            </div>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeSaveModal()" class="text-slate-400 hover:text-white px-4 py-2 text-sm">Cancelar</button>
+                <button onclick="confirmSave()" class="db-btn text-white px-6 py-2 rounded font-bold text-sm shadow-lg">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-[1400px] flex flex-col items-center">
+        
+        <div class="main-layout" id="mainLayout">
+            
+            <!-- COLUMNA 1: PANEL ADMIN (Visible por defecto para desarrollo en v4.2) -->
+            <div id="adminPanel" class="admin-only bg-slate-800/50 p-4 rounded-xl border border-slate-700 backdrop-blur-sm order-2 lg:order-1 w-full relative">
+                <div class="absolute -top-3 -right-2 bg-pink-600 text-white text-[0.6rem] font-bold px-2 py-1 rounded shadow-lg transform rotate-6 border border-pink-400 z-50">
+                    <i class="fa-solid fa-code-branch mr-1"></i>v5.7
+                </div>
+                <h3 class="text-slate-500 text-xs font-bold mb-4 uppercase tracking-widest border-b border-slate-700 pb-2 flex justify-between">
+                    <span><i class="fa-solid fa-gears mr-2"></i>Panel Generador</span>
+                    <span class="text-[0.65rem] bg-slate-700 px-2 rounded text-slate-300">ADMIN</span>
+                </h3>
+                <div class="mb-4">
+                    <div class="flex flex-col gap-2 mb-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="generateAIMessage()" id="aiGenBtn" class="ai-btn text-white text-xs px-2 py-2 rounded shadow transition-all flex items-center justify-center gap-1 whitespace-nowrap">
+                                <i class="fa-solid fa-chess-king"></i> <span>Frase Chess</span>
+                            </button>
+                            <button onclick="generateAIFamousQuote()" id="aiFamousBtn" class="ai-btn-famous text-white text-xs px-2 py-2 rounded shadow transition-all flex items-center justify-center gap-1 whitespace-nowrap">
+                                <i class="fa-solid fa-quote-right"></i> <span>Célebre</span>
+                            </button>
+                            <button onclick="generateTopicPhrase()" id="aiTopicBtn" class="ai-btn-topic text-white text-xs px-2 py-2 rounded shadow transition-all flex items-center justify-center gap-1 whitespace-nowrap">
+                                <i class="fa-solid fa-wand-sparkles"></i> <span>✨ Por Tema</span>
+                            </button>
+                            <button onclick="completeAIPhrase()" id="aiCompleteBtn" class="ai-complete-btn text-white text-xs px-2 py-2 rounded shadow transition-all flex items-center justify-center gap-1 whitespace-nowrap">
+                                <i class="fa-solid fa-puzzle-piece"></i> <span>Completar</span>
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-end mt-1">
+                            <label class="block text-cyan-400 text-xs md:text-sm font-bold mb-0 leading-tight">
+                                <span class="block text-slate-400 font-normal text-[0.65rem] md:text-xs mb-0.5 tracking-wide">ESCRIBE AQUÍ (O UN TEMA)</span>
+                                TU MENSAJE SECRETO
+                            </label>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <textarea id="messageInput" rows="3" class="neon-input w-full p-3 md:p-4 pr-10 rounded-lg text-base md:text-lg uppercase tracking-wider resize-none" placeholder="HOLA MUNDO!"></textarea>
+                        <button onclick="copyToClipboard()" id="copyBtn" class="absolute top-2 right-2 text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-full bg-slate-900/50 hover:bg-slate-800" title="Copiar mensaje">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="flex justify-between mt-2 text-xs font-mono" id="statusContainer">
+                        <span id="charCount" class="text-slate-400">Calculando...</span>
+                    </div>
+                    <div class="mt-4">
+                         <label class="block text-cyan-400 text-xs md:text-sm font-bold mb-2">SEPARADOR DE PALABRAS</label>
+                         <select id="wordSeparator" class="neon-select w-full p-2 md:p-3 rounded-lg text-sm md:text-base" onchange="updateCharCount()">
+                            <option value="none">🚫 Ninguno (Juntar letras)</option>
+                            <option value="space">␣ Espacio Vacío</option>
+                            <option value="cross">❌ X (De punta a punta)</option>
+                            <option value="cross_medium">❌ X Media (Gordita)</option>
+                            <option value="block">🔲 Bloque Blanco</option>
+                            <option value="knight">♟️ Figurina Caballo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-pink-400 text-xs md:text-sm font-bold mb-2">TAMAÑO DEL TABLERO</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setBoardSize(3, 4)" class="board-btn neon-btn py-2 rounded bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 active-board-btn ring-2 ring-pink-500 text-xs" data-rows="3" data-cols="4">3x4 (12)</button>
+                        <button onclick="setBoardSize(4, 5)" class="board-btn neon-btn py-2 rounded bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 text-xs" data-rows="4" data-cols="5">4x5 (20)</button>
+                        <button onclick="setBoardSize(5, 5)" class="board-btn neon-btn py-2 rounded bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 text-xs" data-rows="5" data-cols="5">5x5 (25)</button>
+                        <button onclick="setBoardSize(5, 6)" class="board-btn neon-btn py-2 rounded bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 text-xs" data-rows="5" data-cols="6">5x6 (30)</button>
+                        <button onclick="setBoardSize(6, 7)" class="board-btn neon-btn py-2 rounded bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 text-xs" data-rows="6" data-cols="7">6x7 (42)</button>
+                        <button onclick="setBoardSize(8, 8)" class="board-btn neon-btn py-2 rounded bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 text-xs font-bold text-cyan-300" data-rows="8" data-cols="8">8x8 (64)</button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 italic" id="boardInfo">
+                        El tablero 3x4 intenta variar, pero es difícil.
+                    </p>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-purple-400 text-xs md:text-sm font-bold mb-2">RELLENO DE ESPACIOS SOBRANTES</label>
+                    <select id="fillOption" class="neon-select w-full p-2 md:p-3 rounded-lg text-sm md:text-base">
+                        <option value="random">🎲 Letras al azar (A-Z)</option>
+                        <option value="white_square">🔲 Cuadrado Blanco (Full)</option>
+                        <option value="cross_x">❌ X (De punta a punta)</option>
+                        <option value="cross_medium">❌ X Media (Gordita)</option>
+                        <option value="knight">♟️ Figurina Caballo</option>
+                        <option value="empty">🚫 Nada (Vacío)</option>
+                    </select>
+                </div>
+                <div class="mb-8">
+                    <label class="block text-yellow-400 text-xs md:text-sm font-bold mb-2">PISTAS</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex gap-1">
+                            <input type="number" id="startHintCount" min="0" max="64" value="1" class="neon-input w-12 p-2 rounded-lg text-center text-xs" placeholder="N">
+                            <button onclick="applyStartHint()" id="btnStartHint" class="hint-btn text-white text-xs px-2 py-2 rounded shadow flex-1 flex items-center justify-center gap-1" disabled>
+                                <i class="fa-solid fa-play"></i> Inicio
+                            </button>
+                        </div>
+                        <div class="flex gap-1">
+                            <input type="number" id="endHintCount" min="0" max="64" value="1" class="neon-input w-12 p-2 rounded-lg text-center text-xs" placeholder="N">
+                            <button onclick="applyEndHint()" id="btnEndHint" class="hint-btn text-white text-xs px-2 py-2 rounded shadow flex-1 flex items-center justify-center gap-1" disabled>
+                                <i class="fa-solid fa-flag-checkered"></i> Fin
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center mt-2 bg-slate-900/50 p-3 rounded border border-slate-700 gap-3">
+                    <span id="label-moves-off" class="text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-slate-500" onclick="document.getElementById('showMovesToggle').checked = false; updateMovesVisuals();">
+                        Ocultar saltos
+                    </span>
+                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="movesToggle" id="showMovesToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-600 transition-all duration-300 ease-in-out left-0" checked onchange="updateMovesVisuals()"/>
+                        <label for="showMovesToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-700 cursor-pointer"></label>
+                    </div>
+                    <span id="label-moves-on" class="text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-yellow-400 font-bold transform scale-105" onclick="document.getElementById('showMovesToggle').checked = true; updateMovesVisuals();">
+                        Mostrar saltos
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <button onclick="generateCryptogram()" class="neon-btn bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-cyan-500/20 text-sm md:text-base col-span-2">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Encriptar
+                    </button>
+                    <button onclick="startResolver()" id="solveBtn" class="neon-btn bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-pink-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base" disabled>
+                        <i class="fa-solid fa-play mr-2"></i>Resolver
+                    </button>
+                    <button onclick="continueAnimation()" id="continueBtn" class="hidden neon-btn bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-red-500/20 text-sm md:text-base">
+                        <i class="fa-solid fa-forward mr-2"></i>Continuar
+                    </button>
+                    <button onclick="openSaveModal()" id="saveBtn" class="db-btn text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-purple-500/20 text-sm md:text-base" disabled>
+                        <i class="fa-solid fa-floppy-disk mr-2"></i>Guardar
+                    </button>
+                </div>
+                <div id="errorMsg" class="hidden mt-4 text-red-400 text-xs md:text-sm bg-red-900/20 p-3 rounded border border-red-900/50">
+                    <i class="fa-solid fa-triangle-exclamation mr-2"></i>No se encontró una ruta válida. Intenta otra vez.
+                </div>
+            </div>
+
+            <!-- VISUALIZACIÓN TABLERO (MÓDULO JUGADOR) -->
+            <div class="flex flex-col items-center justify-center order-1 lg:order-2 w-full h-full">
+                <div class="w-full max-w-md mb-2 text-center">
+                    <h1 class="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500 mb-1 flex items-baseline justify-center">
+                        <span class="fa-stack mr-2 self-baseline" style="font-size: 0.85em;">
+                            <i class="fa-solid fa-chess-knight fa-stack-2x text-cyan-400" style="text-shadow: 2px 2px 0px #ef4444;"></i>
+                            <i class="fa-solid fa-key fa-stack-1x text-pink-500" style="position: absolute; bottom: 0; right: 0; transform: translate(20%, 20%) scale(0.7); text-shadow: 1px 1px 0px #1e293b;"></i>
+                        </span>
+                        CriptoCaballo <span class="text-pink-500 text-sm">ADMIN</span>
+                    </h1>
+                    <p class="text-slate-400 max-w-lg mx-auto text-sm md:text-base hidden sm:block mb-6">
+                        <span class="bg-pink-600/20 border border-pink-500 px-3 py-1 rounded-full text-pink-300">🔐 Panel de Administración</span>
+                    </p>
+
+                    <div class="border-b border-cyan-900/50 pb-2 mb-4 flex justify-between items-end">
+                        <div class="sign-perspective">
+                            <div id="gameModeContainer" class="text-left interactive-sign" onclick="handleSignClick(event)" onmousemove="handleSignHover(event)" onmouseleave="resetSignTilt()">
+                                <h2 id="gameModeTitle" class="text-xl font-bold text-cyan-400" style="font-family: 'Orbitron', sans-serif;">
+                                    <i class="fa-solid fa-gamepad mr-2"></i>CriptoMensaje
+                                </h2>
+                                <p id="gameModeDesc" class="text-slate-500 text-xs mt-1">
+                                    Descifra el mensaje oculto.
+                                </p>
+                            </div>
+                        </div>
+                         <div class="flex flex-col items-end">
+                             <label class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
+                             <input type="date" class="date-input" onchange="loadDailyLevel(this.value)">
+                         </div>
+                    </div>
+                </div>
+
+                <!-- NUEVO MENÚ JUGADOR (v4.2): BOTONES ARCADE -->
+                <div class="w-full max-w-md mb-4 grid grid-cols-3 gap-2"> 
+                    <button onclick="playerSelectSize(3,4)" class="arcade-btn py-1 rounded" data-rows="3" data-cols="4">3x4</button>
+                    <button onclick="playerSelectSize(4,5)" class="arcade-btn py-1 rounded" data-rows="4" data-cols="5">4x5</button>
+                    <button onclick="playerSelectSize(5,5)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="5">5x5</button>
+                    <button onclick="playerSelectSize(5,6)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="6">5x6</button> 
+                    <button onclick="playerSelectSize(6,7)" class="arcade-btn py-1 rounded" data-rows="6" data-cols="7">6x7</button> 
+                    <button onclick="playerSelectSize(8,8)" class="arcade-btn py-1 rounded" data-rows="8" data-cols="8">8x8</button>
+                </div>
+                
+                <div class="board-wrapper" id="boardWrapper">
+                    <div class="game-header text-center"></div>
+                    <div class="timer-row">
+                        <div id="timer" class="timer-display">00:00:00</div>
+                        <div class="reset-btn-wrapper">
+                            <button onclick="resetCurrentLevel()" class="reset-btn" title="Jugar de nuevo">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="ranks-col" class="ranks-col"></div>
+                    <div id="board" class="chess-grid"></div>
+                    <div id="files-row" class="files-row"></div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] flex flex-col justify-center max-w-md relative">
+                    <p class="text-xs text-slate-500 mb-1">MENSAJE DECODIFICADO</p>
+                    <h3 id="decodedText" class="text-lg md:text-2xl font-bold break-words leading-relaxed"></h3>
+                    <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
+                        <i class="fa-regular fa-eye"></i> Ver con Espacios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyDDRILtZ02s-_i81kSqYCQda8VtzKb2weY"; 
+        const APP_VERSION = "5.7"; 
+
+        // CONFIGURACIÓN SUPABASE
+        // Ver archivo config.example.js para instrucciones
+        // Las credenciales reales deben estar en /.private/criptocaballo-config.js
+        const SUPABASE_URL = window.CRYPTO_CONFIG?.supabase?.url || "TU_SUPABASE_URL";
+        const SUPABASE_KEY = window.CRYPTO_CONFIG?.supabase?.anonKey || "TU_SUPABASE_ANON_KEY";
+
+        let supabaseClient = null;
+        try {
+            if(typeof supabase !== 'undefined' && SUPABASE_URL !== "TU_SUPABASE_URL") {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch (e) { console.error("Error init Supabase:", e); }
+
+        let rows = 3; 
+        let cols = 4;
+        let currentPath = [];
+        let animationInterval = null; 
+        let isAnimating = false; 
+        let isAutoSolved = false;
+        let globalTokens = []; 
+
+        let validMessageLength = 0; 
+        let currentStep = 0; 
+        let targetStep = 0; 
+        let lastDecodedMessageOriginal = ""; 
+        let isShowingSpaces = false;
+        let activeEndHints = 0; 
+        let showMovesEnabled = true;
+
+        let userPath = []; 
+        let isManualMode = false;
+        
+        let timerInterval = null;
+        let startTime = 0;
+        let isTimerRunning = false;
+        let lockedHintCount = 0;
+
+        const CROSS_MARKER = "@@CROSS@@"; 
+        const CROSS_MEDIUM_MARKER = "@@CROSS_MEDIUM@@";
+        const BLOCK_MARKER = "@@BLOCK@@";
+        const KNIGHT_MARKER = "@@KNIGHT@@";
+
+        const BACKUP_3X4_PATH = [
+            [0,0], [1,2], [2,0], 
+            [0,1], [1,3], [2,1], 
+            [0,2], [2,3], [1,1], 
+            [0,3], [2,2], [1,0]  
+        ];
+
+        const WELCOME_PHRASES = [
+            "BIENVENIDO A CRIPTOCABALLO",
+            "EL AJEDREZ ES ARTE",
+            "JAKE MATE AL REY",
+            "CABALLO DE TROYA",
+            "PIENSA ANTES DE MOVER",
+            "EL TABLERO ES TU MUNDO"
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log(`CriptoCaballo v${APP_VERSION} cargado.`);
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const input = document.getElementById('messageInput');
+            if(input) {
+                input.addEventListener('input', updateCharCount);
+                input.maxLength = 150;
+            }
+            
+            setBoardSize(3, 4); 
+            
+            toggleHintButtons(false);
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.querySelector('.date-input');
+            if(dateInput) dateInput.value = today;
+        });
+
+        // --- HELPERS ---
+        function isTokenSeparator(token) {
+            return token === " " ||
+                   token === CROSS_MARKER ||
+                   token === CROSS_MEDIUM_MARKER ||
+                   token === BLOCK_MARKER ||
+                   token === KNIGHT_MARKER;
+        }
+
+        // --- AI FUNCTIONS ---
+        async function callGemini(prompt) {
+            if (!apiKey) return "Error: Falta API Key.";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const delays = [1000, 2000, 4000];
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error IA.";
+                } catch (e) {
+                    if (i === 2) return "IA ocupada.";
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        async function generateAIMessage() {
+            console.log("Botón presionado: Generar Frase Chess con IA");
+            const btn = document.getElementById('aiGenBtn');
+            const input = document.getElementById('messageInput');
+            const separator = document.getElementById('wordSeparator').value;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ...';
+            btn.disabled = true;
+            const maxLen = rows * cols;
+            const isNoSeparator = separator === 'none';
+            let prompt = isNoSeparator ? 
+                 `Genera una frase mística y filosófica en Español sobre ajedrez, secretos o tiempo.
+                 IMPORTANTE: Devuelve el texto con ESPACIOS NORMALES.
+                 La cantidad de LETRAS (sin contar espacios) debe ser MÍNIMO ${Math.max(5, maxLen-8)} y MÁXIMO ${maxLen}.
+                 ¡Es vital que sea lo suficientemente larga para llenar el tablero!
+                 Solo devuelve la frase.` :
+                 `Genera una frase mística y filosófica en Español sobre ajedrez, secretos o tiempo.
+                 IMPORTANTE: Devuelve el texto con ESPACIOS NORMALES.
+                 La longitud total (contando espacios) debe ser MÍNIMO ${Math.max(5, maxLen-8)} y MÁXIMO ${maxLen}.
+                 ¡Es vital que sea lo suficientemente larga para llenar el tablero!
+                 Solo devuelve la frase.`;
+            try {
+                const phrase = await callGemini(prompt);
+                const clean = postProcessAIResponse(phrase, isNoSeparator, maxLen);
+                input.value = clean;
+                updateCharCount(); 
+                input.classList.add('ring-2', 'ring-purple-500');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-purple-500'), 500);
+            } catch (error) { console.error(error); input.value = "ERROR IA"; }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function generateAIFamousQuote() {
+            console.log("Botón presionado: Generar Cita Célebre");
+            const btn = document.getElementById('aiFamousBtn');
+            const input = document.getElementById('messageInput');
+            const separator = document.getElementById('wordSeparator').value;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ...';
+            btn.disabled = true;
+            const maxLen = rows * cols;
+            const isNoSeparator = separator === 'none';
+            let prompt = isNoSeparator ? 
+                 `Dame una cita célebre larga, un poema o un fragmento de libro en Español.
+                 IMPORTANTE: Devuelve el texto con ESPACIOS NORMALES.
+                 La cantidad de LETRAS (sin contar espacios) debe ser MÍNIMO ${Math.max(5, maxLen-8)} y MÁXIMO ${maxLen}.
+                 ¡Es vital que sea lo suficientemente larga para llenar el tablero!
+                 Solo devuelve el texto sin autor.` :
+                 `Dame una cita célebre larga, un poema o un fragmento de libro en Español.
+                 IMPORTANTE: Devuelve el texto con ESPACIOS NORMALES.
+                 La longitud total (contando espacios) debe ser MÍNIMO ${Math.max(5, maxLen-8)} y MÁXIMO ${maxLen}.
+                 ¡Es vital que sea lo suficientemente larga para llenar el tablero!
+                 Solo devuelve el texto sin autor.`;
+            try {
+                const phrase = await callGemini(prompt);
+                let raw = phrase.trim().replace(/^["']|["']$/g, '');
+                raw = raw.split(" - ")[0].split(" – ")[0]; 
+                const clean = postProcessAIResponse(raw, isNoSeparator, maxLen);
+                input.value = clean;
+                updateCharCount(); 
+                input.classList.add('ring-2', 'ring-yellow-500');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-yellow-500'), 500);
+            } catch (error) { console.error(error); input.value = "ERROR IA"; }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function generateTopicPhrase() {
+            console.log("Botón presionado: Generar por Tema");
+            const btn = document.getElementById('aiTopicBtn');
+            const input = document.getElementById('messageInput');
+            const separator = document.getElementById('wordSeparator').value;
+            const originalText = btn.innerHTML;
+            const topic = input.value.trim();
+            if (!topic) {
+                input.placeholder = "Escribe un tema primero...";
+                input.classList.add('ring-2', 'ring-red-500');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-red-500'), 1000);
+                return;
+            }
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ...';
+            btn.disabled = true;
+            const maxLen = rows * cols;
+            const isNoSeparator = separator === 'none';
+            let prompt = isNoSeparator ? 
+                 `Genera un texto detallado o historia muy breve sobre "${topic}" en Español natural (CON espacios).
+                 Restricción: La cantidad de LETRAS (sin espacios) debe ser MÍNIMO ${Math.max(5, maxLen-8)} y MÁXIMO ${maxLen}.
+                 ¡Es vital que sea lo suficientemente larga para llenar el tablero!
+                 Solo devuelve la frase.` :
+                 `Genera un texto detallado o historia muy breve sobre "${topic}" en Español.
+                 IMPORTANTE: Devuelve el texto con ESPACIOS NORMALES.
+                 Longitud total (con espacios) MÍNIMO ${Math.max(5, maxLen-8)} y MÁXIMO ${maxLen}.
+                 ¡Es vital que sea lo suficientemente larga para llenar el tablero!
+                 Solo devuelve la frase.`;
+            try {
+                const phrase = await callGemini(prompt);
+                const clean = postProcessAIResponse(phrase, isNoSeparator, maxLen);
+                input.value = clean;
+                updateCharCount(); 
+                input.classList.add('ring-2', 'ring-pink-500');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-pink-500'), 500);
+            } catch (error) { console.error(error); }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function completeAIPhrase() {
+            console.log("Botón presionado: Completar Frase");
+            const btn = document.getElementById('aiCompleteBtn');
+            const input = document.getElementById('messageInput');
+            const separator = document.getElementById('wordSeparator').value;
+            const originalText = btn.innerHTML;
+            const currentText = input.value.trim();
+            if (!currentText) return; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            const maxLen = rows * cols;
+            const isNoSeparator = separator === 'none';
+            const currentLen = isNoSeparator ? currentText.replace(/\s/g, '').length : currentText.length;
+            const remaining = maxLen - currentLen;
+            if (remaining <= 0) {
+                 btn.innerHTML = originalText; 
+                 btn.disabled = false;
+                 alert("¡No queda espacio para completar!");
+                 return;
+            }
+            let prompt = isNoSeparator ? 
+                 `Completa la frase en Español: "${currentText}".
+                 El resultado final debe ser una frase natural con espacios.
+                 Debes añadir APROXIMADAMENTE ${remaining} LETRAS (sin espacios) para completar el puzzle.
+                 El total de letras NO PUEDE SUPERAR ${maxLen}.
+                 Solo devuelve la frase completa.` :
+                 `Completa la frase en Español: "${currentText}".
+                 Devuelve el texto COMPLETO con ESPACIOS NORMALES.
+                 El total de caracteres (incluyendo espacios) debe ser MÁXIMO ${maxLen}.
+                 Solo devuelve la frase completa.`;
+            try {
+                const phrase = await callGemini(prompt);
+                const clean = postProcessAIResponse(phrase, isNoSeparator, maxLen);
+                input.value = clean;
+                updateCharCount(); 
+                input.classList.add('ring-2', 'ring-green-500');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-green-500'), 500);
+            } catch (error) { console.error(error); }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+        
+        function postProcessAIResponse(rawPhrase, isNoSeparator, maxLimit) {
+            let text = rawPhrase.trim().replace(/^["']|["']$/g, '').toUpperCase();
+            let currentLen = isNoSeparator ? text.replace(/\s/g, '').length : text.length;
+            if (currentLen <= maxLimit) return text;
+            let words = text.split(' ');
+            while (words.length > 0) {
+                words.pop(); 
+                let tempText = words.join(' ');
+                let tempLen = isNoSeparator ? tempText.replace(/\s/g, '').length : tempText.length;
+                if (tempLen <= maxLimit) {
+                    return tempText;
+                }
+            }
+            return text.substring(0, maxLimit); 
+        }
+
+        function updateCharCount() {
+            const input = document.getElementById('messageInput');
+            if(!input) return;
+            const max = rows * cols;
+            const val = input.value;
+            const len = val.length;
+            document.getElementById('charCount').innerHTML = `${len} / ${max}`;
+        }
+
+        // --- CORE GAME LOGIC ---
+        function findKnightPath(R, C) {
+            const MAX_ATTEMPTS = 2000;
+            for(let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                let startR = Math.floor(Math.random() * R);
+                let startC = Math.floor(Math.random() * C);
+                let path = [[startR, startC]];
+                let visited = new Set();
+                visited.add(`${startR},${startC}`);
+                let currR = startR; let currC = startC;
+                const movesDefinition = [[2,1], [1,2], [-1,2], [-2,1], [-2,-1], [-1,-2], [1,-2], [2,-1]];
+                const totalCells = R * C;
+                let success = true;
+                for (let step = 1; step < totalCells; step++) {
+                    let possibleMoves = [];
+                    for (let m of movesDefinition) {
+                        let nr = currR + m[0]; let nc = currC + m[1];
+                        if (nr >= 0 && nr < R && nc >= 0 && nc < C && !visited.has(`${nr},${nc}`)) {
+                            let onwardCount = 0;
+                            for (let om of movesDefinition) {
+                                let onr = nr + om[0]; let onc = nc + om[1];
+                                if (onr >= 0 && onr < R && onc >= 0 && onc < C && !visited.has(`${onr},${onc}`)) onwardCount++;
+                            }
+                            possibleMoves.push({r: nr, c: nc, degree: onwardCount});
+                        }
+                    }
+                    if (possibleMoves.length === 0) { success = false; break; }
+                    possibleMoves.sort((a, b) => a.degree - b.degree);
+                    let minDegree = possibleMoves[0].degree;
+                    let bestCandidates = possibleMoves.filter(m => m.degree === minDegree);
+                    let next = bestCandidates[Math.floor(Math.random() * bestCandidates.length)];
+                    currR = next.r; currC = next.c;
+                    visited.add(`${currR},${currC}`);
+                    path.push([currR, currC]);
+                }
+                if (success && path.length === totalCells) return path;
+            }
+            return null;
+        }
+
+        function generateCryptogram() {
+            console.log("Botón presionado: Encriptar");
+            const input = document.getElementById('messageInput');
+            if (!input) return;
+
+            const fillOption = document.getElementById('fillOption').value;
+            const separator = document.getElementById('wordSeparator').value;
+            const discardSpaces = (separator === 'none');
+
+            lastDecodedMessageOriginal = input.value;
+
+            let rawText = input.value.toUpperCase();
+            if (discardSpaces) {
+                rawText = rawText.replace(/\s/g, '');
+            } else if (separator !== 'space') {
+                let replacement = ' ';
+                if (separator === 'cross') replacement = CROSS_MARKER;
+                else if (separator === 'cross_medium') replacement = CROSS_MEDIUM_MARKER;
+                else if (separator === 'block') replacement = BLOCK_MARKER;
+                else if (separator === 'knight') replacement = KNIGHT_MARKER;
+                
+                rawText = rawText.replace(/\s/g, replacement);
+            }
+            
+            if (rawText.length === 0) return;
+            
+            const regex = new RegExp(`(${CROSS_MARKER}|${CROSS_MEDIUM_MARKER}|${BLOCK_MARKER}|${KNIGHT_MARKER}|.)`, 'g');
+            
+            let tokens = rawText.match(regex) || [];
+            
+            const maxCells = rows * cols;
+            validMessageLength = Math.min(tokens.length, maxCells);
+            
+            if (tokens.length > maxCells) {
+                tokens = tokens.slice(0, maxCells);
+            }
+
+            const missingChars = maxCells - tokens.length;
+            if (missingChars > 0) {
+                 if (fillOption === 'random') {
+                    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                    for(let i=0; i<missingChars; i++) tokens.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
+                } else if (fillOption === 'white_square') {
+                    for(let i=0; i<missingChars; i++) tokens.push(BLOCK_MARKER);
+                } else if (fillOption === 'cross_x') {
+                    for(let i=0; i<missingChars; i++) tokens.push(CROSS_MARKER);
+                } else if (fillOption === 'cross_medium') {
+                    for(let i=0; i<missingChars; i++) tokens.push(CROSS_MEDIUM_MARKER);
+                } else if (fillOption === 'knight') {
+                    for(let i=0; i<missingChars; i++) tokens.push(KNIGHT_MARKER);
+                } else if (fillOption === 'empty') {
+                    for(let i=0; i<missingChars; i++) tokens.push(" ");
+                }
+            }
+            
+            globalTokens = tokens;
+
+            let path = findKnightPath(rows, cols);
+            if (!path || path.length < maxCells) {
+                 const errorMsg = document.getElementById('errorMsg');
+                 if(errorMsg) errorMsg.classList.remove('hidden');
+                 return;
+            }
+            
+            const errorMsg = document.getElementById('errorMsg');
+            if(errorMsg) errorMsg.classList.add('hidden');
+
+            currentPath = path;
+            
+            renderBoardState();
+            toggleHintButtons(true); 
+
+            const solveBtn = document.getElementById('solveBtn');
+            if(solveBtn) solveBtn.disabled = false;
+            
+            const decodedText = document.getElementById('decodedText');
+            if(decodedText) {
+                decodedText.textContent = "LISTO PARA RESOLVER";
+                decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
+            }
+            resetTimer(); 
+        }
+        
+        function setBoardSize(r, c) {
+            console.log(`Botón presionado: Tablero ${r}x${c}`);
+            rows = r; cols = c; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0;
+            
+            const info = document.getElementById('boardInfo');
+            if(info) info.textContent = `Tablero ${r}x${c}`;
+            
+            document.querySelectorAll('.board-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-pink-500');
+                if(parseInt(btn.dataset.rows) === r && parseInt(btn.dataset.cols) === c) {
+                    btn.classList.add('ring-2', 'ring-pink-500');
+                }
+            });
+
+            document.querySelectorAll('.arcade-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(parseInt(btn.dataset.rows) === r && parseInt(btn.dataset.cols) === c) {
+                    btn.classList.add('active');
+                }
+            });
+
+            createEmptyBoard(); 
+            toggleHintButtons(false); 
+            resetTimer();
+        }
+
+        function playerSelectSize(r, c) {
+            console.log(`Jugador seleccionó: ${r}x${c}`);
+            setBoardSize(r, c);
+            const randomPhrase = WELCOME_PHRASES[Math.floor(Math.random() * WELCOME_PHRASES.length)];
+            const input = document.getElementById('messageInput');
+            if(input) {
+                input.value = randomPhrase;
+                updateCharCount();
+                generateCryptogram(); 
+            }
+        }
+
+        function createEmptyBoard() {
+            const board = document.getElementById('board');
+            if(!board) return;
+            const ranksCol = document.getElementById('ranks-col');
+            const filesRow = document.getElementById('files-row');
+            if(ranksCol) ranksCol.innerHTML = ''; 
+            if(filesRow) filesRow.innerHTML = '';
+            board.innerHTML = '';
+            
+            const widthConstraint = `calc((100vw - 60px) / ${cols})`;
+            const heightConstraint = `calc((80vh - 40px) / ${rows})`;
+            const cellSizeExpr = `min(60px, ${widthConstraint}, ${heightConstraint})`;
+
+            board.style.gridTemplateColumns = `repeat(${cols}, ${cellSizeExpr})`;
+            board.style.gridTemplateRows = `repeat(${rows}, ${cellSizeExpr})`;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${r}-${c}`;
+                    cell.onclick = () => handleCellClick(r, c);
+                    const fileChar = String.fromCharCode(97 + c); 
+                    const rankNum = rows - r; 
+                    cell.setAttribute('data-coord', `${fileChar}${rankNum}`);
+                    board.appendChild(cell);
+                }
+            }
+            if(ranksCol) {
+                for (let r = 0; r < rows; r++) { const div = document.createElement('div'); div.className = 'rank-label'; div.textContent = rows - r; ranksCol.appendChild(div); }
+            }
+            if(filesRow) {
+                for (let c = 0; c < cols; c++) { const div = document.createElement('div'); div.className = 'file-label'; div.textContent = String.fromCharCode(97 + c); filesRow.appendChild(div); }
+            }
+        }
+
+        function renderBoardState() {
+             const max = rows*cols;
+             document.querySelectorAll('.cell').forEach(cell => {
+                cell.textContent = '';
+                cell.className = 'cell'; 
+                delete cell.dataset.letter;
+             });
+             for(let i=0; i<max; i++) {
+                 if(i<currentPath.length && i<globalTokens.length) {
+                     const [r,c] = currentPath[i];
+                     const token = globalTokens[i];
+                     const cell = document.getElementById(`cell-${r}-${c}`);
+                     if(cell) {
+                        if (token === CROSS_MARKER) {
+                            cell.classList.add('crossed-out');
+                            cell.textContent = ""; 
+                            cell.dataset.letter = ""; 
+                        } else if (token === CROSS_MEDIUM_MARKER) {
+                            cell.classList.add('cross-medium');
+                            cell.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                            cell.dataset.letter = "";
+                        } else if (token === BLOCK_MARKER) {
+                            cell.classList.add('white-block');
+                            cell.textContent = ""; 
+                            cell.dataset.letter = ""; 
+                        } else if (token === KNIGHT_MARKER) {
+                            cell.classList.add('knight-decoration');
+                            cell.innerHTML = '<i class="fa-solid fa-chess-knight"></i>'; 
+                            cell.dataset.letter = "";
+                        } else {
+                            cell.textContent = token;
+                            cell.dataset.letter = token;
+                        }
+                     }
+                 }
+             }
+             restorePathVisuals();
+        }
+
+        function restorePathVisuals() {
+            if (isAutoSolved) {
+                currentPath.forEach((pos, idx) => {
+                    const [r, c] = pos;
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    if (!cell) return;
+                    
+                    if (idx === 0) cell.classList.add('start-cell');
+
+                    if (validMessageLength > 0 && idx === validMessageLength - 1) {
+                        cell.classList.add('message-final-char');
+                    }
+
+                    const isFillerStep = idx >= validMessageLength;
+                    const token = globalTokens[idx];
+                    const isSeparator = isTokenSeparator(token);
+
+                    if (isFillerStep) cell.classList.add('active-filler');
+                    else if (isSeparator) cell.classList.add('active-separator');
+                    else cell.classList.add('active-msg');
+                    
+                    if (idx === currentPath.length - 1) {
+                         if (isFillerStep) cell.classList.add('knight-pos-filler');
+                         else cell.classList.add('knight-pos-msg');
+                         cell.classList.remove('active-filler', 'active-msg', 'active-separator');
+                    }
+                    const badge = document.createElement('span');
+                    badge.className = 'step-number';
+                    badge.innerText = idx + 1;
+                    cell.appendChild(badge);
+                });
+                 const grid = document.querySelector('.chess-grid');
+                 if(grid) grid.classList.add('success'); 
+
+            } else {
+                if (userPath.length > 0) {
+                    userPath.forEach((pos, idx) => {
+                        const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
+                        if (!cell) return;
+                        
+                        if (idx === 0) cell.classList.add('start-cell');
+
+                        if (validMessageLength > 0 && idx === validMessageLength - 1) {
+                            cell.classList.add('message-final-char');
+                        }
+
+                        const isFillerStep = idx >= validMessageLength;
+                        const isLast = idx === userPath.length - 1;
+                        const token = globalTokens[idx];
+                        const isSeparator = isTokenSeparator(token);
+
+                        if (isLast) {
+                            if (isFillerStep) cell.classList.add('user-selected-filler'); 
+                            else if (isSeparator) cell.classList.add('user-selected-separator');
+                            else cell.classList.add('user-selected'); 
+                        } else {
+                            if (isFillerStep) cell.classList.add('user-path-filler'); 
+                            else if (isSeparator) cell.classList.add('user-path-separator');
+                            else cell.classList.add('user-path'); 
+                        }
+
+                        const badge = document.createElement('span');
+                        badge.className = 'step-number';
+                        badge.innerText = idx + 1;
+                        cell.appendChild(badge);
+                    });
+                    const last = userPath[userPath.length - 1];
+                    showPossibleMoves(last.r, last.c);
+                     if (userPath.length === validMessageLength) {
+                         const grid = document.querySelector('.chess-grid');
+                         if(grid) grid.classList.add('success');
+                     }
+                }
+                
+                if (activeEndHints > 0) {
+                    const messageEndIndex = validMessageLength; 
+                    const startIndex = Math.max(0, messageEndIndex - activeEndHints);
+                    
+                    for(let i = startIndex; i < messageEndIndex; i++) {
+                        if (i >= 0 && i < currentPath.length) { 
+                            const [r, c] = currentPath[i];
+                            const cell = document.getElementById(`cell-${r}-${c}`);
+                            if (cell) {
+                                cell.classList.add('hint-end');
+                                const stepNum = i + 1;
+                                if (!cell.querySelector('.step-number')) {
+                                     const badge = document.createElement('span');
+                                     badge.className = 'step-number';
+                                     badge.innerText = stepNum;
+                                     cell.appendChild(badge);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleCellClick(r, c) {
+            const solveBtn = document.getElementById('solveBtn');
+            if (solveBtn && solveBtn.disabled || isAnimating || isAutoSolved) return;
+
+            const cellId = `cell-${r}-${c}`;
+            const cell = document.getElementById(cellId);
+            
+            console.log("Celda clickeada:", r, c);
+
+            if (!isTimerRunning && userPath.length < validMessageLength) {
+                startTimer();
+            }
+            
+            if (userPath.length > 0) {
+                const lastMove = userPath[userPath.length - 1];
+                if (lastMove.r === r && lastMove.c === c) {
+                    if (userPath.length <= lockedHintCount) {
+                        cell.classList.add('ring-2', 'ring-red-500');
+                        setTimeout(() => cell.classList.remove('ring-2', 'ring-red-500'), 200);
+                        return;
+                    }
+                    
+                    // Deshacer
+                    cell.classList.remove('user-selected', 'message-final-char', 'user-selected-filler', 'user-selected-separator');
+                    const badge = cell.querySelector('.step-number');
+                    if (badge) badge.remove();
+                    userPath.pop();
+                    
+                    const boardWrapper = document.getElementById('boardWrapper');
+                    if(boardWrapper) boardWrapper.classList.remove('success');
+                    
+                    const showSpacesBtn = document.getElementById('showSpacesBtn');
+                    if(showSpacesBtn) showSpacesBtn.classList.add('hidden');
+                    
+                    updateUserDecodedText();
+                    clearPossibleMoves();
+                    
+                    if (userPath.length > 0) {
+                        const newLast = userPath[userPath.length - 1];
+                        const newLastCell = document.getElementById(`cell-${newLast.r}-${newLast.c}`);
+                        newLastCell.classList.remove('user-path', 'user-path-filler', 'user-path-separator'); 
+                        
+                        const newLastIsFiller = (userPath.length - 1) >= validMessageLength;
+                        const token = globalTokens[userPath.length - 1];
+                        const isSep = isTokenSeparator(token);
+
+                        if (newLastIsFiller) newLastCell.classList.add('user-selected-filler');
+                        else if (isSep) newLastCell.classList.add('user-selected-separator');
+                        else newLastCell.classList.add('user-selected');
+
+                        if (validMessageLength > 0 && userPath.length === validMessageLength) {
+                            newLastCell.classList.add('message-final-char');
+                        }
+                        showPossibleMoves(newLast.r, newLast.c);
+                    } else {
+                        const decodedText = document.getElementById('decodedText');
+                        if(decodedText) {
+                            decodedText.textContent = "LISTO PARA RESOLVER";
+                            decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
+                        }
+                    }
+                    return;
+                }
+            }
+            
+            // Validar movimiento
+            if (userPath.length > 0) {
+                const lastMove = userPath[userPath.length - 1];
+                if (!isValidKnightMove(lastMove.r, lastMove.c, r, c)) return;
+                if (userPath.some(p => p.r === r && p.c === c)) return;
+            }
+            
+            // Mover el anterior a path
+            if (userPath.length > 0) {
+                const lastMove = userPath[userPath.length - 1];
+                const lastCell = document.getElementById(`cell-${lastMove.r}-${lastMove.c}`);
+                lastCell.classList.remove('user-selected', 'user-selected-filler', 'user-selected-separator');
+                
+                const prevIsFiller = (userPath.length - 1) >= validMessageLength;
+                const prevToken = globalTokens[userPath.length - 1];
+                const prevIsSep = isTokenSeparator(prevToken);
+
+                if (prevIsFiller) lastCell.classList.add('user-path-filler');
+                else if (prevIsSep) lastCell.classList.add('user-path-separator');
+                else lastCell.classList.add('user-path');
+            }
+            
+            userPath.push({r, c});
+            const currentIdx = userPath.length - 1;
+            const currentToken = globalTokens[currentIdx];
+            
+            const currentIsFiller = currentIdx >= validMessageLength;
+            const currentIsSep = isTokenSeparator(currentToken);
+
+            if (currentIsFiller) cell.classList.add('user-selected-filler');
+            else if (currentIsSep) cell.classList.add('user-selected-separator');
+            else cell.classList.add('user-selected');
+
+            const badge = document.createElement('span');
+            badge.className = 'step-number';
+            badge.innerText = userPath.length;
+            cell.appendChild(badge);
+            clearPossibleMoves();
+            showPossibleMoves(r, c);
+            
+            if (userPath.length === 1) cell.classList.add('start-cell');
+            
+            if (validMessageLength > 0 && userPath.length === validMessageLength) {
+                cell.classList.add('message-final-char');
+            }
+
+            updateUserDecodedText();
+            if (userPath.length === validMessageLength) {
+                const boardWrapper = document.getElementById('boardWrapper');
+                if(boardWrapper) boardWrapper.classList.add('success');
+                
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-text text-sm md:text-base font-bold mt-2';
+                successMsg.textContent = "¡CRIPTOGRAMA RESUELTO! 🎉";
+                const decodedText = document.getElementById('decodedText');
+                if(decodedText) decodedText.appendChild(successMsg);
+                
+                const showSpacesBtn = document.getElementById('showSpacesBtn');
+                if(showSpacesBtn) showSpacesBtn.classList.remove('hidden');
+                
+                stopTimer(); 
+                launchConfetti();
+            }
+        }
+        
+        // --- UTILS & RESTORED FUNCTIONS ---
+        function isValidKnightMove(r1, c1, r2, c2) {
+            const dr = Math.abs(r1 - r2); const dc = Math.abs(c1 - c2);
+            return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
+        }
+
+        function showPossibleMoves(r, c) {
+            if (!showMovesEnabled) return; 
+            const moves = [[2,1], [1,2], [-1,2], [-2,1], [-2,-1], [-1,-2], [1,-2], [2,-1]];
+            moves.forEach(m => {
+                const nr = r + m[0]; const nc = c + m[1];
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                    if (!userPath.some(p => p.r === nr && p.c === nc)) {
+                        const cell = document.getElementById(`cell-${nr}-${nc}`);
+                        if (cell) cell.classList.add('possible-move');
+                    }
+                }
+            });
+        }
+        
+        function clearPossibleMoves() { document.querySelectorAll('.possible-move').forEach(el => el.classList.remove('possible-move')); }
+
+        function updateUserDecodedText() {
+            const output = document.getElementById('decodedText');
+            if(!output) return;
+            
+            if (userPath.length === 0) {
+                output.textContent = "LISTO PARA RESOLVER";
+                output.className = "text-lg md:text-xl font-bold text-slate-600";
+                return;
+            }
+            output.innerHTML = '';
+            output.className = "text-lg md:text-2xl font-bold break-words leading-relaxed";
+            
+            userPath.forEach((pos, idx) => {
+                const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
+                const letter = cell.dataset.letter || ""; 
+                const span = document.createElement('span');
+                span.className = 'user-decoded-char'; 
+                span.textContent = letter;
+                output.appendChild(span);
+
+                if (idx === validMessageLength - 1 && validMessageLength < (rows * cols)) {
+                    const separator = document.createElement('div');
+                    separator.className = 'msg-separator';
+                    separator.textContent = 'MENSAJE COMPLETADO';
+                    output.appendChild(separator);
+                }
+            });
+            if (userPath.length === (rows * cols)) {
+                 const endMarker = document.createElement('div');
+                endMarker.className = 'text-xs text-red-400 font-mono mt-4 opacity-75';
+                endMarker.textContent = '// FIN DE TRANSMISIÓN //';
+                output.appendChild(endMarker);
+            }
+        }
+
+        // --- UI HANDLERS (CARTEL 3D) ---
+        function handleSignClick(e) { 
+            console.log("Cartel Clickeado");
+            const container = e.currentTarget; 
+            const rect = container.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const isLeftEdge = clickX < (width * 0.3);
+            const isRightEdge = clickX > (width * 0.7);
+            if (!isLeftEdge && !isRightEdge) return; 
+            const directionClass = isLeftEdge ? 'flip-right' : 'flip-left';
+            triggerFlipAnimation(container, directionClass);
+        }
+        function handleSignHover(e) { 
+            const container = e.currentTarget;
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const width = rect.width;
+            const centerX = width / 2;
+            if (mouseX < centerX) {
+                container.classList.add('tilt-left');
+                container.classList.remove('tilt-right');
+            } else {
+                container.classList.add('tilt-right');
+                container.classList.remove('tilt-left');
+            }
+        }
+        function resetSignTilt() { 
+            const container = document.getElementById('gameModeContainer');
+            container.classList.remove('tilt-left', 'tilt-right');
+        }
+
+        // --- UI HELPERS ---
+        function startTimer() { if (isTimerRunning) return; isTimerRunning = true; startTime = Date.now(); timerInterval = setInterval(updateTimer, 10); }
+        function stopTimer() { isTimerRunning = false; clearInterval(timerInterval); }
+        function resetTimer() { stopTimer(); const t=document.getElementById('timer'); if(t) t.textContent = "00:00:00"; }
+        function updateTimer() { const now = Date.now(); const diff = now - startTime; const minutes = Math.floor(diff / 60000); const seconds = Math.floor((diff % 60000) / 1000); const centiseconds = Math.floor((diff % 1000) / 10); const mStr = minutes.toString().padStart(2, '0'); const sStr = seconds.toString().padStart(2, '0'); const csStr = centiseconds.toString().padStart(2, '0'); const t=document.getElementById('timer'); if(t) t.textContent = `${mStr}:${sStr}:${csStr}`; }
+        function resetCurrentLevel() { console.log("Botón presionado: Reset Level"); userPath = []; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0; resetTimer(); const b=document.getElementById('board'); if(b) b.classList.remove('success'); const s=document.getElementById('showSpacesBtn'); if(s) s.classList.add('hidden'); const d=document.getElementById('decodedText'); if(d) { d.textContent = "LISTO PARA RESOLVER"; d.className = "text-lg md:text-xl font-bold text-slate-600"; } renderBoardState(); const sv=document.getElementById('solveBtn'); if(sv) sv.classList.remove('hidden'); const c=document.getElementById('continueBtn'); if(c) c.classList.add('hidden'); }
+        function openSaveModal() { console.log("Botón presionado: Abrir Guardar"); if (!currentPath || currentPath.length === 0) return; const m=document.getElementById('saveModal'); if(m) m.classList.add('active'); const i=document.getElementById('messageInput'); const n=document.getElementById('lvlName'); if(i && n) { n.value = i.value.split(' ').slice(0, 2).join(' '); } }
+        function closeSaveModal() { const m=document.getElementById('saveModal'); if(m) m.classList.remove('active'); }
+        function confirmSave() { console.log("Botón presionado: Confirmar Guardar"); console.log("Guardando..."); closeSaveModal(); alert("Simulación: Guardado en DB."); }
+        function updateMovesVisuals() { const t=document.getElementById('showMovesToggle'); if (!t) return; showMovesEnabled = t.checked; const off=document.getElementById('label-moves-off'); const on=document.getElementById('label-moves-on'); if (showMovesEnabled) { if(on) on.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-yellow-400 font-bold transform scale-105"; if(off) off.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-slate-500 font-normal"; if (!isAutoSolved && userPath.length > 0) { const last = userPath[userPath.length - 1]; showPossibleMoves(last.r, last.c); } } else { if(off) off.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-red-400 font-bold transform scale-105"; if(on) on.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-slate-500 font-normal"; clearPossibleMoves(); } }
+        function copyToClipboard() { console.log("Botón presionado: Copiar al portapapeles"); const i=document.getElementById('messageInput'); i.select(); i.setSelectionRange(0, 99999); try { var s=document.execCommand('copy'); if(s) showCopySuccess(); else { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(i.value).then(() => showCopySuccess()).catch(err => console.error(err)); } } catch (err) { console.error('Copy error', err); } }
+        function showCopySuccess() { const b=document.getElementById('copyBtn'); const o=b.innerHTML; b.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>'; setTimeout(() => b.innerHTML = o, 2000); }
+        function toggleHintButtons(enable) { const s=document.getElementById('btnStartHint'); if(s) s.disabled = !enable; const e=document.getElementById('btnEndHint'); if(e) e.disabled = !enable; const sv=document.getElementById('saveBtn'); if(sv) sv.disabled = !enable; }
+        function applyStartHint() { console.log("Botón presionado: Pista Inicio"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('startHintCount').value)||0; isAutoSolved=false; userPath=[]; resetTimer(); document.getElementById('board').classList.remove('success'); document.getElementById('showSpacesBtn').classList.add('hidden'); for (let i=0; i<n && i<currentPath.length; i++) { const [r,c]=currentPath[i]; userPath.push({r,c}); } lockedHintCount=userPath.length; renderBoardState(); if (userPath.length>0) { const last=userPath[userPath.length-1]; showPossibleMoves(last.r, last.c); } updateUserDecodedText(); if (userPath.length===validMessageLength && validMessageLength>0) { document.getElementById('board').classList.add('success'); launchConfetti(); } }
+        function applyEndHint() { console.log("Botón presionado: Pista Fin"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('endHintCount').value)||0; activeEndHints=n; renderBoardState(); }
+        function toggleSpaces() { console.log("Botón presionado: Ver/Ocultar Espacios"); isShowingSpaces = !isShowingSpaces; const b=document.getElementById('showSpacesBtn'); const d=document.getElementById('decodedText'); if (isShowingSpaces) { b.classList.add('active'); b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios'; d.innerHTML = `<span class="decoded-msg-char">${lastDecodedMessageOriginal.toUpperCase()}</span>`; } else { b.classList.remove('active'); b.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios'; updateUserDecodedText(); } }
+        
+        function startResolver() { 
+            console.log("Botón presionado: RESOLVER (AUTO)"); 
+            isAutoSolved = true; 
+            userPath = []; 
+            clearPossibleMoves(); 
+            document.getElementById('boardWrapper').classList.remove('success'); 
+            const showSpacesBtn = document.getElementById('showSpacesBtn'); 
+            if(showSpacesBtn) showSpacesBtn.classList.add('hidden'); 
+            currentStep = 0; 
+            document.querySelectorAll('.cell').forEach(c => { 
+                c.classList.remove('active', 'active-msg', 'active-filler', 'active-separator', 'knight-pos-msg', 'knight-pos-filler', 'user-selected', 'user-path', 'user-selected-filler', 'user-path-filler', 'user-selected-separator', 'user-path-separator', 'start-cell', 'auto-solve-start', 'message-final-char'); 
+                const badge = c.querySelector('.step-number'); 
+                if(badge) badge.remove(); 
+            }); 
+            const decodedEl = document.getElementById('decodedText'); 
+            if(decodedEl) { 
+                decodedEl.textContent = ""; 
+                decodedEl.className = "text-lg md:text-2xl font-bold break-words"; 
+            } 
+            targetStep = validMessageLength; 
+            const continueBtn = document.getElementById('continueBtn'); 
+            if(continueBtn) continueBtn.classList.add('hidden'); 
+            const solveBtn = document.getElementById('solveBtn'); 
+            if(solveBtn) solveBtn.classList.remove('hidden'); 
+            startAnimationLoop(); 
+        }
+        
+        function continueAnimation() { 
+            console.log("Botón presionado: CONTINUAR"); 
+            targetStep = rows * cols; 
+            const continueBtn = document.getElementById('continueBtn'); 
+            if(continueBtn) continueBtn.classList.add('hidden'); 
+            startAnimationLoop(); 
+        }
+        
+        function startAnimationLoop() { 
+            if (isAnimating) return; 
+            isAnimating = true; 
+            let speed = 500; 
+            if (rows * cols > 30) speed = 350; 
+            if (rows * cols >= 64) speed = 250; 
+            
+            function animateStep() { 
+                if (currentStep >= targetStep) { 
+                    isAnimating = false; 
+                    if (targetStep === validMessageLength && validMessageLength < (rows * cols)) { 
+                        const solveBtn = document.getElementById('solveBtn'); 
+                        if(solveBtn) solveBtn.classList.add('hidden'); 
+                        const continueBtn = document.getElementById('continueBtn'); 
+                        if(continueBtn) continueBtn.classList.remove('hidden'); 
+                        const decodedEl = document.getElementById('decodedText'); 
+                        const separator = document.createElement('div'); 
+                        separator.className = 'msg-separator'; 
+                        separator.textContent = 'MENSAJE COMPLETADO'; 
+                        if(decodedEl) decodedEl.appendChild(separator); 
+                        const grid = document.querySelector('.chess-grid'); 
+                        if (grid) grid.classList.add('success'); 
+                        const showSpacesBtn = document.getElementById('showSpacesBtn'); 
+                        if(showSpacesBtn) showSpacesBtn.classList.remove('hidden'); 
+                        launchConfetti(); 
+                    } else if (currentStep === (rows * cols)) { 
+                        const solveBtn = document.getElementById('solveBtn'); 
+                        if(solveBtn) solveBtn.classList.remove('hidden'); 
+                        const decodedEl = document.getElementById('decodedText'); 
+                        const endMarker = document.createElement('div'); 
+                        endMarker.className = 'text-xs text-red-400 font-mono mt-4 opacity-75'; 
+                        endMarker.textContent = '// FIN DE TRANSMISIÓN //'; 
+                        if(decodedEl) decodedEl.appendChild(endMarker); 
+                    } 
+                    return; 
+                } 
+                
+                const [r, c] = currentPath[currentStep]; 
+                const cell = document.getElementById(`cell-${r}-${c}`); 
+                if(!cell) return; 
+                const letter = cell.dataset.letter; 
+                const isFillerStep = currentStep >= validMessageLength; 
+                const token = globalTokens[currentStep]; 
+                const isSeparator = isTokenSeparator(token); 
+                
+                if (currentStep > 0) { 
+                    const [pr, pc] = currentPath[currentStep-1]; 
+                    const prev = document.getElementById(`cell-${pr}-${pc}`); 
+                    if(prev) { 
+                        const wasFillerStep = (currentStep - 1) >= validMessageLength; 
+                        const prevTok = globalTokens[currentStep - 1]; 
+                        const wasSep = isTokenSeparator(prevTok); 
+                        prev.classList.remove('knight-pos-msg', 'knight-pos-filler'); 
+                        if (wasFillerStep) prev.classList.add('active-filler'); 
+                        else if (wasSep) prev.classList.add('active-separator'); 
+                        else prev.classList.add('active-msg'); 
+                    } 
+                } 
+                
+                if (currentStep === 0) { 
+                    cell.classList.add('start-cell'); 
+                    cell.classList.add('auto-solve-start'); 
+                } 
+                
+                if (validMessageLength > 0 && currentStep === validMessageLength - 1) { 
+                    cell.classList.add('message-final-char'); 
+                } 
+                
+                if (isFillerStep) cell.classList.add('knight-pos-filler'); 
+                else cell.classList.add('knight-pos-msg'); 
+                
+                const badge = document.createElement('span'); 
+                badge.className = 'step-number'; 
+                badge.innerText = currentStep + 1; 
+                cell.appendChild(badge); 
+                
+                const decodedEl = document.getElementById('decodedText'); 
+                const span = document.createElement('span'); 
+                if (isFillerStep) span.className = 'decoded-filler-char'; 
+                else span.className = 'decoded-msg-char'; 
+                span.textContent = letter; 
+                if(decodedEl) decodedEl.appendChild(span); 
+                
+                currentStep++; 
+                animationInterval = setTimeout(animateStep, speed); 
+            } 
+            animateStep(); 
+        }
+        
+        function stopAnimation() { clearTimeout(animationInterval); isAnimating = false; }
+        function launchConfetti() { const container = document.getElementById('confetti-container'); const colors = ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#a855f7', '#ec4899', '#06b6d4']; for (let i = 0; i < 50; i++) { const confetti = document.createElement('div'); confetti.className = 'confetti'; confetti.style.left = Math.random() * 100 + '%'; confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; confetti.style.animationDuration = (Math.random() * 2 + 3) + 's'; confetti.style.animationDelay = (Math.random() * 2) + 's'; container.appendChild(confetti); setTimeout(() => confetti.remove(), 6000); } }
+
+        // ============================================
+        // ADMIN PASSWORD PROTECTION
+        // ============================================
+        // CONFIGURACIÓN: Ver archivo config.example.js para instrucciones
+        // El password real debe estar en /.private/criptocaballo-config.js
+        const ADMIN_PASSWORD = window.CRYPTO_CONFIG?.admin?.password || "CAMBIAR_ESTE_PASSWORD";
+
+        function verifyAdminPassword() {
+            const input = document.getElementById('adminPasswordInput');
+            const error = document.getElementById('loginError');
+            const modal = document.getElementById('adminLoginModal');
+
+            if (input.value === ADMIN_PASSWORD) {
+                // Password correcto
+                localStorage.setItem('adminAuthenticated', 'true');
+                modal.style.display = 'none';
+                error.classList.add('hidden');
+            } else {
+                // Password incorrecto
+                error.classList.remove('hidden');
+                input.value = '';
+                input.focus();
+                // Shake animation
+                input.style.animation = 'shake 0.5s';
+                setTimeout(() => input.style.animation = '', 500);
+            }
+        }
+
+        // Verificar si ya está autenticado
+        window.addEventListener('DOMContentLoaded', () => {
+            const isAuthenticated = localStorage.getItem('adminAuthenticated');
+            if (isAuthenticated === 'true') {
+                document.getElementById('adminLoginModal').style.display = 'none';
+            }
+
+            // Permitir Enter para login
+            document.getElementById('adminPasswordInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyAdminPassword();
+            });
+        });
+
+        // Agregar animación shake
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
