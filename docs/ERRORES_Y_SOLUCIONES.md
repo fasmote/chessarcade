@@ -3807,28 +3807,44 @@ En Master Sequence (y posiblemente otros juegos), algunas casillas del tablero n
 
 ### 🔍 Causa Raíz
 
-El menú dropdown `.games-menu-dropdown` tiene las siguientes propiedades cuando **NO está activo**:
+**Problema Complejo con DOS Elementos:**
+
+Hay una jerarquía de contenedores con `position: fixed`:
+
+```html
+<div class="floating-games-menu">        ← Contenedor padre
+  <div class="games-menu-dropdown">      ← Dropdown hijo
+    <!-- Menú items -->
+  </div>
+</div>
+```
+
+**CSS Original (INCORRECTO):**
 
 ```css
-.games-menu-dropdown {
+.floating-games-menu {
     position: fixed;
     top: 80px;
     right: 20px;
     z-index: 1000;
+    /* ❌ SIN pointer-events: none; */
+}
+
+.games-menu-dropdown {
     opacity: 0;
     visibility: hidden;
-    /* ❌ FALTA: pointer-events: none; */
+    /* ❌ SIN pointer-events: none; */
 }
 ```
 
-**El problema:**
+**El problema en detalle:**
 
-Aunque el menú es **invisible** (`opacity: 0` y `visibility: hidden`), sigue siendo **interactivo** porque no tiene `pointer-events: none`. Esto significa que:
-
-1. El menú ocupa espacio en la posición `top: 80px, right: 20px`
-2. Tiene `min-width: 220px` de ancho y ~5 items × 50px = ~250px de alto
-3. Aunque invisible, **captura todos los eventos de clic** en esa área
-4. Cualquier casilla del tablero que esté **debajo** del área del menú queda bloqueada
+1. **AMBOS elementos** tienen `position: fixed` con `z-index: 1000`
+2. **Contenedor padre** `.floating-games-menu` ocupa espacio en la pantalla
+3. **Dropdown hijo** `.games-menu-dropdown` también ocupa espacio (220×250px aprox)
+4. Aunque invisibles (`opacity: 0` y `visibility: hidden`), **siguen capturando eventos de clic**
+5. Cualquier casilla del tablero **debajo** de estos elementos queda bloqueada
+6. El problema es más notorio cerca del botón "JUEGOS" en la esquina superior derecha
 
 **Diagrama del problema:**
 
@@ -3866,11 +3882,19 @@ Revisión completa de todos los juegos:
 
 ### ✅ Solución Implementada
 
-Agregar `pointer-events: none` cuando el menú **NO está activo**, y `pointer-events: auto` cuando **SÍ está activo**:
+**SOLUCIÓN COMPLETA:** Agregar `pointer-events: none` a **AMBOS** elementos (padre e hijo):
 
 **ANTES (Problemático):**
 
 ```css
+.floating-games-menu {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    /* ❌ Sin pointer-events - BLOQUEABA CLICS */
+}
+
 .games-menu-dropdown {
     background: rgba(26, 0, 51, 0.95);
     border: 2px solid var(--neon-yellow);
@@ -3878,7 +3902,7 @@ Agregar `pointer-events: none` cuando el menú **NO está activo**, y `pointer-e
     min-width: 220px;
     opacity: 0;
     visibility: hidden;
-    /* ❌ Sin pointer-events */
+    /* ❌ Sin pointer-events - BLOQUEABA CLICS */
     transform: translateY(-10px);
     transition: all 0.3s ease;
 }
@@ -3893,6 +3917,14 @@ Agregar `pointer-events: none` cuando el menú **NO está activo**, y `pointer-e
 **DESPUÉS (Correcto):**
 
 ```css
+.floating-games-menu {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    pointer-events: none;  /* ✅ Contenedor NO captura eventos */
+}
+
 .games-menu-dropdown {
     background: rgba(26, 0, 51, 0.95);
     border: 2px solid var(--neon-yellow);
@@ -3900,7 +3932,7 @@ Agregar `pointer-events: none` cuando el menú **NO está activo**, y `pointer-e
     min-width: 220px;
     opacity: 0;
     visibility: hidden;
-    pointer-events: none;  /* ✅ No captura eventos cuando invisible */
+    pointer-events: none;  /* ✅ Dropdown NO captura eventos cuando invisible */
     transform: translateY(-10px);
     transition: all 0.3s ease;
 }
@@ -3908,10 +3940,12 @@ Agregar `pointer-events: none` cuando el menú **NO está activo**, y `pointer-e
 .games-menu-dropdown.active {
     opacity: 1;
     visibility: visible;
-    pointer-events: auto;  /* ✅ Captura eventos cuando visible */
+    pointer-events: auto;  /* ✅ Dropdown SÍ captura eventos cuando visible */
     transform: translateY(0);
 }
 ```
+
+**Nota crítica:** Es necesario agregar `pointer-events: none` al **contenedor padre** también, no solo al dropdown hijo. Inicialmente solo se agregó al hijo, pero el padre seguía bloqueando clics.
 
 ### 🎯 Concepto Clave: `pointer-events`
 
@@ -3993,16 +4027,32 @@ document.elementsFromPoint(x, y);
 
 ### 📊 Resumen de Cambios
 
-**Archivos modificados:**
+**Archivos CSS modificados:**
 
-1. `games/master-sequence/styles.css` - Líneas 2019-2036
-2. `games/square-rush/css/square-rush.css` - Líneas 697-714
-3. `games/memory-matrix-v2/styles.css` - Líneas 2330-2347
-4. `games/chessinfive/css/chessinfive.css` - Líneas 1413-1430
+1. `games/master-sequence/styles.css` - Líneas 2017, 2026, 2036
+2. `games/square-rush/css/square-rush.css` - Líneas 695, 704, 714
+3. `games/memory-matrix-v2/styles.css` - Líneas 2328, 2337, 2347
+4. `games/chessinfive/css/chessinfive.css` - Líneas 1411, 1420, 1430
 
-**Cambios por archivo:** +2 líneas cada uno
+**Archivos HTML modificados (cache busting):**
+
+1. `games/master-sequence/index.html` - v4 → v5 → v6
+2. `games/square-rush/index.html` - v13 → v14 → v15
+3. `games/memory-matrix-v2/index.html` - sin versión → v1 → v2
+4. `games/chessinfive/index.html` - sin versión → v1 → v2
+
+**Cambios por archivo:** +3 líneas de CSS cada uno
 
 ```diff
++/* FLOATING GAMES MENU */
+ .floating-games-menu {
+     position: fixed;
+     top: 80px;
+     right: 20px;
+     z-index: 1000;
++    pointer-events: none;
+ }
+
  .games-menu-dropdown {
      opacity: 0;
      visibility: hidden;
@@ -4018,14 +4068,39 @@ document.elementsFromPoint(x, y);
  }
 ```
 
-### ✅ Resultado
+**Commits relacionados:**
 
-- ✅ Todas las casillas del tablero ahora son clickeables
+1. `2979170` - Primer intento: solo agregó pointer-events al dropdown hijo
+2. `37a529f` - Cache busting v1: incrementó versiones CSS pero faltaba fix en contenedor padre
+3. `74566f4` - **Fix definitivo**: agregó pointer-events al contenedor padre + cache busting v2
+
+### ✅ Resultado Final
+
+**Juegos Solucionados:**
+- ✅ **Master Sequence** - Todas las casillas clickeables
+- ✅ **Square Rush** - Todas las casillas clickeables
+- ✅ **Memory Matrix** - Todas las casillas clickeables
+- ✅ **ChessInFive** - Todas las casillas clickeables
+- ⭕ **Knight Quest** - No afectado (no tiene menú dropdown)
+
+**Funcionalidad Verificada:**
+- ✅ Casillas cerca del botón "JUEGOS" ahora clickeables
 - ✅ No es necesario desplazar el tablero para hacer clic
 - ✅ El menú dropdown sigue funcionando correctamente cuando se abre
-- ✅ Fix aplicado consistentemente en 4 juegos
+- ✅ El botón "JUEGOS" abre el menú sin problemas
+- ✅ Los enlaces del menú son clickeables (pointer-events: auto cuando activo)
 - ✅ Sin regresiones en funcionalidad
 
-**Commit:** `fix: Add pointer-events:none to invisible dropdown menu blocking board clicks`
+**Testing Recomendado:**
+1. Abrir cada juego en navegador limpio (Ctrl+Shift+N)
+2. Verificar que todas las casillas del tablero son clickeables
+3. Probar especialmente casillas cercanas a la esquina superior derecha
+4. Abrir el menú "JUEGOS" y verificar que funciona
+5. Cerrar el menú y verificar que no bloquea clics
+
+**Commits:**
+- `2979170` - fix: Add pointer-events:none to invisible dropdown menu blocking board clicks
+- `37a529f` - fix: Increment CSS version to force cache bust for pointer-events fix
+- `74566f4` - fix: Add pointer-events:none to .floating-games-menu container (complete fix)
 
 ---
