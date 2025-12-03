@@ -2014,6 +2014,7 @@ body::before {
     top: 80px;
     right: 20px;
     z-index: 1000;
+    pointer-events: none;
 }
 
 .games-menu-dropdown {
