@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Square Rush - ChessArcade</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/square-rush.css?v=13">
+    <link rel="stylesheet" href="css/square-rush.css?v=14">
     
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2472413468382197" crossorigin="anonymous"></script>
@@ -90,28 +90,29 @@
         
         <!-- Game UI -->
         <div class="game-ui">
-            <div class="level-info">
-                <div class="level-number" id="levelNumber">1</div>
-                <div class="level-name" id="levelName">BABY STEPS</div>
+            <!-- Target Display (movido dentro de game-ui para desktop) -->
+            <div class="target-display">
+                <div class="target-label">Click on square:</div>
+                <div class="target-coordinate" id="targetCoordinate">A1</div>
             </div>
-            
+
             <div class="timer" id="timer">5.0</div>
-            
+
             <div class="score-info">
                 <div class="score">Score: <span id="score">0</span></div>
                 <div class="combo">Combo: x<span id="combo">1</span></div>
             </div>
+
+            <!-- Level Info movido abajo, mismo tamaño que combo -->
+            <div class="level-info">
+                <div class="level-number" id="levelNumber">1</div>
+                <div class="level-name" id="levelName">BABY STEPS</div>
+            </div>
         </div>
-        
+
         <!-- Progress -->
         <div class="progress-container">
             <div class="progress-bar" id="progressBar"></div>
-        </div>
-
-        <!-- Target Display -->
-        <div class="target-display">
-            <div class="target-label">Click on square:</div>
-            <div class="target-coordinate" id="targetCoordinate">A1</div>
         </div>
 
         <!-- Chess Board -->
