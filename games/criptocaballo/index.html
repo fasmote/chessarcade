@@ -647,7 +647,11 @@
             toggleHintButtons(false);
             const today = new Date().toISOString().split('T')[0];
             const dateInput = document.querySelector('.date-input');
-            if(dateInput) dateInput.value = today;
+            if(dateInput) {
+                dateInput.value = today;
+                // Restrict to today or past dates only (jugador no puede ver futuro)
+                dateInput.max = today;
+            }
         });
 
         // --- HELPERS ---
@@ -1009,7 +1013,72 @@
             if(input) {
                 input.value = randomPhrase;
                 updateCharCount();
-                generateCryptogram(); 
+                generateCryptogram();
+            }
+        }
+
+        async function loadDailyLevel(selectedDate) {
+            if(!supabaseClient) {
+                console.log("Supabase no configurado");
+                alert("⚠️ No se puede cargar puzzles. Supabase no está configurado.");
+                return;
+            }
+
+            const boardSize = `${rows}x${cols}`;
+
+            if(!selectedDate) {
+                selectedDate = new Date().toISOString().split('T')[0];
+            }
+
+            console.log(`Cargando puzzle para ${selectedDate} (${boardSize})`);
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('puzzles')
+                    .select('*')
+                    .eq('puzzle_date', selectedDate)
+                    .eq('board_size', boardSize)
+                    .single();
+
+                if (error) {
+                    console.log("No se encontró puzzle:", error.message);
+                    alert(`ℹ️ No hay puzzle para ${selectedDate} (${boardSize})\n\nPuedes seleccionar otro tamaño de tablero o cambiar la fecha.`);
+                    return;
+                }
+
+                if (data) {
+                    console.log("Puzzle cargado:", data);
+
+                    // Load the puzzle path
+                    currentPath = data.solution_path;
+
+                    // Reset game state
+                    userPath = [];
+                    isAutoSolved = false;
+                    activeEndHints = 0;
+                    lockedHintCount = 0;
+                    resetTimer();
+
+                    // Create board and place letters
+                    createEmptyBoard();
+                    placeSolutionPath();
+                    fillEmptyCells();
+                    renderBoardState();
+
+                    // Show message that it's ready to solve
+                    const decodedText = document.getElementById('decodedText');
+                    if(decodedText) {
+                        decodedText.textContent = "LISTO PARA RESOLVER";
+                        decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
+                    }
+
+                    toggleHintButtons(true);
+
+                    alert(`✅ Puzzle del ${selectedDate} cargado (${boardSize})\n\n¡Encuentra el mensaje oculto!`);
+                }
+            } catch (err) {
+                console.error("Error al cargar:", err);
+                alert(`❌ Error al cargar puzzle: ${err.message}`);
             }
         }
 
