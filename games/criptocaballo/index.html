@@ -1322,6 +1322,11 @@
                         }
                         showPossibleMoves(newLast.r, newLast.c);
                     } else {
+                        // Remove all start-cell markers when path is empty
+                        document.querySelectorAll('.start-cell').forEach(c => {
+                            c.classList.remove('start-cell');
+                        });
+
                         const decodedText = document.getElementById('decodedText');
                         if(decodedText) {
                             decodedText.textContent = "LISTO PARA RESOLVER";
