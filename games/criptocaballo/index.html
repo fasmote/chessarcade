@@ -610,8 +610,9 @@
         let activeEndHints = 0; 
         let showMovesEnabled = true;
 
-        let userPath = []; 
+        let userPath = [];
         let isManualMode = false;
+        let messageCompletedCorrectly = false; // Track if message was solved correctly
         
         let timerInterval = null;
         let startTime = 0;
@@ -1010,6 +1011,7 @@
             isAnimating = false;
             lastDecodedMessageOriginal = '';
             isShowingSpaces = false;
+            messageCompletedCorrectly = false;
 
             const info = document.getElementById('boardInfo');
             if(info) info.textContent = `Tablero ${r}x${c}`;
@@ -1388,9 +1390,10 @@
                     if (userPath.length > 0) {
                         const newLast = userPath[userPath.length - 1];
                         const newLastCell = document.getElementById(`cell-${newLast.r}-${newLast.c}`);
-                        newLastCell.classList.remove('user-path', 'user-path-filler', 'user-path-separator'); 
-                        
-                        const newLastIsFiller = (userPath.length - 1) >= validMessageLength;
+                        newLastCell.classList.remove('user-path', 'user-path-filler', 'user-path-separator');
+
+                        // Only mark as filler (red) if message was already completed correctly
+                        const newLastIsFiller = messageCompletedCorrectly && (userPath.length - 1) >= validMessageLength;
                         const token = globalTokens[userPath.length - 1];
                         const isSep = isTokenSeparator(token);
 
@@ -1430,8 +1433,9 @@
                 const lastMove = userPath[userPath.length - 1];
                 const lastCell = document.getElementById(`cell-${lastMove.r}-${lastMove.c}`);
                 lastCell.classList.remove('user-selected', 'user-selected-filler', 'user-selected-separator');
-                
-                const prevIsFiller = (userPath.length - 1) >= validMessageLength;
+
+                // Only mark as filler (red) if message was already completed correctly
+                const prevIsFiller = messageCompletedCorrectly && (userPath.length - 1) >= validMessageLength;
                 const prevToken = globalTokens[userPath.length - 1];
                 const prevIsSep = isTokenSeparator(prevToken);
 
@@ -1443,8 +1447,9 @@
             userPath.push({r, c});
             const currentIdx = userPath.length - 1;
             const currentToken = globalTokens[currentIdx];
-            
-            const currentIsFiller = currentIdx >= validMessageLength;
+
+            // Only mark as filler (red) if message was already completed correctly
+            const currentIsFiller = messageCompletedCorrectly && currentIdx >= validMessageLength;
             const currentIsSep = isTokenSeparator(currentToken);
 
             if (currentIsFiller) cell.classList.add('user-selected-filler');
@@ -1485,6 +1490,8 @@
 
                 if (isCorrect) {
                     // SUCCESS: Path is correct!
+                    messageCompletedCorrectly = true; // Mark message as correctly completed
+
                     const boardWrapper = document.getElementById('boardWrapper');
                     if(boardWrapper) boardWrapper.classList.add('success');
 
@@ -1604,7 +1611,7 @@
         function stopTimer() { isTimerRunning = false; clearInterval(timerInterval); }
         function resetTimer() { stopTimer(); const t=document.getElementById('timer'); if(t) t.textContent = "00:00:00"; }
         function updateTimer() { const now = Date.now(); const diff = now - startTime; const minutes = Math.floor(diff / 60000); const seconds = Math.floor((diff % 60000) / 1000); const centiseconds = Math.floor((diff % 1000) / 10); const mStr = minutes.toString().padStart(2, '0'); const sStr = seconds.toString().padStart(2, '0'); const csStr = centiseconds.toString().padStart(2, '0'); const t=document.getElementById('timer'); if(t) t.textContent = `${mStr}:${sStr}:${csStr}`; }
-        function resetCurrentLevel() { console.log("Botón presionado: Reset Level"); userPath = []; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0; resetTimer(); const b=document.getElementById('board'); if(b) b.classList.remove('success'); const s=document.getElementById('showSpacesBtn'); if(s) s.classList.add('hidden'); const d=document.getElementById('decodedText'); if(d) { d.textContent = "LISTO PARA RESOLVER"; d.className = "text-lg md:text-xl font-bold text-slate-600"; } renderBoardState(); const sv=document.getElementById('solveBtn'); if(sv) sv.classList.remove('hidden'); const c=document.getElementById('continueBtn'); if(c) c.classList.add('hidden'); }
+        function resetCurrentLevel() { console.log("Botón presionado: Reset Level"); userPath = []; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0; messageCompletedCorrectly = false; resetTimer(); const b=document.getElementById('board'); if(b) b.classList.remove('success'); const s=document.getElementById('showSpacesBtn'); if(s) s.classList.add('hidden'); const d=document.getElementById('decodedText'); if(d) { d.textContent = "LISTO PARA RESOLVER"; d.className = "text-lg md:text-xl font-bold text-slate-600"; } renderBoardState(); const sv=document.getElementById('solveBtn'); if(sv) sv.classList.remove('hidden'); const c=document.getElementById('continueBtn'); if(c) c.classList.add('hidden'); }
         function openSaveModal() { console.log("Botón presionado: Abrir Guardar"); if (!currentPath || currentPath.length === 0) return; const m=document.getElementById('saveModal'); if(m) m.classList.add('active'); const i=document.getElementById('messageInput'); const n=document.getElementById('lvlName'); if(i && n) { n.value = i.value.split(' ').slice(0, 2).join(' '); } }
         function closeSaveModal() { const m=document.getElementById('saveModal'); if(m) m.classList.remove('active'); }
         function confirmSave() { console.log("Botón presionado: Confirmar Guardar"); console.log("Guardando..."); closeSaveModal(); alert("Simulación: Guardado en DB."); }
