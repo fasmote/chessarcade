@@ -324,6 +324,8 @@
         .date-input { background: #0f172a; border: 1px solid #334155; color: #22d3ee; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; outline: none; font-family: 'Roboto Mono', monospace; text-align: center; cursor: pointer; }
         .date-input:hover { border-color: #06b6d4; }
         .date-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        .message-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
+        .message-visible { filter: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-4 px-2 md:py-6 md:px-4">
@@ -405,9 +407,9 @@
                         </div>
                     </div>
                     <div class="relative">
-                        <textarea id="messageInput" rows="3" class="neon-input w-full p-3 md:p-4 pr-10 rounded-lg text-base md:text-lg uppercase tracking-wider resize-none" placeholder="HOLA MUNDO!"></textarea>
-                        <button onclick="copyToClipboard()" id="copyBtn" class="absolute top-2 right-2 text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-full bg-slate-900/50 hover:bg-slate-800" title="Copiar mensaje">
-                            <i class="fa-regular fa-copy"></i>
+                        <textarea id="messageInput" rows="3" class="neon-input w-full p-3 md:p-4 pr-10 rounded-lg text-base md:text-lg uppercase tracking-wider resize-none message-hidden" placeholder="MENSAJE OCULTO" readonly></textarea>
+                        <button onclick="toggleMessageVisibility()" id="toggleMessageBtn" class="absolute top-2 right-2 text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-full bg-slate-900/50 hover:bg-slate-800" title="Mostrar/Ocultar mensaje">
+                            <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>
                     <div class="flex justify-between mt-2 text-xs font-mono" id="statusContainer">
@@ -1486,6 +1488,23 @@
         function updateMovesVisuals() { const t=document.getElementById('showMovesToggle'); if (!t) return; showMovesEnabled = t.checked; const off=document.getElementById('label-moves-off'); const on=document.getElementById('label-moves-on'); if (showMovesEnabled) { if(on) on.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-yellow-400 font-bold transform scale-105"; if(off) off.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-slate-500 font-normal"; if (!isAutoSolved && userPath.length > 0) { const last = userPath[userPath.length - 1]; showPossibleMoves(last.r, last.c); } } else { if(off) off.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-red-400 font-bold transform scale-105"; if(on) on.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-slate-500 font-normal"; clearPossibleMoves(); } }
         function copyToClipboard() { console.log("Botón presionado: Copiar al portapapeles"); const i=document.getElementById('messageInput'); i.select(); i.setSelectionRange(0, 99999); try { var s=document.execCommand('copy'); if(s) showCopySuccess(); else { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(i.value).then(() => showCopySuccess()).catch(err => console.error(err)); } } catch (err) { console.error('Copy error', err); } }
         function showCopySuccess() { const b=document.getElementById('copyBtn'); const o=b.innerHTML; b.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>'; setTimeout(() => b.innerHTML = o, 2000); }
+
+        function toggleMessageVisibility() {
+            const input = document.getElementById('messageInput');
+            const btn = document.getElementById('toggleMessageBtn');
+            const icon = btn.querySelector('i');
+
+            if(input.classList.contains('message-hidden')) {
+                input.classList.remove('message-hidden');
+                input.classList.add('message-visible');
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                input.classList.add('message-hidden');
+                input.classList.remove('message-visible');
+                icon.className = 'fa-regular fa-eye';
+            }
+        }
+
         function toggleHintButtons(enable) { const s=document.getElementById('btnStartHint'); if(s) s.disabled = !enable; const e=document.getElementById('btnEndHint'); if(e) e.disabled = !enable; const sv=document.getElementById('saveBtn'); if(sv) sv.disabled = !enable; }
         function applyStartHint() { console.log("Botón presionado: Pista Inicio"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('startHintCount').value)||0; isAutoSolved=false; userPath=[]; resetTimer(); document.getElementById('board').classList.remove('success'); document.getElementById('showSpacesBtn').classList.add('hidden'); for (let i=0; i<n && i<currentPath.length; i++) { const [r,c]=currentPath[i]; userPath.push({r,c}); } lockedHintCount=userPath.length; renderBoardState(); if (userPath.length>0) { const last=userPath[userPath.length-1]; showPossibleMoves(last.r, last.c); } updateUserDecodedText(); if (userPath.length===validMessageLength && validMessageLength>0) { document.getElementById('board').classList.add('success'); launchConfetti(); } }
         function applyEndHint() { console.log("Botón presionado: Pista Fin"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('endHintCount').value)||0; activeEndHints=n; renderBoardState(); }

@@ -687,12 +687,16 @@
                 input.maxLength = 150;
             }
             
-            setBoardSize(3, 4); 
-            
+            setBoardSize(3, 4);
+
             toggleHintButtons(false);
             const today = new Date().toISOString().split('T')[0];
             const dateInput = document.querySelector('.date-input');
-            if(dateInput) dateInput.value = today;
+            if(dateInput) {
+                dateInput.value = today;
+                // Update ID display after setting date
+                setTimeout(() => updatePuzzleIdDisplay(), 100);
+            }
         });
 
         // --- HELPERS ---
@@ -1627,9 +1631,10 @@
 
                     // Regenerate the board with loaded data
                     currentPath = data.solution_path;
-                    generateMessage();
+                    generateCryptogram();
 
-                    alert(`✅ Puzzle cargado: ${data.message}`);
+                    // Update ID display with loaded title and author
+                    updatePuzzleIdDisplay(data.title || '', data.author || '');
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);
