@@ -1059,40 +1059,22 @@
                     const titleText = data.title ? ` "${data.title}"` : '';
                     const authorText = data.author ? ` por ${data.author}` : '';
 
-                    // Load the puzzle path
-                    currentPath = data.solution_path;
-
-                    // Reset game state
-                    userPath = [];
-                    isAutoSolved = false;
-                    activeEndHints = 0;
-                    lockedHintCount = 0;
-                    resetTimer();
-
-                    // Create board and place letters
-                    createEmptyBoard();
-                    placeSolutionPath();
-                    fillEmptyCells();
-                    renderBoardState();
-
-                    // Show message that it's ready to solve
-                    const decodedText = document.getElementById('decodedText');
-                    if(decodedText) {
-                        decodedText.textContent = "LISTO PARA RESOLVER";
-                        decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
+                    // Load the message into input
+                    const messageInput = document.getElementById('messageInput');
+                    if(messageInput) {
+                        messageInput.value = data.message;
                     }
 
-                    toggleHintButtons(true);
+                    // Generate the cryptogram with the loaded message
+                    generateCryptogram();
 
-                    // Show ID in UI
+                    // Show ID in UI permanently
                     const idDisplay = document.getElementById('puzzleIdDisplay');
                     const idText = document.getElementById('puzzleIdText');
                     if(idDisplay && idText) {
-                        idText.innerHTML = `<strong>Resolviendo:</strong> <strong>${puzzleId}</strong>${titleText}${authorText} | ${selectedDate}`;
+                        idText.innerHTML = `<strong>Resolviendo:</strong> <strong>${puzzleId}</strong>${titleText}${authorText}`;
                         idDisplay.classList.remove('hidden');
                     }
-
-                    alert(`✅ Puzzle cargado!\n\nID: ${puzzleId}${titleText}${authorText}\nFecha: ${selectedDate}\nTablero: ${boardSize}\n\n¡Encuentra el mensaje oculto!`);
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);

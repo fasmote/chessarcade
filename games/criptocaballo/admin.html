@@ -550,6 +550,13 @@
                         <span class="bg-pink-600/20 border border-pink-500 px-3 py-1 rounded-full text-pink-300">🔐 Panel de Administración</span>
                     </p>
 
+                    <!-- Puzzle ID Display - Always Visible -->
+                    <div id="currentPuzzleId" class="mb-3 text-center bg-slate-900/50 border border-cyan-900/30 rounded-lg p-2">
+                        <span class="text-[0.65rem] text-slate-500 font-bold">PUZZLE ID:</span>
+                        <span id="puzzleIdValue" class="text-cyan-400 font-mono text-sm ml-2">#-------</span>
+                        <span id="puzzleTitle" class="text-slate-400 text-xs ml-2 italic"></span>
+                    </div>
+
                     <div class="border-b border-cyan-900/50 pb-2 mb-4 flex justify-between items-end">
                         <div class="sign-perspective">
                             <div id="gameModeContainer" class="text-left interactive-sign" onclick="handleSignClick(event)" onmousemove="handleSignHover(event)" onmouseleave="resetSignTilt()">
@@ -1013,13 +1020,37 @@
             resetTimer(); 
         }
         
+        function updatePuzzleIdDisplay(title = '', author = '') {
+            // Get current date from date input or use today
+            const dateInput = document.querySelector('.date-input');
+            const puzzleDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const boardSize = `${rows}x${cols}`;
+            const puzzleId = `#${puzzleDate.replace(/-/g, '')}-${boardSize}`;
+
+            const idValue = document.getElementById('puzzleIdValue');
+            const titleSpan = document.getElementById('puzzleTitle');
+
+            if(idValue) {
+                idValue.textContent = puzzleId;
+            }
+
+            if(titleSpan) {
+                const titleText = title ? `"${title}"` : '';
+                const authorText = author ? ` por ${author}` : '';
+                titleSpan.textContent = titleText + authorText;
+            }
+        }
+
         function setBoardSize(r, c) {
             console.log(`Botón presionado: Tablero ${r}x${c}`);
             rows = r; cols = c; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0;
-            
+
             const info = document.getElementById('boardInfo');
             if(info) info.textContent = `Tablero ${r}x${c}`;
-            
+
+            // Update Puzzle ID display
+            updatePuzzleIdDisplay();
+
             document.querySelectorAll('.board-btn').forEach(btn => {
                 btn.classList.remove('ring-2', 'ring-pink-500');
                 if(parseInt(btn.dataset.rows) === r && parseInt(btn.dataset.cols) === c) {
@@ -1542,13 +1573,14 @@
                     const idDisplay = document.getElementById('puzzleIdDisplay');
                     const idText = document.getElementById('puzzleIdText');
                     if(idDisplay && idText) {
-                        idText.innerHTML = `<strong>Puzzle guardado!</strong> ID: <strong>${puzzleId}</strong>${titleText}${authorText} | Fecha: ${puzzleDate} | Tablero: ${boardSize}`;
+                        idText.innerHTML = `<strong>✓ Guardado!</strong> ID: <strong>${puzzleId}</strong>${titleText}${authorText}`;
                         idDisplay.classList.remove('hidden');
-                        // Hide after 10 seconds
-                        setTimeout(() => idDisplay.classList.add('hidden'), 10000);
+                        // Hide after 8 seconds
+                        setTimeout(() => idDisplay.classList.add('hidden'), 8000);
                     }
 
-                    alert(`✅ Puzzle guardado exitosamente!\n\nID: ${puzzleId}${titleText}${authorText}\nFecha: ${puzzleDate}\nTablero: ${boardSize}\nMensaje: ${message}`);
+                    // Update permanent ID display
+                    updatePuzzleIdDisplay(title, author);
                 }
             } catch (err) {
                 console.error("Excepción al guardar:", err);
