@@ -1053,15 +1053,65 @@
             clearPossibleMoves();
         }
 
-        function playerSelectSize(r, c) {
+        async function playerSelectSize(r, c) {
             console.log(`Jugador seleccionó: ${r}x${c}`);
             setBoardSize(r, c);
+
+            // Try to load puzzle from Supabase first
+            if(supabaseClient) {
+                const boardSize = `${r}x${c}`;
+                const today = new Date().toISOString().split('T')[0];
+
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('puzzles')
+                        .select('*')
+                        .eq('puzzle_date', today)
+                        .eq('board_size', boardSize)
+                        .single();
+
+                    if (data && !error) {
+                        console.log(`Puzzle encontrado en Supabase para ${boardSize}`);
+
+                        // Load puzzle from Supabase
+                        const input = document.getElementById('messageInput');
+                        if(input) {
+                            input.value = data.message;
+                        }
+                        generateCryptogram();
+
+                        // Show puzzle ID
+                        const puzzleId = `#${today.replace(/-/g, '')}-${boardSize}`;
+                        const titleText = data.title ? ` "${data.title}"` : '';
+                        const authorText = data.author ? ` por ${data.author}` : '';
+
+                        const idDisplay = document.getElementById('puzzleIdDisplay');
+                        const idText = document.getElementById('puzzleIdText');
+                        if(idDisplay && idText) {
+                            idText.innerHTML = `<strong>Resolviendo:</strong> <strong>${puzzleId}</strong>${titleText}${authorText}`;
+                            idDisplay.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                } catch(e) {
+                    console.log("Error verificando puzzle en Supabase:", e);
+                }
+            }
+
+            // No puzzle found in Supabase, generate random one
+            console.log(`No hay puzzle en Supabase para ${r}x${c}, generando aleatorio`);
             const randomPhrase = WELCOME_PHRASES[Math.floor(Math.random() * WELCOME_PHRASES.length)];
             const input = document.getElementById('messageInput');
             if(input) {
                 input.value = randomPhrase;
                 updateCharCount();
                 generateCryptogram();
+            }
+
+            // Hide puzzle ID when no official puzzle
+            const idDisplay = document.getElementById('puzzleIdDisplay');
+            if(idDisplay) {
+                idDisplay.classList.add('hidden');
             }
         }
 
