@@ -601,19 +601,19 @@
         </div>
     </div>
 
-    <!-- Cargar configuración: intenta .private/ (dev) con fallback a config.js (prod) -->
-    <script src="../../.private/criptocaballo-config.js" onerror="console.log('Cargando config de producción...')"></script>
-    <script src="config.js" onerror="console.log('Config local cargado')"></script>
+    <!-- Cargar configuración de producción -->
+    <script src="config.js"></script>
 
     <script>
-        const apiKey = "AIzaSyDDRILtZ02s-_i81kSqYCQda8VtzKb2weY"; 
-        const APP_VERSION = "5.7"; 
+        const apiKey = "AIzaSyDDRILtZ02s-_i81kSqYCQda8VtzKb2weY";
+        const APP_VERSION = "5.7";
 
         // CONFIGURACIÓN SUPABASE
-        // Ver archivo config.example.js para instrucciones
-        // Las credenciales reales deben estar en /.private/criptocaballo-config.js
+        // Carga desde config.js (producción) o .private/criptocaballo-config.js (desarrollo local)
+        console.log("CRYPTO_CONFIG cargado:", window.CRYPTO_CONFIG ? "✅ SÍ" : "❌ NO");
         const SUPABASE_URL = window.CRYPTO_CONFIG?.supabase?.url || "TU_SUPABASE_URL";
         const SUPABASE_KEY = window.CRYPTO_CONFIG?.supabase?.anonKey || "TU_SUPABASE_ANON_KEY";
+        console.log("Supabase URL:", SUPABASE_URL);
 
         let supabaseClient = null;
         try {
