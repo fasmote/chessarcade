@@ -1604,7 +1604,40 @@
         function toggleHintButtons(enable) { const s=document.getElementById('btnStartHint'); if(s) s.disabled = !enable; const e=document.getElementById('btnEndHint'); if(e) e.disabled = !enable; const sv=document.getElementById('saveBtn'); if(sv) sv.disabled = !enable; }
         function applyStartHint() { console.log("Botón presionado: Pista Inicio"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('startHintCount').value)||0; isAutoSolved=false; userPath=[]; resetTimer(); document.getElementById('board').classList.remove('success'); document.getElementById('showSpacesBtn').classList.add('hidden'); for (let i=0; i<n && i<currentPath.length; i++) { const [r,c]=currentPath[i]; userPath.push({r,c}); } lockedHintCount=userPath.length; renderBoardState(); if (userPath.length>0) { const last=userPath[userPath.length-1]; showPossibleMoves(last.r, last.c); } updateUserDecodedText(); if (userPath.length===validMessageLength && validMessageLength>0) { document.getElementById('board').classList.add('success'); launchConfetti(); } }
         function applyEndHint() { console.log("Botón presionado: Pista Fin"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('endHintCount').value)||0; activeEndHints=n; renderBoardState(); }
-        function toggleSpaces() { console.log("Botón presionado: Ver/Ocultar Espacios"); isShowingSpaces = !isShowingSpaces; const b=document.getElementById('showSpacesBtn'); const d=document.getElementById('decodedText'); if (isShowingSpaces) { b.classList.add('active'); b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios'; d.innerHTML = `<span class="decoded-msg-char">${lastDecodedMessageOriginal.toUpperCase()}</span>`; } else { b.classList.remove('active'); b.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios'; updateUserDecodedText(); } }
+        function toggleSpaces() {
+            console.log("Botón presionado: Ver/Ocultar Espacios");
+            isShowingSpaces = !isShowingSpaces;
+            const b=document.getElementById('showSpacesBtn');
+            const d=document.getElementById('decodedText');
+
+            if (isShowingSpaces) {
+                b.classList.add('active');
+                b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios';
+
+                // Build text from USER'S path with spaces (not the original message)
+                let userDecodedWithSpaces = '';
+                userPath.forEach((pos, idx) => {
+                    const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
+                    const letter = cell.dataset.letter || "";
+
+                    // Check if this position in the ORIGINAL solution has a space
+                    if(idx < currentPath.length && idx < globalTokens.length) {
+                        const token = globalTokens[idx];
+                        if(token === ' ') {
+                            userDecodedWithSpaces += ' ';
+                        }
+                    }
+
+                    userDecodedWithSpaces += letter.toUpperCase();
+                });
+
+                d.innerHTML = `<span class="decoded-msg-char">${userDecodedWithSpaces}</span>`;
+            } else {
+                b.classList.remove('active');
+                b.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                updateUserDecodedText();
+            }
+        }
         
         function startResolver() { 
             console.log("Botón presionado: RESOLVER (AUTO)"); 
