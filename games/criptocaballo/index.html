@@ -539,7 +539,12 @@
                     <button onclick="playerSelectSize(6,7)" class="arcade-btn py-1 rounded" data-rows="6" data-cols="7">6x7</button> 
                     <button onclick="playerSelectSize(8,8)" class="arcade-btn py-1 rounded" data-rows="8" data-cols="8">8x8</button>
                 </div>
-                
+
+                <!-- Puzzle ID Display -->
+                <div id="puzzleIdDisplay" class="hidden mt-2 mb-2 text-cyan-400 text-xs bg-cyan-900/20 p-2 rounded border border-cyan-900/50 max-w-md">
+                    <i class="fa-solid fa-info-circle mr-1"></i><span id="puzzleIdText"></span>
+                </div>
+
                 <div class="board-wrapper" id="boardWrapper">
                     <div class="game-header text-center"></div>
                     <div class="timer-row">
@@ -1078,6 +1083,14 @@
                     }
 
                     toggleHintButtons(true);
+
+                    // Show ID in UI
+                    const idDisplay = document.getElementById('puzzleIdDisplay');
+                    const idText = document.getElementById('puzzleIdText');
+                    if(idDisplay && idText) {
+                        idText.innerHTML = `<strong>Resolviendo:</strong> <strong>${puzzleId}</strong>${titleText}${authorText} | ${selectedDate}`;
+                        idDisplay.classList.remove('hidden');
+                    }
 
                     alert(`✅ Puzzle cargado!\n\nID: ${puzzleId}${titleText}${authorText}\nFecha: ${selectedDate}\nTablero: ${boardSize}\n\n¡Encuentra el mensaje oculto!`);
                 }

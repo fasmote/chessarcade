@@ -531,6 +531,9 @@
                 <div id="errorMsg" class="hidden mt-4 text-red-400 text-xs md:text-sm bg-red-900/20 p-3 rounded border border-red-900/50">
                     <i class="fa-solid fa-triangle-exclamation mr-2"></i>No se encontró una ruta válida. Intenta otra vez.
                 </div>
+                <div id="puzzleIdDisplay" class="hidden mt-4 text-cyan-400 text-xs md:text-sm bg-cyan-900/20 p-3 rounded border border-cyan-900/50">
+                    <i class="fa-solid fa-check-circle mr-2"></i><span id="puzzleIdText"></span>
+                </div>
             </div>
 
             <!-- VISUALIZACIÓN TABLERO (MÓDULO JUGADOR) -->
@@ -1532,8 +1535,20 @@
                 } else {
                     console.log("Puzzle guardado exitosamente:", data);
                     closeSaveModal();
-                    const titleText = title ? `"${title}"` : '';
-                    alert(`✅ Puzzle guardado exitosamente!\n\nID: ${puzzleId} ${titleText}\nFecha: ${puzzleDate}\nTablero: ${boardSize}\nMensaje: ${message}`);
+                    const titleText = title ? ` "${title}"` : '';
+                    const authorText = author ? ` por ${author}` : '';
+
+                    // Show ID in UI
+                    const idDisplay = document.getElementById('puzzleIdDisplay');
+                    const idText = document.getElementById('puzzleIdText');
+                    if(idDisplay && idText) {
+                        idText.innerHTML = `<strong>Puzzle guardado!</strong> ID: <strong>${puzzleId}</strong>${titleText}${authorText} | Fecha: ${puzzleDate} | Tablero: ${boardSize}`;
+                        idDisplay.classList.remove('hidden');
+                        // Hide after 10 seconds
+                        setTimeout(() => idDisplay.classList.add('hidden'), 10000);
+                    }
+
+                    alert(`✅ Puzzle guardado exitosamente!\n\nID: ${puzzleId}${titleText}${authorText}\nFecha: ${puzzleDate}\nTablero: ${boardSize}\nMensaje: ${message}`);
                 }
             } catch (err) {
                 console.error("Excepción al guardar:", err);
