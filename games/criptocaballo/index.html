@@ -641,16 +641,16 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             console.log(`CriptoCaballo v${APP_VERSION} cargado.`);
-            
+
             const urlParams = new URLSearchParams(window.location.search);
             const input = document.getElementById('messageInput');
             if(input) {
                 input.addEventListener('input', updateCharCount);
                 input.maxLength = 150;
             }
-            
-            setBoardSize(3, 4); 
-            
+
+            setBoardSize(3, 4);
+
             toggleHintButtons(false);
             const today = new Date().toISOString().split('T')[0];
             const dateInput = document.querySelector('.date-input');
@@ -658,7 +658,17 @@
                 dateInput.value = today;
                 // Restrict to today or past dates only (jugador no puede ver futuro)
                 dateInput.max = today;
+
+                // Add listener to load puzzle when date changes
+                dateInput.addEventListener('change', () => {
+                    loadDailyLevel();
+                });
             }
+
+            // Auto-load today's puzzle on page load
+            setTimeout(() => {
+                loadDailyLevel();
+            }, 500);
         });
 
         // --- HELPERS ---
