@@ -601,9 +601,9 @@
         </div>
     </div>
 
-    <!-- Cargar configuración: primero intenta .private/, luego config.js de producción -->
-    <script src="../../.private/criptocaballo-config.js"></script>
-    <script src="config.js"></script>
+    <!-- Cargar configuración: intenta .private/ (dev) con fallback a config.js (prod) -->
+    <script src="../../.private/criptocaballo-config.js" onerror="console.log('Cargando config de producción...')"></script>
+    <script src="config.js" onerror="console.log('Config local cargado')"></script>
 
     <script>
         const apiKey = "AIzaSyDDRILtZ02s-_i81kSqYCQda8VtzKb2weY"; 
