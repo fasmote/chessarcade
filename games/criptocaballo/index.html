@@ -1465,21 +1465,48 @@
             }
 
             updateUserDecodedText();
+
+            // Check if puzzle is CORRECTLY solved (not just completed)
             if (userPath.length === validMessageLength) {
-                const boardWrapper = document.getElementById('boardWrapper');
-                if(boardWrapper) boardWrapper.classList.add('success');
-                
-                const successMsg = document.createElement('div');
-                successMsg.className = 'success-text text-sm md:text-base font-bold mt-2';
-                successMsg.textContent = "¡CRIPTOGRAMA RESUELTO! 🎉";
-                const decodedText = document.getElementById('decodedText');
-                if(decodedText) decodedText.appendChild(successMsg);
-                
-                const showSpacesBtn = document.getElementById('showSpacesBtn');
-                if(showSpacesBtn) showSpacesBtn.classList.remove('hidden');
-                
-                stopTimer(); 
-                launchConfetti();
+                // Verify that user's path matches the correct solution
+                let isCorrect = true;
+                for (let i = 0; i < validMessageLength; i++) {
+                    if (i >= currentPath.length) {
+                        isCorrect = false;
+                        break;
+                    }
+                    const [correctR, correctC] = currentPath[i];
+                    const userPos = userPath[i];
+                    if (userPos.r !== correctR || userPos.c !== correctC) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+
+                if (isCorrect) {
+                    // SUCCESS: Path is correct!
+                    const boardWrapper = document.getElementById('boardWrapper');
+                    if(boardWrapper) boardWrapper.classList.add('success');
+
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'success-text text-sm md:text-base font-bold mt-2';
+                    successMsg.textContent = "¡CRIPTOGRAMA RESUELTO! 🎉";
+                    const decodedText = document.getElementById('decodedText');
+                    if(decodedText) decodedText.appendChild(successMsg);
+
+                    const showSpacesBtn = document.getElementById('showSpacesBtn');
+                    if(showSpacesBtn) showSpacesBtn.classList.remove('hidden');
+
+                    stopTimer();
+                    launchConfetti();
+                } else {
+                    // FAILED: Path is wrong (completed but incorrect order)
+                    console.log("Puzzle completado pero en orden incorrecto");
+
+                    // Show spaces button anyway so user can see their mistake
+                    const showSpacesBtn = document.getElementById('showSpacesBtn');
+                    if(showSpacesBtn) showSpacesBtn.classList.remove('hidden');
+                }
             }
         }
         
