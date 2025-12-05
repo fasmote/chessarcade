@@ -999,10 +999,21 @@
         function setBoardSize(r, c) {
             console.log(`Botón presionado: Tablero ${r}x${c}`);
             rows = r; cols = c; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0;
-            
+
+            // Reset all game state variables
+            userPath = [];
+            currentPath = [];
+            globalTokens = [];
+            validMessageLength = 0;
+            currentStep = 0;
+            targetStep = 0;
+            isAnimating = false;
+            lastDecodedMessageOriginal = '';
+            isShowingSpaces = false;
+
             const info = document.getElementById('boardInfo');
             if(info) info.textContent = `Tablero ${r}x${c}`;
-            
+
             document.querySelectorAll('.board-btn').forEach(btn => {
                 btn.classList.remove('ring-2', 'ring-pink-500');
                 if(parseInt(btn.dataset.rows) === r && parseInt(btn.dataset.cols) === c) {
@@ -1017,9 +1028,29 @@
                 }
             });
 
-            createEmptyBoard(); 
-            toggleHintButtons(false); 
+            createEmptyBoard();
+            toggleHintButtons(false);
             resetTimer();
+
+            // Clear decoded text display
+            const decodedText = document.getElementById('decodedText');
+            if(decodedText) {
+                decodedText.textContent = "LISTO PARA RESOLVER";
+                decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
+            }
+
+            // Hide success elements
+            const boardWrapper = document.getElementById('boardWrapper');
+            if(boardWrapper) boardWrapper.classList.remove('success');
+
+            const showSpacesBtn = document.getElementById('showSpacesBtn');
+            if(showSpacesBtn) showSpacesBtn.classList.add('hidden');
+
+            // Hide puzzle ID when changing board size (will reload if there's a puzzle)
+            const idDisplay = document.getElementById('puzzleIdDisplay');
+            if(idDisplay) idDisplay.classList.add('hidden');
+
+            clearPossibleMoves();
         }
 
         function playerSelectSize(r, c) {
