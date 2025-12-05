@@ -1491,11 +1491,18 @@
             }
 
             const difficulty = document.getElementById('lvlDifficulty')?.value || 'medium';
+            const title = document.getElementById('lvlName')?.value || '';
+            const author = document.getElementById('lvlAuthor')?.value || '';
+
+            // Generate readable ID: #YYYYMMDD-AxB
+            const puzzleId = `#${puzzleDate.replace(/-/g, '')}-${boardSize}`;
 
             const puzzleData = {
                 puzzle_date: puzzleDate,
                 board_size: boardSize,
                 message: message,
+                title: title,
+                author: author,
                 solution_path: currentPath,
                 filler_type: 'random',
                 difficulty: difficulty,
@@ -1525,7 +1532,8 @@
                 } else {
                     console.log("Puzzle guardado exitosamente:", data);
                     closeSaveModal();
-                    alert(`✅ Puzzle guardado exitosamente para ${puzzleDate} (${boardSize})`);
+                    const titleText = title ? `"${title}"` : '';
+                    alert(`✅ Puzzle guardado exitosamente!\n\nID: ${puzzleId} ${titleText}\nFecha: ${puzzleDate}\nTablero: ${boardSize}\nMensaje: ${message}`);
                 }
             } catch (err) {
                 console.error("Excepción al guardar:", err);

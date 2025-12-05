@@ -1049,6 +1049,11 @@
                 if (data) {
                     console.log("Puzzle cargado:", data);
 
+                    // Generate readable ID
+                    const puzzleId = `#${selectedDate.replace(/-/g, '')}-${boardSize}`;
+                    const titleText = data.title ? ` "${data.title}"` : '';
+                    const authorText = data.author ? ` por ${data.author}` : '';
+
                     // Load the puzzle path
                     currentPath = data.solution_path;
 
@@ -1074,7 +1079,7 @@
 
                     toggleHintButtons(true);
 
-                    alert(`✅ Puzzle del ${selectedDate} cargado (${boardSize})\n\n¡Encuentra el mensaje oculto!`);
+                    alert(`✅ Puzzle cargado!\n\nID: ${puzzleId}${titleText}${authorText}\nFecha: ${selectedDate}\nTablero: ${boardSize}\n\n¡Encuentra el mensaje oculto!`);
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);
