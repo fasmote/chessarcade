@@ -1130,58 +1130,77 @@
             // Restore original path from Supabase
             currentPath = data.solution_path;
 
-            // Recreate tokens from message + filler
-            const messageInput = document.getElementById('messageInput');
-            const rawMessage = messageInput ? messageInput.value.toUpperCase() : data.message.toUpperCase();
+            // CRITICAL: Use saved tokens instead of regenerating!
+            if(data.tokens && Array.isArray(data.tokens)) {
+                // Use EXACT tokens from Supabase (includes message + filler as admin created it)
+                globalTokens = data.tokens;
+                console.log("✅ Usando tokens guardados:", globalTokens);
+            } else {
+                // Fallback: regenerate tokens (old puzzles without tokens field)
+                console.warn("⚠️ Puzzle sin tokens guardados, regenerando (pueden diferir del original)");
+                const messageInput = document.getElementById('messageInput');
+                const rawMessage = messageInput ? messageInput.value.toUpperCase() : data.message.toUpperCase();
 
-            // Process message to extract tokens (similar to generateCryptogram)
-            const fillOption = document.getElementById('fillOption')?.value || 'random';
-            const separator = document.getElementById('wordSeparator')?.value || 'space';
-            const discardSpaces = (separator === 'none');
+                const fillOption = data.filler_type || 'random';
+                const separator = data.word_separator || 'space';
+                const discardSpaces = (separator === 'none');
 
-            let rawText = rawMessage;
-            if (discardSpaces) {
-                rawText = rawText.replace(/\s/g, '');
-            } else if (separator !== 'space') {
-                let replacement = ' ';
-                if (separator === 'cross') replacement = CROSS_MARKER;
-                else if (separator === 'cross_medium') replacement = CROSS_MEDIUM_MARKER;
-                else if (separator === 'block') replacement = BLOCK_MARKER;
-                else if (separator === 'knight') replacement = KNIGHT_MARKER;
-                rawText = rawText.replace(/\s/g, replacement);
-            }
-
-            const regex = new RegExp(`(${CROSS_MARKER}|${CROSS_MEDIUM_MARKER}|${BLOCK_MARKER}|${KNIGHT_MARKER}|.)`, 'g');
-            let tokens = rawText.match(regex) || [];
-
-            const maxCells = rows * cols;
-            validMessageLength = Math.min(tokens.length, maxCells);
-
-            if (tokens.length > maxCells) {
-                tokens = tokens.slice(0, maxCells);
-            }
-
-            // Add filler if needed
-            const missingChars = maxCells - tokens.length;
-            if (missingChars > 0) {
-                if (fillOption === 'random') {
-                    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                    for(let i=0; i<missingChars; i++) tokens.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
-                } else if (fillOption === 'white_square') {
-                    for(let i=0; i<missingChars; i++) tokens.push(BLOCK_MARKER);
-                } else if (fillOption === 'cross_x') {
-                    for(let i=0; i<missingChars; i++) tokens.push(CROSS_MARKER);
-                } else if (fillOption === 'cross_medium') {
-                    for(let i=0; i<missingChars; i++) tokens.push(CROSS_MEDIUM_MARKER);
-                } else if (fillOption === 'knight') {
-                    for(let i=0; i<missingChars; i++) tokens.push(KNIGHT_MARKER);
-                } else if (fillOption === 'empty') {
-                    for(let i=0; i<missingChars; i++) tokens.push(" ");
+                let rawText = rawMessage;
+                if (discardSpaces) {
+                    rawText = rawText.replace(/\s/g, '');
+                } else if (separator !== 'space') {
+                    let replacement = ' ';
+                    if (separator === 'cross') replacement = CROSS_MARKER;
+                    else if (separator === 'cross_medium') replacement = CROSS_MEDIUM_MARKER;
+                    else if (separator === 'block') replacement = BLOCK_MARKER;
+                    else if (separator === 'knight') replacement = KNIGHT_MARKER;
+                    rawText = rawText.replace(/\s/g, replacement);
                 }
+
+                const regex = new RegExp(`(${CROSS_MARKER}|${CROSS_MEDIUM_MARKER}|${BLOCK_MARKER}|${KNIGHT_MARKER}|.)`, 'g');
+                let tokens = rawText.match(regex) || [];
+
+                const maxCells = rows * cols;
+                const missingChars = maxCells - tokens.length;
+                if (missingChars > 0) {
+                    if (fillOption === 'random') {
+                        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                        for(let i=0; i<missingChars; i++) tokens.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
+                    } else if (fillOption === 'white_square') {
+                        for(let i=0; i<missingChars; i++) tokens.push(BLOCK_MARKER);
+                    } else if (fillOption === 'cross_x') {
+                        for(let i=0; i<missingChars; i++) tokens.push(CROSS_MARKER);
+                    } else if (fillOption === 'cross_medium') {
+                        for(let i=0; i<missingChars; i++) tokens.push(CROSS_MEDIUM_MARKER);
+                    } else if (fillOption === 'knight') {
+                        for(let i=0; i<missingChars; i++) tokens.push(KNIGHT_MARKER);
+                    } else if (fillOption === 'empty') {
+                        for(let i=0; i<missingChars; i++) tokens.push(" ");
+                    }
+                }
+                globalTokens = tokens;
             }
 
-            globalTokens = tokens;
-            lastDecodedMessageOriginal = messageInput ? messageInput.value : data.message;
+            // Set validMessageLength
+            const messageInput = document.getElementById('messageInput');
+            const rawMessage = messageInput ? messageInput.value : data.message;
+            const separator = data.word_separator || 'space';
+            const discardSpaces = (separator === 'none');
+            let processedMessage = rawMessage.toUpperCase();
+            if (!discardSpaces && separator !== 'space') {
+                const replacement = separator === 'cross' ? CROSS_MARKER :
+                                  separator === 'cross_medium' ? CROSS_MEDIUM_MARKER :
+                                  separator === 'block' ? BLOCK_MARKER :
+                                  separator === 'knight' ? KNIGHT_MARKER : ' ';
+                processedMessage = processedMessage.replace(/\s/g, replacement);
+            } else if (discardSpaces) {
+                processedMessage = processedMessage.replace(/\s/g, '');
+            }
+            const regex = new RegExp(`(${CROSS_MARKER}|${CROSS_MEDIUM_MARKER}|${BLOCK_MARKER}|${KNIGHT_MARKER}|.)`, 'g');
+            const messageTokens = processedMessage.match(regex) || [];
+            validMessageLength = messageTokens.length;
+
+            lastDecodedMessageOriginal = rawMessage;
 
             // Apply hints from saved data
             if(data.start_hints && data.start_hints > 0) {
@@ -1781,6 +1800,7 @@
                 board_size: boardSize,
                 message: messageInput ? messageInput.value : '',
                 solution_path: currentPath,
+                tokens: globalTokens,  // CRITICAL: Save exact tokens (letters + filler)
                 filler_type: fillOption ? fillOption.value : 'random',
                 word_separator: separator ? separator.value : 'space',
                 title: titleInput ? titleInput.value : null,
