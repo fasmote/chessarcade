@@ -615,9 +615,8 @@
     <script src="config.js"></script>
 
     <script>
-        // API Key removida por seguridad - funcionalidad de IA deshabilitada
-        const apiKey = null;
-        const APP_VERSION = "5.7";
+        // API Key manejada de forma segura en Vercel serverless function
+        const APP_VERSION = "5.8";
 
         // CONFIGURACIÓN SUPABASE
         // Carga desde config.js (producción) o .private/criptocaballo-config.js (desarrollo local)
@@ -710,23 +709,29 @@
         }
 
         // --- AI FUNCTIONS ---
-        async function callGemini(prompt) {
-            if (!apiKey) return "Error: Falta API Key.";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+        async function callGemini(prompt, action = 'custom') {
+            // Llamar a nuestra API route segura en Vercel
+            const apiUrl = '/api/gemini';
             const delays = [1000, 2000, 4000];
+
             for (let i = 0; i < 3; i++) {
                 try {
-                    const response = await fetch(url, {
+                    const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({ prompt, action })
                     });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+
                     const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error IA.";
+                    return data.text || "Error IA.";
                 } catch (e) {
-                    if (i === 2) return "IA ocupada.";
+                    console.error('Gemini API error:', e);
+                    if (i === 2) return "IA ocupada. Intenta más tarde.";
                     await new Promise(resolve => setTimeout(resolve, delays[i]));
                 }
             }
