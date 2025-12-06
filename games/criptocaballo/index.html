@@ -1725,7 +1725,74 @@
         function resetCurrentLevel() { console.log("Botón presionado: Reset Level"); userPath = []; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0; messageCompletedCorrectly = false; resetTimer(); const b=document.getElementById('board'); if(b) b.classList.remove('success'); const s=document.getElementById('showSpacesBtn'); if(s) s.classList.add('hidden'); const d=document.getElementById('decodedText'); if(d) { d.textContent = "LISTO PARA RESOLVER"; d.className = "text-lg md:text-xl font-bold text-slate-600"; } renderBoardState(); const sv=document.getElementById('solveBtn'); if(sv) sv.classList.remove('hidden'); const c=document.getElementById('continueBtn'); if(c) c.classList.add('hidden'); }
         function openSaveModal() { console.log("Botón presionado: Abrir Guardar"); if (!currentPath || currentPath.length === 0) return; const m=document.getElementById('saveModal'); if(m) m.classList.add('active'); const i=document.getElementById('messageInput'); const n=document.getElementById('lvlName'); if(i && n) { n.value = i.value.split(' ').slice(0, 2).join(' '); } }
         function closeSaveModal() { const m=document.getElementById('saveModal'); if(m) m.classList.remove('active'); }
-        function confirmSave() { console.log("Botón presionado: Confirmar Guardar"); console.log("Guardando..."); closeSaveModal(); alert("Simulación: Guardado en DB."); }
+        async function confirmSave() {
+            console.log("Botón presionado: Confirmar Guardar");
+
+            if(!supabaseClient) {
+                alert("❌ Supabase no está configurado. No se puede guardar.");
+                closeSaveModal();
+                return;
+            }
+
+            if(!currentPath || currentPath.length === 0) {
+                alert("❌ No hay puzzle para guardar. Genera uno primero.");
+                closeSaveModal();
+                return;
+            }
+
+            // Get data from form
+            const titleInput = document.getElementById('lvlName');
+            const authorInput = document.getElementById('lvlAuthor');
+            const chapterInput = document.getElementById('lvlChapter');
+            const difficultyInput = document.getElementById('lvlDifficulty');
+            const messageInput = document.getElementById('messageInput');
+            const fillOption = document.getElementById('fillOption');
+            const separator = document.getElementById('wordSeparator');
+            const dateInput = document.querySelector('.date-input');
+
+            const puzzleDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const boardSize = `${rows}x${cols}`;
+
+            const puzzleData = {
+                puzzle_date: puzzleDate,
+                board_size: boardSize,
+                message: messageInput ? messageInput.value : '',
+                solution_path: currentPath,
+                filler_type: fillOption ? fillOption.value : 'random',
+                word_separator: separator ? separator.value : 'space',
+                title: titleInput ? titleInput.value : null,
+                author: authorInput ? authorInput.value : null,
+                difficulty: difficultyInput ? difficultyInput.value : 'medium',
+                start_hints: lockedHintCount || 0,
+                end_hints: activeEndHints || 0
+            };
+
+            console.log("Guardando puzzle:", puzzleData);
+
+            try {
+                // Try to insert, if conflict (same date+size) then update
+                const { data, error } = await supabaseClient
+                    .from('puzzles')
+                    .upsert(puzzleData, {
+                        onConflict: 'puzzle_date,board_size',
+                        ignoreDuplicates: false
+                    })
+                    .select();
+
+                if (error) {
+                    console.error("Error al guardar:", error);
+                    alert(`❌ Error al guardar:\n${error.message}`);
+                } else {
+                    console.log("Puzzle guardado exitosamente:", data);
+                    alert(`✅ Puzzle guardado exitosamente!\n\nFecha: ${puzzleDate}\nTamaño: ${boardSize}`);
+                }
+            } catch (err) {
+                console.error("Error inesperado:", err);
+                alert(`❌ Error inesperado:\n${err.message}`);
+            }
+
+            closeSaveModal();
+        }
         function updateMovesVisuals() { const t=document.getElementById('showMovesToggle'); if (!t) return; showMovesEnabled = t.checked; const off=document.getElementById('label-moves-off'); const on=document.getElementById('label-moves-on'); if (showMovesEnabled) { if(on) on.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-yellow-400 font-bold transform scale-105"; if(off) off.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-slate-500 font-normal"; if (!isAutoSolved && userPath.length > 0) { const last = userPath[userPath.length - 1]; showPossibleMoves(last.r, last.c); } } else { if(off) off.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-red-400 font-bold transform scale-105"; if(on) on.className = "text-xs md:text-sm cursor-pointer select-none transition-all duration-300 text-slate-500 font-normal"; clearPossibleMoves(); } }
         function copyToClipboard() { console.log("Botón presionado: Copiar al portapapeles"); const i=document.getElementById('messageInput'); i.select(); i.setSelectionRange(0, 99999); try { var s=document.execCommand('copy'); if(s) showCopySuccess(); else { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(i.value).then(() => showCopySuccess()).catch(err => console.error(err)); } } catch (err) { console.error('Copy error', err); } }
         function showCopySuccess() { const b=document.getElementById('copyBtn'); const o=b.innerHTML; b.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>'; setTimeout(() => b.innerHTML = o, 2000); }
