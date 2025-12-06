@@ -1102,20 +1102,26 @@
                 }
             }
 
-            // No puzzle found in Supabase, generate random one
-            console.log(`No hay puzzle en Supabase para ${r}x${c}, generando aleatorio`);
-            const randomPhrase = WELCOME_PHRASES[Math.floor(Math.random() * WELCOME_PHRASES.length)];
+            // No puzzle found in Supabase - leave board empty
+            console.log(`No hay puzzle en Supabase para ${r}x${c}, dejando tablero vacío`);
+
+            // Clear message input
             const input = document.getElementById('messageInput');
             if(input) {
-                input.value = randomPhrase;
-                updateCharCount();
-                generateCryptogram();
+                input.value = '';
             }
 
             // Hide puzzle ID when no official puzzle
             const idDisplay = document.getElementById('puzzleIdDisplay');
             if(idDisplay) {
                 idDisplay.classList.add('hidden');
+            }
+
+            // Show message to user
+            const decodedText = document.getElementById('decodedText');
+            if(decodedText) {
+                decodedText.textContent = "No hay puzzle oficial para esta fecha y tamaño";
+                decodedText.className = "text-sm md:text-base text-slate-500 italic";
             }
         }
 
@@ -1650,9 +1656,12 @@
                 b.classList.add('active');
                 b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios';
 
-                // Build text from USER'S path with spaces (not the original message)
+                // Build text from USER'S path with spaces (ONLY message, not filler)
                 let userDecodedWithSpaces = '';
-                userPath.forEach((pos, idx) => {
+                const messageLength = Math.min(userPath.length, validMessageLength);
+
+                for (let idx = 0; idx < messageLength; idx++) {
+                    const pos = userPath[idx];
                     const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
                     const letter = cell.dataset.letter || "";
 
@@ -1665,7 +1674,7 @@
                     }
 
                     userDecodedWithSpaces += letter.toUpperCase();
-                });
+                }
 
                 d.innerHTML = `<span class="decoded-msg-char">${userDecodedWithSpaces}</span>`;
             } else {
