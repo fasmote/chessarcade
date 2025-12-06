@@ -691,7 +691,7 @@
 
             toggleHintButtons(false);
             const today = new Date().toISOString().split('T')[0];
-            const dateInput = document.querySelector('.date-input');
+            const dateInput = document.getElementById('puzzleDate');
             if(dateInput) {
                 dateInput.value = today;
                 // Update ID display after setting date
@@ -1535,6 +1535,9 @@
             // Generate readable ID: #YYYYMMDD-AxB
             const puzzleId = `#${puzzleDate.replace(/-/g, '')}-${boardSize}`;
 
+            const fillOption = document.getElementById('fillOption');
+            const separator = document.getElementById('wordSeparator');
+
             const puzzleData = {
                 puzzle_date: puzzleDate,
                 board_size: boardSize,
@@ -1542,14 +1545,12 @@
                 title: title,
                 author: author,
                 solution_path: currentPath,
-                filler_type: 'random',
+                tokens: globalTokens,  // CRITICAL: Save exact tokens
+                filler_type: fillOption ? fillOption.value : 'random',
+                word_separator: separator ? separator.value : 'space',
                 difficulty: difficulty,
-                hints: {
-                    showStart: false,
-                    showEnd: false,
-                    revealedLetters: 0
-                },
-                start_position: currentPath[0] || null
+                start_hints: lockedHintCount || 0,
+                end_hints: activeEndHints || 0
             };
 
             console.log("Guardando puzzle:", puzzleData);
