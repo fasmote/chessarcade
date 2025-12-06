@@ -1062,13 +1062,15 @@
             // Try to load puzzle from Supabase first
             if(supabaseClient) {
                 const boardSize = `${r}x${c}`;
-                const today = new Date().toISOString().split('T')[0];
+                // Get selected date from date picker, not today's date
+                const dateInput = document.querySelector('.date-input');
+                const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
 
                 try {
                     const { data, error } = await supabaseClient
                         .from('puzzles')
                         .select('*')
-                        .eq('puzzle_date', today)
+                        .eq('puzzle_date', selectedDate)
                         .eq('board_size', boardSize)
                         .single();
 
@@ -1083,7 +1085,7 @@
                         generateCryptogram();
 
                         // Show puzzle ID
-                        const puzzleId = `#${today.replace(/-/g, '')}-${boardSize}`;
+                        const puzzleId = `#${selectedDate.replace(/-/g, '')}-${boardSize}`;
                         const titleText = data.title ? ` "${data.title}"` : '';
                         const authorText = data.author ? ` por ${data.author}` : '';
 
