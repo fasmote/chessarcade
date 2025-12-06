@@ -1077,12 +1077,19 @@
                     if (data && !error) {
                         console.log(`Puzzle encontrado en Supabase para ${boardSize}`);
 
-                        // Load puzzle from Supabase
+                        // Load puzzle from Supabase using ORIGINAL tokens
                         const input = document.getElementById('messageInput');
                         if(input) {
                             input.value = data.message;
                         }
-                        generateCryptogram();
+
+                        // CRITICAL: Use loadPuzzleFromSavedData instead of generateCryptogram!
+                        if(data.solution_path && Array.isArray(data.solution_path)) {
+                            loadPuzzleFromSavedData(data);
+                        } else {
+                            console.warn("Puzzle sin solution_path, generando nuevo");
+                            generateCryptogram();
+                        }
 
                         // Show puzzle ID
                         const puzzleId = `#${selectedDate.replace(/-/g, '')}-${boardSize}`;
