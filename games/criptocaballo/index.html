@@ -1183,15 +1183,38 @@
             globalTokens = tokens;
             lastDecodedMessageOriginal = messageInput ? messageInput.value : data.message;
 
-            // Render board with ORIGINAL path
+            // Apply hints from saved data
+            if(data.start_hints && data.start_hints > 0) {
+                lockedHintCount = data.start_hints;
+                // Add start hints to userPath
+                userPath = [];
+                for(let i = 0; i < data.start_hints && i < currentPath.length; i++) {
+                    const [r, c] = currentPath[i];
+                    userPath.push({r, c});
+                }
+            }
+
+            if(data.end_hints && data.end_hints > 0) {
+                activeEndHints = data.end_hints;
+            }
+
+            // Render board with ORIGINAL path and hints
             renderBoardState();
+
+            // Update decoded text to show hints
+            if(userPath.length > 0) {
+                updateUserDecodedText();
+                const last = userPath[userPath.length - 1];
+                showPossibleMoves(last.r, last.c);
+            }
+
             toggleHintButtons(true);
 
             const solveBtn = document.getElementById('solveBtn');
             if(solveBtn) solveBtn.disabled = false;
 
             const decodedText = document.getElementById('decodedText');
-            if(decodedText) {
+            if(decodedText && userPath.length === 0) {
                 decodedText.textContent = "LISTO PARA RESOLVER";
                 decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
             }
