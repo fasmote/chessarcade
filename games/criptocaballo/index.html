@@ -1133,7 +1133,11 @@
 
             const boardSize = `${rows}x${cols}`;
 
-            if(!selectedDate) {
+            // Always read from date picker if available, otherwise use parameter or today
+            const dateInput = document.querySelector('.date-input');
+            if(dateInput && dateInput.value) {
+                selectedDate = dateInput.value;
+            } else if(!selectedDate) {
                 selectedDate = new Date().toISOString().split('T')[0];
             }
 
@@ -1550,7 +1554,7 @@
         function updateUserDecodedText() {
             const output = document.getElementById('decodedText');
             if(!output) return;
-            
+
             if (userPath.length === 0) {
                 output.textContent = "LISTO PARA RESOLVER";
                 output.className = "text-lg md:text-xl font-bold text-slate-600";
@@ -1558,22 +1562,41 @@
             }
             output.innerHTML = '';
             output.className = "text-lg md:text-2xl font-bold break-words leading-relaxed";
-            
-            userPath.forEach((pos, idx) => {
-                const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
-                const letter = cell.dataset.letter || ""; 
-                const span = document.createElement('span');
-                span.className = 'user-decoded-char'; 
-                span.textContent = letter;
-                output.appendChild(span);
 
-                if (idx === validMessageLength - 1 && validMessageLength < (rows * cols)) {
-                    const separator = document.createElement('div');
-                    separator.className = 'msg-separator';
-                    separator.textContent = 'MENSAJE COMPLETADO';
-                    output.appendChild(separator);
+            // Build message part (up to validMessageLength)
+            userPath.forEach((pos, idx) => {
+                if (idx < validMessageLength) {
+                    const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
+                    const letter = cell.dataset.letter || "";
+                    const span = document.createElement('span');
+                    span.className = 'decoded-msg-char';
+                    span.textContent = letter;
+                    output.appendChild(span);
                 }
             });
+
+            // Add separator if there's filler
+            if (userPath.length > validMessageLength && validMessageLength > 0) {
+                const separator = document.createElement('div');
+                separator.className = 'msg-separator';
+                separator.textContent = 'MENSAJE COMPLETADO';
+                output.appendChild(separator);
+            }
+
+            // Build filler part (after validMessageLength)
+            if (userPath.length > validMessageLength) {
+                userPath.forEach((pos, idx) => {
+                    if (idx >= validMessageLength) {
+                        const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
+                        const letter = cell.dataset.letter || "";
+                        const span = document.createElement('span');
+                        span.className = 'decoded-filler-char';
+                        span.textContent = letter;
+                        output.appendChild(span);
+                    }
+                });
+            }
+
             if (userPath.length === (rows * cols)) {
                  const endMarker = document.createElement('div');
                 endMarker.className = 'text-xs text-red-400 font-mono mt-4 opacity-75';
