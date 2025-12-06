@@ -28,6 +28,7 @@
 16. [Layout de Sidebar Desktop: El Patrón "Auto-Center Grid" (Square Rush)](#16-layout-de-sidebar-desktop-el-patrón-auto-center-grid-square-rush)
 17. [Botón UNDO No Se Habilita Después de Hacer un Movimiento (Knight Quest)](#17-botón-undo-no-se-habilita-después-de-hacer-un-movimiento-knight-quest)
 18. [Menú Dropdown Invisible Bloquea Clics en el Tablero](#18-menú-dropdown-invisible-bloquea-clics-en-el-tablero)
+19. [CriptoCaballo: 8 Bugs Críticos Resueltos en Una Sesión](#19-criptocaballo-8-bugs-críticos-resueltos-en-una-sesión)
 
 ---
 
@@ -4102,5 +4103,90 @@ document.elementsFromPoint(x, y);
 - `2979170` - fix: Add pointer-events:none to invisible dropdown menu blocking board clicks
 - `37a529f` - fix: Increment CSS version to force cache bust for pointer-events fix
 - `74566f4` - fix: Add pointer-events:none to .floating-games-menu container (complete fix)
+
+---
+
+
+## 19. CriptoCaballo: 8 Bugs Críticos Resueltos en Una Sesión
+
+### 🎮 Juego Afectado
+**CriptoCaballo** - Generador de enigmas ajedrecísticos
+
+### 📅 Fecha
+5 de diciembre de 2025
+
+### 📝 Resumen
+Durante una sesión intensiva de debugging, se identificaron y resolvieron 8 bugs en CriptoCaballo, 4 de ellos críticos que rompían la funcionalidad core del juego.
+
+---
+
+### 🔴 Bug Crítico #1: Config.js No Cargaba (404)
+
+**Síntoma:** Error 404 al cargar config.js → Supabase no se configuraba
+
+**Causa:** Archivo no existía en producción
+
+**Solución:** Crear games/criptocaballo/config.js para producción
+
+**Lección:** Separar configs dev (.private/) y prod (config.js)
+
+---
+
+### 🔴 Bug Crítico #2: Puzzle Guardado No Se Carga
+
+**Síntoma:** Admin guarda 8x8 → Usuario ve puzzle aleatorio
+
+**Causa:** Generaba aleatorio ANTES de consultar DB
+
+**Solución:** Consultar Supabase PRIMERO, generar aleatorio como fallback
+
+**Lección:** SIEMPRE cargar desde fuente autoritativa antes de generar contenido
+
+---
+
+### 🔴 Bug Crítico #3: Validación de Orden Incorrecta
+
+**Síntoma:** Completar en cualquier orden → Confetti + RESUELTO
+
+**Causa:** Solo validaba cantidad, no orden
+
+**Solución:** Validar posición por posición del camino
+
+**Lección:** En juegos de lógica, el ORDEN importa
+
+---
+
+### 🔴 Bug Crítico #4: Casillas Rojas Como Spoiler
+
+**Síntoma:** Casillas rojas antes de terminar revelan dónde termina mensaje
+
+**Causa:** Marcaba filler basándose solo en índice
+
+**Solución:** Agregar flag messageCompletedCorrectly
+
+**Lección:** No revelar información prematura
+
+---
+
+## 🎓 Patrones Importantes
+
+1. **Estado vs Presentación**: Limpiar HTML ≠ Limpiar estado
+2. **Validación Completa**: Cantidad + Orden + Contenido
+3. **Orden de Operaciones**: DB first → Random fallback
+4. **Feedback Honesto**: Mostrar lo que hizo, no lo correcto
+5. **Información Condicional**: Hints solo después de logros
+
+---
+
+## 📊 Estadísticas
+
+- Bugs totales: 8 (4 críticos, 2 medios, 2 menores)
+- Commits: 8
+- Tiempo: ~3 horas
+- URL: https://chessarcade-2j0ig0aar-claudios-projects.vercel.app/games/criptocaballo/
+
+---
+
+**Documentación completa:** games/criptocaballo/ERRORES_SOLUCIONADOS.md
 
 ---
