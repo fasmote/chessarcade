@@ -1124,6 +1124,80 @@
             }
         }
 
+        function loadPuzzleFromSavedData(data) {
+            console.log("Cargando puzzle desde datos guardados (sin re-encriptar)");
+
+            // Restore original path from Supabase
+            currentPath = data.solution_path;
+
+            // Recreate tokens from message + filler
+            const messageInput = document.getElementById('messageInput');
+            const rawMessage = messageInput ? messageInput.value.toUpperCase() : data.message.toUpperCase();
+
+            // Process message to extract tokens (similar to generateCryptogram)
+            const fillOption = document.getElementById('fillOption')?.value || 'random';
+            const separator = document.getElementById('wordSeparator')?.value || 'space';
+            const discardSpaces = (separator === 'none');
+
+            let rawText = rawMessage;
+            if (discardSpaces) {
+                rawText = rawText.replace(/\s/g, '');
+            } else if (separator !== 'space') {
+                let replacement = ' ';
+                if (separator === 'cross') replacement = CROSS_MARKER;
+                else if (separator === 'cross_medium') replacement = CROSS_MEDIUM_MARKER;
+                else if (separator === 'block') replacement = BLOCK_MARKER;
+                else if (separator === 'knight') replacement = KNIGHT_MARKER;
+                rawText = rawText.replace(/\s/g, replacement);
+            }
+
+            const regex = new RegExp(`(${CROSS_MARKER}|${CROSS_MEDIUM_MARKER}|${BLOCK_MARKER}|${KNIGHT_MARKER}|.)`, 'g');
+            let tokens = rawText.match(regex) || [];
+
+            const maxCells = rows * cols;
+            validMessageLength = Math.min(tokens.length, maxCells);
+
+            if (tokens.length > maxCells) {
+                tokens = tokens.slice(0, maxCells);
+            }
+
+            // Add filler if needed
+            const missingChars = maxCells - tokens.length;
+            if (missingChars > 0) {
+                if (fillOption === 'random') {
+                    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                    for(let i=0; i<missingChars; i++) tokens.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
+                } else if (fillOption === 'white_square') {
+                    for(let i=0; i<missingChars; i++) tokens.push(BLOCK_MARKER);
+                } else if (fillOption === 'cross_x') {
+                    for(let i=0; i<missingChars; i++) tokens.push(CROSS_MARKER);
+                } else if (fillOption === 'cross_medium') {
+                    for(let i=0; i<missingChars; i++) tokens.push(CROSS_MEDIUM_MARKER);
+                } else if (fillOption === 'knight') {
+                    for(let i=0; i<missingChars; i++) tokens.push(KNIGHT_MARKER);
+                } else if (fillOption === 'empty') {
+                    for(let i=0; i<missingChars; i++) tokens.push(" ");
+                }
+            }
+
+            globalTokens = tokens;
+            lastDecodedMessageOriginal = messageInput ? messageInput.value : data.message;
+
+            // Render board with ORIGINAL path
+            renderBoardState();
+            toggleHintButtons(true);
+
+            const solveBtn = document.getElementById('solveBtn');
+            if(solveBtn) solveBtn.disabled = false;
+
+            const decodedText = document.getElementById('decodedText');
+            if(decodedText) {
+                decodedText.textContent = "LISTO PARA RESOLVER";
+                decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
+            }
+            resetTimer();
+        }
+
         async function loadDailyLevel(selectedDate) {
             if(!supabaseClient) {
                 console.log("Supabase no configurado");
@@ -1171,8 +1245,14 @@
                         messageInput.value = data.message;
                     }
 
-                    // Generate the cryptogram with the loaded message
-                    generateCryptogram();
+                    // Load puzzle using ORIGINAL solution_path from Supabase (don't re-encrypt!)
+                    if(data.solution_path && Array.isArray(data.solution_path)) {
+                        loadPuzzleFromSavedData(data);
+                    } else {
+                        // Fallback: if no solution_path, generate new one (shouldn't happen)
+                        console.warn("No solution_path en data, generando nuevo");
+                        generateCryptogram();
+                    }
 
                     // Show ID in UI permanently
                     const idDisplay = document.getElementById('puzzleIdDisplay');
@@ -1679,42 +1759,62 @@
                 b.classList.add('active');
                 b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios';
 
-                // Build text from USER'S path with spaces (message part)
-                let userDecodedWithSpaces = '';
-                const messageLength = Math.min(userPath.length, validMessageLength);
+                // Clear and rebuild with spaces
+                d.innerHTML = '';
+                d.className = "text-lg md:text-2xl font-bold break-words leading-relaxed";
 
+                // Build message part with spaces
+                const messageLength = Math.min(userPath.length, validMessageLength);
                 for (let idx = 0; idx < messageLength; idx++) {
                     const pos = userPath[idx];
                     const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
                     const letter = cell.dataset.letter || "";
 
-                    // Check if this position in the ORIGINAL solution has a space
-                    if(idx < currentPath.length && idx < globalTokens.length) {
+                    // Check if ORIGINAL solution has a space at this position
+                    if(idx < globalTokens.length) {
                         const token = globalTokens[idx];
-                        if(token === ' ') {
-                            userDecodedWithSpaces += ' ';
+                        if(token === ' ' || isTokenSeparator(token)) {
+                            // Add space separator
+                            const spaceSpan = document.createElement('span');
+                            spaceSpan.textContent = ' ';
+                            d.appendChild(spaceSpan);
                         }
                     }
 
-                    userDecodedWithSpaces += letter.toUpperCase();
+                    // Add letter
+                    const span = document.createElement('span');
+                    span.className = 'decoded-msg-char';
+                    span.textContent = letter.toUpperCase();
+                    d.appendChild(span);
                 }
 
-                // Build filler part (if any)
-                let fillerText = '';
+                // Add separator if there's filler
+                if (userPath.length > validMessageLength && validMessageLength > 0) {
+                    const separator = document.createElement('div');
+                    separator.className = 'msg-separator';
+                    separator.textContent = 'MENSAJE COMPLETADO';
+                    d.appendChild(separator);
+                }
+
+                // Build filler part
                 if (userPath.length > validMessageLength) {
                     for (let idx = validMessageLength; idx < userPath.length; idx++) {
                         const pos = userPath[idx];
                         const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
                         const letter = cell.dataset.letter || "";
-                        fillerText += letter.toUpperCase();
+                        const span = document.createElement('span');
+                        span.className = 'decoded-filler-char';
+                        span.textContent = letter.toUpperCase();
+                        d.appendChild(span);
                     }
                 }
 
-                // Display message with spaces, and filler separately
-                if (fillerText) {
-                    d.innerHTML = `<span class="decoded-msg-char">${userDecodedWithSpaces}</span><span class="decoded-filler-char">${fillerText}</span>`;
-                } else {
-                    d.innerHTML = `<span class="decoded-msg-char">${userDecodedWithSpaces}</span>`;
+                // Add end marker if all completed
+                if (userPath.length === (rows * cols)) {
+                    const endMarker = document.createElement('div');
+                    endMarker.className = 'text-xs text-red-400 font-mono mt-4 opacity-75';
+                    endMarker.textContent = '// FIN DE TRANSMISIÓN //';
+                    d.appendChild(endMarker);
                 }
             } else {
                 b.classList.remove('active');
