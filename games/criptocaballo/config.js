@@ -3,6 +3,7 @@
 // ============================================
 // Este archivo SÍ se sube a GitHub para deployment en Vercel
 // Las credenciales de Supabase Anon Key son seguras de compartir públicamente
+// Última actualización: 2025-12-06
 
 const CRYPTO_CONFIG = {
     supabase: {
