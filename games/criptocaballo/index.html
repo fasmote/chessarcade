@@ -1366,7 +1366,8 @@
             
             console.log("Celda clickeada:", r, c);
 
-            if (!isTimerRunning && userPath.length < validMessageLength) {
+            // Start timer only if not running, not completed, and still solving message
+            if (!isTimerRunning && !messageCompletedCorrectly && userPath.length < validMessageLength) {
                 startTimer();
             }
             
@@ -1655,7 +1656,7 @@
                 b.classList.add('active');
                 b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios';
 
-                // Build text from USER'S path with spaces (ONLY message, not filler)
+                // Build text from USER'S path with spaces (message part)
                 let userDecodedWithSpaces = '';
                 const messageLength = Math.min(userPath.length, validMessageLength);
 
@@ -1675,7 +1676,23 @@
                     userDecodedWithSpaces += letter.toUpperCase();
                 }
 
-                d.innerHTML = `<span class="decoded-msg-char">${userDecodedWithSpaces}</span>`;
+                // Build filler part (if any)
+                let fillerText = '';
+                if (userPath.length > validMessageLength) {
+                    for (let idx = validMessageLength; idx < userPath.length; idx++) {
+                        const pos = userPath[idx];
+                        const cell = document.getElementById(`cell-${pos.r}-${pos.c}`);
+                        const letter = cell.dataset.letter || "";
+                        fillerText += letter.toUpperCase();
+                    }
+                }
+
+                // Display message with spaces, and filler separately
+                if (fillerText) {
+                    d.innerHTML = `<span class="decoded-msg-char">${userDecodedWithSpaces}</span><span class="decoded-filler-char">${fillerText}</span>`;
+                } else {
+                    d.innerHTML = `<span class="decoded-msg-char">${userDecodedWithSpaces}</span>`;
+                }
             } else {
                 b.classList.remove('active');
                 b.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
