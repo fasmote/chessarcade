@@ -10,40 +10,7 @@ Este documento registra bugs conocidos, limitaciones técnicas y mejoras planifi
 
 ### 🔴 PRIORIDAD ALTA
 
-#### 1. CriptoCaballo: Timer se reinicia al retroceder después de resolver correctamente
-
-**Descripción:**
-Una vez resuelto correctamente un mensaje, si el usuario retrocede un par de casillas (deshacer movimientos), el reloj se reinicia a cero. Entonces puede avanzar nuevamente y parece que resolvió todo en 1 segundo, aunque originalmente tomó mucho más tiempo.
-
-**Estado:** 🔴 Activo - Requiere solución
-**Prioridad:** Alta (permite falsear tiempos en leaderboard)
-**Fecha reportado:** 6 de diciembre de 2025
-
-**Comportamiento esperado:**
-Una vez que el puzzle está resuelto correctamente y el timer se detiene, NO debe reactivarse al retroceder. El tiempo final registrado debe ser el tiempo real de la primera solución completa.
-
-**Causa raíz probable:**
-El timer se reinicia cuando `userPath.length` cambia, sin verificar si el puzzle ya fue completado anteriormente.
-
-**Solución propuesta:**
-- Agregar flag `puzzleCompleted` que se active al completar el puzzle por primera vez
-- Una vez `puzzleCompleted === true`, el timer NO debe reiniciarse aunque se retroceda
-- El tiempo guardado debe ser el tiempo de la primera solución completa
-
-**Archivos afectados:**
-- `games/criptocaballo/index.html` - Lógica del timer y función de retroceder
-
-**Testing requerido:**
-1. Resolver puzzle completamente en 30 segundos
-2. Timer se detiene en 30s
-3. Retroceder 2 casillas
-4. Timer NO debe reiniciarse, debe seguir mostrando 30s
-5. Avanzar nuevamente las 2 casillas
-6. Timer NO debe cambiar de 30s
-
----
-
-#### 2. CriptoCaballo: Puzzle guardado en Supabase no se carga al cambiar tamaño de tablero
+#### 1. CriptoCaballo: Puzzle guardado en Supabase no se carga al cambiar tamaño de tablero
 
 **Descripción:**
 Cuando el admin guarda un puzzle (ej: 8x8) y el usuario selecciona ese tamaño, el juego genera un puzzle aleatorio en lugar de cargar el puzzle guardado desde Supabase.
@@ -128,39 +95,7 @@ async function playerSelectSize(r, c) {
 
 ### 🟡 PRIORIDAD MEDIA
 
-#### 1. CriptoCaballo: Al mostrar espacios con el botón "ojito", se ocultan los espacios sobrantes (filler)
-
-**Descripción:**
-Cuando se resuelve todo el puzzle (mensaje + espacios sobrantes) y se presiona el botón "ojito" (Ver con Espacios) para mostrar los espacios del mensaje, los espacios sobrantes (filler, casillas rojas) desaparecen de la visualización.
-
-**Estado:** 🟡 Pendiente
-**Prioridad:** Media (afecta UX de visualización final)
-**Fecha reportado:** 6 de diciembre de 2025
-
-**Comportamiento esperado:**
-Al presionar "Ver con Espacios", debe mostrar el mensaje con sus espacios internos, PERO los espacios sobrantes (filler) deben permanecer visibles debajo de la línea separadora.
-
-**Comportamiento actual:**
-La función `toggleSpaces()` solo muestra las primeras N letras (hasta `validMessageLength`), ocultando completamente el filler.
-
-**Solución propuesta:**
-Modificar `toggleSpaces()` para que:
-1. Muestre el mensaje con espacios (primeros `validMessageLength` caracteres)
-2. Agregue separador visual
-3. Muestre también el filler (desde `validMessageLength` hasta `userPath.length`)
-
-**Archivos afectados:**
-- `games/criptocaballo/index.html` - Función `toggleSpaces()` (línea ~1659)
-
-**Testing requerido:**
-1. Resolver puzzle completo (12 casillas en 3x4, mensaje de 10 letras + 2 filler)
-2. Presionar botón "ojito" (Ver con Espacios)
-3. Verificar: Mensaje muestra espacios internos
-4. Verificar: Filler sigue visible debajo del separador
-
----
-
-#### 2. CriptoCaballo: Pistas (iniciales y finales) no se muestran en modo jugador
+#### 1. CriptoCaballo: Pistas (iniciales y finales) no se muestran en modo jugador
 
 **Descripción:**
 Cuando el admin marca pistas iniciales y finales (usando los botones "Inicio" y "Fin"), estas pistas NO se muestran al usuario en la pantalla de jugador.
@@ -172,16 +107,19 @@ Cuando el admin marca pistas iniciales y finales (usando los botones "Inicio" y 
 **Comportamiento esperado:**
 Las casillas marcadas como pistas deben mostrarse visualmente diferentes (ej: con color distintivo o badge) en el modo jugador, para ayudar al usuario a saber por dónde empezar/terminar.
 
-**Causa raíz probable:**
-Las pistas se guardan en variables del admin pero no se transfieren al renderizado del jugador, o no se guardan en Supabase junto con el puzzle.
+**Causa raíz:**
+La función `confirmSave()` (línea 1625) actualmente solo muestra un `alert("Simulación: Guardado en DB.")` y NO guarda nada en Supabase. Las pistas se aplican visualmente en modo admin pero no se persisten en la base de datos.
 
-**Solución propuesta:**
-1. Guardar pistas en Supabase junto con el puzzle (campos `start_hints` y `end_hints`)
-2. Al cargar puzzle desde Supabase, aplicar estilos visuales a las casillas con pistas
+**Bloqueador:**
+Este bug requiere primero implementar la funcionalidad completa de guardado en Supabase. Sin eso, no hay forma de persistir las pistas para cargarlas después.
+
+**Solución propuesta (después de implementar guardado):**
+1. Implementar `confirmSave()` para guardar en Supabase con campos `start_hints` y `end_hints`
+2. Al cargar puzzle desde Supabase en modo jugador, aplicar estilos visuales a las casillas con pistas
 3. Agregar clase CSS especial para pistas (ej: `hint-cell` con border amarillo o glow)
 
 **Archivos afectados:**
-- `games/criptocaballo/index.html` - Funciones de guardado/carga y renderizado
+- `games/criptocaballo/index.html` - Función `confirmSave()` (línea 1625) y carga de puzzles
 
 **Testing requerido:**
 1. Como admin: Crear puzzle 3x4, marcar 2 pistas iniciales y 1 pista final
@@ -191,7 +129,7 @@ Las pistas se guardan en variables del admin pero no se transfieren al renderiza
 
 ---
 
-#### 3. CriptoCaballo: Estado del puzzle se pierde al cambiar de tamaño de tablero
+#### 2. CriptoCaballo: Estado del puzzle se pierde al cambiar de tamaño de tablero
 
 **Descripción:**
 Cuando el usuario resuelve un puzzle (ej: 3x4) y cambia a otro tamaño (4x5, 5x5), al volver al tamaño original (3x4), el puzzle ya no está resuelto. El tablero aparece limpio.
@@ -310,6 +248,20 @@ Ninguno actualmente.
 ---
 
 ## ✅ Issues Resueltos Recientemente
+
+### CriptoCaballo: Timer se reinicia al retroceder después de resolver correctamente (CRÍTICO)
+- **Resuelto:** 6 de diciembre de 2025
+- **Problema:** Permitía falsear tiempos en leaderboard (resolver en 30s, retroceder, avanzar = 1s)
+- **Solución:** Agregar verificación `!messageCompletedCorrectly` antes de iniciar timer
+- **Archivos afectados:** games/criptocaballo/index.html (línea 1370)
+- **Commit:** cf39b86
+
+### CriptoCaballo: Botón "Ver con Espacios" oculta filler
+- **Resuelto:** 6 de diciembre de 2025
+- **Problema:** Al mostrar mensaje con espacios, los caracteres filler (rojos) desaparecían
+- **Solución:** Agregar bucle separado para construir y mostrar filler con clase `decoded-filler-char`
+- **Archivos afectados:** games/criptocaballo/index.html (función `toggleSpaces()`, líneas 1679-1695)
+- **Commit:** cf39b86
 
 ### CriptoCaballo: Contenido no centrado en desktop
 - **Resuelto:** 6 de diciembre de 2025
