@@ -975,12 +975,16 @@
 
             lastDecodedMessageOriginal = input.value;
 
-            // CRITICAL CHANGE: ALWAYS keep spaces in tokens, regardless of separator setting
-            // The separator setting now only controls visualization, not storage
             let rawText = input.value.toUpperCase();
 
-            // Replace visual separators but KEEP normal spaces
-            if (separator === 'cross') {
+            // Handle separators
+            if (separator === 'none') {
+                // NINGUNO: Remove ALL spaces, join letters together
+                rawText = rawText.replace(/\s/g, '');
+            } else if (separator === 'space') {
+                // ESPACIO: Keep spaces as normal ' '
+                // No change needed
+            } else if (separator === 'cross') {
                 rawText = rawText.replace(/\s/g, CROSS_MARKER);
             } else if (separator === 'cross_medium') {
                 rawText = rawText.replace(/\s/g, CROSS_MEDIUM_MARKER);
@@ -989,7 +993,6 @@
             } else if (separator === 'knight') {
                 rawText = rawText.replace(/\s/g, KNIGHT_MARKER);
             }
-            // If separator === 'space' or 'none', keep spaces as normal ' ' characters
 
             if (rawText.length === 0) return;
 
@@ -1130,10 +1133,12 @@
                     const tokens = rawText.match(regex) || [];
                     messageLength = tokens.length;
                 } else {
+                    // No separator or space separator - count message without spaces
                     messageLength = data.message.replace(/\s/g, '').length;
                 }
                 validMessageLength = Math.min(messageLength, rows * cols);
             } else {
+                // Fallback if no message field (shouldn't happen)
                 validMessageLength = globalTokens.length;
             }
 
