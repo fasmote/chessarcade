@@ -974,6 +974,9 @@
             const separator = document.getElementById('wordSeparator').value;
 
             lastDecodedMessageOriginal = input.value;
+            console.log(`🔐 ENCRIPTANDO - Tablero: ${rows}x${cols}`);
+            console.log(`🔐 Guardando lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+            console.log(`🔐 Separador seleccionado: ${separator}`);
 
             let rawText = input.value.toUpperCase();
 
@@ -1214,7 +1217,13 @@
 
         function setBoardSize(r, c) {
             console.log(`Botón presionado: Tablero ${r}x${c}`);
+            console.log(`📋 ANTES de cambiar - lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+
             rows = r; cols = c; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0;
+
+            // CRITICAL: Reset message when changing board size
+            lastDecodedMessageOriginal = "";
+            console.log(`📋 DESPUÉS de cambiar - lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
 
             const info = document.getElementById('boardInfo');
             if(info) info.textContent = `Tablero ${r}x${c}`;
@@ -1870,7 +1879,29 @@
         function toggleHintButtons(enable) { const s=document.getElementById('btnStartHint'); if(s) s.disabled = !enable; const e=document.getElementById('btnEndHint'); if(e) e.disabled = !enable; const sv=document.getElementById('saveBtn'); if(sv) sv.disabled = !enable; }
         function applyStartHint() { console.log("Botón presionado: Pista Inicio"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('startHintCount').value)||0; isAutoSolved=false; userPath=[]; resetTimer(); document.getElementById('board').classList.remove('success'); document.getElementById('showSpacesBtn').classList.add('hidden'); for (let i=0; i<n && i<currentPath.length; i++) { const [r,c]=currentPath[i]; userPath.push({r,c}); } lockedHintCount=userPath.length; renderBoardState(); if (userPath.length>0) { const last=userPath[userPath.length-1]; showPossibleMoves(last.r, last.c); } updateUserDecodedText(); if (userPath.length===validMessageLength && validMessageLength>0) { document.getElementById('board').classList.add('success'); launchConfetti(); } }
         function applyEndHint() { console.log("Botón presionado: Pista Fin"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('endHintCount').value)||0; activeEndHints=n; renderBoardState(); }
-        function toggleSpaces() { console.log("Botón presionado: Ver/Ocultar Espacios"); isShowingSpaces = !isShowingSpaces; const b=document.getElementById('showSpacesBtn'); const d=document.getElementById('decodedText'); if (isShowingSpaces) { b.classList.add('active'); b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios'; d.innerHTML = `<span class="decoded-msg-char">${lastDecodedMessageOriginal.toUpperCase()}</span>`; } else { b.classList.remove('active'); b.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios'; updateUserDecodedText(); } }
+        function toggleSpaces() {
+            console.log("Botón presionado: Ver/Ocultar Espacios");
+            console.log(`👁️ Tablero actual: ${rows}x${cols}`);
+            console.log(`👁️ lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+            console.log(`👁️ validMessageLength: ${validMessageLength}`);
+            console.log(`👁️ globalTokens length: ${globalTokens.length}`);
+
+            isShowingSpaces = !isShowingSpaces;
+            const b=document.getElementById('showSpacesBtn');
+            const d=document.getElementById('decodedText');
+
+            if (isShowingSpaces) {
+                console.log(`👁️ MOSTRANDO mensaje original con espacios`);
+                b.classList.add('active');
+                b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios';
+                d.innerHTML = `<span class="decoded-msg-char">${lastDecodedMessageOriginal.toUpperCase()}</span>`;
+            } else {
+                console.log(`👁️ OCULTANDO espacios, volviendo a mensaje del usuario`);
+                b.classList.remove('active');
+                b.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                updateUserDecodedText();
+            }
+        }
         
         function startResolver() { 
             console.log("Botón presionado: RESOLVER (AUTO)"); 
