@@ -1375,20 +1375,26 @@
                      if(cell) {
                         if (token === CROSS_MARKER) {
                             cell.classList.add('crossed-out');
-                            cell.textContent = ""; 
-                            cell.dataset.letter = ""; 
+                            cell.textContent = "";
+                            cell.dataset.letter = "";
                         } else if (token === CROSS_MEDIUM_MARKER) {
                             cell.classList.add('cross-medium');
                             cell.innerHTML = '<i class="fa-solid fa-xmark"></i>';
                             cell.dataset.letter = "";
                         } else if (token === BLOCK_MARKER) {
                             cell.classList.add('white-block');
-                            cell.textContent = ""; 
-                            cell.dataset.letter = ""; 
+                            cell.textContent = "";
+                            cell.dataset.letter = "";
                         } else if (token === KNIGHT_MARKER) {
                             cell.classList.add('knight-decoration');
-                            cell.innerHTML = '<i class="fa-solid fa-chess-knight"></i>'; 
+                            cell.innerHTML = '<i class="fa-solid fa-chess-knight"></i>';
                             cell.dataset.letter = "";
+                        } else if (token === ' ') {
+                            // SPACE: Don't show anything on the board (invisible separator)
+                            // But keep it in dataset for "Ver con Espacios" button
+                            cell.classList.add('space-separator');
+                            cell.textContent = "";
+                            cell.dataset.letter = " ";  // Store space for later use
                         } else {
                             cell.textContent = token;
                             cell.dataset.letter = token;
