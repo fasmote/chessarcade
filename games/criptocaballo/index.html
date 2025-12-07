@@ -573,8 +573,8 @@
         </div>
     </div>
 
-    <!-- Cargar configuración de producción -->
-    <script src="config.js"></script>
+    <!-- Cargar configuración de producción (con cache busting) -->
+    <script src="config.js?v=5.8"></script>
 
     <script>
         // API Key manejada de forma segura en Vercel serverless function
@@ -602,12 +602,13 @@
         let isAutoSolved = false;
         let globalTokens = []; 
 
-        let validMessageLength = 0; 
-        let currentStep = 0; 
-        let targetStep = 0; 
-        let lastDecodedMessageOriginal = ""; 
+        let validMessageLength = 0;
+        let currentStep = 0;
+        let targetStep = 0;
+        let lastDecodedMessageOriginal = "";
         let isShowingSpaces = false;
-        let activeEndHints = 0; 
+        let puzzleShowSpaces = true; // NEW: Track if puzzle allows showing spaces
+        let activeEndHints = 0;
         let showMovesEnabled = true;
 
         let userPath = [];
@@ -1230,6 +1231,10 @@
             if(data.end_hints && data.end_hints > 0) {
                 activeEndHints = data.end_hints;
             }
+
+            // NEW: Load show_spaces setting from puzzle data
+            // Default to true for backwards compatibility with old puzzles
+            puzzleShowSpaces = (data.show_spaces !== undefined) ? data.show_spaces : true;
 
             // Render board with ORIGINAL path and hints
             renderBoardState();
@@ -1887,7 +1892,7 @@
                 d.innerHTML = '';
                 d.className = "text-lg md:text-2xl font-bold break-words leading-relaxed";
 
-                // Build message part with spaces
+                // Build message part with spaces (only if puzzleShowSpaces is true)
                 const messageLength = Math.min(userPath.length, validMessageLength);
                 for (let idx = 0; idx < messageLength; idx++) {
                     const pos = userPath[idx];
@@ -1895,7 +1900,8 @@
                     const letter = cell.dataset.letter || "";
 
                     // Check if ORIGINAL solution has a space at this position
-                    if(idx < globalTokens.length) {
+                    // AND if the puzzle allows showing spaces
+                    if(puzzleShowSpaces && idx < globalTokens.length) {
                         const token = globalTokens[idx];
                         if(token === ' ') {
                             // Add space separator (actual space in the message)
@@ -1914,7 +1920,7 @@
                         }
                     }
 
-                    // Add letter (only if not a separator)
+                    // Add letter (only if not a separator OR if spaces shouldn't be shown)
                     if(letter) {
                         const span = document.createElement('span');
                         span.className = 'decoded-msg-char';

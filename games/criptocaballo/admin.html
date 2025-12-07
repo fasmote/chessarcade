@@ -611,8 +611,8 @@
         </div>
     </div>
 
-    <!-- Cargar configuración de producción -->
-    <script src="config.js"></script>
+    <!-- Cargar configuración de producción (con cache busting) -->
+    <script src="config.js?v=5.8"></script>
 
     <script>
         // API Key manejada de forma segura en Vercel serverless function
@@ -972,27 +972,29 @@
 
             const fillOption = document.getElementById('fillOption').value;
             const separator = document.getElementById('wordSeparator').value;
-            const discardSpaces = (separator === 'none');
 
             lastDecodedMessageOriginal = input.value;
 
+            // CRITICAL CHANGE: ALWAYS keep spaces in tokens, regardless of separator setting
+            // The separator setting now only controls visualization, not storage
             let rawText = input.value.toUpperCase();
-            if (discardSpaces) {
-                rawText = rawText.replace(/\s/g, '');
-            } else if (separator !== 'space') {
-                let replacement = ' ';
-                if (separator === 'cross') replacement = CROSS_MARKER;
-                else if (separator === 'cross_medium') replacement = CROSS_MEDIUM_MARKER;
-                else if (separator === 'block') replacement = BLOCK_MARKER;
-                else if (separator === 'knight') replacement = KNIGHT_MARKER;
-                
-                rawText = rawText.replace(/\s/g, replacement);
+
+            // Replace visual separators but KEEP normal spaces
+            if (separator === 'cross') {
+                rawText = rawText.replace(/\s/g, CROSS_MARKER);
+            } else if (separator === 'cross_medium') {
+                rawText = rawText.replace(/\s/g, CROSS_MEDIUM_MARKER);
+            } else if (separator === 'block') {
+                rawText = rawText.replace(/\s/g, BLOCK_MARKER);
+            } else if (separator === 'knight') {
+                rawText = rawText.replace(/\s/g, KNIGHT_MARKER);
             }
-            
+            // If separator === 'space' or 'none', keep spaces as normal ' ' characters
+
             if (rawText.length === 0) return;
-            
+
             const regex = new RegExp(`(${CROSS_MARKER}|${CROSS_MEDIUM_MARKER}|${BLOCK_MARKER}|${KNIGHT_MARKER}|.)`, 'g');
-            
+
             let tokens = rawText.match(regex) || [];
             
             const maxCells = rows * cols;
@@ -1722,6 +1724,10 @@
             const fillOption = document.getElementById('fillOption');
             const separator = document.getElementById('wordSeparator');
 
+            // Determine if spaces should be shown to user
+            // If separator is 'none', hide spaces; otherwise show them
+            const showSpaces = separator ? (separator.value !== 'none') : true;
+
             const puzzleData = {
                 puzzle_date: puzzleDate,
                 board_size: boardSize,
@@ -1729,9 +1735,10 @@
                 title: title,
                 author: author,
                 solution_path: currentPath,
-                tokens: globalTokens,  // CRITICAL: Save exact tokens
+                tokens: globalTokens,  // CRITICAL: Save exact tokens (always with spaces)
                 filler_type: fillOption ? fillOption.value : 'random',
-                word_separator: separator ? separator.value : 'space',
+                word_separator: separator ? separator.value : 'space',  // Legacy field (keep for compatibility)
+                show_spaces: showSpaces,  // NEW: Controls if user sees spaces
                 difficulty: difficulty,
                 start_hints: lockedHintCount || 0,
                 end_hints: activeEndHints || 0
