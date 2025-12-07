@@ -1724,10 +1724,6 @@
             const fillOption = document.getElementById('fillOption');
             const separator = document.getElementById('wordSeparator');
 
-            // Determine if spaces should be shown to user
-            // If separator is 'none', hide spaces; otherwise show them
-            const showSpaces = separator ? (separator.value !== 'none') : true;
-
             const puzzleData = {
                 puzzle_date: puzzleDate,
                 board_size: boardSize,
@@ -1737,8 +1733,7 @@
                 solution_path: currentPath,
                 tokens: globalTokens,  // CRITICAL: Save exact tokens (always with spaces)
                 filler_type: fillOption ? fillOption.value : 'random',
-                word_separator: separator ? separator.value : 'space',  // Legacy field (keep for compatibility)
-                show_spaces: showSpaces,  // NEW: Controls if user sees spaces
+                word_separator: separator ? separator.value : 'space',  // Controls board visualization only
                 difficulty: difficulty,
                 start_hints: lockedHintCount || 0,
                 end_hints: activeEndHints || 0

@@ -607,7 +607,6 @@
         let targetStep = 0;
         let lastDecodedMessageOriginal = "";
         let isShowingSpaces = false;
-        let puzzleShowSpaces = true; // NEW: Track if puzzle allows showing spaces
         let activeEndHints = 0;
         let showMovesEnabled = true;
 
@@ -1231,10 +1230,6 @@
             if(data.end_hints && data.end_hints > 0) {
                 activeEndHints = data.end_hints;
             }
-
-            // NEW: Load show_spaces setting from puzzle data
-            // Default to true for backwards compatibility with old puzzles
-            puzzleShowSpaces = (data.show_spaces !== undefined) ? data.show_spaces : true;
 
             // Render board with ORIGINAL path and hints
             renderBoardState();
@@ -1892,7 +1887,8 @@
                 d.innerHTML = '';
                 d.className = "text-lg md:text-2xl font-bold break-words leading-relaxed";
 
-                // Build message part with spaces (only if puzzleShowSpaces is true)
+                // Build message part with spaces FROM ORIGINAL MESSAGE
+                // ALWAYS show spaces from the original message, regardless of separator setting
                 const messageLength = Math.min(userPath.length, validMessageLength);
                 for (let idx = 0; idx < messageLength; idx++) {
                     const pos = userPath[idx];
@@ -1900,18 +1896,17 @@
                     const letter = cell.dataset.letter || "";
 
                     // Check if ORIGINAL solution has a space at this position
-                    // AND if the puzzle allows showing spaces
-                    if(puzzleShowSpaces && idx < globalTokens.length) {
+                    if(idx < globalTokens.length) {
                         const token = globalTokens[idx];
                         if(token === ' ') {
-                            // Add space separator (actual space in the message)
+                            // Add space separator (actual space in the original message)
                             const spaceSpan = document.createElement('span');
                             spaceSpan.className = 'decoded-msg-char';
                             spaceSpan.textContent = ' ';
                             d.appendChild(spaceSpan);
                             continue; // Skip adding letter since this IS the space
                         } else if(isTokenSeparator(token)) {
-                            // Add visual separator (X, block, etc.)
+                            // Add visual separator (X, block, etc.) as space
                             const span = document.createElement('span');
                             span.className = 'decoded-msg-char text-pink-400';
                             span.textContent = ' '; // Show as space visually
@@ -1920,7 +1915,7 @@
                         }
                     }
 
-                    // Add letter (only if not a separator OR if spaces shouldn't be shown)
+                    // Add letter (only if not a separator)
                     if(letter) {
                         const span = document.createElement('span');
                         span.className = 'decoded-msg-char';
