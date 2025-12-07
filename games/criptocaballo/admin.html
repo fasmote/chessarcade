@@ -1675,7 +1675,8 @@
             const i=document.getElementById('messageInput');
             const n=document.getElementById('lvlName');
             if(i && n) {
-                n.value = i.value.split(' ').slice(0, 2).join(' ');
+                // Copiar toda la frase como nombre del nivel
+                n.value = i.value;
             }
             // Set default date to today
             const dateInput = document.getElementById('puzzleDate');
