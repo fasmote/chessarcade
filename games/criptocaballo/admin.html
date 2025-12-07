@@ -760,12 +760,21 @@
                  Solo devuelve la frase.`;
             try {
                 const phrase = await callGemini(prompt);
-                const clean = postProcessAIResponse(phrase, isNoSeparator, maxLen);
-                input.value = clean;
-                updateCharCount(); 
-                input.classList.add('ring-2', 'ring-purple-500');
-                setTimeout(() => input.classList.remove('ring-2', 'ring-purple-500'), 500);
-            } catch (error) { console.error(error); input.value = "ERROR IA"; }
+                if (phrase.includes("ERROR") || phrase.includes("Error") || phrase.includes("ocupada")) {
+                    alert(`⚠️ ${phrase}\n\n¿Configuraste GEMINI_API_KEY en Vercel?\nSettings → Environment Variables → GEMINI_API_KEY`);
+                    input.value = "";
+                } else {
+                    const clean = postProcessAIResponse(phrase, isNoSeparator, maxLen);
+                    input.value = clean;
+                    updateCharCount();
+                    input.classList.add('ring-2', 'ring-purple-500');
+                    setTimeout(() => input.classList.remove('ring-2', 'ring-purple-500'), 500);
+                }
+            } catch (error) {
+                console.error('Error en IA:', error);
+                alert(`⚠️ Error al generar frase con IA\n\n${error.message}\n\n¿Configuraste GEMINI_API_KEY en Vercel?`);
+                input.value = "";
+            }
             finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
 
@@ -792,14 +801,23 @@
                  Solo devuelve el texto sin autor.`;
             try {
                 const phrase = await callGemini(prompt);
-                let raw = phrase.trim().replace(/^["']|["']$/g, '');
-                raw = raw.split(" - ")[0].split(" – ")[0]; 
-                const clean = postProcessAIResponse(raw, isNoSeparator, maxLen);
-                input.value = clean;
-                updateCharCount(); 
-                input.classList.add('ring-2', 'ring-yellow-500');
-                setTimeout(() => input.classList.remove('ring-2', 'ring-yellow-500'), 500);
-            } catch (error) { console.error(error); input.value = "ERROR IA"; }
+                if (phrase.includes("ERROR") || phrase.includes("Error") || phrase.includes("ocupada")) {
+                    alert(`⚠️ ${phrase}\n\n¿Configuraste GEMINI_API_KEY en Vercel?\nSettings → Environment Variables → GEMINI_API_KEY`);
+                    input.value = "";
+                } else {
+                    let raw = phrase.trim().replace(/^["']|["']$/g, '');
+                    raw = raw.split(" - ")[0].split(" – ")[0];
+                    const clean = postProcessAIResponse(raw, isNoSeparator, maxLen);
+                    input.value = clean;
+                    updateCharCount();
+                    input.classList.add('ring-2', 'ring-yellow-500');
+                    setTimeout(() => input.classList.remove('ring-2', 'ring-yellow-500'), 500);
+                }
+            } catch (error) {
+                console.error('Error en IA:', error);
+                alert(`⚠️ Error al generar cita con IA\n\n${error.message}\n\n¿Configuraste GEMINI_API_KEY en Vercel?`);
+                input.value = "";
+            }
             finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
 

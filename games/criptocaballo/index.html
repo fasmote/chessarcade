@@ -226,6 +226,7 @@
             gap: 1.5rem;
             max-width: 1400px;
             align-items: start;
+            padding-bottom: 6rem; /* Espacio extra para evitar solapamiento con footer */
         }
         
         @media (min-width: 1024px) {
@@ -1896,19 +1897,30 @@
                     // Check if ORIGINAL solution has a space at this position
                     if(idx < globalTokens.length) {
                         const token = globalTokens[idx];
-                        if(token === ' ' || isTokenSeparator(token)) {
-                            // Add space separator
+                        if(token === ' ') {
+                            // Add space separator (actual space in the message)
                             const spaceSpan = document.createElement('span');
+                            spaceSpan.className = 'decoded-msg-char';
                             spaceSpan.textContent = ' ';
                             d.appendChild(spaceSpan);
+                            continue; // Skip adding letter since this IS the space
+                        } else if(isTokenSeparator(token)) {
+                            // Add visual separator (X, block, etc.)
+                            const span = document.createElement('span');
+                            span.className = 'decoded-msg-char text-pink-400';
+                            span.textContent = ' '; // Show as space visually
+                            d.appendChild(span);
+                            continue; // Skip adding letter
                         }
                     }
 
-                    // Add letter
-                    const span = document.createElement('span');
-                    span.className = 'decoded-msg-char';
-                    span.textContent = letter.toUpperCase();
-                    d.appendChild(span);
+                    // Add letter (only if not a separator)
+                    if(letter) {
+                        const span = document.createElement('span');
+                        span.className = 'decoded-msg-char';
+                        span.textContent = letter.toUpperCase();
+                        d.appendChild(span);
+                    }
                 }
 
                 // Add separator if there's filler
