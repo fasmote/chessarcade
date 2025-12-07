@@ -916,15 +916,6 @@
             return text.substring(0, maxLimit); 
         }
 
-        function updateCharCount() {
-            const input = document.getElementById('messageInput');
-            if(!input) return;
-            const max = rows * cols;
-            const val = input.value;
-            const len = val.length;
-            document.getElementById('charCount').innerHTML = `${len} / ${max}`;
-        }
-
         // --- CORE GAME LOGIC ---
         function findKnightPath(R, C) {
             const MAX_ATTEMPTS = 2000;
