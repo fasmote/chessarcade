@@ -1186,6 +1186,27 @@
             }
         }
 
+        function updateCharCount() {
+            const input = document.getElementById('messageInput');
+            const separator = document.getElementById('wordSeparator').value;
+            const countEl = document.getElementById('charCount');
+            if (!input || !countEl) return;
+
+            const max = rows * cols;
+
+            let val = input.value;
+            if (separator === 'none') {
+                val = val.replace(/\s/g, '');
+            }
+
+            const len = val.length;
+            let statusHtml = `<span class="text-slate-300 font-bold">${len}</span> / ${max} car.`;
+            if (len < max) statusHtml += ` <span class="text-yellow-400 ml-2"><i class="fa-solid fa-circle-half-stroke mr-1"></i>Faltan ${max - len}</span>`;
+            else if (len > max) statusHtml += ` <span class="text-red-400 ml-2"><i class="fa-solid fa-circle-exclamation mr-1"></i>Sobran ${len - max}</span>`;
+            else statusHtml += ` <span class="text-green-400 ml-2"><i class="fa-solid fa-circle-check mr-1"></i>Completo</span>`;
+            countEl.innerHTML = statusHtml;
+        }
+
         function setBoardSize(r, c) {
             console.log(`Botón presionado: Tablero ${r}x${c}`);
             rows = r; cols = c; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0;
@@ -1210,8 +1231,9 @@
                 }
             });
 
-            createEmptyBoard(); 
-            toggleHintButtons(false); 
+            updateCharCount();
+            createEmptyBoard();
+            toggleHintButtons(false);
             resetTimer();
         }
 
