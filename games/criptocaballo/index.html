@@ -238,7 +238,7 @@
 
         .board-wrapper {
             position: relative;
-            display: inline-grid; /* Changed back to inline-grid */
+            display: grid;
             grid-template-columns: max-content max-content;
             grid-template-rows: min-content min-content auto min-content;
             gap: 0px;
@@ -246,7 +246,8 @@
             row-gap: 0px;
             max-width: 100%;
             overflow: visible;
-            /* Centering handled by flex parent with items-center */
+            justify-self: center;
+            /* Centering: justify-self centers the grid element within the flex parent */
         }
 
         .game-header { grid-column: 2; grid-row: 1; text-align: center; margin-bottom: 0.5rem; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -612,7 +613,8 @@
         let userPath = [];
         let isManualMode = false;
         let messageCompletedCorrectly = false; // Track if message was solved correctly
-        
+        let currentPuzzleMessage = ''; // TEMP: Store puzzle message, only copy to lastDecodedMessageOriginal when solved correctly
+
         let timerInterval = null;
         let startTime = 0;
         let elapsedSeconds = 0; // NEW: Track total elapsed time for persistence
@@ -1077,6 +1079,12 @@
                 messageCompletedCorrectly = progressData.messageCompletedCorrectly || false;
                 console.log(`📍 DESPUÉS de restaurar - messageCompletedCorrectly: ${messageCompletedCorrectly}`);
 
+                // CRITICAL FIX: If puzzle was completed correctly, restore lastDecodedMessageOriginal for eye button
+                if(messageCompletedCorrectly && currentPuzzleMessage) {
+                    lastDecodedMessageOriginal = currentPuzzleMessage;
+                    console.log(`✅👁️ Restaurado lastDecodedMessageOriginal para ojito: "${lastDecodedMessageOriginal}"`);
+                }
+
                 // Re-render board with restored path
                 renderBoardState();
                 updateUserDecodedText();
@@ -1180,7 +1188,7 @@
         }
 
         async function playerSelectSize(r, c) {
-            console.log(`Jugador seleccionó: ${r}x${c}`);
+            console.log(`🎲 Jugador seleccionó: ${r}x${c}`);
             setBoardSize(r, c);
 
             // Try to load puzzle from Supabase first
@@ -1189,6 +1197,11 @@
                 // Get selected date from date picker, not today's date
                 const dateInput = document.querySelector('.date-input');
                 const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+
+                console.log(`📅🔍 playerSelectSize buscando puzzle para:`);
+                console.log(`   📅 Fecha seleccionada: ${selectedDate}`);
+                console.log(`   📐 Tamaño de tablero: ${boardSize}`);
+                console.log(`   🔑 Clave Supabase: puzzle_date='${selectedDate}' AND board_size='${boardSize}'`);
 
                 try {
                     const { data, error } = await supabaseClient
@@ -1199,7 +1212,10 @@
                         .single();
 
                     if (data && !error) {
-                        console.log(`Puzzle encontrado en Supabase para ${boardSize}`);
+                        console.log(`✅ Puzzle encontrado en Supabase:`);
+                        console.log(`   📅 Fecha del puzzle: ${data.puzzle_date}`);
+                        console.log(`   📐 Tamaño: ${data.board_size}`);
+                        console.log(`   💬 Mensaje: "${data.message}"`);
 
                         // Load puzzle from Supabase using ORIGINAL tokens
                         const input = document.getElementById('messageInput');
@@ -1262,9 +1278,12 @@
         function loadPuzzleFromSavedData(data) {
             console.log("Cargando puzzle desde datos guardados (sin re-encriptar)");
 
-            // CRITICAL: Save original message for eye button
-            lastDecodedMessageOriginal = data.message || "";
-            console.log(`💾 Guardando mensaje original para ojito: "${lastDecodedMessageOriginal}"`);
+            // CRITICAL FIX: Store message temporarily, DON'T make it accessible until puzzle is solved correctly
+            currentPuzzleMessage = data.message || "";
+            console.log(`📋 Mensaje del puzzle cargado: "${currentPuzzleMessage}" (NO accesible hasta resolver correctamente)`);
+
+            // DO NOT set lastDecodedMessageOriginal here - only when puzzle is solved correctly
+            // lastDecodedMessageOriginal stays empty until user solves puzzle
 
             // Restore original path from Supabase
             currentPath = data.solution_path;
@@ -1339,7 +1358,8 @@
             const messageTokens = processedMessage.match(regex) || [];
             validMessageLength = messageTokens.length;
 
-            lastDecodedMessageOriginal = rawMessage;
+            // REMOVED: lastDecodedMessageOriginal = rawMessage;
+            // This was the bug! DON'T set lastDecodedMessageOriginal here - only when puzzle is solved correctly
 
             // Apply hints from saved data
             if(data.start_hints && data.start_hints > 0) {
@@ -1381,7 +1401,7 @@
 
         async function loadDailyLevel(selectedDate) {
             if(!supabaseClient) {
-                console.log("Supabase no configurado");
+                console.log("❌ Supabase no configurado");
                 alert("⚠️ No se puede cargar puzzles. Supabase no está configurado.");
                 return;
             }
@@ -1396,8 +1416,11 @@
                 selectedDate = getLocalDateString();
             }
 
-            console.log(`📅🔄 Cargando puzzle para ${selectedDate} (${boardSize})`);
-            console.log(`📅🔄 ANTES - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+            console.log(`📅🔄 loadDailyLevel llamada con:`);
+            console.log(`   📅 Fecha parámetro: ${selectedDate}`);
+            console.log(`   📐 Tamaño actual (rows x cols): ${rows}x${cols} => boardSize: ${boardSize}`);
+            console.log(`   🔑 Buscando en Supabase: puzzle_date='${selectedDate}' AND board_size='${boardSize}'`);
+            console.log(`   📋 ANTES - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
 
             // CRITICAL: Reset game state when loading new puzzle (fecha diferente)
             userPath = [];
@@ -1405,7 +1428,7 @@
             isShowingSpaces = false;
             lastDecodedMessageOriginal = '';
 
-            console.log(`📅🔄 DESPUÉS del reset - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+            console.log(`   📋 DESPUÉS del reset - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
 
             try {
                 const { data, error } = await supabaseClient
@@ -1416,13 +1439,16 @@
                     .single();
 
                 if (error) {
-                    console.log("No se encontró puzzle:", error.message);
+                    console.log("❌ No se encontró puzzle:", error.message);
                     alert(`ℹ️ No hay puzzle para ${selectedDate} (${boardSize})\n\nPuedes seleccionar otro tamaño de tablero o cambiar la fecha.`);
                     return;
                 }
 
                 if (data) {
-                    console.log("Puzzle cargado:", data);
+                    console.log("✅ Puzzle cargado desde Supabase:");
+                    console.log(`   📅 Fecha del puzzle: ${data.puzzle_date}`);
+                    console.log(`   📐 Tamaño: ${data.board_size}`);
+                    console.log(`   💬 Mensaje: "${data.message}"`);
 
                     // Generate readable ID
                     const puzzleId = `#${selectedDate.replace(/-/g, '')}-${boardSize}`;
@@ -1438,6 +1464,15 @@
                     // Load puzzle using ORIGINAL solution_path from Supabase (don't re-encrypt!)
                     if(data.solution_path && Array.isArray(data.solution_path)) {
                         loadPuzzleFromSavedData(data);
+
+                        // CRITICAL FIX: Try to restore progress from localStorage after loading puzzle
+                        console.log(`📥 Intentando restaurar progreso desde localStorage para ${boardSize} en ${selectedDate}...`);
+                        const progressRestored = loadProgressFromLocalStorage();
+                        if(progressRestored) {
+                            console.log(`✅ Progreso restaurado exitosamente`);
+                        } else {
+                            console.log(`📭 No hay progreso previo para esta fecha+tamaño`);
+                        }
                     } else {
                         // Fallback: if no solution_path, generate new one (shouldn't happen)
                         console.warn("No solution_path en data, generando nuevo");
@@ -1781,6 +1816,10 @@
                     console.log(`✅ PUZZLE RESUELTO CORRECTAMENTE - Seteando messageCompletedCorrectly = true`);
                     messageCompletedCorrectly = true; // Mark message as correctly completed
 
+                    // CRITICAL FIX: Only now make the message accessible for eye button
+                    lastDecodedMessageOriginal = currentPuzzleMessage;
+                    console.log(`✅👁️ Mensaje ahora accesible para ojito: "${lastDecodedMessageOriginal}"`);
+
                     const boardWrapper = document.getElementById('boardWrapper');
                     if(boardWrapper) boardWrapper.classList.add('success');
 
@@ -1802,7 +1841,9 @@
                     launchConfetti();
                 } else {
                     // FAILED: Path is wrong (completed but incorrect order)
-                    console.log("Puzzle completado pero en orden incorrecto");
+                    console.log("❌ Puzzle completado pero en orden incorrecto");
+                    console.log(`❌👁️ lastDecodedMessageOriginal NO se setea (permanece: "${lastDecodedMessageOriginal}")`);
+                    console.log(`❌ messageCompletedCorrectly permanece: ${messageCompletedCorrectly}`);
 
                     // Reset eye button to initial state
                     isShowingSpaces = false;

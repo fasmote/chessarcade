@@ -1,6 +1,6 @@
 # 🐛 Issues Conocidos y Mejoras Futuras
 
-**Última actualización:** 6 de diciembre de 2025
+**Última actualización:** 8 de diciembre de 2025
 
 Este documento registra bugs conocidos, limitaciones técnicas y mejoras planificadas para ChessArcade que no son críticas pero deben resolverse eventualmente.
 
@@ -9,6 +9,75 @@ Este documento registra bugs conocidos, limitaciones técnicas y mejoras planifi
 ## 📋 Issues Activos
 
 ### 🔴 PRIORIDAD ALTA
+
+#### 1. CriptoCaballo: config.js no se carga de forma consistente en modo usuario (404)
+
+**Descripción:**
+El archivo `config.js` que contiene las credenciales de Supabase NO se carga de forma consistente en el modo usuario. A veces carga correctamente, otras veces devuelve 404, lo que impide conectar a Supabase y cargar puzzles.
+
+**Estado:** 🔴 CRÍTICO - Afecta disponibilidad total del juego
+**Prioridad:** Alta (rompe funcionalidad principal de forma intermitente)
+**Fecha reportado:** 8 de diciembre de 2025
+
+**Evidencia:**
+```
+Log 203_CC_usuario.log (líneas 3-5):
+config.js:1  Failed to load resource: the server responded with a status of 404 ()
+CRYPTO_CONFIG cargado: ❌ NO
+Supabase URL: TU_SUPABASE_URL
+```
+
+**Comportamiento:**
+- **Esperado:** config.js siempre se carga y CRYPTO_CONFIG está disponible
+- **Actual:** A veces carga (✅), otras veces 404 (❌)
+- **Impacto:** Cuando falla, el usuario NO puede jugar - todos los puzzles muestran "No hay puzzle en Supabase"
+
+**Causa raíz probable:**
+- Issue de caché de Vercel
+- Timing issue (script se ejecuta antes que config.js termine de cargar)
+- Problema de path relativo vs absoluto
+
+**Solución propuesta:**
+1. **Inline config en index.html** (solución inmediata):
+```html
+<script>
+window.CRYPTO_CONFIG = {
+    supabase: {
+        url: "https://eyuuujpwvgmpajrjhnah.supabase.co",
+        anonKey: "eyJhbGciOiJIU..."
+    }
+};
+</script>
+<script src="criptocaballo.js"></script>
+```
+
+2. **Agregar retry logic** (solución robusta):
+```javascript
+async function loadConfig() {
+    for(let i = 0; i < 3; i++) {
+        try {
+            await import('./config.js');
+            if(window.CRYPTO_CONFIG) return true;
+        } catch(e) {
+            console.warn(`Config load attempt ${i+1} failed`);
+            await new Promise(r => setTimeout(r, 100));
+        }
+    }
+    console.error("❌ Config failed to load after 3 attempts");
+    return false;
+}
+```
+
+**Archivos afectados:**
+- `games/criptocaballo/index.html` (línea que carga config.js)
+- `games/criptocaballo/config.js`
+
+**Testing requerido:**
+1. Abrir index.html en modo usuario 10 veces seguidas (hard refresh cada vez)
+2. Verificar que CRYPTO_CONFIG se carga TODAS las veces
+3. Verificar que puzzles se cargan correctamente
+
+---
 
 #### 1. CriptoCaballo: Puzzle guardado en Supabase no se carga al cambiar tamaño de tablero
 
@@ -243,11 +312,70 @@ Recomendar a usuarios de Firefox que usen Chrome Mobile para mejor experiencia.
 
 ### 🟢 PRIORIDAD BAJA
 
-Ninguno actualmente.
+#### 1. CriptoCaballo: Tablero se desplaza progresivamente a la derecha en tamaños grandes (8x8)
+
+**Descripción:**
+En modo usuario, el tablero NO está perfectamente centrado. A medida que crece el tamaño (3x4 se ve bien, 8x8 se ve muy desplazado a la derecha), el desplazamiento se hace más evidente.
+
+**Estado:** 🟢 Cosmético - No afecta jugabilidad
+**Prioridad:** Baja (bug visual menor)
+**Fecha reportado:** 8 de diciembre de 2025
+
+**Evidencia:**
+- Screenshot: `screenshot_errores/197_CC_usuario_tablero_desplazado_.png`
+- Tablero 8x8 visiblemente más a la derecha que centro de pantalla
+- Tableros pequeños (3x4, 4x5) se ven casi centrados
+
+**Causa raíz:**
+El `.board-wrapper` usa un grid de 2 columnas:
+- Columna 1: Números de filas (ranks-col) - ancho variable según tamaño
+- Columna 2: Tablero (chess-grid)
+
+Cuando el tablero crece, la columna 1 también crece, empujando todo el conjunto hacia la derecha. El `justify-self: center` centra el GRID COMPLETO, pero no compensa por el ancho asimétrico de las columnas.
+
+**Solución propuesta (cuando haya tiempo):**
+```css
+.board-wrapper {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    justify-self: center;
+    transform: translateX(-10px); /* Compensar el offset de ranks */
+}
+
+/* O mejor aún, centrar basándose solo en el chess-grid */
+.board-wrapper {
+    position: relative;
+    left: 50%;
+}
+
+.chess-grid {
+    position: relative;
+    left: -50%;
+}
+```
+
+**Archivos afectados:**
+- `games/criptocaballo/index.html` - CSS de `.board-wrapper` (línea ~241-250)
+
+**Testing requerido:**
+1. Probar todos los tamaños: 3x4, 4x5, 5x5, 5x6, 6x7, 8x8
+2. Verificar que todos estén visualmente centrados
+3. Verificar en desktop y mobile
+
+**Notas:**
+Usuario decidió dejarlo para futuro: "el desplazamiento se va dando a medida que el tablero crece, pero empieza bien, guardalo como bug a solucionar a futuro, ya me canse"
 
 ---
 
 ## ✅ Issues Resueltos Recientemente
+
+### CriptoCaballo: Date picker en admin siempre vuelve a fecha actual al cambiar tamaño de tablero
+- **Resuelto:** 8 de diciembre de 2025
+- **Problema:** Selector de fecha persistía pero al cambiar tamaño de tablero, siempre cargaba puzzles de fecha actual
+- **Causa raíz:** `document.querySelector('.date-input')` seleccionaba el PRIMER date picker (admin creation), NO el del "RETO DEL DÍA"
+- **Solución:** Usar selector `.date-input:not(#puzzleDate)` para excluir el date picker del admin
+- **Archivos afectados:** games/criptocaballo/admin.html (línea 1266)
+- **Evidencia:** Log 202_CC_admin.log líneas 16-17, 27-28 mostraban el date picker incorrecto
 
 ### CriptoCaballo: Timer se reinicia al retroceder después de resolver correctamente (CRÍTICO)
 - **Resuelto:** 6 de diciembre de 2025

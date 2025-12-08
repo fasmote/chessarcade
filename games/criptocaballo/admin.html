@@ -1257,13 +1257,22 @@
         }
 
         async function playerSelectSize(r, c) {
-            console.log(`Jugador seleccionó: ${r}x${c}`);
+            console.log(`🎲 Jugador seleccionó: ${r}x${c}`);
             setBoardSize(r, c);
 
-            // Try to load existing puzzle for current date and new board size
-            const dateInput = document.getElementById('puzzleDate');
+            // CRITICAL FIX: Read from the correct date picker (the one in "RETO DEL DÍA" section, not the admin section)
+            // The admin date picker has id="puzzleDate", the "RETO DEL DÍA" one doesn't have an id
+            // Use a more specific selector: .date-input:not(#puzzleDate) to get the one WITHOUT id
+            const dateInput = document.querySelector('.date-input:not(#puzzleDate)');
+            console.log(`🔍🔍 dateInput encontrado:`, dateInput);
+            console.log(`🔍🔍 dateInput.value (ANTES de leer):`, dateInput ? dateInput.value : 'NULL');
             const selectedDate = dateInput ? dateInput.value : getLocalDateString();
             const boardSize = `${r}x${c}`;
+
+            console.log(`📅🔍 playerSelectSize buscando puzzle para:`);
+            console.log(`   📅 Fecha seleccionada: ${selectedDate}`);
+            console.log(`   📐 Tamaño de tablero: ${boardSize}`);
+            console.log(`   🔑 Clave Supabase: puzzle_date='${selectedDate}' AND board_size='${boardSize}'`);
 
             try {
                 const { data, error } = await supabaseClient
@@ -1274,7 +1283,10 @@
                     .single();
 
                 if (data && !error) {
-                    console.log(`Puzzle encontrado en Supabase para ${boardSize}`);
+                    console.log(`✅ Puzzle encontrado en Supabase:`);
+                    console.log(`   📅 Fecha del puzzle: ${data.puzzle_date}`);
+                    console.log(`   📐 Tamaño: ${data.board_size}`);
+                    console.log(`   💬 Mensaje: "${data.message}"`);
 
                     const input = document.getElementById('messageInput');
                     if(input) {
@@ -1843,7 +1855,10 @@
                 selectedDate = getLocalDateString();
             }
 
-            console.log(`Cargando puzzle para ${selectedDate} (${boardSize})`);
+            console.log(`📅🔄 loadDailyLevel llamada con:`);
+            console.log(`   📅 Fecha parámetro: ${selectedDate}`);
+            console.log(`   📐 Tamaño actual (rows x cols): ${rows}x${cols} => boardSize: ${boardSize}`);
+            console.log(`   🔑 Buscando en Supabase: puzzle_date='${selectedDate}' AND board_size='${boardSize}'`);
 
             try {
                 const { data, error } = await supabaseClient
@@ -1854,13 +1869,16 @@
                     .single();
 
                 if (error) {
-                    console.log("No se encontró puzzle:", error.message);
+                    console.log("❌ No se encontró puzzle:", error.message);
                     alert(`ℹ️ No hay puzzle para ${selectedDate} (${boardSize})`);
                     return;
                 }
 
                 if (data) {
-                    console.log("Puzzle cargado:", data);
+                    console.log("✅ Puzzle cargado desde Supabase:");
+                    console.log(`   📅 Fecha del puzzle: ${data.puzzle_date}`);
+                    console.log(`   📐 Tamaño: ${data.board_size}`);
+                    console.log(`   💬 Mensaje: "${data.message}"`);
 
                     // Load the message
                     const messageInput = document.getElementById('messageInput');
