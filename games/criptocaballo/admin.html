@@ -677,20 +677,30 @@
             "EL TABLERO ES TU MUNDO"
         ];
 
+        // Helper function to get local date in YYYY-MM-DD format (not UTC)
+        function getLocalDateString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             console.log(`CriptoCaballo v${APP_VERSION} cargado.`);
-            
+
             const urlParams = new URLSearchParams(window.location.search);
             const input = document.getElementById('messageInput');
             if(input) {
                 input.addEventListener('input', updateCharCount);
                 input.maxLength = 150;
             }
-            
+
             setBoardSize(3, 4);
 
             toggleHintButtons(false);
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString(); // FIXED: Use local date instead of UTC
+            console.log(`📅 Fecha local (no UTC): ${today}`);
             const dateInput = document.getElementById('puzzleDate');
             if(dateInput) {
                 dateInput.value = today;
@@ -1171,7 +1181,7 @@
         function updatePuzzleIdDisplay(title = '', author = '') {
             // Get current date from date input or use today
             const dateInput = document.querySelector('.date-input');
-            const puzzleDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const puzzleDate = dateInput ? dateInput.value : getLocalDateString();
             const boardSize = `${rows}x${cols}`;
             const puzzleId = `#${puzzleDate.replace(/-/g, '')}-${boardSize}`;
 
@@ -1252,7 +1262,7 @@
 
             // Try to load existing puzzle for current date and new board size
             const dateInput = document.getElementById('puzzleDate');
-            const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const selectedDate = dateInput ? dateInput.value : getLocalDateString();
             const boardSize = `${r}x${c}`;
 
             try {
@@ -1725,7 +1735,7 @@
             // Set default date to today
             const dateInput = document.getElementById('puzzleDate');
             if(dateInput && !dateInput.value) {
-                const today = new Date().toISOString().split('T')[0];
+                const today = getLocalDateString();
                 dateInput.value = today;
             }
         }
@@ -1740,7 +1750,7 @@
             }
 
             const dateInput = document.getElementById('puzzleDate');
-            const puzzleDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const puzzleDate = dateInput ? dateInput.value : getLocalDateString();
 
             if(!puzzleDate) {
                 alert("❌ Debes seleccionar una fecha");
@@ -1830,7 +1840,7 @@
             const boardSize = `${rows}x${cols}`;
 
             if(!selectedDate) {
-                selectedDate = new Date().toISOString().split('T')[0];
+                selectedDate = getLocalDateString();
             }
 
             console.log(`Cargando puzzle para ${selectedDate} (${boardSize})`);

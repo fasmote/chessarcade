@@ -238,15 +238,15 @@
 
         .board-wrapper {
             position: relative;
-            display: inline-grid;
+            display: grid; /* FIXED: Changed from inline-grid to grid for proper centering */
             grid-template-columns: max-content max-content;
             grid-template-rows: min-content min-content auto min-content;
             gap: 0px;
             column-gap: 6px;
             row-gap: 0px;
-            margin: 0 auto;
+            margin: 0 auto; /* This now works with display: grid */
             max-width: 100%;
-            align-self: center;
+            justify-self: center; /* Added to center within flex parent */
             overflow: visible;
         }
 
@@ -641,6 +641,15 @@
             "EL TABLERO ES TU MUNDO"
         ];
 
+        // Helper function to get local date in YYYY-MM-DD format (not UTC)
+        function getLocalDateString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             console.log(`CriptoCaballo v${APP_VERSION} cargado.`);
 
@@ -654,7 +663,8 @@
             setBoardSize(3, 4);
 
             toggleHintButtons(false);
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString(); // FIXED: Use local date instead of UTC
+            console.log(`📅 Fecha local (no UTC): ${today}`);
             const dateInput = document.querySelector('.date-input');
             if(dateInput) {
                 dateInput.value = today;
@@ -1007,7 +1017,7 @@
         // --- PROGRESS PERSISTENCE ---
         function saveProgressToLocalStorage() {
             const dateInput = document.querySelector('.date-input');
-            const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const selectedDate = dateInput ? dateInput.value : getLocalDateString();
             const key = `criptocaballo_progress_${selectedDate}_${rows}x${cols}`;
 
             const progressData = {
@@ -1037,7 +1047,7 @@
 
         function loadProgressFromLocalStorage() {
             const dateInput = document.querySelector('.date-input');
-            const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const selectedDate = dateInput ? dateInput.value : getLocalDateString();
             const key = `criptocaballo_progress_${selectedDate}_${rows}x${cols}`;
 
             console.log(`📥 Intentando cargar progreso para ${rows}x${cols}`);
@@ -1377,7 +1387,7 @@
             if(dateInput && dateInput.value) {
                 selectedDate = dateInput.value;
             } else if(!selectedDate) {
-                selectedDate = new Date().toISOString().split('T')[0];
+                selectedDate = getLocalDateString();
             }
 
             console.log(`Cargando puzzle para ${selectedDate} (${boardSize})`);
