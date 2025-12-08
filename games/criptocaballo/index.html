@@ -1000,11 +1000,98 @@
                 decodedText.textContent = "LISTO PARA RESOLVER";
                 decodedText.className = "text-lg md:text-xl font-bold text-slate-600";
             }
-            resetTimer(); 
+            resetTimer();
         }
-        
+
+        // --- PROGRESS PERSISTENCE ---
+        function saveProgressToLocalStorage() {
+            const dateInput = document.querySelector('.date-input');
+            const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const key = `criptocaballo_progress_${selectedDate}_${rows}x${cols}`;
+
+            const progressData = {
+                userPath: userPath,
+                elapsedSeconds: elapsedSeconds,
+                messageCompletedCorrectly: messageCompletedCorrectly,
+                timestamp: Date.now()
+            };
+
+            try {
+                localStorage.setItem(key, JSON.stringify(progressData));
+                console.log(`💾 Progreso guardado para ${rows}x${cols}:`, progressData);
+            } catch(e) {
+                console.error("Error guardando progreso:", e);
+            }
+        }
+
+        function loadProgressFromLocalStorage() {
+            const dateInput = document.querySelector('.date-input');
+            const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            const key = `criptocaballo_progress_${selectedDate}_${rows}x${cols}`;
+
+            try {
+                const saved = localStorage.getItem(key);
+                if(!saved) {
+                    console.log(`📭 No hay progreso guardado para ${rows}x${cols}`);
+                    return false;
+                }
+
+                const progressData = JSON.parse(saved);
+                console.log(`📥 Progreso encontrado para ${rows}x${cols}:`, progressData);
+
+                // Restore user path
+                userPath = progressData.userPath || [];
+
+                // Restore timer
+                elapsedSeconds = progressData.elapsedSeconds || 0;
+                updateTimerDisplay();
+
+                // Restore completion state
+                messageCompletedCorrectly = progressData.messageCompletedCorrectly || false;
+
+                // Re-render board with restored path
+                renderBoardState();
+                updateUserDecodedText();
+
+                // If completed, show success
+                if(messageCompletedCorrectly) {
+                    const boardWrapper = document.getElementById('boardWrapper');
+                    if(boardWrapper) boardWrapper.classList.add('success');
+
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'success-text text-sm md:text-base font-bold mt-2';
+                    successMsg.textContent = "¡CRIPTOGRAMA RESUELTO! 🎉";
+                    const decodedText = document.getElementById('decodedText');
+                    if(decodedText) decodedText.appendChild(successMsg);
+
+                    isShowingSpaces = false;
+                    const showSpacesBtn = document.getElementById('showSpacesBtn');
+                    if(showSpacesBtn) {
+                        showSpacesBtn.classList.remove('hidden', 'active');
+                        showSpacesBtn.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                    }
+                }
+
+                // Continue timer if not completed
+                if(!messageCompletedCorrectly && userPath.length > 0) {
+                    startTimer();
+                }
+
+                return true;
+            } catch(e) {
+                console.error("Error cargando progreso:", e);
+                return false;
+            }
+        }
+
         function setBoardSize(r, c) {
             console.log(`Botón presionado: Tablero ${r}x${c}`);
+
+            // SAVE current progress before switching (if any)
+            if(rows > 0 && cols > 0 && userPath.length > 0) {
+                saveProgressToLocalStorage();
+            }
+
             rows = r; cols = c; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0;
 
             // Reset all game state variables
@@ -1096,6 +1183,9 @@
                             console.warn("Puzzle sin solution_path, generando nuevo");
                             generateCryptogram();
                         }
+
+                        // Try to restore previous progress from localStorage
+                        loadProgressFromLocalStorage();
 
                         // Show puzzle ID
                         const puzzleId = `#${selectedDate.replace(/-/g, '')}-${boardSize}`;
@@ -1655,8 +1745,13 @@
                     const decodedText = document.getElementById('decodedText');
                     if(decodedText) decodedText.appendChild(successMsg);
 
+                    // Reset eye button to initial state
+                    isShowingSpaces = false;
                     const showSpacesBtn = document.getElementById('showSpacesBtn');
-                    if(showSpacesBtn) showSpacesBtn.classList.remove('hidden');
+                    if(showSpacesBtn) {
+                        showSpacesBtn.classList.remove('hidden', 'active');
+                        showSpacesBtn.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                    }
 
                     stopTimer();
                     launchConfetti();
@@ -1664,13 +1759,20 @@
                     // FAILED: Path is wrong (completed but incorrect order)
                     console.log("Puzzle completado pero en orden incorrecto");
 
-                    // Show spaces button anyway so user can see their mistake
+                    // Reset eye button to initial state
+                    isShowingSpaces = false;
                     const showSpacesBtn = document.getElementById('showSpacesBtn');
-                    if(showSpacesBtn) showSpacesBtn.classList.remove('hidden');
+                    if(showSpacesBtn) {
+                        showSpacesBtn.classList.remove('hidden', 'active');
+                        showSpacesBtn.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                    }
                 }
             }
+
+            // Save progress after every move
+            saveProgressToLocalStorage();
         }
-        
+
         // --- UTILS & RESTORED FUNCTIONS ---
         function isValidKnightMove(r1, c1, r2, c2) {
             const dr = Math.abs(r1 - r2); const dc = Math.abs(c1 - c2);
@@ -2018,12 +2120,18 @@
                         const decodedEl = document.getElementById('decodedText'); 
                         const separator = document.createElement('div'); 
                         separator.className = 'msg-separator'; 
-                        separator.textContent = 'MENSAJE COMPLETADO'; 
-                        if(decodedEl) decodedEl.appendChild(separator); 
-                        const grid = document.querySelector('.chess-grid'); 
-                        if (grid) grid.classList.add('success'); 
-                        const showSpacesBtn = document.getElementById('showSpacesBtn'); 
-                        if(showSpacesBtn) showSpacesBtn.classList.remove('hidden'); 
+                        separator.textContent = 'MENSAJE COMPLETADO';
+                        if(decodedEl) decodedEl.appendChild(separator);
+                        const grid = document.querySelector('.chess-grid');
+                        if (grid) grid.classList.add('success');
+
+                        // Reset eye button to initial state
+                        isShowingSpaces = false;
+                        const showSpacesBtn = document.getElementById('showSpacesBtn');
+                        if(showSpacesBtn) {
+                            showSpacesBtn.classList.remove('hidden', 'active');
+                            showSpacesBtn.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                        } 
                         launchConfetti(); 
                     } else if (currentStep === (rows * cols)) { 
                         const solveBtn = document.getElementById('solveBtn'); 

@@ -1050,6 +1050,10 @@
         function loadPuzzleFromSavedData(data) {
             console.log("Cargando puzzle desde datos guardados (sin re-encriptar)");
 
+            // CRITICAL: Save original message for eye button
+            lastDecodedMessageOriginal = data.message || "";
+            console.log(`💾 Cargando lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+
             currentPath = data.solution_path;
 
             // CRITICAL: Use saved tokens instead of regenerating!
@@ -1598,9 +1602,14 @@
                 successMsg.textContent = "¡CRIPTOGRAMA RESUELTO! 🎉";
                 const decodedText = document.getElementById('decodedText');
                 if(decodedText) decodedText.appendChild(successMsg);
-                
+
+                // Reset eye button to initial state
+                isShowingSpaces = false;
                 const showSpacesBtn = document.getElementById('showSpacesBtn');
-                if(showSpacesBtn) showSpacesBtn.classList.remove('hidden');
+                if(showSpacesBtn) {
+                    showSpacesBtn.classList.remove('hidden', 'active');
+                    showSpacesBtn.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                }
                 
                 stopTimer(); 
                 launchConfetti();
@@ -1947,12 +1956,18 @@
                         const decodedEl = document.getElementById('decodedText'); 
                         const separator = document.createElement('div'); 
                         separator.className = 'msg-separator'; 
-                        separator.textContent = 'MENSAJE COMPLETADO'; 
-                        if(decodedEl) decodedEl.appendChild(separator); 
-                        const grid = document.querySelector('.chess-grid'); 
-                        if (grid) grid.classList.add('success'); 
-                        const showSpacesBtn = document.getElementById('showSpacesBtn'); 
-                        if(showSpacesBtn) showSpacesBtn.classList.remove('hidden'); 
+                        separator.textContent = 'MENSAJE COMPLETADO';
+                        if(decodedEl) decodedEl.appendChild(separator);
+                        const grid = document.querySelector('.chess-grid');
+                        if (grid) grid.classList.add('success');
+
+                        // Reset eye button to initial state
+                        isShowingSpaces = false;
+                        const showSpacesBtn = document.getElementById('showSpacesBtn');
+                        if(showSpacesBtn) {
+                            showSpacesBtn.classList.remove('hidden', 'active');
+                            showSpacesBtn.innerHTML = '<i class="fa-regular fa-eye"></i> Ver con Espacios';
+                        } 
                         launchConfetti(); 
                     } else if (currentStep === (rows * cols)) { 
                         const solveBtn = document.getElementById('solveBtn'); 
