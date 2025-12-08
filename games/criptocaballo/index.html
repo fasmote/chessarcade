@@ -616,6 +616,7 @@
         
         let timerInterval = null;
         let startTime = 0;
+        let elapsedSeconds = 0; // NEW: Track total elapsed time for persistence
         let isTimerRunning = false;
         let lockedHintCount = 0;
 
@@ -1230,6 +1231,10 @@
 
         function loadPuzzleFromSavedData(data) {
             console.log("Cargando puzzle desde datos guardados (sin re-encriptar)");
+
+            // CRITICAL: Save original message for eye button
+            lastDecodedMessageOriginal = data.message || "";
+            console.log(`💾 Guardando mensaje original para ojito: "${lastDecodedMessageOriginal}"`);
 
             // Restore original path from Supabase
             currentPath = data.solution_path;
@@ -1882,10 +1887,49 @@
         }
 
         // --- UI HELPERS ---
-        function startTimer() { if (isTimerRunning) return; isTimerRunning = true; startTime = Date.now(); timerInterval = setInterval(updateTimer, 10); }
-        function stopTimer() { isTimerRunning = false; clearInterval(timerInterval); }
-        function resetTimer() { stopTimer(); const t=document.getElementById('timer'); if(t) t.textContent = "00:00:00"; }
-        function updateTimer() { const now = Date.now(); const diff = now - startTime; const minutes = Math.floor(diff / 60000); const seconds = Math.floor((diff % 60000) / 1000); const centiseconds = Math.floor((diff % 1000) / 10); const mStr = minutes.toString().padStart(2, '0'); const sStr = seconds.toString().padStart(2, '0'); const csStr = centiseconds.toString().padStart(2, '0'); const t=document.getElementById('timer'); if(t) t.textContent = `${mStr}:${sStr}:${csStr}`; }
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            startTime = Date.now() - (elapsedSeconds * 1000); // Account for previously elapsed time
+            timerInterval = setInterval(updateTimer, 10);
+        }
+        function stopTimer() {
+            if (isTimerRunning) {
+                // Save elapsed time before stopping
+                const now = Date.now();
+                const diff = now - startTime;
+                elapsedSeconds = Math.floor(diff / 1000);
+            }
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+        }
+        function resetTimer() {
+            stopTimer();
+            elapsedSeconds = 0;
+            const t=document.getElementById('timer');
+            if(t) t.textContent = "00:00:00";
+        }
+        function updateTimer() {
+            const now = Date.now();
+            const diff = now - startTime;
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            const centiseconds = Math.floor((diff % 1000) / 10);
+            const mStr = minutes.toString().padStart(2, '0');
+            const sStr = seconds.toString().padStart(2, '0');
+            const csStr = centiseconds.toString().padStart(2, '0');
+            const t=document.getElementById('timer');
+            if(t) t.textContent = `${mStr}:${sStr}:${csStr}`;
+        }
+        function updateTimerDisplay() {
+            // Restore timer display from elapsedSeconds (for loading saved progress)
+            const minutes = Math.floor(elapsedSeconds / 60);
+            const seconds = elapsedSeconds % 60;
+            const mStr = minutes.toString().padStart(2, '0');
+            const sStr = seconds.toString().padStart(2, '0');
+            const t=document.getElementById('timer');
+            if(t) t.textContent = `${mStr}:${sStr}:00`;
+        }
         function resetCurrentLevel() { console.log("Botón presionado: Reset Level"); userPath = []; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0; messageCompletedCorrectly = false; resetTimer(); const b=document.getElementById('board'); if(b) b.classList.remove('success'); const s=document.getElementById('showSpacesBtn'); if(s) s.classList.add('hidden'); const d=document.getElementById('decodedText'); if(d) { d.textContent = "LISTO PARA RESOLVER"; d.className = "text-lg md:text-xl font-bold text-slate-600"; } renderBoardState(); const sv=document.getElementById('solveBtn'); if(sv) sv.classList.remove('hidden'); const c=document.getElementById('continueBtn'); if(c) c.classList.add('hidden'); }
         function openSaveModal() { console.log("Botón presionado: Abrir Guardar"); if (!currentPath || currentPath.length === 0) return; const m=document.getElementById('saveModal'); if(m) m.classList.add('active'); const i=document.getElementById('messageInput'); const n=document.getElementById('lvlName'); if(i && n) { n.value = i.value.split(' ').slice(0, 2).join(' '); } }
         function closeSaveModal() { const m=document.getElementById('saveModal'); if(m) m.classList.remove('active'); }
@@ -1983,6 +2027,9 @@
         function applyEndHint() { console.log("Botón presionado: Pista Fin"); if (!currentPath || currentPath.length === 0) return; const n=parseInt(document.getElementById('endHintCount').value)||0; activeEndHints=n; renderBoardState(); }
         function toggleSpaces() {
             console.log("Botón presionado: Ver/Ocultar Espacios");
+            console.log(`👁️ lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+            console.log(`👁️ messageCompletedCorrectly: ${messageCompletedCorrectly}`);
+
             isShowingSpaces = !isShowingSpaces;
             const b=document.getElementById('showSpacesBtn');
             const d=document.getElementById('decodedText');
@@ -1991,7 +2038,16 @@
                 b.classList.add('active');
                 b.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Espacios';
 
-                // Clear and rebuild with spaces
+                // Si tenemos el mensaje original, mostrarlo directamente (más simple y confiable)
+                if(lastDecodedMessageOriginal && lastDecodedMessageOriginal.length > 0) {
+                    console.log("👁️ Mostrando mensaje original directo");
+                    d.innerHTML = `<span class="decoded-msg-char">${lastDecodedMessageOriginal.toUpperCase()}</span>`;
+                    d.className = "text-lg md:text-2xl font-bold break-words leading-relaxed";
+                    return;
+                }
+
+                console.log("👁️ Reconstruyendo desde tokens (fallback)");
+                // Fallback: Clear and rebuild with spaces from tokens
                 d.innerHTML = '';
                 d.className = "text-lg md:text-2xl font-bold break-words leading-relaxed";
 
