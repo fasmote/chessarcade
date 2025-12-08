@@ -238,16 +238,15 @@
 
         .board-wrapper {
             position: relative;
-            display: grid; /* FIXED: Changed from inline-grid to grid for proper centering */
+            display: inline-grid; /* Changed back to inline-grid */
             grid-template-columns: max-content max-content;
             grid-template-rows: min-content min-content auto min-content;
             gap: 0px;
             column-gap: 6px;
             row-gap: 0px;
-            margin: 0 auto; /* This now works with display: grid */
             max-width: 100%;
-            justify-self: center; /* Added to center within flex parent */
             overflow: visible;
+            /* Centering handled by flex parent with items-center */
         }
 
         .game-header { grid-column: 2; grid-row: 1; text-align: center; margin-bottom: 0.5rem; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -1063,16 +1062,20 @@
                 const progressData = JSON.parse(saved);
                 console.log(`✅ Progreso encontrado para ${rows}x${cols}:`, progressData);
                 console.log(`✅ elapsedSeconds cargado: ${progressData.elapsedSeconds}`);
+                console.log(`✅ messageCompletedCorrectly en localStorage: ${progressData.messageCompletedCorrectly}`);
 
                 // Restore user path
                 userPath = progressData.userPath || [];
+                console.log(`✅ Restaurando userPath con ${userPath.length} movimientos`);
 
                 // Restore timer
                 elapsedSeconds = progressData.elapsedSeconds || 0;
                 updateTimerDisplay();
 
                 // Restore completion state
+                console.log(`📍 ANTES de restaurar - messageCompletedCorrectly: ${messageCompletedCorrectly}`);
                 messageCompletedCorrectly = progressData.messageCompletedCorrectly || false;
+                console.log(`📍 DESPUÉS de restaurar - messageCompletedCorrectly: ${messageCompletedCorrectly}`);
 
                 // Re-render board with restored path
                 renderBoardState();
@@ -1110,7 +1113,8 @@
         }
 
         function setBoardSize(r, c) {
-            console.log(`Botón presionado: Tablero ${r}x${c}`);
+            console.log(`🎯 Botón presionado: Tablero ${r}x${c}`);
+            console.log(`🎯 ANTES - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}", userPath.length: ${userPath.length}`);
 
             // SAVE current progress before switching (if any)
             if(rows > 0 && cols > 0 && userPath.length > 0) {
@@ -1130,6 +1134,8 @@
             lastDecodedMessageOriginal = '';
             isShowingSpaces = false;
             messageCompletedCorrectly = false;
+
+            console.log(`🎯 DESPUÉS del reset - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
 
             const info = document.getElementById('boardInfo');
             if(info) info.textContent = `Tablero ${r}x${c}`;
@@ -1390,7 +1396,16 @@
                 selectedDate = getLocalDateString();
             }
 
-            console.log(`Cargando puzzle para ${selectedDate} (${boardSize})`);
+            console.log(`📅🔄 Cargando puzzle para ${selectedDate} (${boardSize})`);
+            console.log(`📅🔄 ANTES - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
+
+            // CRITICAL: Reset game state when loading new puzzle (fecha diferente)
+            userPath = [];
+            messageCompletedCorrectly = false;
+            isShowingSpaces = false;
+            lastDecodedMessageOriginal = '';
+
+            console.log(`📅🔄 DESPUÉS del reset - messageCompletedCorrectly: ${messageCompletedCorrectly}, lastDecodedMessageOriginal: "${lastDecodedMessageOriginal}"`);
 
             try {
                 const { data, error } = await supabaseClient
@@ -1763,6 +1778,7 @@
 
                 if (isCorrect) {
                     // SUCCESS: Path is correct!
+                    console.log(`✅ PUZZLE RESUELTO CORRECTAMENTE - Seteando messageCompletedCorrectly = true`);
                     messageCompletedCorrectly = true; // Mark message as correctly completed
 
                     const boardWrapper = document.getElementById('boardWrapper');
