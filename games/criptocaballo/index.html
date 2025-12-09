@@ -582,6 +582,11 @@
                     <i class="fa-solid fa-info-circle mr-1"></i><span id="puzzleIdText"></span>
                 </div>
 
+                <!-- Admin Comments Display -->
+                <div id="commentsDisplay" class="hidden mt-2 mb-2 text-yellow-300 text-xs bg-yellow-900/10 p-2 rounded border border-yellow-700/30 max-w-md">
+                    <i class="fa-solid fa-comment-dots mr-1"></i><span id="commentsText"></span>
+                </div>
+
                 <div class="board-wrapper" id="boardWrapper">
                     <div class="game-header text-center"></div>
                     <div class="timer-row">
@@ -1291,6 +1296,21 @@
                             idText.innerHTML = `<strong>Resolviendo:</strong> <strong>${puzzleId}</strong>${titleText}${authorText}`;
                             idDisplay.classList.remove('hidden');
                         }
+
+                        // Show admin comments if available
+                        const commentsDisplay = document.getElementById('commentsDisplay');
+                        const commentsText = document.getElementById('commentsText');
+                        if(data.admin_comments && commentsDisplay && commentsText) {
+                            const comments = data.admin_comments.split('|').map(c => c.trim()).filter(c => c);
+                            if(comments.length > 0) {
+                                commentsText.innerHTML = comments.map(comment => `<div class="mb-1">• ${comment}</div>`).join('');
+                                commentsDisplay.classList.remove('hidden');
+                            } else {
+                                commentsDisplay.classList.add('hidden');
+                            }
+                        } else if(commentsDisplay) {
+                            commentsDisplay.classList.add('hidden');
+                        }
                         return;
                     }
                 } catch(e) {
@@ -1531,6 +1551,21 @@
                     if(idDisplay && idText) {
                         idText.innerHTML = `<strong>Resolviendo:</strong> <strong>${puzzleId}</strong>${titleText}${authorText}`;
                         idDisplay.classList.remove('hidden');
+                    }
+
+                    // Show admin comments if available
+                    const commentsDisplay = document.getElementById('commentsDisplay');
+                    const commentsText = document.getElementById('commentsText');
+                    if(data.admin_comments && commentsDisplay && commentsText) {
+                        const comments = data.admin_comments.split('|').map(c => c.trim()).filter(c => c);
+                        if(comments.length > 0) {
+                            commentsText.innerHTML = comments.map(comment => `<div class="mb-1">• ${comment}</div>`).join('');
+                            commentsDisplay.classList.remove('hidden');
+                        } else {
+                            commentsDisplay.classList.add('hidden');
+                        }
+                    } else if(commentsDisplay) {
+                        commentsDisplay.classList.add('hidden');
                     }
                 }
             } catch (err) {
