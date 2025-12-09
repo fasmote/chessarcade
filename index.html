@@ -352,18 +352,15 @@
                     </button>
                 </article>
 
-                <!-- Cripto-Caballo Game - PRÓXIMAMENTE -->
-                <article class="neon-card cripto-caballo-card coming-soon" tabindex="0" role="button">
-                    <div class="neon-card-icon coming-soon-icon" aria-hidden="true">🔐♞</div>
-                    <div class="coming-soon-overlay">
-                        <div class="coming-soon-badge">PRÓXIMAMENTE</div>
-                    </div>
+                <!-- Cripto-Caballo Game -->
+                <article class="neon-card cripto-caballo-card" tabindex="0" role="button">
+                    <div class="neon-card-icon" aria-hidden="true">🔐♞</div>
                     <h2 class="neon-heading">Cripto-Caballo</h2>
                     <p class="neon-text neon-mb-md">
                         Decode hidden messages with knight moves! Follow the L-shaped path to reveal cryptic phrases. Cryptography meets chess in this brain-teasing adventure!
                     </p>
-                    <button class="neon-play-btn coming-soon-btn" type="button" disabled>
-                        Próximamente
+                    <button class="neon-play-btn" type="button" data-game="cripto-caballo">
+                        Play Now
                     </button>
                 </article>
 
@@ -432,6 +429,10 @@
 
                     <p style="margin-bottom: 1rem;">
                         ⚔️ <strong>ChessInFive</strong> - Experience a unique <strong>two-player strategy game</strong> that combines Connect Four's gravity mechanics with chess tactical movement. Drop pieces onto the board, then move them using authentic chess rules to align 5 in a row. Perfect for developing <strong>strategic thinking</strong>, <strong>positional understanding</strong>, and <strong>tactical planning</strong>. Play with a friend on the same device!
+                    </p>
+
+                    <p style="margin-bottom: 1rem;">
+                        🔐 <strong>Cripto-Caballo</strong> - Decode hidden messages by tracing the knight's L-shaped path across letter-filled boards. This unique fusion of <strong>cryptography and chess</strong> trains your <strong>logical deduction</strong>, <strong>pattern recognition</strong>, and <strong>spatial visualization</strong>. Follow the knight's jumps to reveal famous quotes, proverbs, and philosophical phrases hidden in plain sight!
                     </p>
 
                     <p style="margin-bottom: 1.5rem;">
@@ -529,7 +530,7 @@
             console.log(`🔍 Checking if game is available...`);
 
             // Check if game is available
-            if (gameId === 'knight-quest' || gameId === 'square-rush' || gameId === 'memory-matrix' || gameId === 'master-sequence' || gameId === 'chessinfive') {
+            if (gameId === 'knight-quest' || gameId === 'square-rush' || gameId === 'memory-matrix' || gameId === 'master-sequence' || gameId === 'chessinfive' || gameId === 'cripto-caballo') {
                 console.log(`✅ Game ${gameId} is available, proceeding...`);
                 // Add screen flash effect
                 document.body.style.background = 'white';
@@ -556,6 +557,9 @@
                     console.log(`🔗 Target URL: ${targetUrl}`);
                     // Versión v2 - rebuild desde cero, paso a paso
                     window.location.href = targetUrl;
+                } else if (gameId === 'cripto-caballo') {
+                    console.log(`🔐 Redirecting to Cripto-Caballo...`);
+                    window.location.href = 'games/criptocaballo/index.html';
                 } else {
                     console.log(`🎮 Redirecting to ${gameId}...`);
                     window.location.href = `games/${gameId}/index.html`;

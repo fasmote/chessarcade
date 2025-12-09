@@ -2,7 +2,7 @@
 
 ![ChessArcade Banner](./assets/images/chessarcade-banner.png)
 
-## 🚀 [Play Now!](https://fasmote.github.io/ChessArcade/) | [🎯 Square Rush](https://fasmote.github.io/ChessArcade/games/square-rush/index.html) | [🐴 Knight Quest](https://fasmote.github.io/ChessArcade/games/knight-quest/index.html) | [🧠 Memory Matrix](https://fasmote.github.io/ChessArcade/games/memory-matrix-v2/index.html) | [🟦 Master Sequence](https://fasmote.github.io/ChessArcade/games/master-sequence/index.html) | [⚔️ ChessInFive](https://fasmote.github.io/ChessArcade/games/chessinfive/index.html)
+## 🚀 [Play Now!](https://fasmote.github.io/ChessArcade/) | [🎯 Square Rush](https://fasmote.github.io/ChessArcade/games/square-rush/index.html) | [🐴 Knight Quest](https://fasmote.github.io/ChessArcade/games/knight-quest/index.html) | [🧠 Memory Matrix](https://fasmote.github.io/ChessArcade/games/memory-matrix-v2/index.html) | [🟦 Master Sequence](https://fasmote.github.io/ChessArcade/games/master-sequence/index.html) | [⚔️ ChessInFive](https://fasmote.github.io/ChessArcade/games/chessinfive/index.html) | [🔐 Cripto-Caballo](https://fasmote.github.io/ChessArcade/games/criptocaballo/index.html)
 
 ---
 
@@ -18,6 +18,7 @@
 - **🧠 Memory Matrix** - Train positional memory with progressive levels *(Available Now!)*
 - **🟦 Master Sequence** - Simon Says meets chess! Memorize growing patterns *(Available Now!)*
 - **⚔️ ChessInFive** - Connect Four meets Chess! Two-player tactical strategy **+ AI Opponent!** *(Available Now!)*
+- **🔐 Cripto-Caballo** - Decode hidden messages with knight moves! Cryptography meets chess *(Available Now!)*
 
 #### 🎯 **Features:**
 - **🏆 Global Leaderboards**: Compete with players worldwide across all games
@@ -56,6 +57,7 @@ ChessArcade/
 - **🧠 Memory Matrix** - Entrena la memoria posicional con niveles progresivos *(¡Disponible Ahora!)*
 - **🟦 Master Sequence** - ¡Simon Says encuentra el ajedrez! Memoriza patrones crecientes *(¡Disponible Ahora!)*
 - **⚔️ ChessInFive** - ¡Conecta Cuatro conoce al Ajedrez! Estrategia táctica para dos jugadores **+ ¡Oponente IA!** *(¡Disponible Ahora!)*
+- **🔐 Cripto-Caballo** - ¡Descifra mensajes ocultos con movimientos de caballo! Criptografía y ajedrez *(¡Disponible Ahora!)*
 
 #### 🎯 **Características:**
 - **🏆 Ranking Global**: Compite con jugadores de todo el mundo en todos los juegos
@@ -272,12 +274,60 @@ ChessArcade/
 
 ---
 
+## 🔐 Cripto-Caballo - NEW! Decode Hidden Messages!
+
+![Cripto-Caballo Screenshot](./screenshots/criptocaballo-preview.png)
+
+### 🎮 **What is Cripto-Caballo?**
+**Cripto-Caballo** (Crypto-Knight) is a unique puzzle game that fuses cryptography with chess! Hidden messages are scattered across letter-filled boards, and only the knight's L-shaped path can reveal them. Follow the knight's jumps to decode famous quotes, proverbs, and philosophical phrases hidden in plain sight.
+
+### ✨ **Game Features:**
+- **📐 6 Board Sizes**: 3x4, 4x5, 5x5, 5x6, 6x7, and classic 8x8 boards
+- **📅 Daily Puzzles**: New message to decode every day via Supabase integration
+- **💡 Smart Hints**: Visual highlighting of valid knight moves
+- **↩️ Undo System**: Take back moves to explore different paths
+- **🧠 Pattern Recognition**: Train logical deduction and linguistic intuition
+- **🎯 Admin Mode**: Create and test custom puzzles with password protection
+
+### 🎪 **Perfect For:**
+- **Logical Thinking**: Combines chess movement with word pattern recognition
+- **Spatial Visualization**: Master the knight's complex L-shaped movement
+- **Language Skills**: Decode Spanish phrases and expand vocabulary
+- **Chess Training**: Develop deep understanding of knight movement patterns
+- **All Skill Levels**: From simple 3x4 boards to challenging 8x8 mazes
+
+### 🎵 **How to Play:**
+```
+🔐 The Challenge:
+- A hidden message (quote, proverb, or phrase) is encoded on the board
+- Each square contains a letter
+- Only the knight's L-shaped moves connect the message
+- Find the starting square and trace the path to reveal the secret!
+
+♞ Knight Movement Rules:
+- Move in an "L" shape: 2 squares in one direction, 1 square perpendicular
+- Valid moves are highlighted when you select a square
+- Build the message letter by letter following the knight's path
+- Use UNDO to explore alternative routes
+
+💡 Strategy Tips:
+- Look for common Spanish words (EL, LA, DE, EN, etc.)
+- Follow grammatical patterns (articles, prepositions)
+- If stuck, try starting from different squares
+- Use the hint system to see all possible moves
+```
+
+### 🔗 **[▶️ Play Cripto-Caballo Now!](https://fasmote.github.io/ChessArcade/games/criptocaballo/index.html)**
+
+---
+
 ### 🔗 **Play All Games:**
 - **🎯 [Play Square Rush](./games/square-rush/index.html)** - Master coordinates A1-H8!
 - **🐴 [Play Knight Quest](./games/knight-quest/index.html)** - Conquer the knight's tour!
 - **🧠 [Play Memory Matrix](./games/memory-matrix-v2/index.html)** - Train your visual memory!
 - **🟦 [Play Master Sequence](./games/master-sequence/index.html)** - Master growing patterns!
 - **⚔️ [Play ChessInFive](./games/chessinfive/index.html)** - Connect Four meets Chess!
+- **🔐 [Play Cripto-Caballo](./games/criptocaballo/index.html)** - Decode hidden messages!
 - **📁 [View Source Code](https://github.com/fasmote/ChessArcade)**
 - **🐛 [Report Issues](https://github.com/fasmote/ChessArcade/issues)**
 
@@ -340,7 +390,8 @@ ChessArcade uses a custom **NeonChess Design System** featuring:
 │   ├── 📁 square-rush/              # ✅ Coordinate training
 │   ├── 📁 memory-matrix-v2/         # ✅ Visual memory training
 │   ├── 📁 master-sequence/          # ✅ Master Sequence (Simon Says)
-│   └── 📁 chessinfive/               # ✅ ChessInFive + AI Opponent (Gomoku-inspired)
+│   ├── 📁 chessinfive/              # ✅ ChessInFive + AI Opponent (Gomoku-inspired)
+│   └── 📁 criptocaballo/            # ✅ Cripto-Caballo (Cryptography + Knight moves)
 ├── 📁 screenshots/                  # Game screenshots
 └── 📁 docs/                         # Documentation
 ```
@@ -419,9 +470,9 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## 🏅 **Achievements & Stats**
 
-- **🎯 Games Released**: 5 (Square Rush, Knight Quest, Memory Matrix, Master Sequence, ChessInFive)
+- **🎯 Games Released**: 6 (Square Rush, Knight Quest, Memory Matrix, Master Sequence, ChessInFive, Cripto-Caballo)
 - **⭐ GitHub Stars**: Growing!
-- **🔧 Last Updated**: October 2025
+- **🔧 Last Updated**: December 2025
 - **📱 Mobile Support**: 100%
 - **🌐 Browser Support**: Chrome, Firefox, Safari, Edge
 
@@ -436,6 +487,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 [![Play Memory Matrix](https://img.shields.io/badge/🧠_Play_Memory_Matrix-00FF80?style=for-the-badge)](https://fasmote.github.io/ChessArcade/games/memory-matrix-v2/index.html)
 [![Play Master Sequence](https://img.shields.io/badge/🟦_Play_Master_Sequence-8000FF?style=for-the-badge)](https://fasmote.github.io/ChessArcade/games/master-sequence/index.html)
 [![Play ChessInFive](https://img.shields.io/badge/⚔️_Play_ChessInFive-FF00FF?style=for-the-badge)](https://fasmote.github.io/ChessArcade/games/chessinfive/index.html)
+[![Play Cripto-Caballo](https://img.shields.io/badge/🔐_Play_Cripto--Caballo-FFD700?style=for-the-badge)](https://fasmote.github.io/ChessArcade/games/criptocaballo/index.html)
 [![GitHub](https://img.shields.io/badge/⭐_Star_on_GitHub-00FFFF?style=for-the-badge&logo=github)](https://github.com/fasmote/ChessArcade)
 
 **Made with ⚡ by ChessArcade | Powered by NeonChess Design System**
