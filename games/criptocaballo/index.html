@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CriptoCaballo - Chess Arcade</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N3EKXHPD5Y"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-N3EKXHPD5Y');
+    </script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2472413468382197"
+     crossorigin="anonymous"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Importamos Supabase -->
@@ -14,6 +28,22 @@
 
         body {
             background-color: #0f172a;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 49px,
+                    rgba(0, 255, 255, 0.03) 49px,
+                    rgba(0, 255, 255, 0.03) 50px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 49px,
+                    rgba(0, 255, 255, 0.03) 49px,
+                    rgba(0, 255, 255, 0.03) 50px
+                );
+            background-size: 50px 50px;
             font-family: 'Roboto Mono', monospace;
             color: #e2e8f0;
             overflow-x: hidden;
@@ -2352,7 +2382,7 @@
     </div> <!-- Cierre del wrapper de contenido centrado -->
 
     <!-- How to Play Section -->
-    <div style="max-width: 900px; margin: 2rem auto; padding: 1rem;">
+    <div style="max-width: 900px; margin: 0.5rem auto 2rem auto; padding: 1rem;">
         <details style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.9), rgba(15, 23, 42, 0.95)); border: 2px solid #22d3ee; border-radius: 15px; padding: 1.5rem; box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);">
             <summary style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: #22d3ee; cursor: pointer; text-shadow: 0 0 10px rgba(34, 211, 238, 0.8); margin-bottom: 1rem; list-style: none; display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 1.8rem;">📖</span> Cómo Jugar - Guía Paso a Paso
@@ -2424,6 +2454,8 @@
     <footer style="background: linear-gradient(180deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); padding: 1.5rem 1rem; margin-top: auto; border-top: 3px solid #22d3ee; box-shadow: 0 -4px 20px rgba(34, 211, 238, 0.3); text-align: center; width: 100%;">
         <div style="max-width: 1200px; margin: 0 auto;">
             <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; margin-bottom: 1rem;">
+                <a href="../../index.html" style="color: #22d3ee; text-decoration: none; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;" onmouseover="this.style.color='#06b6d4'; this.style.textShadow='0 0 10px rgba(34, 211, 238, 0.8)'" onmouseout="this.style.color='#22d3ee'; this.style.textShadow='none'">🏠 Home</a>
+                <a href="../../about.html#games-section" style="color: #22d3ee; text-decoration: none; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;" onmouseover="this.style.color='#06b6d4'; this.style.textShadow='0 0 10px rgba(34, 211, 238, 0.8)'" onmouseout="this.style.color='#22d3ee'; this.style.textShadow='none'">🎮 Juegos</a>
                 <a href="../../articles.html" style="color: #22d3ee; text-decoration: none; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;" onmouseover="this.style.color='#06b6d4'; this.style.textShadow='0 0 10px rgba(34, 211, 238, 0.8)'" onmouseout="this.style.color='#22d3ee'; this.style.textShadow='none'">Artículos</a>
                 <a href="../../chess_rules.html" style="color: #22d3ee; text-decoration: none; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;" onmouseover="this.style.color='#06b6d4'; this.style.textShadow='0 0 10px rgba(34, 211, 238, 0.8)'" onmouseout="this.style.color='#22d3ee'; this.style.textShadow='none'">Reglas del Ajedrez</a>
                 <a href="../../about.html" style="color: #22d3ee; text-decoration: none; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;" onmouseover="this.style.color='#06b6d4'; this.style.textShadow='0 0 10px rgba(34, 211, 238, 0.8)'" onmouseout="this.style.color='#22d3ee'; this.style.textShadow='none'">Acerca de</a>
