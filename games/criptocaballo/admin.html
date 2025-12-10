@@ -555,13 +555,6 @@
                         <span class="bg-pink-600/20 border border-pink-500 px-3 py-1 rounded-full text-pink-300">🔐 Panel de Administración</span>
                     </p>
 
-                    <!-- Puzzle ID Display - Always Visible -->
-                    <div id="currentPuzzleId" class="mb-3 text-center bg-slate-900/50 border border-cyan-900/30 rounded-lg p-2">
-                        <span class="text-[0.65rem] text-slate-500 font-bold">PUZZLE ID:</span>
-                        <span id="puzzleIdValue" class="text-cyan-400 font-mono text-sm ml-2">#-------</span>
-                        <span id="puzzleTitle" class="text-slate-400 text-xs ml-2 italic"></span>
-                    </div>
-
                     <div class="border-b border-cyan-900/50 pb-2 mb-4 flex justify-between items-end">
                         <div class="sign-perspective">
                             <div id="gameModeContainer" class="text-left interactive-sign" onclick="handleSignClick(event)" onmousemove="handleSignHover(event)" onmouseleave="resetSignTilt()">
@@ -572,6 +565,12 @@
                                     Descifra el mensaje oculto.
                                 </p>
                             </div>
+                        </div>
+                        <!-- Puzzle ID Display - Always Visible -->
+                        <div id="currentPuzzleId" class="text-center bg-slate-900/50 border border-cyan-900/30 rounded-lg p-2">
+                            <span class="text-[0.65rem] text-slate-500 font-bold">PUZZLE ID:</span>
+                            <span id="puzzleIdValue" class="text-cyan-400 font-mono text-sm ml-2">#-------</span>
+                            <span id="puzzleTitle" class="text-slate-400 text-xs ml-2 italic"></span>
                         </div>
                          <div class="flex flex-col items-end">
                              <label class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
