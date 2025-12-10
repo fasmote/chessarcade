@@ -391,10 +391,15 @@
                     <option value="expert">Experto</option>
                 </select>
             </div>
-            <div class="mb-6">
+            <div class="mb-4">
                 <label class="block text-slate-400 text-xs font-bold mb-1">FECHA DEL PUZZLE</label>
                 <input type="date" id="puzzleDate" class="date-input w-full p-2">
                 <p class="text-[0.6rem] text-slate-500 mt-1">Puedes programar puzzles para fechas futuras</p>
+            </div>
+            <div class="mb-6">
+                <label class="block text-slate-400 text-xs font-bold mb-1">💬 COMENTARIOS (Opcional)</label>
+                <textarea id="lvlComments" class="neon-input w-full p-2 rounded text-sm" rows="3" placeholder="Ej: Traducción EN: 'Practice makes perfect' | Pista: Empieza en A1 | Dificultad: Media"></textarea>
+                <p class="text-[0.6rem] text-slate-500 mt-1">Visible para usuarios. Usa '|' para separar múltiples notas (traducciones, pistas, etc.).</p>
             </div>
             <div class="flex gap-2 justify-end">
                 <button onclick="closeSaveModal()" class="text-slate-400 hover:text-white px-4 py-2 text-sm">Cancelar</button>
@@ -1781,6 +1786,8 @@
             const difficulty = document.getElementById('lvlDifficulty')?.value || 'medium';
             const title = document.getElementById('lvlName')?.value || '';
             const author = document.getElementById('lvlAuthor')?.value || '';
+            const commentsInput = document.getElementById('lvlComments');
+            const adminComments = commentsInput ? commentsInput.value : null;
 
             // Generate readable ID: #YYYYMMDD-AxB
             const puzzleId = `#${puzzleDate.replace(/-/g, '')}-${boardSize}`;
@@ -1800,7 +1807,8 @@
                 word_separator: separator ? separator.value : 'space',  // Controls board visualization only
                 difficulty: difficulty,
                 start_hints: lockedHintCount || 0,
-                end_hints: activeEndHints || 0
+                end_hints: activeEndHints || 0,
+                admin_comments: adminComments
             };
 
             console.log("Guardando puzzle:", puzzleData);
