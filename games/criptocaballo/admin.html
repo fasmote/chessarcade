@@ -575,7 +575,7 @@
                         </div>
                          <div class="flex flex-col items-end">
                              <label class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
-                             <input type="date" class="date-input" onchange="loadDailyLevel(this.value)">
+                             <input type="date" id="dailyLevelDate" class="date-input" onchange="loadDailyLevel(this.value)">
                          </div>
                     </div>
                 </div>
@@ -1265,13 +1265,11 @@
             console.log(`🎲 Jugador seleccionó: ${r}x${c}`);
             setBoardSize(r, c);
 
-            // CRITICAL FIX: Read from the correct date picker (the one in "RETO DEL DÍA" section, not the admin section)
-            // The admin date picker has id="puzzleDate", the "RETO DEL DÍA" one doesn't have an id
-            // Use a more specific selector: .date-input:not(#puzzleDate) to get the one WITHOUT id
-            const dateInput = document.querySelector('.date-input:not(#puzzleDate)');
-            console.log(`🔍🔍 dateInput encontrado:`, dateInput);
-            console.log(`🔍🔍 dateInput.value (ANTES de leer):`, dateInput ? dateInput.value : 'NULL');
-            const selectedDate = dateInput ? dateInput.value : getLocalDateString();
+            // Read from the "RETO DEL DÍA" date picker
+            const dateInput = document.getElementById('dailyLevelDate');
+            console.log(`🔍🔍 dailyLevelDate encontrado:`, dateInput);
+            console.log(`🔍🔍 dailyLevelDate.value:`, dateInput ? dateInput.value : 'NULL');
+            const selectedDate = dateInput && dateInput.value ? dateInput.value : getLocalDateString();
             const boardSize = `${r}x${c}`;
 
             console.log(`📅🔍 playerSelectSize buscando puzzle para:`);
