@@ -566,29 +566,28 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="flex flex-col items-end gap-2">
-                            <!-- Puzzle ID Display - Always Visible -->
-                            <div id="currentPuzzleId" class="text-center bg-slate-900/50 border border-cyan-900/30 rounded-lg p-2">
-                                <span class="text-[0.65rem] text-slate-500 font-bold">PUZZLE ID:</span>
-                                <span id="puzzleIdValue" class="text-cyan-400 font-mono text-sm ml-2">#-------</span>
-                                <span id="puzzleTitle" class="text-slate-400 text-xs ml-2 italic"></span>
-                            </div>
-                            <div class="flex flex-col items-end">
-                                <label class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
-                                <input type="date" id="dailyLevelDate" class="date-input" onchange="loadDailyLevel(this.value)">
-                            </div>
-                        </div>
+                         <div class="flex flex-col items-end">
+                             <label class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
+                             <input type="date" id="dailyLevelDate" class="date-input" onchange="loadDailyLevel(this.value)">
+                         </div>
                     </div>
                 </div>
 
                 <!-- NUEVO MENÚ JUGADOR (v4.2): BOTONES ARCADE -->
-                <div class="w-full max-w-md mb-4 grid grid-cols-3 gap-2"> 
+                <div class="w-full max-w-md mb-4 grid grid-cols-3 gap-2">
                     <button onclick="playerSelectSize(3,4)" class="arcade-btn py-1 rounded" data-rows="3" data-cols="4">3x4</button>
                     <button onclick="playerSelectSize(4,5)" class="arcade-btn py-1 rounded" data-rows="4" data-cols="5">4x5</button>
                     <button onclick="playerSelectSize(5,5)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="5">5x5</button>
-                    <button onclick="playerSelectSize(5,6)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="6">5x6</button> 
-                    <button onclick="playerSelectSize(6,7)" class="arcade-btn py-1 rounded" data-rows="6" data-cols="7">6x7</button> 
+                    <button onclick="playerSelectSize(5,6)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="6">5x6</button>
+                    <button onclick="playerSelectSize(6,7)" class="arcade-btn py-1 rounded" data-rows="6" data-cols="7">6x7</button>
                     <button onclick="playerSelectSize(8,8)" class="arcade-btn py-1 rounded" data-rows="8" data-cols="8">8x8</button>
+                </div>
+
+                <!-- Puzzle ID Display - Always Visible -->
+                <div id="currentPuzzleId" class="w-full max-w-md mb-2 text-cyan-400 text-xs bg-cyan-900/20 p-2 rounded border border-cyan-900/50">
+                    <span class="text-[0.65rem] text-slate-500 font-bold">PUZZLE ID:</span>
+                    <span id="puzzleIdValue" class="text-cyan-400 font-mono text-sm ml-2">#-------</span>
+                    <span id="puzzleTitle" class="text-slate-400 text-xs ml-2 italic"></span>
                 </div>
                 
                 <div class="board-wrapper" id="boardWrapper">
