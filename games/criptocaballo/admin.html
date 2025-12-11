@@ -566,16 +566,18 @@
                                 </p>
                             </div>
                         </div>
-                        <!-- Puzzle ID Display - Always Visible -->
-                        <div id="currentPuzzleId" class="text-center bg-slate-900/50 border border-cyan-900/30 rounded-lg p-2">
-                            <span class="text-[0.65rem] text-slate-500 font-bold">PUZZLE ID:</span>
-                            <span id="puzzleIdValue" class="text-cyan-400 font-mono text-sm ml-2">#-------</span>
-                            <span id="puzzleTitle" class="text-slate-400 text-xs ml-2 italic"></span>
+                        <div class="flex flex-col items-end gap-2">
+                            <!-- Puzzle ID Display - Always Visible -->
+                            <div id="currentPuzzleId" class="text-center bg-slate-900/50 border border-cyan-900/30 rounded-lg p-2">
+                                <span class="text-[0.65rem] text-slate-500 font-bold">PUZZLE ID:</span>
+                                <span id="puzzleIdValue" class="text-cyan-400 font-mono text-sm ml-2">#-------</span>
+                                <span id="puzzleTitle" class="text-slate-400 text-xs ml-2 italic"></span>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <label class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
+                                <input type="date" id="dailyLevelDate" class="date-input" onchange="loadDailyLevel(this.value)">
+                            </div>
                         </div>
-                         <div class="flex flex-col items-end">
-                             <label class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
-                             <input type="date" id="dailyLevelDate" class="date-input" onchange="loadDailyLevel(this.value)">
-                         </div>
                     </div>
                 </div>
 
