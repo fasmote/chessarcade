@@ -307,84 +307,66 @@ Recomendar a usuarios de Firefox que usen Chrome Mobile para mejor experiencia.
 
 ---
 
-### 7. Scroll no funciona en mobile en chess_rules.html
-**Estado:** 🟡 Pendiente
+### 7. ✅ RESUELTO - Scroll no funciona en mobile en chess_rules.html
+**Estado:** ✅ RESUELTO
 **Fecha reportado:** 11 de diciembre de 2025
+**Fecha resuelto:** 13 de diciembre de 2025
 **Impacto:** Usuarios de mobile no pueden leer las reglas completas
 
 **Descripción:**
 En la página de reglas del ajedrez (chess_rules.html), el scroll NO funciona en dispositivos móviles. El usuario no puede desplazarse hacia abajo para leer el contenido completo.
 
-**Comportamiento:**
-- **Esperado:** El usuario puede hacer scroll vertical para ver todas las reglas
-- **Actual:** El scroll está bloqueado o no responde en mobile
+**Causa raíz identificada:**
+- `.neon-container` tenía `display: flex` + `min-height: 100vh` que bloqueaba el scroll
+- El grid animado (`::before`) interfería con touch events
 
-**Causa raíz probable:**
-- Puede ser el mismo issue que afecta a Firefox Mobile en otras páginas
-- Posible conflicto con CSS de `overflow`, `touch-action` o `position: fixed`
-- Background animado bloqueando touch events
+**Solución aplicada:**
+Se agregó media query en `neonchess-style.css` para mobile (max-width: 1024px):
+```css
+.neon-container {
+    min-height: auto !important;
+    height: auto !important;
+    display: block !important;
+    overflow: visible !important;
+    position: static !important;
+}
 
-**Solución propuesta:**
-Similar a otras páginas con problemas de scroll:
-1. Verificar que el contenedor principal tenga `overflow-y: auto`
-2. Agregar `touch-action: pan-y` al contenedor de contenido
-3. Asegurar que el background animado tenga `pointer-events: none`
-4. Remover cualquier `height: 100vh` que pueda estar bloqueando scroll
+.neon-grid-bg::before {
+    display: none !important;  /* Desactiva grid animado en mobile */
+}
+```
 
-**Archivos afectados:**
-- `chess_rules.html`
-- `assets/css/neonchess-style.css`
+**Archivos modificados:**
+- `assets/css/neonchess-style.css` (líneas 117-158)
 
 ---
 
-### 8. Imagen del movimiento de piezas no se abre en desktop
-**Estado:** 🟡 Pendiente
+### 8. ✅ RESUELTO - Imagen del movimiento de piezas no se abre en desktop
+**Estado:** ✅ RESUELTO
 **Fecha reportado:** 11 de diciembre de 2025
+**Fecha resuelto:** 13 de diciembre de 2025
 **Impacto:** Usuarios de desktop no pueden ver detalles de movimientos
 
 **Descripción:**
-En la página chess_rules.html (escritorio), cuando el usuario hace click en la imagen que muestra el movimiento de las piezas, NO se abre/amplía la imagen.
+En la página chess_rules.html, cuando el usuario hace click en las tarjetas de piezas, NO se mostraba el diagrama del movimiento.
 
-**Comportamiento:**
-- **Esperado:** Al hacer click en la imagen, se abre en modal/lightbox o se amplía para ver en detalle
-- **Actual:** El click no hace nada, la imagen no se amplía
+**Solución implementada:**
+Se agregó un modal lightbox completo con:
+1. **Data attributes** en cada `.piece-card` mapeando a `assets/images/chess-rules/movimiento_*.png`
+2. **CSS del modal** con animación de zoom-in y diseño neon
+3. **JavaScript** para abrir/cerrar modal (click, fondo, tecla Escape)
+4. **Hint visual** "Click para ver movimiento" en cada tarjeta
+5. **Fix para mobile landscape** - modal ajustado para viewport pequeño
 
-**Causa raíz probable:**
-- Falta JavaScript para manejar el click event de la imagen
-- No hay modal/lightbox implementado para mostrar imagen ampliada
-- El enlace/botón está roto o no existe
+**Archivos modificados:**
+- `chess_rules.html`:
+  - Líneas 454-540: Data attributes en piece-cards
+  - Líneas 250-365: CSS del modal y click-hint
+  - Líneas 690-743: Modal HTML y JavaScript
 
-**Solución propuesta:**
-
-Opción 1 - Modal simple con CSS:
-```html
-<div class="image-modal" id="imageModal">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="modalImage">
-</div>
-
-<img src="path/to/piece-moves.png" onclick="openModal(this)" style="cursor: pointer;">
-
-<script>
-function openModal(img) {
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    modal.style.display = "block";
-    modalImg.src = img.src;
-}
-</script>
-```
-
-Opción 2 - Link simple:
-```html
-<a href="path/to/piece-moves.png" target="_blank">
-    <img src="path/to/piece-moves.png" alt="Movimiento de piezas">
-</a>
-```
-
-**Archivos afectados:**
-- `chess_rules.html` - Sección de imágenes de movimientos
-- CSS para modal (si se usa Opción 1)
+**Imágenes utilizadas:**
+- `movimiento_peon.png`, `movimiento_torre.png`, `movimiento_caballo.png`
+- `movimiento_alfil.png`, `movimiento_dama.png`, `movimiento_rey.png`
 
 ---
 

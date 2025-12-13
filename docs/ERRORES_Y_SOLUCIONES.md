@@ -4190,3 +4190,151 @@ Durante una sesión intensiva de debugging, se identificaron y resolvieron 8 bug
 **Documentación completa:** games/criptocaballo/ERRORES_SOLUCIONADOS.md
 
 ---
+
+## 20. Mobile Portrait: Botones de Navegación Estáticos (Diciembre 2025 - Sesión 6)
+
+### 🔴 Síntoma
+En mobile portrait, los botones "VOLVER AL INICIO" y "JUEGOS" estaban flotantes (position: fixed) y se solapaban con el contenido. El usuario quería que fueran estáticos, parte del flujo del documento.
+
+### ✅ Solución Implementada
+
+**Patrón: nav-buttons-container**
+
+Se creó un contenedor que agrupa ambos botones y cambia su comportamiento según orientación:
+
+```html
+<div class="nav-buttons-container" id="navButtonsContainer">
+    <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
+    <div class="floating-games-menu">
+        <button class="games-menu-btn">🎮 JUEGOS</button>
+        <div class="games-menu-dropdown">...</div>
+    </div>
+</div>
+```
+
+```css
+/* Desktop y Landscape: Sin efecto */
+.nav-buttons-container {
+    display: contents;
+}
+
+/* Mobile Portrait: Botones estáticos apilados */
+@media (max-width: 768px) and (orientation: portrait) {
+    .nav-buttons-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 1rem 0;
+    }
+
+    .nav-buttons-container .back-button,
+    .nav-buttons-container .games-menu-btn {
+        position: static !important;
+        width: 200px;
+        text-align: center;
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .nav-buttons-container .floating-games-menu {
+        position: relative !important;  /* Importante para dropdown */
+    }
+
+    .nav-buttons-container .games-menu-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+    }
+}
+```
+
+### 📝 Lecciones Aprendidas
+
+1. **`display: contents`** es perfecto para contenedores que deben "desaparecer" en desktop
+2. **`position: relative`** es necesario en el padre del dropdown, no `static`
+3. **Media query con orientación**: `(orientation: portrait)` distingue vertical de horizontal
+4. **Ancho fijo en mobile**: 200px para ambos botones crea consistencia visual
+
+### 📁 Archivos Modificados
+- `chess_rules.html`
+- `about.html`
+- `articles.html`
+- `contact.html`
+- `privacy-policy.html`
+
+---
+
+## 21. Modal Lightbox para Movimientos de Piezas (Diciembre 2025 - Sesión 6)
+
+### 🔴 Síntoma
+En chess_rules.html, al hacer click en las tarjetas de piezas no se mostraba ningún diagrama del movimiento.
+
+### ✅ Solución Implementada
+
+**Modal con data attributes:**
+
+```html
+<div class="piece-card" data-movement="assets/images/chess-rules/movimiento_peon.png" data-piece="Peón">
+    ...
+    <div class="click-hint">Click para ver movimiento</div>
+</div>
+
+<div class="movement-modal" id="movementModal">
+    <div class="modal-content">
+        <button class="modal-close">&times;</button>
+        <h3 class="modal-title" id="modalTitle">Movimiento del Peón</h3>
+        <img class="modal-image" id="modalImage" src="" alt="Diagrama">
+    </div>
+</div>
+```
+
+```javascript
+document.querySelectorAll('.piece-card[data-movement]').forEach(card => {
+    card.addEventListener('click', function() {
+        modalImage.src = this.dataset.movement;
+        modalTitle.textContent = 'Movimiento del ' + this.dataset.piece;
+        modal.classList.add('active');
+    });
+});
+```
+
+### 🔧 Fix para Mobile Landscape
+
+El modal se desbordaba en landscape. Se agregó media query específico:
+
+```css
+@media (max-height: 500px) and (orientation: landscape) {
+    .modal-content {
+        max-height: 92vh;
+        padding: 0.3rem 0.5rem;
+        padding-top: 2.5rem;
+    }
+    .modal-close {
+        top: 5px;
+        right: 5px;  /* Dentro del modal, no afuera */
+    }
+}
+```
+
+### 📝 Lecciones Aprendidas
+
+1. **Data attributes** para mapear elementos a recursos (imágenes)
+2. **max-height con orientation** para landscape donde altura es limitada
+3. **Botón close dentro del modal** en mobile para evitar que se corte
+4. **object-fit: contain** para que imagen respete aspect ratio
+
+---
+
+**Nuevas lecciones agregadas (Diciembre 2025 - Sesión 6):**
+- `display: contents` para contenedores "invisibles" en desktop
+- `position: relative` es necesario para dropdown menus (no static)
+- Media query `(orientation: portrait)` para cambios solo en vertical
+- Data attributes para mapear clicks a recursos
+- Modal close button debe estar DENTRO del modal en mobile
+- `max-height` con `orientation: landscape` para viewports horizontales pequeños
+
+---
