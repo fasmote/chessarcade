@@ -238,13 +238,140 @@
             .piece-name {
                 font-size: 1.3rem;
             }
+        }
 
-            .back-button {
-                position: static;
-                display: block;
-                width: fit-content;
-                margin: 2rem auto 1rem;
+        /* Click hint for piece cards */
+        .click-hint {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px dashed var(--neon-cyan);
+            border-radius: 20px;
+            color: var(--neon-cyan);
+            font-size: 0.8rem;
+            text-align: center;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .piece-card:hover .click-hint {
+            opacity: 1;
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Movement Modal Styles */
+        .movement-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .movement-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 85vh;
+            background: var(--dark-secondary);
+            border: 3px solid var(--neon-cyan);
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+            animation: modalZoomIn 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes modalZoomIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
             }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            color: var(--neon-magenta);
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
+            flex-shrink: 0;
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: calc(85vh - 4rem);
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+            object-fit: contain;
+        }
+
+        /* Mobile landscape fix */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .modal-content {
+                max-height: 92vh;
+                padding: 0.3rem 0.5rem;
+                padding-top: 2.5rem;
+            }
+
+            .modal-title {
+                font-size: 0.9rem;
+                margin-bottom: 0.2rem;
+            }
+
+            .modal-image {
+                max-height: calc(92vh - 3.5rem);
+            }
+
+            .modal-close {
+                top: 5px;
+                right: 5px;
+                width: 32px;
+                height: 32px;
+                font-size: 1.3rem;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: var(--neon-magenta);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 30px rgba(255, 0, 128, 0.8);
         }
     </style>
 </head>
@@ -252,11 +379,13 @@
     <!-- Main Container with Grid Background -->
     <div class="neon-container neon-grid-bg">
 
-        <!-- Floating Back Button -->
-        <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
+        <!-- Navigation Buttons Container (for mobile portrait) -->
+        <div class="nav-buttons-container" id="navButtonsContainer">
+            <!-- Floating Back Button -->
+            <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
 
-        <!-- Floating Games Menu -->
-        <div class="floating-games-menu">
+            <!-- Floating Games Menu -->
+            <div class="floating-games-menu">
             <button class="games-menu-btn" id="gamesMenuBtn" aria-label="Menú de juegos">
                 🎮 JUEGOS
             </button>
@@ -281,10 +410,63 @@
                     <span class="game-icon">⚔️</span>
                     <span class="game-name">ChessInFive</span>
                 </a>
+                <a href="games/criptocaballo/index.html" class="game-menu-item">
+                    <span class="game-icon">🔐</span>
+                    <span class="game-name">CriptoCaballo</span>
+                </a>
             </div>
         </div>
+        </div><!-- End nav-buttons-container -->
 
         <style>
+            /* Navigation Buttons Container - Mobile Portrait */
+            .nav-buttons-container {
+                display: contents; /* No effect on desktop */
+            }
+
+            @media (max-width: 768px) and (orientation: portrait) {
+                .nav-buttons-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0.5rem;
+                    width: 100%;
+                    padding: 1rem 0;
+                }
+
+                .nav-buttons-container .back-button {
+                    position: static !important;
+                    width: 200px;
+                    text-align: center;
+                    margin: 0;
+                    padding: 0.6rem 1rem;
+                    font-size: 0.8rem;
+                }
+
+                .nav-buttons-container .floating-games-menu {
+                    position: relative !important;
+                    transform: none !important;
+                    top: auto !important;
+                    right: auto !important;
+                }
+
+                .nav-buttons-container .games-menu-btn {
+                    width: 200px;
+                    text-align: center;
+                    padding: 0.6rem 1rem;
+                    font-size: 0.8rem;
+                }
+
+                .nav-buttons-container .games-menu-dropdown {
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    right: auto;
+                    z-index: 1001;
+                }
+            }
+
             /* Floating Games Menu */
             .floating-games-menu {
                 position: fixed;
@@ -369,8 +551,8 @@
                 letter-spacing: 0.05em;
             }
 
-            @media (max-width: 768px) {
-            /* Keep games menu fixed on mobile */
+            @media (max-width: 768px) and (orientation: landscape) {
+            /* Keep games menu fixed on mobile landscape */
             .floating-games-menu {
                 top: 5.5rem;
                 right: 50%;
@@ -416,6 +598,7 @@
                         }
                     });
                 }
+
             });
         </script>
 
@@ -451,7 +634,7 @@
 
             <div class="pieces-grid">
 
-                <div class="piece-card">
+                <div class="piece-card" data-movement="assets/images/chess-rules/movimiento_peon.png" data-piece="Peón">
                     <div class="piece-icon-wrapper">
                         <div class="piece-icon">
                             <img src="assets/images/chess-rules/pawn.png" alt="Peón">
@@ -463,9 +646,10 @@
                         <strong>Ataque:</strong> 1 casilla en diagonal.<br>
                         <em>"La infantería. Pequeños pero valientes. Si llegan al final, ascienden."</em>
                     </div>
+                    <div class="click-hint">Click para ver movimiento</div>
                 </div>
 
-                <div class="piece-card">
+                <div class="piece-card" data-movement="assets/images/chess-rules/movimiento_torre.png" data-piece="Torre">
                     <div class="piece-icon-wrapper">
                         <div class="piece-icon">
                             <img src="assets/images/chess-rules/rook.png" alt="Torre">
@@ -476,9 +660,10 @@
                         <strong>Movimiento:</strong> Líneas rectas infinitas (horizontal o vertical).<br>
                         <em>"El Tanque. Devastadora en columnas abiertas y finales."</em>
                     </div>
+                    <div class="click-hint">Click para ver movimiento</div>
                 </div>
 
-                <div class="piece-card">
+                <div class="piece-card" data-movement="assets/images/chess-rules/movimiento_caballo.png" data-piece="Caballo">
                     <div class="piece-icon-wrapper">
                         <div class="piece-icon">
                             <img src="assets/images/chess-rules/knight.png" alt="Caballo">
@@ -490,9 +675,10 @@
                         <strong>Habilidad:</strong> Puede saltar sobre otras piezas.<br>
                         <em>"El Tramposo. Impredecible y peligroso en el centro."</em>
                     </div>
+                    <div class="click-hint">Click para ver movimiento</div>
                 </div>
 
-                <div class="piece-card">
+                <div class="piece-card" data-movement="assets/images/chess-rules/movimiento_alfil.png" data-piece="Alfil">
                     <div class="piece-icon-wrapper">
                         <div class="piece-icon">
                             <img src="assets/images/chess-rules/bishop.png" alt="Alfil">
@@ -503,9 +689,10 @@
                         <strong>Movimiento:</strong> Diagonales infinitas.<br>
                         <em>"El Francotirador. Ataca desde lejos, pero atado a su color."</em>
                     </div>
+                    <div class="click-hint">Click para ver movimiento</div>
                 </div>
 
-                <div class="piece-card">
+                <div class="piece-card" data-movement="assets/images/chess-rules/movimiento_dama.png" data-piece="Dama">
                     <div class="piece-icon-wrapper">
                         <div class="piece-icon">
                             <img src="assets/images/chess-rules/queen.png" alt="Dama">
@@ -516,9 +703,10 @@
                         <strong>Movimiento:</strong> Combina Torre + Alfil. Cualquier dirección.<br>
                         <em>"La Jefa. La pieza más poderosa del tablero. Úsala con cuidado."</em>
                     </div>
+                    <div class="click-hint">Click para ver movimiento</div>
                 </div>
 
-                <div class="piece-card">
+                <div class="piece-card" data-movement="assets/images/chess-rules/movimiento_rey.png" data-piece="Rey">
                     <div class="piece-icon-wrapper">
                         <div class="piece-icon">
                             <img src="assets/images/chess-rules/king.png" alt="Rey">
@@ -529,6 +717,7 @@
                         <strong>Movimiento:</strong> 1 casilla en cualquier dirección.<br>
                         <em>"El VIP. Si cae, pierdes. Protégelo a toda costa."</em>
                     </div>
+                    <div class="click-hint">Click para ver movimiento</div>
                 </div>
 
             </div>
@@ -577,6 +766,61 @@
 
     <!-- NeonChess Interactive System -->
     <script src="assets/js/neonchess-effects.js"></script>
+
+    <!-- Movement Modal -->
+    <div class="movement-modal" id="movementModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <h3 class="modal-title" id="modalTitle">Movimiento del Peón</h3>
+            <img class="modal-image" id="modalImage" src="" alt="Diagrama de movimiento">
+        </div>
+    </div>
+
+    <!-- Piece Card Click Handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('movementModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalClose = document.getElementById('modalClose');
+
+            // Add click handlers to all piece cards
+            document.querySelectorAll('.piece-card[data-movement]').forEach(card => {
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', function() {
+                    const movementSrc = this.dataset.movement;
+                    const pieceName = this.dataset.piece;
+
+                    modalImage.src = movementSrc;
+                    modalTitle.textContent = 'Movimiento del ' + pieceName;
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+
+            // Close modal on button click
+            modalClose.addEventListener('click', function() {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+
+            // Close modal on background click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>

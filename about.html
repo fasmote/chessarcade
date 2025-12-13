@@ -159,11 +159,13 @@
 <body>
     <div class="neon-container neon-grid-bg" style="min-height: 100vh;">
 
-    <!-- Floating Back Button -->
-    <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
+    <!-- Navigation Buttons Container (for mobile portrait) -->
+    <div class="nav-buttons-container" id="navButtonsContainer">
+        <!-- Floating Back Button -->
+        <a href="index.html" class="back-button">🏠 VOLVER AL INICIO</a>
 
-    <!-- Floating Games Menu -->
-    <div class="floating-games-menu">
+        <!-- Floating Games Menu -->
+        <div class="floating-games-menu">
         <button class="games-menu-btn" id="gamesMenuBtn" aria-label="Menú de juegos">
             🎮 JUEGOS
         </button>
@@ -194,8 +196,57 @@
             </a>
         </div>
     </div>
+    </div><!-- End nav-buttons-container -->
 
     <style>
+        /* Navigation Buttons Container - Mobile Portrait */
+        .nav-buttons-container {
+            display: contents;
+        }
+
+        @media (max-width: 768px) and (orientation: portrait) {
+            .nav-buttons-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+                width: 100%;
+                padding: 1rem 0;
+            }
+
+            .nav-buttons-container .back-button {
+                position: static !important;
+                width: 200px;
+                text-align: center;
+                margin: 0;
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .nav-buttons-container .floating-games-menu {
+                position: relative !important;
+                transform: none !important;
+                top: auto !important;
+                right: auto !important;
+            }
+
+            .nav-buttons-container .games-menu-btn {
+                width: 200px;
+                text-align: center;
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .nav-buttons-container .games-menu-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                right: auto;
+                z-index: 1001;
+            }
+        }
+
         /* Floating Games Menu */
         .floating-games-menu {
             position: fixed;
