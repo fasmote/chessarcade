@@ -343,10 +343,12 @@
 
     <!-- ==================================================
          OVERLAY DE ERROR
+         La X grande (icono ❌) es clickeable para cerrar y reintentar
          ================================================== -->
     <div class="overlay hidden" id="failOverlay">
         <div class="overlay-content fail">
-            <div class="overlay-icon">❌</div>
+            <!-- El icono ❌ es clickeable para cerrar el modal -->
+            <div class="overlay-icon clickable-icon" id="btnCloseFailOverlay" title="Click para reintentar">❌</div>
             <h2 class="overlay-title">¡Secuencia Incorrecta!</h2>
             <p class="overlay-message" id="failMessage">Te quedan 2 intentos</p>
             <div class="sequence-display">
@@ -361,6 +363,11 @@
 
     <!-- ==================================================
          OVERLAY DE GAME OVER
+         Reorganizado para mejor UX:
+         1. Botones de navegación discretos arriba
+         2. Contenido principal (Game Over, stats, ranking)
+         3. Sección de guardar score (oculta si score=0)
+         4. Mensaje de consuelo (visible si score=0)
          ================================================== -->
     <div class="overlay hidden" id="gameOverOverlay">
         <div class="overlay-content game-over">
@@ -372,6 +379,20 @@
                 </svg>
             </button>
 
+            <!-- ====== BOTONES DE NAVEGACIÓN (arriba, discretos) ====== -->
+            <div class="game-over-nav-buttons">
+                <button class="btn-nav-small" id="gameOverViewLeaderboardBtn">
+                    👁️ LEADERBOARD
+                </button>
+                <button class="btn-nav-small" id="btnRestart">
+                    🔄 JUGAR
+                </button>
+                <button class="btn-nav-small" id="btnRestartGame">
+                    🏠 INICIO
+                </button>
+            </div>
+
+            <!-- ====== TÍTULO Y STATS ====== -->
             <div class="overlay-icon">💀</div>
             <h2 class="overlay-title">Game Over</h2>
             <p class="overlay-message">¡Buen intento!</p>
@@ -386,26 +407,33 @@
                 </div>
             </div>
 
-            <!-- Player Name Input for Leaderboard -->
-            <div style="margin: 20px 0;">
-                <label for="gameOverPlayerNameInput" style="display: block; margin-bottom: 8px; color: var(--neon-cyan); font-weight: bold;">Enter Your Name:</label>
-                <input type="text" id="gameOverPlayerNameInput" maxlength="20" placeholder="Your Name"
-                       style="width: 100%; padding: 10px; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--neon-cyan); border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 16px; text-align: center;">
+            <!-- La animación de ranking se inserta aquí dinámicamente -->
+
+            <!-- ====== SECCIÓN GUARDAR SCORE (oculta si score=0) ====== -->
+            <div id="gameOverSubmitSection">
+                <!-- Input de nombre prominente con animación de latido -->
+                <div class="name-input-container">
+                    <label for="gameOverPlayerNameInput" class="name-input-label">
+                        ✨ Ingresa tu Nombre:
+                    </label>
+                    <input type="text" id="gameOverPlayerNameInput" maxlength="20" placeholder="Tu Nombre"
+                           class="name-input-field">
+                </div>
+
+                <!-- Botón de submit prominente -->
+                <button class="btn-submit-score" id="gameOverSubmitScoreBtn">
+                    🏆 GUARDAR SCORE
+                </button>
             </div>
 
-            <div class="overlay-buttons">
-                <button class="btn-primary btn-overlay" id="gameOverSubmitScoreBtn">
-                    🏆 SUBMIT SCORE
-                </button>
-                <button class="btn-secondary btn-overlay" id="gameOverViewLeaderboardBtn">
-                    👁️ VIEW LEADERBOARD
-                </button>
-                <button class="btn-primary btn-overlay" id="btnRestart">
-                    🔄 Jugar de Nuevo
-                </button>
-                <button class="btn-secondary btn-overlay" id="btnRestartGame">
-                    🏠 Volver al Inicio
-                </button>
+            <!-- ====== MENSAJE DE CONSUELO (visible si score=0) ====== -->
+            <div id="zeroScoreMessage" class="zero-score-message" style="display: none;">
+                <div class="consolation-icon">🎮</div>
+                <p class="consolation-text">¡No te rindas!</p>
+                <p class="consolation-subtext">
+                    Necesitas completar al menos un nivel para guardar tu score.
+                    <br>¡Inténtalo de nuevo!
+                </p>
             </div>
         </div>
     </div>
@@ -453,6 +481,7 @@
     <link rel="stylesheet" href="../../css/leaderboard.css">
     <script src="../../js/leaderboard-api.js"></script>
     <script src="../../js/leaderboard-ui.js"></script>
+    <script src="ranking-animation.js"></script>
     <script src="leaderboard-integration.js"></script>
 
     <!-- Footer -->

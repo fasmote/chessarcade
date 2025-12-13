@@ -620,10 +620,16 @@ function renderMasterSequenceScoreRow(score, highlightTop3 = true) {
  * Headers personalizados: RANK | PLAYER | SCORE | LENGTH | LEVEL | TIME
  * (sin columna COUNTRY separada, la bandera va al lado del nombre)
  *
+ * VISTA DIVIDIDA: Si el jugador destacado está muy lejos del top (rank > 10),
+ * muestra: Top 5 → separador "..." → posiciones alrededor del jugador
+ * Esto permite ver siempre la posición del jugador sin tener que hacer scroll
+ *
  * @param {array} scores - Array de scores del backend
+ * @param {string} highlightPlayer - Nombre del jugador a destacar (opcional)
+ * @param {number} highlightScore - Score específico a destacar (para no destacar todas las filas)
  * @returns {HTMLElement} - Elemento table
  */
-function renderMasterSequenceLeaderboardTable(scores) {
+function renderMasterSequenceLeaderboardTable(scores, highlightPlayer = null, highlightScore = null) {
   // Crear elemento table
   const table = document.createElement('table');
   table.className = 'leaderboard-table';
@@ -655,8 +661,95 @@ function renderMasterSequenceLeaderboardTable(scores) {
       </tr>
     `;
   } else {
-    // Renderizar cada score usando la función específica de Master Sequence
-    tbody.innerHTML = scores.map(score => renderMasterSequenceScoreRow(score, true)).join('');
+    /**
+     * VISTA DIVIDIDA: Encontrar la posición del jugador destacado
+     * Si está en posición > 10, mostrar vista dividida:
+     * - Top 5 posiciones
+     * - Fila separadora visual
+     * - 2 posiciones antes del jugador
+     * - Posición del jugador (destacada)
+     * - 2 posiciones después del jugador
+     */
+    let playerIndex = -1;
+
+    // Debug: mostrar qué estamos buscando
+    console.log('[DEBUG] Split view search - highlightPlayer:', highlightPlayer, 'highlightScore:', highlightScore);
+
+    if (highlightPlayer && highlightScore !== null) {
+      playerIndex = scores.findIndex(score => {
+        const nameMatch = score.player_name?.toLowerCase() === highlightPlayer.toLowerCase();
+        const scoreMatch = score.score === highlightScore;
+        if (nameMatch) {
+          console.log('[DEBUG] Found name match:', score.player_name, 'score:', score.score, 'expected:', highlightScore, 'match:', scoreMatch);
+        }
+        return nameMatch && scoreMatch;
+      });
+    }
+
+    console.log('[DEBUG] playerIndex found:', playerIndex);
+
+    // Determinar si usar vista dividida (jugador en posición > 10)
+    const useSplitView = playerIndex > 9; // índice 9 = posición 10
+
+    /**
+     * Función auxiliar para renderizar una fila con highlight si corresponde
+     */
+    const renderRowWithHighlight = (score) => {
+      const rowHtml = renderMasterSequenceScoreRow(score, true);
+      const nameMatches = highlightPlayer && score.player_name &&
+          score.player_name.toLowerCase() === highlightPlayer.toLowerCase();
+      const scoreMatches = highlightScore === null || score.score === highlightScore;
+
+      if (nameMatches && scoreMatches) {
+        console.log('[DEBUG] Highlighting row:', score.player_name, score.score);
+        return rowHtml.replace('<tr class="', '<tr class="highlight-player-row ');
+      }
+      return rowHtml;
+    };
+
+    if (useSplitView) {
+      // VISTA DIVIDIDA: Top 5 + separador + posiciones alrededor del jugador
+      const TOP_COUNT = 5;           // Mostrar las primeras 5 posiciones
+      const CONTEXT_BEFORE = 2;      // Mostrar 2 posiciones antes del jugador
+      const CONTEXT_AFTER = 2;       // Mostrar 2 posiciones después del jugador
+
+      let htmlRows = [];
+
+      // 1. Mostrar Top 5
+      for (let i = 0; i < Math.min(TOP_COUNT, scores.length); i++) {
+        htmlRows.push(renderRowWithHighlight(scores[i]));
+      }
+
+      // 2. Calcular cuántas posiciones están ocultas
+      const startIndex = Math.max(TOP_COUNT, playerIndex - CONTEXT_BEFORE);
+      const hiddenCount = startIndex - TOP_COUNT;
+
+      // 3. Agregar fila separadora NOTORIA con indicador de posiciones ocultas
+      htmlRows.push(`
+        <tr class="separator-row">
+          <td colspan="6" class="separator-cell">
+            <div class="separator-indicator">
+              <span class="separator-line"></span>
+              <span class="separator-text">${hiddenCount > 0 ? `#${TOP_COUNT + 1} - #${startIndex} ocultos` : '• • •'}</span>
+              <span class="separator-line"></span>
+            </div>
+          </td>
+        </tr>
+      `);
+
+      // 4. Calcular rango final
+      const endIndex = Math.min(scores.length - 1, playerIndex + CONTEXT_AFTER);
+
+      // 5. Mostrar posiciones alrededor del jugador
+      for (let i = startIndex; i <= endIndex; i++) {
+        htmlRows.push(renderRowWithHighlight(scores[i]));
+      }
+
+      tbody.innerHTML = htmlRows.join('');
+    } else {
+      // Vista normal: mostrar todas las filas
+      tbody.innerHTML = scores.map(score => renderRowWithHighlight(score)).join('');
+    }
   }
 
   table.appendChild(tbody);
@@ -848,7 +941,13 @@ function renderMemoryMatrixLeaderboardTable(scores) {
  *
  * @param {string} initialGame - Juego inicial a mostrar (default: 'square-rush')
  */
-async function showLeaderboardModal(initialGame = 'square-rush') {
+/**
+ * @param {string} initialGame - Juego inicial a mostrar (default: 'square-rush')
+ * @param {object} options - Opciones adicionales
+ * @param {string} options.highlightPlayer - Nombre del jugador a destacar
+ * @param {number} options.highlightScore - Score específico a destacar (para no destacar todas las filas del mismo jugador)
+ */
+async function showLeaderboardModal(initialGame = 'square-rush', options = {}) {
   // Crear contenedor del leaderboard
   const container = document.createElement('div');
   container.className = 'leaderboard-modal-content';
@@ -858,7 +957,10 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
     currentGame: initialGame,
     currentOffset: 0,
     limit: 50,
-    loading: false
+    loading: false,
+    // Nombre Y score del jugador a destacar (para resaltar SOLO esa fila específica)
+    highlightPlayer: options.highlightPlayer || window.lastSubmittedPlayerName || null,
+    highlightScore: options.highlightScore || window.lastSubmittedScore || null
   };
 
   // Crear tabs para los juegos
@@ -955,9 +1057,10 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
         offset: state.currentOffset
       });
 
-      // Renderizar tabla (usar función específica para Knight Quest)
+      // Renderizar tabla (usar función específica para cada juego)
       console.log('[DEBUG] Current game:', state.currentGame);
-      console.log('[DEBUG] renderKnightQuestLeaderboardTable exists?', typeof renderKnightQuestLeaderboardTable);
+      console.log('[DEBUG] highlightPlayer:', state.highlightPlayer);
+      console.log('[DEBUG] highlightScore:', state.highlightScore);
 
       let table;
       if (state.currentGame === 'knight-quest') {
@@ -965,7 +1068,8 @@ async function showLeaderboardModal(initialGame = 'square-rush') {
         table = renderKnightQuestLeaderboardTable(data.scores);
       } else if (state.currentGame === 'master-sequence') {
         console.log('[DEBUG] Using Master Sequence custom leaderboard');
-        table = renderMasterSequenceLeaderboardTable(data.scores);
+        // Pasar nombre Y score para resaltar SOLO la fila específica (no todas del mismo jugador)
+        table = renderMasterSequenceLeaderboardTable(data.scores, state.highlightPlayer, state.highlightScore);
       } else if (state.currentGame === 'memory-matrix') {
         console.log('[DEBUG] Using Memory Matrix custom leaderboard');
         table = renderMemoryMatrixLeaderboardTable(data.scores);

@@ -720,3 +720,113 @@
 .score-row:nth-child(4) { animation-delay: 0.15s; }
 .score-row:nth-child(5) { animation-delay: 0.2s; }
 /* ... (continúa hasta N filas, o usar JS para agregar delays dinámicamente) */
+
+/* ===========================================================================
+   HIGHLIGHT PLAYER ROW
+   Destaca la fila del jugador que acaba de guardar su score
+   =========================================================================== */
+
+/**
+ * Esta clase se agrega automáticamente a la fila del jugador
+ * cuando abre el leaderboard después de guardar su score.
+ * Usa una animación de "latido" para llamar la atención.
+ */
+.highlight-player-row {
+  /* Fondo con gradiente llamativo */
+  background: linear-gradient(90deg,
+    rgba(255, 0, 128, 0.3),
+    rgba(0, 255, 255, 0.2),
+    rgba(255, 0, 128, 0.3)
+  ) !important;
+
+  /* Borde brillante */
+  border: 2px solid var(--neon-magenta, #ff0080) !important;
+
+  /* Animación de latido para llamar la atención */
+  animation: highlightPulse 1.5s ease-in-out infinite;
+}
+
+/**
+ * Animación de "latido" que hace brillar la fila
+ * Alterna entre un glow suave y uno más intenso
+ */
+@keyframes highlightPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(255, 0, 128, 0.5),
+      inset 0 0 10px rgba(255, 0, 128, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(255, 0, 128, 0.8),
+      0 0 40px rgba(0, 255, 255, 0.4),
+      inset 0 0 15px rgba(255, 0, 128, 0.2);
+  }
+}
+
+/* Asegurar que el texto en la fila destacada sea legible */
+.highlight-player-row td {
+  color: #ffffff !important;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+/* ===========================================================================
+   FILA SEPARADORA PARA VISTA DIVIDIDA
+   Cuando el jugador está muy lejos del top (posición > 10), se muestra:
+   Top 5 → separador visual → posiciones alrededor del jugador
+   =========================================================================== */
+.separator-row {
+  background: transparent !important;
+  border: none !important;
+}
+
+.separator-cell {
+  padding: 0.75rem 0 !important;
+  border: none !important;
+}
+
+/* Contenedor del indicador de separación */
+.separator-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+/* Líneas decorativas a los lados */
+.separator-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--neon-yellow, #ffff00) 20%,
+    var(--neon-yellow, #ffff00) 80%,
+    transparent
+  );
+  max-width: 80px;
+  box-shadow: 0 0 8px var(--neon-yellow, #ffff00);
+}
+
+/* Texto central con las posiciones ocultas */
+.separator-text {
+  color: var(--neon-yellow, #ffff00);
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 0.05rem;
+  text-shadow: 0 0 10px var(--neon-yellow, #ffff00);
+  background: rgba(255, 255, 0, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  border: 1px dashed var(--neon-yellow, #ffff00);
+  white-space: nowrap;
+}
+
+/* Compatibilidad con el estilo anterior (por si acaso) */
+.separator-dots {
+  color: var(--neon-cyan, #00ffff);
+  font-size: 1.2rem;
+  letter-spacing: 0.5rem;
+  opacity: 0.7;
+  text-shadow: 0 0 10px var(--neon-cyan, #00ffff);
+}

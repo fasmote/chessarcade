@@ -32,8 +32,9 @@ let gameState = {
 
     // Config
     soundEnabled: true,
-    coordinatesEnabled: false,  // Mostrar coordenadas dentro de casillas (modo ayuda)
+    coordinatesEnabled: true,   // Mostrar coordenadas por defecto (ayuda visual)
     hintActive: false,          // Si el jugador activó el HINT
+    hasFirstCorrect: false,     // Si el jugador ya tuvo al menos un acierto (para habilitar Terminar)
 
     // Stats
     bestLevel: 1,
@@ -240,6 +241,9 @@ function setupEventListeners() {
     // Botón X de Game Over (misma función que "Volver al Inicio")
     document.getElementById('btnCloseGameOver')?.addEventListener('click', backToMainScreen);
 
+    // Icono ❌ clickeable en el overlay de error (misma función que "Reintentar")
+    document.getElementById('btnCloseFailOverlay')?.addEventListener('click', retryLevel);
+
     // Botón X de Stats Overlay (misma función que "Continuar")
     document.getElementById('btnCloseStats')?.addEventListener('click', () => {
         hideAllOverlays();
@@ -304,6 +308,14 @@ function startGame() {
     gameState.sequenceColors = []; // Resetear colores
     gameState.squareUsageCount = {}; // Resetear contador de uso
     gameState.gameStartTime = Date.now(); // Iniciar cronómetro de partida completa
+    gameState.hasFirstCorrect = false; // Resetear flag de primer acierto
+
+    // Deshabilitar botón Terminar hasta que haya al menos un acierto
+    const btnEndGame = document.getElementById('btnEndGame');
+    if (btnEndGame) {
+        btnEndGame.disabled = true;
+        btnEndGame.classList.add('disabled');
+    }
 
     // Limpiar líneas de replay si quedaron como residuo
     clearReplayConnectingLines();
@@ -646,6 +658,16 @@ function handleSquareClick(e) {
     if (isCorrect) {
         // ✅ Correcto
         console.log(`✅ Correct! (${gameState.currentStep + 1}/${gameState.sequence.length})`);
+
+        // Habilitar botón Terminar después del primer acierto
+        if (!gameState.hasFirstCorrect) {
+            gameState.hasFirstCorrect = true;
+            const btnEndGame = document.getElementById('btnEndGame');
+            if (btnEndGame) {
+                btnEndGame.disabled = false;
+                btnEndGame.classList.remove('disabled');
+            }
+        }
 
         // Limpiar TODO el hint (líneas, flechas, coordenadas, bordes)
         clearHints();
@@ -1760,15 +1782,25 @@ function saveCoordinatesPreference() {
 
 /**
  * Carga preferencia de coordenadas
+ * Por defecto las coordenadas están ACTIVADAS (visible)
+ * Solo se desactivan si el usuario las desactivó explícitamente
  */
 function loadCoordinatesPreference() {
     const saved = localStorage.getItem('coordinate_sequence_coordinates');
-    if (saved === 'enabled') {
+    const btnCoordinates = document.getElementById('btnCoordinates');
+    const btnText = btnCoordinates?.querySelector('.btn-text');
+
+    // Si el usuario DESACTIVÓ las coordenadas explícitamente, respetar esa preferencia
+    if (saved === 'disabled') {
+        gameState.coordinatesEnabled = false;
+        if (btnCoordinates) btnCoordinates.classList.remove('active');
+        if (btnText) btnText.textContent = 'SHOW COORDINATES';
+        hideAllCoordinates();
+    } else {
+        // Por defecto (o si guardó 'enabled'), mostrar coordenadas
         gameState.coordinatesEnabled = true;
-        const btnCoordinates = document.getElementById('btnCoordinates');
-        const btnText = btnCoordinates.querySelector('.btn-text');
-        btnCoordinates.classList.add('active');
-        btnText.textContent = 'HIDE COORDINATES';
+        if (btnCoordinates) btnCoordinates.classList.add('active');
+        if (btnText) btnText.textContent = 'HIDE COORDINATES';
         showAllCoordinates();
     }
 }

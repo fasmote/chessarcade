@@ -2070,3 +2070,434 @@ body::before {
     font-size: 0.9rem;
     letter-spacing: 0.05em;
 }
+
+/* ============================================
+   RANKING ANIMATION
+   ============================================ */
+
+.ranking-animation-container {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--neon-cyan);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.5s ease;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.ranking-animation-container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ranking-animation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    margin-bottom: 0.75rem;
+}
+
+.ranking-animation-title {
+    font-size: 0.9rem;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.ranking-animation-score {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+}
+
+.ranking-animation-body {
+    position: relative;
+    min-height: auto;
+    max-height: 200px;
+    overflow: hidden;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ranking-list-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.ranking-list-row .rank-position {
+    color: var(--neon-cyan);
+    font-weight: bold;
+}
+
+.ranking-list-row .rank-name {
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ranking-list-row .rank-score {
+    text-align: right;
+    color: var(--neon-green);
+}
+
+/* Player row styling (inline with other rows) */
+.ranking-list-row.player-row {
+    background: linear-gradient(90deg, rgba(255, 0, 128, 0.3), rgba(0, 255, 255, 0.3));
+    border: 2px solid var(--neon-magenta);
+    box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+}
+
+.ranking-list-row.player-row .rank-position {
+    color: var(--neon-magenta);
+    font-weight: bold;
+}
+
+.ranking-list-row.player-row .rank-name {
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.ranking-list-row.player-row .rank-score {
+    color: var(--neon-yellow);
+    font-weight: bold;
+}
+
+.ranking-list-row.player-row.found-position {
+    animation: pulseGlow 1s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(255, 0, 128, 0.8), 0 0 50px rgba(0, 255, 255, 0.4);
+    }
+}
+
+.ranking-animation-message {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+    margin-top: 0.5rem;
+    padding: 0.25rem;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.5s ease;
+}
+
+.ranking-animation-message.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+
+/* Highlight para el input de nombre */
+#gameOverPlayerNameInput.highlight-input {
+    animation: highlightPulse 1.5s ease-in-out infinite;
+    border-color: var(--neon-magenta) !important;
+}
+
+@keyframes highlightPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 0, 128, 0.8), 0 0 40px rgba(0, 255, 255, 0.4);
+    }
+}
+
+/* Responsive para la animación */
+@media (max-width: 480px) {
+    .ranking-animation-container {
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+    }
+
+    .ranking-animation-header {
+        flex-direction: row;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .ranking-list-row {
+        grid-template-columns: 35px 1fr 55px;
+        font-size: 0.7rem;
+        padding: 0.35rem;
+    }
+
+    .ranking-animation-message {
+        font-size: 0.9rem;
+    }
+}
+
+/* ============================================
+   GAME OVER - ESTILOS REORGANIZADOS
+   ============================================
+   Nuevos estilos para el overlay de Game Over:
+   - Botones de navegación discretos arriba
+   - Input de nombre prominente con animación
+   - Mensaje de consuelo para score=0
+   ============================================ */
+
+/* ====== BOTONES DE NAVEGACIÓN (arriba, discretos) ====== */
+.game-over-nav-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/**
+ * Botones pequeños y discretos para navegación
+ * No compiten visualmente con el contenido principal
+ */
+.btn-nav-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    font-family: 'Orbitron', monospace;
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: 4px;
+    color: var(--neon-cyan);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-nav-small:hover {
+    background: rgba(0, 255, 255, 0.2);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+/* ====== INPUT DE NOMBRE PROMINENTE ====== */
+.name-input-container {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(255, 0, 128, 0.1);
+    border: 2px solid var(--neon-magenta);
+    border-radius: 10px;
+    /* Animación de latido para llamar la atención */
+    animation: nameContainerPulse 2s ease-in-out infinite;
+}
+
+/**
+ * Animación de "latido" que hace brillar el contenedor
+ * Esto ayuda a que el usuario note que debe ingresar su nombre
+ */
+@keyframes nameContainerPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 0, 128, 0.6), 0 0 40px rgba(0, 255, 255, 0.3);
+        transform: scale(1.02);
+    }
+}
+
+.name-input-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--neon-magenta);
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
+}
+
+/**
+ * Campo de input grande y visible
+ * Usa colores llamativos para atraer la atención
+ */
+.name-input-field {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 8px;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.name-input-field:focus {
+    outline: none;
+    border-color: var(--neon-magenta);
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+}
+
+.name-input-field::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* ====== BOTÓN DE SUBMIT PROMINENTE ====== */
+.btn-submit-score {
+    width: 100%;
+    padding: 15px 20px;
+    margin-top: 1rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: white;
+    background: linear-gradient(135deg, var(--neon-magenta), var(--neon-cyan));
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.4);
+}
+
+.btn-submit-score:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(255, 0, 128, 0.6), 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn-submit-score:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ====== MENSAJE DE CONSUELO (score=0) ====== */
+.zero-score-message {
+    text-align: center;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    background: rgba(255, 255, 0, 0.1);
+    border: 2px solid var(--neon-yellow);
+    border-radius: 10px;
+}
+
+.consolation-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    /* Animación de rebote suave */
+    animation: consolationBounce 2s ease-in-out infinite;
+}
+
+@keyframes consolationBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.consolation-text {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    margin: 0.5rem 0;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+}
+
+.consolation-subtext {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 480px) {
+    .game-over-nav-buttons {
+        gap: 0.3rem;
+    }
+
+    .btn-nav-small {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.6rem;
+    }
+
+    .name-input-container {
+        padding: 0.75rem;
+    }
+
+    .name-input-label {
+        font-size: 0.9rem;
+    }
+
+    .name-input-field {
+        font-size: 1rem;
+        padding: 10px;
+    }
+
+    .btn-submit-score {
+        font-size: 0.9rem;
+        padding: 12px 15px;
+    }
+
+    .consolation-icon {
+        font-size: 2rem;
+    }
+
+    .consolation-text {
+        font-size: 1.1rem;
+    }
+
+    .consolation-subtext {
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================
+   ICONO CLICKEABLE EN OVERLAYS
+   ============================================
+   Hace que el icono grande (como la X roja) sea clickeable
+   para cerrar el modal de forma intuitiva
+   ============================================ */
+
+.clickable-icon {
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.clickable-icon:hover {
+    transform: scale(1.2);
+    filter: brightness(1.3);
+}
+
+.clickable-icon:active {
+    transform: scale(0.95);
+}
+
+/* ============================================
+   BOTÓN TERMINAR DESHABILITADO
+   ============================================
+   El botón Terminar está deshabilitado hasta que el jugador
+   tenga al menos un acierto (para evitar terminar sin jugar)
+   ============================================ */
+
+#btnTerminar.disabled,
+#btnTerminar:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(50%);
+}

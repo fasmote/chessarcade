@@ -10,6 +10,7 @@
  * 2. Conectar los botones del Game Over overlay con el leaderboard
  * 3. Enviar el score al leaderboard global cuando termina una partida
  * 4. Mostrar el leaderboard cuando se solicita
+ * 5. Manejar el caso especial cuando el score es 0 (mostrar mensaje de consuelo)
  */
 
 (function() {
@@ -21,6 +22,12 @@
 
     const STORAGE_KEY = 'masterSequencePlayerName';
     const GAME_ID = 'master-sequence';
+
+    /**
+     * Variable global para almacenar el nombre del jugador que acaba de guardar
+     * Esto permite que el leaderboard destaque la fila del jugador
+     */
+    window.lastSubmittedPlayerName = null;
 
     // ========================================
     // CARGAR NOMBRE GUARDADO
@@ -40,13 +47,66 @@
         loadSavedName();
     });
 
+    // ========================================
+    // MANEJAR CASO SCORE = 0
+    // ========================================
+
+    /**
+     * Muestra u oculta las secciones del Game Over según el score
+     * Si score es 0, oculta el formulario de nombre y muestra mensaje de consuelo
+     * Si score > 0, muestra el formulario normal
+     */
+    function handleZeroScoreCase(finalScore) {
+        const submitSection = document.getElementById('gameOverSubmitSection');
+        const zeroScoreMessage = document.getElementById('zeroScoreMessage');
+
+        if (finalScore === 0) {
+            // Score es 0: ocultar formulario, mostrar mensaje de consuelo
+            if (submitSection) submitSection.style.display = 'none';
+            if (zeroScoreMessage) zeroScoreMessage.style.display = 'block';
+            console.log('📊 Score es 0, mostrando mensaje de consuelo');
+        } else {
+            // Score > 0: mostrar formulario normal
+            if (submitSection) submitSection.style.display = 'block';
+            if (zeroScoreMessage) zeroScoreMessage.style.display = 'none';
+        }
+    }
+
     // También cargar cuando se muestra el Game Over overlay
     const gameOverObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                 const gameOverOverlay = document.getElementById('gameOverOverlay');
                 if (gameOverOverlay && !gameOverOverlay.classList.contains('hidden')) {
+                    // Overlay ahora visible - cargar nombre
                     loadSavedName();
+
+                    // Obtener el score final
+                    const finalScoreElement = document.getElementById('finalScore');
+                    const finalScore = parseInt(finalScoreElement?.textContent) || 0;
+
+                    // Manejar caso especial: score = 0
+                    handleZeroScoreCase(finalScore);
+
+                    // Solo mostrar animación si score > 0
+                    if (finalScore > 0 && typeof window.showRankingAnimation === 'function') {
+                        const overlayContent = gameOverOverlay.querySelector('.overlay-content');
+                        if (overlayContent) {
+                            // Limpiar animación anterior si existe
+                            if (typeof window.clearRankingAnimation === 'function') {
+                                window.clearRankingAnimation();
+                            }
+                            // Mostrar nueva animación con pequeño delay
+                            setTimeout(() => {
+                                window.showRankingAnimation(finalScore, overlayContent);
+                            }, 500);
+                        }
+                    }
+                } else {
+                    // Overlay oculto - limpiar animación
+                    if (typeof window.clearRankingAnimation === 'function') {
+                        window.clearRankingAnimation();
+                    }
                 }
             }
         });
@@ -126,6 +186,14 @@
             submitBtn.disabled = false;
             submitBtn.textContent = '✅ SUBMITTED!';
 
+            /**
+             * Guardar el nombre Y el score del jugador que acaba de enviar
+             * Esto permite que el leaderboard destaque SOLO esa fila específica
+             * (no todas las filas con el mismo nombre)
+             */
+            window.lastSubmittedPlayerName = playerName;
+            window.lastSubmittedScore = finalScore;
+
             // ✅ PATRÓN ESTÁNDAR: Auto-cerrar modal y abrir leaderboard
             setTimeout(() => {
                 console.log('🔒 Closing modal after successful submission');
@@ -137,13 +205,17 @@
                     gameOverModal.classList.add('hidden');
                 }
 
-                // Abrir leaderboard después de cerrar modal
+                // Abrir leaderboard después de cerrar modal, pasando nombre Y score para destacar
                 setTimeout(() => {
                     console.log('📊 Opening leaderboard after score submission');
                     if (window.showLeaderboardModal) {
-                        window.showLeaderboardModal('master-sequence');
+                        // Pasar nombre Y score para que se destaque SOLO esa fila específica
+                        window.showLeaderboardModal('master-sequence', {
+                            highlightPlayer: playerName,
+                            highlightScore: finalScore
+                        });
                     }
-                }, 300); // Small delay to ensure modal is fully closed
+                }, 300); // Pequeño delay para asegurar que el modal se cerró
 
             }, 2000); // 2 segundos para que el usuario vea el mensaje de éxito
 
