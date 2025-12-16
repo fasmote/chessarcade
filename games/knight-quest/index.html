@@ -21,7 +21,8 @@
 
     <!-- NeonChess System -->
     <link rel="stylesheet" href="../../assets/css/neonchess-style.css">
-    
+    <link rel="stylesheet" href="knight-styles.css">
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
         
@@ -1557,11 +1558,8 @@
         <div class="progress-bar">
             <div class="progress-fill" id="completionProgress" style="width: 0%"></div>
         </div>
-        <div class="motivational-message">
-            🎯 "Every master was once a disaster. Try a different strategy and conquer more squares!"
-        </div>
 
-        <!-- Player Name Input (igual que en victory modal) -->
+        <!-- Player Name Input -->
         <div style="margin-top: 1.5rem;">
             <label for="playerNameInputGameOver" style="display: block; margin-bottom: 0.5rem; color: var(--text-color);">
                 👤 Player Name:
@@ -1575,14 +1573,9 @@
             >
         </div>
 
-        <!-- Botones de acción -->
+        <!-- Botón de acción -->
         <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap;">
             <button class="btn btn-primary" id="submitScoreBtnGameOver">🏆 SUBMIT SCORE</button>
-            <button class="btn btn-secondary" id="viewLeaderboardBtnGameOver">👁️ VIEW LEADERBOARD</button>
-        </div>
-        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-primary" onclick="newGame()">🎮 TRY AGAIN</button>
-            <button class="btn btn-secondary" onclick="closeGameOverModal(); changeBoardSize(3, 4);">📉 EASIER</button>
         </div>
     </div>
     
@@ -2157,6 +2150,18 @@
             const showBtn = document.getElementById('showVictoryBtn');
             modal.style.display = 'block';
             showBtn.style.display = 'none';
+
+            // Calcular score y mostrar animación de ranking
+            const currentScore = calculateKnightScore();
+            gameState.currentScore = currentScore; // Guardar para usar al enviar
+
+            // Mostrar animación de ranking después de un pequeño delay
+            setTimeout(() => {
+                if (typeof window.showRankingAnimation === 'function') {
+                    window.clearRankingAnimation(); // Limpiar animación anterior si existe
+                    window.showRankingAnimation(currentScore, modal, 'playerNameInput');
+                }
+            }, 500);
         }
         
         // Close victory modal
@@ -2201,6 +2206,18 @@
             const showBtn = document.getElementById('showGameOverBtn');
             modal.style.display = 'block';
             showBtn.style.display = 'none';
+
+            // Calcular score y mostrar animación de ranking
+            const currentScore = calculateKnightScore();
+            gameState.currentScore = currentScore; // Guardar para usar al enviar
+
+            // Mostrar animación de ranking después de un pequeño delay
+            setTimeout(() => {
+                if (typeof window.showRankingAnimation === 'function') {
+                    window.clearRankingAnimation(); // Limpiar animación anterior si existe
+                    window.showRankingAnimation(currentScore, modal, 'playerNameInputGameOver');
+                }
+            }, 500);
         }
         
         // Close game over modal
@@ -2392,6 +2409,31 @@
         // ========================================
 
         /**
+         * Variables globales para destacar la fila del jugador en el leaderboard
+         * Después de guardar, se pasan estos valores al modal para resaltar SOLO esa fila
+         */
+        window.lastSubmittedPlayerName = null;
+        window.lastSubmittedScore = null;
+
+        /**
+         * Calcula el score del Knight Quest basado en el estado actual del juego
+         * Fórmula: casillas * 1000 + bonus tiempo - penalty movimientos + bonus completar
+         */
+        function calculateKnightScore() {
+            const visited = gameState.visitedSquares.size;
+            const totalSquares = gameState.boardRows * gameState.boardCols;
+            const elapsed = gameState.finalTime || Math.floor((Date.now() - gameState.startTime) / 1000);
+            const moves = gameState.moveHistory.length;
+
+            const baseScore = visited * 1000;
+            const timeBonus = Math.max(0, (300 - elapsed) * 10);
+            const movePenalty = moves * 50;
+            const completionBonus = (visited === totalSquares) ? 5000 : 0;
+
+            return Math.max(0, baseScore + timeBonus - movePenalty + completionBonus);
+        }
+
+        /**
          * Cargar nombre del jugador desde localStorage al iniciar
          * Esto permite que los jugadores no tengan que escribir su nombre cada vez
          */
@@ -2475,6 +2517,10 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = '✅ SUBMITTED!';
 
+                // Guardar nombre y score para destacar en el leaderboard
+                window.lastSubmittedPlayerName = playerName;
+                window.lastSubmittedScore = finalScore;
+
                 // ✅ PATRÓN ESTÁNDAR: Auto-cerrar modal y abrir leaderboard
                 setTimeout(() => {
                     console.log('🔒 Closing modal after successful submission');
@@ -2492,11 +2538,19 @@
                         gameOverModal.style.display = 'none';
                     }
 
-                    // Abrir leaderboard después de cerrar modal
+                    // Limpiar animación de ranking
+                    if (window.clearRankingAnimation) {
+                        window.clearRankingAnimation();
+                    }
+
+                    // Abrir leaderboard después de cerrar modal, pasando nombre Y score para destacar
                     setTimeout(() => {
                         console.log('📊 Opening leaderboard after score submission');
                         if (window.showLeaderboardModal) {
-                            window.showLeaderboardModal('knight-quest');
+                            window.showLeaderboardModal('knight-quest', {
+                                highlightPlayer: playerName,
+                                highlightScore: finalScore
+                            });
                         }
                     }, 300); // Small delay to ensure modal is fully closed
 
@@ -2599,6 +2653,7 @@
     <link rel="stylesheet" href="../../css/leaderboard.css">
     <script src="../../js/leaderboard-api.js"></script>
     <script src="../../js/leaderboard-ui.js"></script>
+    <script src="ranking-animation.js"></script>
 
 </body>
 </html>

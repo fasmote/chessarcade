@@ -76,31 +76,10 @@
 /* ========================================
    TABLERO ESPECÍFICO KNIGHT QUEST
    ======================================== */
-.chessboard {
-    /* Heredamos del CSS compartido y agregamos específicos */
-    display: grid;
-    gap: 0;
-    transition: all 0.5s ease;
-    position: relative;
-}
-
-.chessboard.size-3x4 {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    max-width: 320px;
-}
-
-.chessboard.size-6x6 {
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(6, 1fr);
-    max-width: 400px;
-}
-
-.chessboard.size-8x8 {
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
-    max-width: 500px;
-}
+/* NOTA: Los estilos base del .chessboard están definidos INLINE en index.html
+   para evitar conflictos de especificidad. Aquí solo van estilos adicionales
+   que NO entren en conflicto con los inline (como estados de casillas).
+*/
 
 /* Estados específicos del caballo */
 .square.knight-current {
@@ -561,19 +540,9 @@
     .hints-display {
         justify-content: center;
     }
-    
-    .chessboard.size-3x4 {
-        max-width: 260px;
-    }
 
-    .chessboard.size-6x6 {
-        max-width: 300px;
-    }
+    /* NOTA: Los estilos responsive del .chessboard están en index.html inline */
 
-    .chessboard.size-8x8 {
-        max-width: 320px;
-    }
-    
     .final-stats {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -591,31 +560,203 @@
 }
 
 @media (max-width: 480px) {
-    .chessboard.size-3x4 {
-        max-width: 220px;
-    }
+    /* NOTA: Los estilos responsive del .chessboard están en index.html inline */
 
-    .chessboard.size-6x6 {
-        max-width: 240px;
-    }
-
-    .chessboard.size-8x8 {
-        max-width: 260px;
-    }
-    
     .square {
         font-size: 0.9rem;
     }
-    
+
     .final-stats {
         grid-template-columns: 1fr;
     }
-    
+
     .game-stats {
         font-size: 0.8rem;
     }
-    
+
     .stat {
         padding: 0.5rem 1rem;
+    }
+}
+
+/* ============================================
+   RANKING ANIMATION
+   Animación de "descenso en el ranking" cuando termina el juego
+   ============================================ */
+
+.ranking-animation-container {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--neon-cyan, #00ffff);
+    border-radius: var(--border-radius, 8px);
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.5s ease;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.ranking-animation-container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ranking-animation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    margin-bottom: 0.75rem;
+}
+
+.ranking-animation-title {
+    font-size: 0.9rem;
+    color: var(--neon-cyan, #00ffff);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.ranking-animation-score {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--neon-yellow, #ffff00);
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+}
+
+.ranking-animation-body {
+    position: relative;
+    min-height: auto;
+    max-height: 200px;
+    overflow: hidden;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ranking-list-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.ranking-list-row .rank-position {
+    color: var(--neon-cyan, #00ffff);
+    font-weight: bold;
+}
+
+.ranking-list-row .rank-name {
+    color: var(--text-secondary, #aaa);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ranking-list-row .rank-score {
+    text-align: right;
+    color: var(--neon-green, #00ff00);
+}
+
+/* Player row styling (inline with other rows) */
+.ranking-list-row.player-row {
+    background: linear-gradient(90deg, rgba(255, 0, 128, 0.3), rgba(0, 255, 255, 0.3));
+    border: 2px solid var(--neon-magenta, #ff0080);
+    box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+}
+
+.ranking-list-row.player-row .rank-position {
+    color: var(--neon-magenta, #ff0080);
+    font-weight: bold;
+}
+
+.ranking-list-row.player-row .rank-name {
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.ranking-list-row.player-row .rank-score {
+    color: var(--neon-yellow, #ffff00);
+    font-weight: bold;
+}
+
+.ranking-list-row.player-row.found-position {
+    animation: pulseGlow 1s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(255, 0, 128, 0.8), 0 0 50px rgba(0, 255, 255, 0.4);
+    }
+}
+
+.ranking-animation-message {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--neon-yellow, #ffff00);
+    text-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+    margin-top: 0.5rem;
+    padding: 0.25rem;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.5s ease;
+}
+
+.ranking-animation-message.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Highlight para el input de nombre (ambos modales) */
+#playerNameInput.highlight-input,
+#playerNameInputGameOver.highlight-input {
+    animation: highlightPulse 1.5s ease-in-out infinite;
+    border-color: var(--neon-magenta, #ff0080) !important;
+}
+
+@keyframes highlightPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 0, 128, 0.8), 0 0 40px rgba(0, 255, 255, 0.4);
+    }
+}
+
+/* Responsive para la animación */
+@media (max-width: 480px) {
+    .ranking-animation-container {
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+    }
+
+    .ranking-animation-header {
+        flex-direction: row;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .ranking-list-row {
+        grid-template-columns: 35px 1fr 55px;
+        font-size: 0.7rem;
+        padding: 0.35rem;
+    }
+
+    .ranking-animation-message {
+        font-size: 0.9rem;
     }
 }

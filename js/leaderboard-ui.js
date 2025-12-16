@@ -464,10 +464,15 @@ function renderLeaderboardTable(scores, showTime = false) {
  * Headers personalizados: RANK | PLAYER | SCORE | BOARD | SQUARES | TIME
  * (sin columna COUNTRY separada, la bandera va al lado del nombre)
  *
+ * VISTA DIVIDIDA: Si el jugador destacado está muy lejos del top (rank > 10),
+ * muestra: Top 5 → separador "..." → posiciones alrededor del jugador
+ *
  * @param {array} scores - Array de scores del backend
+ * @param {string} highlightPlayer - Nombre del jugador a destacar (opcional)
+ * @param {number} highlightScore - Score específico a destacar (opcional)
  * @returns {HTMLElement} - Elemento table
  */
-function renderKnightQuestLeaderboardTable(scores) {
+function renderKnightQuestLeaderboardTable(scores, highlightPlayer = null, highlightScore = null) {
   // Crear elemento table
   const table = document.createElement('table');
   table.className = 'leaderboard-table';
@@ -499,8 +504,89 @@ function renderKnightQuestLeaderboardTable(scores) {
       </tr>
     `;
   } else {
-    // Renderizar cada score usando la función específica de Knight Quest
-    tbody.innerHTML = scores.map(score => renderKnightQuestScoreRow(score, true)).join('');
+    /**
+     * VISTA DIVIDIDA: Encontrar la posición del jugador destacado
+     * Si está en posición > 10, mostrar vista dividida
+     */
+    let playerIndex = -1;
+
+    console.log('[DEBUG] Knight Quest split view search - highlightPlayer:', highlightPlayer, 'highlightScore:', highlightScore);
+
+    if (highlightPlayer && highlightScore !== null) {
+      playerIndex = scores.findIndex(score => {
+        const nameMatch = score.player_name?.toLowerCase() === highlightPlayer.toLowerCase();
+        const scoreMatch = score.score === highlightScore;
+        if (nameMatch) {
+          console.log('[DEBUG] Found name match:', score.player_name, 'score:', score.score, 'expected:', highlightScore, 'match:', scoreMatch);
+        }
+        return nameMatch && scoreMatch;
+      });
+    }
+
+    console.log('[DEBUG] playerIndex found:', playerIndex);
+
+    // Determinar si usar vista dividida (jugador en posición > 10)
+    const useSplitView = playerIndex > 9;
+
+    /**
+     * Función auxiliar para renderizar una fila con highlight si corresponde
+     */
+    const renderRowWithHighlight = (score) => {
+      const rowHtml = renderKnightQuestScoreRow(score, true);
+      const nameMatches = highlightPlayer && score.player_name &&
+          score.player_name.toLowerCase() === highlightPlayer.toLowerCase();
+      const scoreMatches = highlightScore === null || score.score === highlightScore;
+
+      if (nameMatches && scoreMatches) {
+        console.log('[DEBUG] Highlighting row:', score.player_name, score.score);
+        return rowHtml.replace('<tr class="', '<tr class="highlight-player-row ');
+      }
+      return rowHtml;
+    };
+
+    if (useSplitView) {
+      // VISTA DIVIDIDA: Top 5 + separador + posiciones alrededor del jugador
+      const TOP_COUNT = 5;
+      const CONTEXT_BEFORE = 2;
+      const CONTEXT_AFTER = 2;
+
+      let htmlRows = [];
+
+      // 1. Mostrar Top 5
+      for (let i = 0; i < Math.min(TOP_COUNT, scores.length); i++) {
+        htmlRows.push(renderRowWithHighlight(scores[i]));
+      }
+
+      // 2. Calcular cuántas posiciones están ocultas
+      const startIndex = Math.max(TOP_COUNT, playerIndex - CONTEXT_BEFORE);
+      const hiddenCount = startIndex - TOP_COUNT;
+
+      // 3. Agregar fila separadora
+      htmlRows.push(`
+        <tr class="separator-row">
+          <td colspan="6" class="separator-cell">
+            <div class="separator-indicator">
+              <span class="separator-line"></span>
+              <span class="separator-text">${hiddenCount > 0 ? `#${TOP_COUNT + 1} - #${startIndex} ocultos` : '• • •'}</span>
+              <span class="separator-line"></span>
+            </div>
+          </td>
+        </tr>
+      `);
+
+      // 4. Calcular rango final
+      const endIndex = Math.min(scores.length - 1, playerIndex + CONTEXT_AFTER);
+
+      // 5. Mostrar posiciones alrededor del jugador
+      for (let i = startIndex; i <= endIndex; i++) {
+        htmlRows.push(renderRowWithHighlight(scores[i]));
+      }
+
+      tbody.innerHTML = htmlRows.join('');
+    } else {
+      // Vista normal: mostrar todas las filas
+      tbody.innerHTML = scores.map(score => renderRowWithHighlight(score)).join('');
+    }
   }
 
   table.appendChild(tbody);
@@ -1065,7 +1151,8 @@ async function showLeaderboardModal(initialGame = 'square-rush', options = {}) {
       let table;
       if (state.currentGame === 'knight-quest') {
         console.log('[DEBUG] Using Knight Quest custom leaderboard');
-        table = renderKnightQuestLeaderboardTable(data.scores);
+        // Pasar nombre Y score para resaltar SOLO la fila específica y activar vista dividida
+        table = renderKnightQuestLeaderboardTable(data.scores, state.highlightPlayer, state.highlightScore);
       } else if (state.currentGame === 'master-sequence') {
         console.log('[DEBUG] Using Master Sequence custom leaderboard');
         // Pasar nombre Y score para resaltar SOLO la fila específica (no todas del mismo jugador)
