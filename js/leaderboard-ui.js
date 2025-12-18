@@ -1271,8 +1271,10 @@ async function showLeaderboardModal(initialGame = 'square-rush', options = {}) {
         table = renderMemoryMatrixLeaderboardTable(data.scores, state.highlightPlayer, state.highlightScore);
       } else if (state.currentGame === 'square-rush') {
         console.log('[DEBUG] Using Square Rush custom leaderboard');
+        // NOTA EDUCATIVA: Pasar nombre Y score para resaltar SOLO la fila específica
+        // y activar vista dividida si el jugador está en posiciones lejanas
         if (typeof window.renderSquareRushLeaderboardTable === 'function') {
-          table = window.renderSquareRushLeaderboardTable(data.scores);
+          table = window.renderSquareRushLeaderboardTable(data.scores, state.highlightPlayer, state.highlightScore);
         } else {
           console.warn('[DEBUG] Square Rush custom renderer not available, using generic');
           table = renderLeaderboardTable(data.scores, true);

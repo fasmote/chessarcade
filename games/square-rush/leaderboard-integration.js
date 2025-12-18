@@ -160,15 +160,14 @@ window.showLeaderboardGameOverModal = function() {
                            value="${localStorage.getItem('squareRushPlayerName') || ''}">
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Container para ranking animation - se insertará aquí dinámicamente -->
+                <div id="gameOverRankingContainer"></div>
+
+                <!-- NOTA: Solo mostramos SUBMIT SCORE. Los botones VIEW LEADERBOARD y PLAY AGAIN
+                     fueron removidos porque el leaderboard se abre automáticamente después del submit
+                     y el modal se cierra solo. Menos botones = UX más limpia. -->
                 <button id="submitScoreGameOver" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white; width: 100%;">
                     🏆 SUBMIT SCORE
-                </button>
-                <button onclick="showLeaderboardModal('square-rush')" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; color: #00ffff; width: 100%;">
-                    👁️ VIEW LEADERBOARD
-                </button>
-                <button onclick="closeLeaderboardGameOverModal(); if(window.playAgain) window.playAgain();" style="margin-top: 1rem; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(255, 0, 128, 0.2); border: 2px solid #ff0080; color: #ff0080; width: 100%;">
-                    🔄 PLAY AGAIN
                 </button>
             </div>
 
@@ -196,10 +195,14 @@ window.showLeaderboardGameOverModal = function() {
     // Event listener para submit
     document.getElementById('submitScoreGameOver').addEventListener('click', handleSubmitScoreGameOver);
 
-    // Focus en input
+    // NOTA EDUCATIVA: Mostramos ranking animation DESPUÉS de insertar el modal en el DOM
+    // La animación muestra al jugador en qué posición quedaría su score
     setTimeout(() => {
-        document.getElementById('playerNameGameOver')?.focus();
-    }, 300);
+        const modalContent = document.querySelector('#leaderboardGameOverModal .game-over-modal-content');
+        if (modalContent && window.showRankingAnimation) {
+            window.showRankingAnimation(finalScore, modalContent, 'playerNameGameOver');
+        }
+    }, 500);
 };
 
 /**
@@ -266,6 +269,12 @@ async function handleSubmitScoreGameOver() {
 
         console.log('✅ Score submitted successfully:', result);
 
+        // ✅ CRÍTICO: Guardar nombre Y score para que el leaderboard pueda destacar la fila correcta
+        // NOTA EDUCATIVA: Sin esto, el leaderboard no sabe qué fila resaltar
+        window.lastSubmittedPlayerName = playerName;
+        window.lastSubmittedScore = finalScore;
+        console.log('✅ [DEBUG] Saved for highlight - Name:', playerName, 'Score:', finalScore);
+
         // Mostrar estado de éxito
         submitBtn.textContent = '✅ SUBMITTED!';
         submitBtn.classList.add('success');
@@ -281,15 +290,25 @@ async function handleSubmitScoreGameOver() {
                 gameOverModal.remove();
             }
 
-            // Abrir leaderboard después de cerrar modal
+            // Limpiar ranking animation
+            if (window.clearRankingAnimation) {
+                window.clearRankingAnimation();
+            }
+
+            // ✅ Abrir leaderboard CON PARÁMETROS DE HIGHLIGHT
+            // NOTA EDUCATIVA: Pasar highlightPlayer y highlightScore permite que el leaderboard
+            // active la vista dividida (split view) si el jugador está lejos del top 10
             setTimeout(() => {
                 console.log('📊 Opening leaderboard after score submission');
                 if (window.showLeaderboardModal) {
-                    window.showLeaderboardModal('square-rush');
+                    window.showLeaderboardModal('square-rush', {
+                        highlightPlayer: window.lastSubmittedPlayerName,
+                        highlightScore: window.lastSubmittedScore
+                    });
                 }
-            }, 300); // Small delay to ensure modal is fully closed
+            }, 300);
 
-        }, 2000); // 2 segundos para que el usuario vea el mensaje de éxito
+        }, 2000);
 
     } catch (error) {
         console.error('❌ Error submitting score:', error);
@@ -403,15 +422,13 @@ window.showLeaderboardVictoryModal = function() {
                            value="${localStorage.getItem('squareRushPlayerName') || ''}">
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Container para ranking animation -->
+                <div id="victoryRankingContainer"></div>
+
+                <!-- NOTA: Solo mostramos SUBMIT SCORE. Los botones VIEW LEADERBOARD y PLAY AGAIN
+                     fueron removidos - el leaderboard se abre automáticamente después del submit. -->
                 <button id="submitScoreVictory" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white; width: 100%;">
                     🏆 SUBMIT SCORE
-                </button>
-                <button onclick="showLeaderboardModal('square-rush')" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; color: #00ffff; width: 100%;">
-                    👁️ VIEW LEADERBOARD
-                </button>
-                <button onclick="closeLeaderboardVictoryModal(); if(window.playAgain) window.playAgain();" style="margin-top: 1rem; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(255, 215, 0, 0.2); border: 2px solid #ffd700; color: #ffd700; width: 100%;">
-                    🔄 PLAY AGAIN
                 </button>
             </div>
 
@@ -439,10 +456,14 @@ window.showLeaderboardVictoryModal = function() {
     // Event listener para submit
     document.getElementById('submitScoreVictory').addEventListener('click', handleSubmitScoreVictory);
 
-    // Focus en input
+    // NOTA EDUCATIVA: Mostramos ranking animation DESPUÉS de insertar el modal en el DOM
+    // La animación muestra al jugador en qué posición quedaría su score
     setTimeout(() => {
-        document.getElementById('playerNameVictory')?.focus();
-    }, 300);
+        const modalContent = document.querySelector('#leaderboardVictoryModal .victory-modal-content');
+        if (modalContent && window.showRankingAnimation) {
+            window.showRankingAnimation(finalScore, modalContent, 'playerNameVictory');
+        }
+    }, 500);
 };
 
 /**
@@ -507,7 +528,10 @@ async function handleSubmitScoreVictory() {
 
         console.log('✅ [SUBMIT] Score submitted successfully:', result);
 
-        console.log('✅ Score submitted successfully:', result);
+        // ✅ CRÍTICO: Guardar nombre Y score para que el leaderboard pueda destacar la fila correcta
+        window.lastSubmittedPlayerName = playerName;
+        window.lastSubmittedScore = finalScore;
+        console.log('✅ [DEBUG] Saved for highlight - Name:', playerName, 'Score:', finalScore);
 
         // Mostrar estado de éxito
         submitBtn.textContent = '✅ SUBMITTED!';
@@ -524,15 +548,23 @@ async function handleSubmitScoreVictory() {
                 victoryModal.remove();
             }
 
-            // Abrir leaderboard después de cerrar modal
+            // Limpiar ranking animation
+            if (window.clearRankingAnimation) {
+                window.clearRankingAnimation();
+            }
+
+            // ✅ Abrir leaderboard CON PARÁMETROS DE HIGHLIGHT
             setTimeout(() => {
                 console.log('📊 Opening leaderboard after score submission');
                 if (window.showLeaderboardModal) {
-                    window.showLeaderboardModal('square-rush');
+                    window.showLeaderboardModal('square-rush', {
+                        highlightPlayer: window.lastSubmittedPlayerName,
+                        highlightScore: window.lastSubmittedScore
+                    });
                 }
-            }, 300); // Small delay to ensure modal is fully closed
+            }, 300);
 
-        }, 2000); // 2 segundos para que el usuario vea el mensaje de éxito
+        }, 2000);
 
     } catch (error) {
         console.error('❌ Error submitting score:', error);
@@ -552,30 +584,53 @@ async function handleSubmitScoreVictory() {
 /**
  * Renderizar leaderboard custom para Square Rush
  * Columnas: RANK | PLAYER | SCORE | LEVEL | TARGETS | COMBO
+ *
+ * VISTA DIVIDIDA: Si el jugador destacado está muy lejos del top (rank > 10),
+ * muestra: Top 5 → separador "..." → posiciones alrededor del jugador
+ *
+ * NOTA EDUCATIVA: El "split view" es una técnica de UX que permite mostrar
+ * información relevante sin scroll excesivo. El usuario ve los líderes
+ * Y su propia posición, sin tener que buscar entre cientos de filas.
+ *
+ * @param {array} scores - Array de scores del backend
+ * @param {string} highlightPlayer - Nombre del jugador a destacar (opcional)
+ * @param {number} highlightScore - Score específico a destacar
  */
-function renderSquareRushLeaderboardTable(scores) {
+function renderSquareRushLeaderboardTable(scores, highlightPlayer = null, highlightScore = null) {
     console.log('🎯 Rendering custom Square Rush leaderboard with', scores.length, 'scores');
+    console.log('[DEBUG] Square Rush highlight - Player:', highlightPlayer, 'Score:', highlightScore);
 
     if (!scores || scores.length === 0) {
         return '<p class="no-scores">No scores yet. Be the first!</p>';
     }
 
-    let html = `
-        <table class="leaderboard-table">
-            <thead>
-                <tr>
-                    <th>RANK</th>
-                    <th>PLAYER</th>
-                    <th>SCORE</th>
-                    <th>LEVEL</th>
-                    <th>TARGETS</th>
-                    <th>COMBO</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
+    // Crear tabla
+    const table = document.createElement('table');
+    table.className = 'leaderboard-table';
 
-    scores.forEach((entry, index) => {
+    // Crear thead
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th>RANK</th>
+            <th>PLAYER</th>
+            <th>SCORE</th>
+            <th>LEVEL</th>
+            <th>TARGETS</th>
+            <th>COMBO</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+
+    // Crear tbody
+    const tbody = document.createElement('tbody');
+
+    /**
+     * Función auxiliar para renderizar una fila
+     * NOTA EDUCATIVA: Separamos la lógica de renderizado para reutilizarla
+     * tanto en vista normal como en vista dividida
+     */
+    const renderRow = (entry, index) => {
         const rank = index + 1;
         const playerName = entry.player_name || 'PLAYER';
         const score = entry.score || 0;
@@ -586,14 +641,23 @@ function renderSquareRushLeaderboardTable(scores) {
         const maxCombo = metadata.max_combo ? `x${metadata.max_combo}` : '-';
         const targetsFound = metadata.targets_found || '-';
 
-        // Clase especial para top 3
-        let rowClass = '';
-        if (rank === 1) rowClass = 'rank-1';
-        else if (rank === 2) rowClass = 'rank-2';
-        else if (rank === 3) rowClass = 'rank-3';
+        // Clases para la fila
+        let rowClasses = [];
+        if (rank === 1) rowClasses.push('rank-1');
+        else if (rank === 2) rowClasses.push('rank-2');
+        else if (rank === 3) rowClasses.push('rank-3');
 
-        html += `
-            <tr class="${rowClass}">
+        // Verificar si esta fila debe ser destacada
+        const nameMatches = highlightPlayer && playerName.toLowerCase() === highlightPlayer.toLowerCase();
+        const scoreMatches = highlightScore === null || score === highlightScore;
+
+        if (nameMatches && scoreMatches) {
+            rowClasses.push('highlight-player-row');
+            console.log('[DEBUG] Highlighting row:', playerName, score);
+        }
+
+        return `
+            <tr class="${rowClasses.join(' ')}">
                 <td class="rank">${getRankEmoji(rank)}${rank}</td>
                 <td class="player-name">${playerName}</td>
                 <td class="score">${score.toLocaleString()}</td>
@@ -602,17 +666,66 @@ function renderSquareRushLeaderboardTable(scores) {
                 <td class="level">${maxCombo}</td>
             </tr>
         `;
-    });
+    };
 
-    html += `
-            </tbody>
-        </table>
-    `;
+    // Buscar posición del jugador destacado
+    let playerIndex = -1;
+    if (highlightPlayer && highlightScore !== null) {
+        playerIndex = scores.findIndex(s =>
+            s.player_name?.toLowerCase() === highlightPlayer.toLowerCase() &&
+            s.score === highlightScore
+        );
+    }
 
-    // Crear elemento tabla desde HTML string
-    const container = document.createElement('div');
-    container.innerHTML = html;
-    return container.firstElementChild;
+    console.log('[DEBUG] playerIndex found:', playerIndex);
+
+    // Usar vista dividida si el jugador está en posición > 10 (índice > 9)
+    const useSplitView = playerIndex > 9;
+
+    if (useSplitView) {
+        // VISTA DIVIDIDA
+        const TOP_COUNT = 5;
+        const CONTEXT_BEFORE = 2;
+        const CONTEXT_AFTER = 2;
+
+        let htmlRows = [];
+
+        // 1. Mostrar Top 5
+        for (let i = 0; i < Math.min(TOP_COUNT, scores.length); i++) {
+            htmlRows.push(renderRow(scores[i], i));
+        }
+
+        // 2. Calcular posiciones ocultas
+        const startIndex = Math.max(TOP_COUNT, playerIndex - CONTEXT_BEFORE);
+        const hiddenCount = startIndex - TOP_COUNT;
+
+        // 3. Agregar separador (colspan="6" porque Square Rush tiene 6 columnas)
+        htmlRows.push(`
+            <tr class="separator-row">
+                <td colspan="6" class="separator-cell">
+                    <div class="separator-indicator">
+                        <span class="separator-line"></span>
+                        <span class="separator-text">${hiddenCount > 0 ? `#${TOP_COUNT + 1} - #${startIndex} ocultos` : '• • •'}</span>
+                        <span class="separator-line"></span>
+                    </div>
+                </td>
+            </tr>
+        `);
+
+        // 4. Mostrar zona del jugador
+        const endIndex = Math.min(scores.length - 1, playerIndex + CONTEXT_AFTER);
+        for (let i = startIndex; i <= endIndex; i++) {
+            htmlRows.push(renderRow(scores[i], i));
+        }
+
+        tbody.innerHTML = htmlRows.join('');
+    } else {
+        // Vista normal: mostrar todas las filas
+        tbody.innerHTML = scores.map((entry, index) => renderRow(entry, index)).join('');
+    }
+
+    table.appendChild(tbody);
+    return table;
 }
 
 /**

@@ -998,3 +998,142 @@ body::before {
         grid-row: 6; /* Cambió de 7 a 6 */
     }
 }
+
+/* ============================================
+   RANKING ANIMATION COMPONENT
+   ============================================
+   Este componente muestra una animación de "descenso en el ranking"
+   cuando el jugador termina un juego. Su score aparece en la cima
+   y "desciende" hasta encontrar su posición real en el leaderboard.
+
+   NOTA EDUCATIVA: Esta técnica de animación usa CSS transitions
+   y JavaScript async/await para crear un efecto secuencial.
+   ============================================ */
+
+/* Container principal de la animación */
+.ranking-animation-container {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--neon-cyan, #00ffff);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.5s ease;
+}
+
+.ranking-animation-container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ranking-animation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.ranking-animation-title {
+    color: var(--neon-cyan, #00ffff);
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.ranking-animation-score {
+    color: var(--neon-yellow, #ffd700);
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.ranking-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.ranking-list-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+}
+
+/* Fila del jugador actual - destacada */
+.ranking-list-row.player-row {
+    background: linear-gradient(90deg, rgba(255, 0, 128, 0.3), rgba(0, 255, 255, 0.3));
+    border: 2px solid var(--neon-pink, #ff0080);
+    animation: pulseGlow 1s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 128, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 0, 128, 0.8); }
+}
+
+.ranking-list-row.found-position {
+    transform: scale(1.02);
+}
+
+.rank-position {
+    color: var(--neon-cyan, #00ffff);
+    font-weight: bold;
+}
+
+.rank-name {
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rank-score {
+    color: var(--neon-yellow, #ffd700);
+    text-align: right;
+    font-weight: bold;
+}
+
+.ranking-animation-message {
+    text-align: center;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--neon-green, #00ff80);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.ranking-animation-message.show {
+    opacity: 1;
+}
+
+/* ============================================
+   INPUT DE NOMBRE DESTACADO
+   ============================================ */
+
+.highlight-input,
+#playerNameGameOver.highlight-input,
+#playerNameVictory.highlight-input {
+    animation: inputPulse 1.5s ease-in-out infinite;
+    border-color: var(--neon-pink, #ff0080) !important;
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.5) !important;
+}
+
+@keyframes inputPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+    }
+}
