@@ -965,10 +965,20 @@ function renderMemoryMatrixScoreRow(score, highlightTop3 = true) {
  * Headers personalizados: RANK | PLAYER | SCORE | LEVEL | SUCCESS | ERRORS | HINTS | TIME
  * (sin columna COUNTRY separada, la bandera va al lado del nombre)
  *
+ * VISTA DIVIDIDA: Si el jugador destacado está muy lejos del top (rank > 10),
+ * muestra: Top 5 → separador "..." → posiciones alrededor del jugador
+ * Esto permite ver siempre la posición del jugador sin tener que hacer scroll
+ *
+ * NOTA EDUCATIVA: Esta función sigue el mismo patrón que renderMasterSequenceLeaderboardTable
+ * El "split view" es útil cuando hay muchos jugadores y el usuario quedó en una posición
+ * lejana (ej: posición 47). Sin split view, tendría que hacer scroll para ver su fila.
+ *
  * @param {array} scores - Array de scores del backend
+ * @param {string} highlightPlayer - Nombre del jugador a destacar (opcional)
+ * @param {number} highlightScore - Score específico a destacar (para no destacar todas las filas)
  * @returns {HTMLElement} - Elemento table
  */
-function renderMemoryMatrixLeaderboardTable(scores) {
+function renderMemoryMatrixLeaderboardTable(scores, highlightPlayer = null, highlightScore = null) {
   // Crear elemento table
   const table = document.createElement('table');
   table.className = 'leaderboard-table';
@@ -1002,8 +1012,104 @@ function renderMemoryMatrixLeaderboardTable(scores) {
       </tr>
     `;
   } else {
-    // Renderizar cada score usando la función específica de Memory Matrix
-    tbody.innerHTML = scores.map(score => renderMemoryMatrixScoreRow(score, true)).join('');
+    /**
+     * VISTA DIVIDIDA: Encontrar la posición del jugador destacado
+     * Si está en posición > 10, mostrar vista dividida:
+     * - Top 5 posiciones
+     * - Fila separadora visual con indicador de posiciones ocultas
+     * - 2 posiciones antes del jugador
+     * - Posición del jugador (destacada con borde neón)
+     * - 2 posiciones después del jugador
+     *
+     * NOTA EDUCATIVA: findIndex() retorna el ÍNDICE (0-based) del elemento encontrado.
+     * El índice 9 corresponde a la posición #10 en el ranking.
+     */
+    let playerIndex = -1;
+
+    // Debug: mostrar qué estamos buscando
+    console.log('[DEBUG] Memory Matrix split view search - highlightPlayer:', highlightPlayer, 'highlightScore:', highlightScore);
+
+    if (highlightPlayer && highlightScore !== null) {
+      playerIndex = scores.findIndex(score => {
+        // Comparar nombre (case-insensitive) Y score exacto
+        const nameMatch = score.player_name?.toLowerCase() === highlightPlayer.toLowerCase();
+        const scoreMatch = score.score === highlightScore;
+        if (nameMatch) {
+          console.log('[DEBUG] Found name match:', score.player_name, 'score:', score.score, 'expected:', highlightScore, 'match:', scoreMatch);
+        }
+        return nameMatch && scoreMatch;
+      });
+    }
+
+    console.log('[DEBUG] playerIndex found:', playerIndex);
+
+    // Determinar si usar vista dividida (jugador en posición > 10)
+    // Índice 9 = posición 10 (porque los índices son 0-based)
+    const useSplitView = playerIndex > 9;
+
+    /**
+     * Función auxiliar para renderizar una fila con highlight si corresponde
+     * NOTA EDUCATIVA: Esta función usa String.replace() para inyectar una clase CSS
+     * adicional en el HTML generado. Es una técnica simple pero efectiva.
+     */
+    const renderRowWithHighlight = (score) => {
+      const rowHtml = renderMemoryMatrixScoreRow(score, true);
+      const nameMatches = highlightPlayer && score.player_name &&
+          score.player_name.toLowerCase() === highlightPlayer.toLowerCase();
+      const scoreMatches = highlightScore === null || score.score === highlightScore;
+
+      if (nameMatches && scoreMatches) {
+        console.log('[DEBUG] Highlighting row:', score.player_name, score.score);
+        // Inyectar clase 'highlight-player-row' para aplicar estilos de destaque
+        return rowHtml.replace('<tr class="', '<tr class="highlight-player-row ');
+      }
+      return rowHtml;
+    };
+
+    if (useSplitView) {
+      // VISTA DIVIDIDA: Top 5 + separador + posiciones alrededor del jugador
+      const TOP_COUNT = 5;           // Mostrar las primeras 5 posiciones
+      const CONTEXT_BEFORE = 2;      // Mostrar 2 posiciones antes del jugador
+      const CONTEXT_AFTER = 2;       // Mostrar 2 posiciones después del jugador
+
+      let htmlRows = [];
+
+      // 1. Mostrar Top 5
+      for (let i = 0; i < Math.min(TOP_COUNT, scores.length); i++) {
+        htmlRows.push(renderRowWithHighlight(scores[i]));
+      }
+
+      // 2. Calcular cuántas posiciones están ocultas
+      const startIndex = Math.max(TOP_COUNT, playerIndex - CONTEXT_BEFORE);
+      const hiddenCount = startIndex - TOP_COUNT;
+
+      // 3. Agregar fila separadora NOTORIA con indicador de posiciones ocultas
+      // colspan="8" porque Memory Matrix tiene 8 columnas
+      htmlRows.push(`
+        <tr class="separator-row">
+          <td colspan="8" class="separator-cell">
+            <div class="separator-indicator">
+              <span class="separator-line"></span>
+              <span class="separator-text">${hiddenCount > 0 ? `#${TOP_COUNT + 1} - #${startIndex} ocultos` : '• • •'}</span>
+              <span class="separator-line"></span>
+            </div>
+          </td>
+        </tr>
+      `);
+
+      // 4. Calcular rango final
+      const endIndex = Math.min(scores.length - 1, playerIndex + CONTEXT_AFTER);
+
+      // 5. Mostrar posiciones alrededor del jugador
+      for (let i = startIndex; i <= endIndex; i++) {
+        htmlRows.push(renderRowWithHighlight(scores[i]));
+      }
+
+      tbody.innerHTML = htmlRows.join('');
+    } else {
+      // Vista normal: mostrar todas las filas con highlight si corresponde
+      tbody.innerHTML = scores.map(score => renderRowWithHighlight(score)).join('');
+    }
   }
 
   table.appendChild(tbody);
@@ -1159,7 +1265,10 @@ async function showLeaderboardModal(initialGame = 'square-rush', options = {}) {
         table = renderMasterSequenceLeaderboardTable(data.scores, state.highlightPlayer, state.highlightScore);
       } else if (state.currentGame === 'memory-matrix') {
         console.log('[DEBUG] Using Memory Matrix custom leaderboard');
-        table = renderMemoryMatrixLeaderboardTable(data.scores);
+        // Pasar nombre Y score para resaltar SOLO la fila específica y activar vista dividida
+        // NOTA EDUCATIVA: Igual que Knight Quest y Master Sequence, Memory Matrix ahora soporta
+        // highlight y split view para mejorar la UX cuando el jugador está en posiciones lejanas
+        table = renderMemoryMatrixLeaderboardTable(data.scores, state.highlightPlayer, state.highlightScore);
       } else if (state.currentGame === 'square-rush') {
         console.log('[DEBUG] Using Square Rush custom leaderboard');
         if (typeof window.renderSquareRushLeaderboardTable === 'function') {

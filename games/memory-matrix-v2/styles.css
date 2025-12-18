@@ -2381,3 +2381,189 @@ body::before {
     font-size: 0.9rem;
     letter-spacing: 0.05em;
 }
+
+/* ============================================
+   RANKING ANIMATION COMPONENT
+   ============================================
+   Este componente muestra una animación de "descenso en el ranking"
+   cuando el jugador termina un juego. Su score aparece en la cima
+   y "desciende" hasta encontrar su posición real en el leaderboard.
+
+   NOTA EDUCATIVA: Esta técnica de animación usa CSS transitions
+   y JavaScript async/await para crear un efecto secuencial.
+   Cada fila aparece con un pequeño delay, creando sensación de movimiento.
+   ============================================ */
+
+/* Container principal de la animación */
+.ranking-animation-container {
+    /* Fondo oscuro semi-transparente para contraste */
+    background: rgba(0, 0, 0, 0.9);
+
+    /* Borde neón cyan para destacar */
+    border: 2px solid var(--neon-cyan, #00ffff);
+    border-radius: 8px;
+
+    /* Espaciado interno compacto */
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+
+    /* Estado inicial: oculto y desplazado hacia arriba */
+    opacity: 0;
+    transform: translateY(-20px);
+
+    /* Transición suave para la entrada */
+    transition: all 0.5s ease;
+}
+
+/* Estado visible de la animación */
+.ranking-animation-container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Header: muestra "TU POSICIÓN" y el score */
+.ranking-animation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.ranking-animation-title {
+    color: var(--neon-cyan, #00ffff);
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.ranking-animation-score {
+    color: var(--neon-yellow, #ffd700);
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Lista de posiciones del ranking */
+.ranking-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Cada fila del ranking */
+.ranking-list-row {
+    display: grid;
+    /* 3 columnas: posición | nombre | score */
+    grid-template-columns: 50px 1fr 80px;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+}
+
+/* Fila del jugador actual - destacada con gradiente y borde neón */
+.ranking-list-row.player-row {
+    background: linear-gradient(90deg, rgba(255, 0, 128, 0.3), rgba(0, 255, 255, 0.3));
+    border: 2px solid var(--neon-pink, #ff0080);
+
+    /* Animación de brillo pulsante */
+    animation: pulseGlow 1s ease-in-out infinite;
+}
+
+/* Animación de brillo pulsante para la fila del jugador */
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 128, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 0, 128, 0.8); }
+}
+
+/* Fila cuando encuentra su posición final */
+.ranking-list-row.found-position {
+    /* Escala un poco para destacar */
+    transform: scale(1.02);
+}
+
+/* Posición (#1, #2, etc) */
+.rank-position {
+    color: var(--neon-cyan, #00ffff);
+    font-weight: bold;
+}
+
+/* Nombre del jugador */
+.rank-name {
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Score del jugador */
+.rank-score {
+    color: var(--neon-yellow, #ffd700);
+    text-align: right;
+    font-weight: bold;
+}
+
+/* Mensaje motivacional al final */
+.ranking-animation-message {
+    text-align: center;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--neon-green, #00ff80);
+
+    /* Estado inicial: oculto */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.ranking-animation-message.show {
+    opacity: 1;
+}
+
+/* ============================================
+   INPUT DE NOMBRE DESTACADO
+   ============================================
+   Cuando aparece la animación de ranking, el input de nombre
+   se destaca con una animación de "latido" para llamar la atención.
+
+   NOTA EDUCATIVA: La clase 'highlight-input' se agrega dinámicamente
+   desde JavaScript después de que la animación de ranking termina.
+   ============================================ */
+
+.highlight-input,
+#victoryPlayerNameInput.highlight-input,
+#gameOverPlayerNameInput.highlight-input {
+    /* Animación de latido para llamar la atención */
+    animation: inputPulse 1.5s ease-in-out infinite;
+
+    /* Borde más prominente */
+    border-color: var(--neon-pink, #ff0080) !important;
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.5) !important;
+}
+
+@keyframes inputPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+    }
+}
+
+/* ============================================
+   ANIMACIÓN DE VICTORIA (glow text)
+   ============================================ */
+@keyframes victoryGlow {
+    0% {
+        text-shadow: 0 0 10px var(--neon-yellow, #ffd700);
+    }
+    100% {
+        text-shadow: 0 0 30px var(--neon-yellow, #ffd700), 0 0 60px var(--neon-yellow, #ffd700);
+    }
+}

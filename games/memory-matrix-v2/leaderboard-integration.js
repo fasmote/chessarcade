@@ -23,6 +23,44 @@
     let victoryModalShown = false;
     const STORAGE_KEY = 'memoryMatrixPlayerName';
 
+    // Variables para highlight en leaderboard después de submit
+    window.lastSubmittedPlayerName = null;
+    window.lastSubmittedScore = null;
+
+    // ========================================
+    // CALCULAR SCORE (reutilizable)
+    // ========================================
+
+    /**
+     * Calcula el score del jugador basado en su desempeño
+     * @param {boolean} isVictory - true si completó todos los niveles, false si game over
+     * @returns {number} - Score calculado
+     */
+    function calculateMemoryMatrixScore(isVictory = false) {
+        // Obtener stats
+        const totalSuccessful = window.totalSuccessfulAttemptsSession || 0;
+        const totalFailed = window.totalFailedAttemptsSession || 0;
+        const levelReached = window.currentLevel || 1;
+        const totalHintsUsed = window.totalHintsUsedSession || 0;
+
+        // Calcular tiempo
+        let totalTimeMs = window.globalElapsedTime || 0;
+        if (window.globalStartTime) {
+            totalTimeMs += Date.now() - window.globalStartTime;
+        }
+
+        // Calcular score
+        const levelScore = isVictory ? 8 * 2000 : levelReached * 2000;
+        const successScore = totalSuccessful * 200;
+        const failuresPenalty = totalFailed * 300;
+        const hintsPenalty = totalHintsUsed > 0 ? 100 * (Math.pow(2, totalHintsUsed) - 1) : 0;
+        const timeLimitMs = 5 * 60 * 1000;
+        const timeBonus = Math.max(0, Math.min(1000, 1000 - Math.floor(Math.max(0, totalTimeMs - timeLimitMs) / 60000) * 100));
+
+        const calculatedScore = levelScore + successScore - failuresPenalty - hintsPenalty + timeBonus;
+        return Math.max(1, calculatedScore);
+    }
+
     // ========================================
     // CREAR MODAL DE VICTORIA
     // ========================================
@@ -82,11 +120,10 @@
                                style="width: 100%; padding: 10px; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--neon-cyan, #00ffff); border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 16px; text-align: center;">
                     </div>
 
+                    <!-- NOTA: Solo mostramos SUBMIT SCORE. Los botones VIEW LEADERBOARD y CONTINUE
+                         fueron removidos porque el leaderboard se abre automáticamente después del submit
+                         y el modal se cierra solo. Menos botones = UX más limpia. -->
                     <button id="victorySubmitScoreBtn" class="btn btn-primary" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white;">🏆 SUBMIT SCORE</button>
-
-                    <button id="victoryViewLeaderboardBtn" class="btn btn-secondary" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--neon-cyan, #00ffff); color: var(--neon-cyan, #00ffff);">👁️ VIEW LEADERBOARD</button>
-
-                    <button onclick="closeLeaderboardVictoryModal()" class="btn btn-primary" style="margin-top: 1rem; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white;">🎮 CONTINUE</button>
                 </div>
 
                 <div class="victory-modal-backdrop" style="
@@ -104,10 +141,9 @@
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
         // Add event listeners
+        // NOTA EDUCATIVA: Solo agregamos listener al botón SUBMIT SCORE
+        // El botón VIEW LEADERBOARD fue removido - el leaderboard se abre automáticamente después del submit
         document.getElementById('victorySubmitScoreBtn').addEventListener('click', submitVictoryScore);
-        document.getElementById('victoryViewLeaderboardBtn').addEventListener('click', () => {
-            showLeaderboardModal('memory-matrix');
-        });
     }
 
     // ========================================
@@ -144,6 +180,17 @@
 
         modal.style.display = 'block';
         victoryModalShown = true;
+
+        // Trigger ranking animation after modal is visible
+        setTimeout(() => {
+            if (window.showRankingAnimation) {
+                const calculatedScore = calculateMemoryMatrixScore(true); // true = victory
+                const modalContent = modal.querySelector('.victory-modal-content');
+                if (modalContent) {
+                    window.showRankingAnimation(calculatedScore, modalContent, 'victoryPlayerNameInput');
+                }
+            }
+        }, 500);
     }
 
     // ========================================
@@ -156,6 +203,11 @@
             modal.style.display = 'none';
         }
         victoryModalShown = false;
+
+        // Clear ranking animation
+        if (window.clearRankingAnimation) {
+            window.clearRankingAnimation();
+        }
     };
 
     // ========================================
@@ -252,6 +304,10 @@
 
             showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
 
+            // Save for highlighting in leaderboard
+            window.lastSubmittedPlayerName = playerName;
+            window.lastSubmittedScore = finalScore;
+
             submitBtn.disabled = true;  // Keep disabled to prevent multiple submissions
             submitBtn.textContent = '✅ SUBMITTED!';
 
@@ -271,14 +327,22 @@
                     gameOverModal.style.display = 'none';
                 }
 
+                // Clear ranking animation
+                if (window.clearRankingAnimation) {
+                    window.clearRankingAnimation();
+                }
+
                 // ✅ IMPORTANTE: Resetear el juego después de cerrar el modal
                 resetGameAfterGameOver();
 
-                // ✅ Open leaderboard after closing modal
+                // ✅ Open leaderboard after closing modal with highlight params
                 setTimeout(() => {
                     console.log('📊 Opening leaderboard after score submission');
                     if (window.showLeaderboardModal) {
-                        window.showLeaderboardModal('memory-matrix');
+                        window.showLeaderboardModal('memory-matrix', {
+                            highlightPlayer: window.lastSubmittedPlayerName,
+                            highlightScore: window.lastSubmittedScore
+                        });
                     }
                 }, 300); // Small delay to ensure modal is fully closed
             }, 2000);
@@ -352,11 +416,10 @@
                                style="width: 100%; padding: 10px; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--neon-cyan, #00ffff); border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 16px; text-align: center;">
                     </div>
 
+                    <!-- NOTA: Solo mostramos SUBMIT SCORE. Los botones VIEW LEADERBOARD y RESTART GAME
+                         fueron removidos porque el leaderboard se abre automáticamente después del submit
+                         y el modal se cierra solo, reiniciando el juego. Menos botones = UX más limpia. -->
                     <button id="gameOverSubmitScoreBtn" class="btn btn-primary" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white;">🏆 SUBMIT SCORE</button>
-
-                    <button id="gameOverViewLeaderboardBtn" class="btn btn-secondary" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--neon-cyan, #00ffff); color: var(--neon-cyan, #00ffff);">👁️ VIEW LEADERBOARD</button>
-
-                    <button onclick="closeLeaderboardGameOverModal()" class="btn btn-primary" style="margin-top: 1rem; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white;">🔄 RESTART GAME</button>
                 </div>
 
                 <div class="victory-modal-backdrop" style="
@@ -374,10 +437,9 @@
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
         // Add event listeners
+        // NOTA EDUCATIVA: Solo agregamos listener al botón SUBMIT SCORE
+        // El botón VIEW LEADERBOARD fue removido - el leaderboard se abre automáticamente después del submit
         document.getElementById('gameOverSubmitScoreBtn').addEventListener('click', submitGameOverScore);
-        document.getElementById('gameOverViewLeaderboardBtn').addEventListener('click', () => {
-            showLeaderboardModal('memory-matrix');
-        });
     }
 
     // ========================================
@@ -413,6 +475,17 @@
         }
 
         modal.style.display = 'block';
+
+        // Trigger ranking animation after modal is visible
+        setTimeout(() => {
+            if (window.showRankingAnimation) {
+                const calculatedScore = calculateMemoryMatrixScore(false); // false = game over
+                const modalContent = modal.querySelector('.victory-modal-content');
+                if (modalContent) {
+                    window.showRankingAnimation(calculatedScore, modalContent, 'gameOverPlayerNameInput');
+                }
+            }
+        }, 500);
     }
 
     // ========================================
@@ -423,6 +496,11 @@
         const modal = document.getElementById('leaderboardGameOverModal');
         if (modal) {
             modal.style.display = 'none';
+        }
+
+        // Clear ranking animation
+        if (window.clearRankingAnimation) {
+            window.clearRankingAnimation();
         }
 
         // Reset the game after closing modal
@@ -539,6 +617,13 @@
 
             showToast(`Score submitted! Rank #${result.rank} of ${result.totalPlayers}`, 'success');
 
+            // ✅ CRÍTICO: Guardar nombre Y score para que el leaderboard pueda destacar la fila correcta
+            // NOTA EDUCATIVA: Sin esto, el leaderboard no sabe qué fila resaltar
+            // El highlight usa AMBOS valores para evitar resaltar todas las filas del mismo jugador
+            window.lastSubmittedPlayerName = playerName;
+            window.lastSubmittedScore = finalScore;
+            console.log('✅ [DEBUG] Saved for highlight - Name:', playerName, 'Score:', finalScore);
+
             submitBtn.disabled = true;  // Keep disabled to prevent multiple submissions
             submitBtn.textContent = '✅ SUBMITTED!';
 
@@ -558,14 +643,24 @@
                     gameOverModal.style.display = 'none';
                 }
 
+                // Clear ranking animation
+                if (window.clearRankingAnimation) {
+                    window.clearRankingAnimation();
+                }
+
                 // ✅ IMPORTANTE: Resetear el juego después de cerrar el modal
                 resetGameAfterGameOver();
 
-                // ✅ Open leaderboard after closing modal
+                // ✅ Open leaderboard after closing modal WITH HIGHLIGHT PARAMS
+                // NOTA EDUCATIVA: Pasar highlightPlayer y highlightScore permite que el leaderboard
+                // active la vista dividida (split view) si el jugador está lejos del top 10
                 setTimeout(() => {
                     console.log('📊 Opening leaderboard after score submission');
                     if (window.showLeaderboardModal) {
-                        window.showLeaderboardModal('memory-matrix');
+                        window.showLeaderboardModal('memory-matrix', {
+                            highlightPlayer: window.lastSubmittedPlayerName,
+                            highlightScore: window.lastSubmittedScore
+                        });
                     }
                 }, 300); // Small delay to ensure modal is fully closed
             }, 2000);
