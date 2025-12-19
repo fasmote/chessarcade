@@ -1464,3 +1464,314 @@ button:disabled {
     font-size: 0.9rem;
     letter-spacing: 0.05em;
 }
+
+/* ==========================================
+   HAMBURGER MENU (Mobile Portrait Only)
+   ========================================== */
+
+.hamburger-menu-container {
+    display: none;
+    position: relative;
+    z-index: 1000;
+}
+
+.hamburger-btn {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--cyan-primary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.hamburger-icon {
+    font-size: 1.5rem;
+    color: var(--cyan-primary);
+}
+
+.hamburger-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: rgba(10, 10, 26, 0.95);
+    border: 2px solid var(--cyan-primary);
+    border-radius: 10px;
+    min-width: 200px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    overflow: hidden;
+}
+
+.hamburger-dropdown.show {
+    display: block;
+}
+
+.hamburger-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    color: white;
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+}
+
+.hamburger-item:hover {
+    background: rgba(0, 255, 255, 0.15);
+}
+
+.hamburger-item-icon {
+    font-size: 1.2rem;
+}
+
+.hamburger-games-toggle {
+    justify-content: space-between;
+}
+
+.hamburger-arrow {
+    font-size: 0.8rem;
+    color: var(--cyan-primary);
+}
+
+.hamburger-games-submenu {
+    display: none;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.hamburger-games-submenu.show {
+    display: block;
+}
+
+.hamburger-game {
+    padding-left: 25px;
+    font-size: 0.85rem;
+}
+
+.hamburger-game.active {
+    background: rgba(0, 255, 255, 0.2);
+    color: var(--cyan-primary);
+}
+
+/* ==========================================
+   RANKING ANIMATION STYLES
+   ========================================== */
+
+.ranking-animation-container {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid var(--cyan-primary);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.ranking-animation-container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ranking-animation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.ranking-animation-title {
+    color: var(--cyan-primary);
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.ranking-animation-score {
+    color: var(--neon-yellow);
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.ranking-list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    font-size: 0.85rem;
+}
+
+.ranking-list-row.player-row {
+    background: linear-gradient(90deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 128, 0.2));
+    border: 2px solid var(--cyan-primary);
+    animation: playerRowPulse 1s ease-in-out infinite;
+}
+
+@keyframes playerRowPulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
+}
+
+.rank-position {
+    color: var(--cyan-primary);
+    font-weight: bold;
+    min-width: 40px;
+}
+
+.rank-name {
+    flex: 1;
+    text-align: center;
+    color: white;
+}
+
+.rank-score {
+    color: var(--neon-yellow);
+    font-weight: bold;
+    min-width: 60px;
+    text-align: right;
+}
+
+.ranking-animation-message {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.ranking-animation-message.show {
+    opacity: 1;
+}
+
+/* ==========================================
+   HIGHLIGHT INPUT (Name Input Animation)
+   ========================================== */
+
+.highlight-input,
+#gameOverPlayerNameInput.highlight-input {
+    animation: inputPulse 1s ease-in-out infinite;
+    border-color: #ff0080 !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.6),
+                0 0 40px rgba(255, 0, 128, 0.3),
+                inset 0 0 10px rgba(255, 0, 128, 0.2) !important;
+    background: rgba(255, 0, 128, 0.15) !important;
+}
+
+@keyframes inputPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px rgba(255, 0, 128, 0.4),
+                    0 0 30px rgba(255, 0, 128, 0.2);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 30px rgba(255, 0, 128, 0.8),
+                    0 0 50px rgba(255, 0, 128, 0.4);
+    }
+}
+
+/* ==========================================
+   MODAL COMPACT (Game Over)
+   ========================================== */
+
+.modal-compact {
+    padding: 1.5rem !important;
+    max-width: 350px !important;
+}
+
+.modal-close-large {
+    font-size: 2rem !important;
+    width: 45px !important;
+    height: 45px !important;
+    background: rgba(255, 0, 0, 0.2) !important;
+    border: 2px solid #ff0080 !important;
+}
+
+/* ==========================================
+   MOBILE PORTRAIT MEDIA QUERY
+   ========================================== */
+
+@media (max-width: 480px) and (orientation: portrait) {
+    /* Show hamburger menu - dentro del header */
+    .hamburger-menu-container {
+        display: block;
+        position: relative; /* Necesario para que el dropdown se posicione correctamente */
+        order: 2; /* A la derecha */
+    }
+
+    /* Hide desktop elements */
+    .desktop-only {
+        display: none !important;
+    }
+
+    /* Hide coin counter in mobile */
+    .neon-coin-counter {
+        display: none !important;
+    }
+
+    /* Compact header - título y hamburguesa en misma línea */
+    .game-header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        gap: 5px;
+    }
+
+    .header-title-container {
+        margin-top: 0;
+        text-align: center;
+        flex: 1;
+    }
+
+    .game-title {
+        font-size: 1.2rem;
+        justify-content: center;
+    }
+
+    .game-subtitle {
+        font-size: 0.65rem;
+        display: none; /* Ocultar subtítulo para más espacio */
+    }
+
+    /* Compact phase indicator */
+    .phase-indicator h2 {
+        font-size: 0.9rem;
+    }
+
+    .phase-indicator p {
+        font-size: 0.75rem;
+    }
+
+    /* Hide how-to-play section in mobile */
+    .how-to-play-section {
+        display: none;
+    }
+
+    /* Compact footer */
+    footer {
+        padding: 1rem !important;
+        margin-top: 1rem !important;
+    }
+}

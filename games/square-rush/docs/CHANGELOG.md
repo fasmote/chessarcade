@@ -552,6 +552,172 @@ Para que el usuario sepa dónde escribir su nombre, el input ahora tiene una ani
 ---
 
 **Última actualización:** 19 Diciembre 2025
-**Versión CSS:** 13
-**Estado:** Mobile UX optimizada con hamburger menu
-**Próximo:** Replicar hamburger menu en otros juegos
+**Versión CSS:** 14
+**Estado:** Hamburger menu estandarizado con biblioteca compartida
+
+---
+
+---
+
+## 🍔 Versión 14 - Biblioteca Compartida Hamburger Menu (19 Diciembre 2025)
+
+### Cambio principal: Estandarización del menú hamburguesa
+
+**Objetivo:**
+Crear una biblioteca reutilizable para el menú hamburguesa que pueda usarse en todos los juegos de ChessArcade.
+
+---
+
+### 🔧 Cambios implementados:
+
+#### 1. **Nueva biblioteca compartida: `js/hamburger-menu.js`**
+Biblioteca JavaScript standalone que maneja todo el menú hamburguesa:
+
+```javascript
+// Uso:
+HamburgerMenu.init({
+    currentGame: 'square-rush',  // Marca el juego actual como activo
+    gameId: 'square-rush',       // ID para el leaderboard
+    soundManager: window.SoundManager  // Opcional: referencia al sound manager
+});
+```
+
+**Características:**
+- Posición fija top-right (`position: fixed`)
+- Lista de juegos expandida por defecto
+- Sincronización automática con SoundManager
+- Leaderboard integrado
+- Games toggle con flecha animada (▲/▼)
+
+#### 2. **Nuevo CSS compartido: `css/hamburger-menu.css`**
+Estilos estandarizados para todos los juegos:
+
+```css
+.hamburger-menu-container {
+    display: none;  /* Visible solo en mobile portrait */
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+    .hamburger-menu-container {
+        display: block !important;
+    }
+}
+```
+
+#### 3. **Menú dinámico con lista de juegos:**
+```
+┌─────────────────────────┐
+│ 🏠 Home                 │
+│ 🏆 Leaderboard          │
+│ 🔊 Sound: ON            │
+│ ────────────────────    │
+│ 🎮 Games           ▲    │
+│   ├─ ♞ Knight Quest     │
+│   ├─ 🎯 Square Rush  ✓  │ ← Activo
+│   ├─ 🧠 Memory Matrix   │
+│   ├─ 🎵 Master Sequence │
+│   ├─ ⚔️ ChessInFive     │
+│   └─ 🔐 CriptoCaballo   │
+└─────────────────────────┘
+```
+
+---
+
+### 🐛 Error solucionado: Hamburger no respondía a clicks
+
+**Problema:**
+El menú hamburguesa en Square Rush no se desplegaba al hacer click, aunque los logs mostraban que el click SÍ se detectaba.
+
+**Causa raíz:**
+Conflicto de clases CSS. Square Rush tenía su propio CSS que usaba `.active` para mostrar el dropdown:
+```css
+/* square-rush.css (VIEJO - conflicto) */
+.hamburger-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+}
+```
+
+Pero la biblioteca compartida usa `.show`:
+```css
+/* hamburger-menu.css (NUEVO - correcto) */
+.hamburger-dropdown.show {
+    display: block;
+}
+```
+
+**Log del error:**
+```
+🍔 [HamburgerMenu] Button CLICKED!
+🍔 [HamburgerMenu] Dropdown show: true  ← JS funciona
+// Pero visualmente no aparece nada porque CSS espera .active
+```
+
+**Solución:**
+Eliminar el CSS duplicado de `square-rush.css` (líneas 1289-1427) y usar solo la biblioteca compartida:
+
+```css
+/* square-rush.css - DESPUÉS */
+/* ============================================
+   MENÚ HAMBURGUESA (MOBILE)
+   ============================================
+   NOTA: Los estilos del menú hamburguesa ahora están en
+   la biblioteca compartida: ../../css/hamburger-menu.css
+   ============================================ */
+```
+
+---
+
+### 📦 Archivos creados/modificados:
+
+| Archivo | Cambio |
+|---------|--------|
+| `js/hamburger-menu.js` | **NUEVO** - Biblioteca compartida |
+| `css/hamburger-menu.css` | **NUEVO** - CSS compartido |
+| `games/square-rush/index.html` | Removido HTML inline, usa biblioteca |
+| `games/square-rush/css/square-rush.css` | Removido CSS duplicado (~140 líneas) |
+| `games/chessinfive/index.html` | Actualizado para usar biblioteca |
+| `games/chessinfive/css/chessinfive.css` | Removido CSS duplicado |
+
+---
+
+### 🎯 Beneficios:
+
+- **Consistencia:** Mismo menú en todos los juegos
+- **Mantenibilidad:** Un solo archivo para actualizar
+- **Menos código:** ~280 líneas removidas de Square Rush + ChessInFive
+- **Sin conflictos:** Un solo source of truth para estilos
+- **Extensibilidad:** Fácil agregar nuevos juegos a la lista
+
+---
+
+### 📝 Cómo agregar hamburger menu a un nuevo juego:
+
+```html
+<!-- 1. En <head>: -->
+<link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
+
+<!-- 2. Al final del <body>: -->
+<script src="../../js/hamburger-menu.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        HamburgerMenu.init({
+            currentGame: 'mi-juego',
+            gameId: 'mi-juego'
+        });
+    });
+</script>
+```
+
+---
+
+### 🔮 Próximos pasos:
+
+- [ ] Aplicar biblioteca a Memory Matrix
+- [ ] Aplicar biblioteca a Master Sequence
+- [ ] Aplicar biblioteca a Knight Quest
+- [ ] Aplicar biblioteca a CriptoCaballo

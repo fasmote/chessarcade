@@ -43,7 +43,7 @@
         loadSavedName();
     });
 
-    // También cargar cuando se muestra el Game Over modal
+    // También cargar cuando se muestra el Game Over modal y mostrar ranking animation
     const gameOverObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
@@ -52,16 +52,33 @@
                     console.log('👁️ [CHESSINFIVE] Game Over modal is now visible');
                     loadSavedName();
 
+                    // Calcular score para mostrar ranking animation
+                    const moveCount = window.GameState?.moveHistory?.length || 0;
+                    const finalPhase = window.GameState?.phase || 'unknown';
+                    const elapsedSeconds = window.GameState?.getElapsedTimeSeconds() || 0;
+                    const phaseBonus = finalPhase === 'gravity' ? 3000 : 0;
+                    const rawScore = 10000 - (moveCount * 50) - (elapsedSeconds * 1) + phaseBonus;
+                    const finalScore = Math.max(1000, Math.floor(rawScore));
+
+                    // Mostrar ranking animation
+                    const rankingContainer = document.getElementById('gameOverRankingContainer');
+                    if (rankingContainer && window.showRankingAnimation) {
+                        // Limpiar animación anterior si existe
+                        if (window.clearRankingAnimation) {
+                            window.clearRankingAnimation();
+                        }
+                        // Mostrar nueva animación
+                        setTimeout(() => {
+                            window.showRankingAnimation(finalScore, rankingContainer, 'gameOverPlayerNameInput');
+                        }, 500);
+                    }
+
                     // Verificar estado del botón Submit
                     const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
                     if (submitBtn) {
-                        console.log('🔘 [CHESSINFIVE] Submit button found!');
-                        console.log('   - disabled:', submitBtn.disabled);
-                        console.log('   - textContent:', submitBtn.textContent);
-                        console.log('   - display:', submitBtn.style.display);
-                        console.log('   - classList:', submitBtn.classList.toString());
-                    } else {
-                        console.error('❌ [CHESSINFIVE] Submit button NOT FOUND in modal!');
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '🏆 SUBMIT SCORE';
                     }
                 }
             }
@@ -338,16 +355,9 @@
         console.warn('⚠️ Game Over Submit Score button not found');
     }
 
-    // Botón "View Leaderboard" en Game Over modal
-    const gameOverViewLeaderboardBtn = document.getElementById('gameOverViewLeaderboardBtn');
-    if (gameOverViewLeaderboardBtn) {
-        gameOverViewLeaderboardBtn.addEventListener('click', () => {
-            showLeaderboardModal(GAME_ID);
-        });
-        console.log('✅ Game Over View Leaderboard button connected');
-    } else {
-        console.warn('⚠️ Game Over View Leaderboard button not found');
-    }
+    // NOTA: Botones VIEW LEADERBOARD y PLAY AGAIN fueron removidos del modal
+    // El leaderboard se abre automáticamente después del submit
+    // El modal se cierra solo después de 2 segundos
 
     // Botón "Leaderboard" en header
     const btnLeaderboard = document.getElementById('btnLeaderboard');

@@ -70,19 +70,30 @@ const UIController = {
             this.hideHelp();
         });
 
-        // Game over modal buttons
-        document.getElementById('btnPlayAgain').addEventListener('click', () => {
-            this.newGame();
-        });
+        // Game over modal buttons (con null checks - algunos botones fueron removidos)
+        const btnPlayAgain = document.getElementById('btnPlayAgain');
+        if (btnPlayAgain) {
+            btnPlayAgain.addEventListener('click', () => {
+                this.newGame();
+            });
+        }
 
-        document.getElementById('btnBackHome').addEventListener('click', () => {
-            window.location.href = '../../index.html';
-        });
+        const btnBackHome = document.getElementById('btnBackHome');
+        if (btnBackHome) {
+            btnBackHome.addEventListener('click', () => {
+                window.location.href = '../../index.html';
+            });
+        }
 
         // Close game over modal (X button) - allows analyzing the game
-        document.getElementById('btnCloseGameOver').addEventListener('click', () => {
-            this.hideGameOver();
-        });
+        const btnCloseGameOver = document.getElementById('btnCloseGameOver');
+        if (btnCloseGameOver) {
+            btnCloseGameOver.addEventListener('click', () => {
+                this.hideGameOver();
+                // Iniciar nuevo juego al cerrar el modal
+                this.newGame();
+            });
+        }
 
         // Undo button (future implementation)
         document.getElementById('btnUndo').addEventListener('click', () => {

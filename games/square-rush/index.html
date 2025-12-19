@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Square Rush - ChessArcade</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/square-rush.css?v=15">
+    <link rel="stylesheet" href="css/square-rush.css?v=16">
+    <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
     
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2472413468382197" crossorigin="anonymous"></script>
@@ -21,73 +22,7 @@
 </head>
 <body>
     <div class="game-container">
-        <!-- ============================================
-             MENÚ HAMBURGUESA (MOBILE)
-             ============================================
-             En mobile, todos los botones se consolidan en un menú hamburguesa
-             para ahorrar espacio y tener una UI más limpia.
-
-             NOTA EDUCATIVA: El menú hamburguesa (☰) es un patrón de UX muy común
-             en mobile. Agrupa acciones secundarias en un menú desplegable,
-             dejando más espacio para el contenido principal.
-        -->
-        <div class="hamburger-menu-container">
-            <!-- Botón hamburguesa (solo visible en mobile) -->
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú">
-                <span class="hamburger-icon">☰</span>
-            </button>
-
-            <!-- Menú desplegable -->
-            <div class="hamburger-dropdown" id="hamburgerDropdown">
-                <!-- Home -->
-                <a href="../../index.html" class="hamburger-item">
-                    <span class="hamburger-item-icon">🏠</span>
-                    <span class="hamburger-item-text">Home</span>
-                </a>
-
-                <!-- Leaderboard -->
-                <button class="hamburger-item" id="hamburgerLeaderboard">
-                    <span class="hamburger-item-icon">🏆</span>
-                    <span class="hamburger-item-text">Leaderboard</span>
-                </button>
-
-                <!-- Sound Toggle -->
-                <button class="hamburger-item" id="hamburgerSound">
-                    <span class="hamburger-item-icon" id="hamburgerSoundIcon">🔊</span>
-                    <span class="hamburger-item-text" id="hamburgerSoundText">Sound: ON</span>
-                </button>
-
-                <!-- Separator -->
-                <div class="hamburger-separator"></div>
-
-                <!-- Games submenu -->
-                <div class="hamburger-games-title">Juegos</div>
-                <a href="../knight-quest/index.html" class="hamburger-item hamburger-game">
-                    <span class="hamburger-item-icon">🐴</span>
-                    <span class="hamburger-item-text">Knight Quest</span>
-                </a>
-                <a href="../square-rush/index.html" class="hamburger-item hamburger-game active">
-                    <span class="hamburger-item-icon">🎯</span>
-                    <span class="hamburger-item-text">Square Rush</span>
-                </a>
-                <a href="../memory-matrix-v2/index.html" class="hamburger-item hamburger-game">
-                    <span class="hamburger-item-icon">🧠</span>
-                    <span class="hamburger-item-text">Memory Matrix</span>
-                </a>
-                <a href="../master-sequence/index.html" class="hamburger-item hamburger-game">
-                    <span class="hamburger-item-icon">🟦</span>
-                    <span class="hamburger-item-text">Master Sequence</span>
-                </a>
-                <a href="../chessinfive/index.html" class="hamburger-item hamburger-game">
-                    <span class="hamburger-item-icon">⚔️</span>
-                    <span class="hamburger-item-text">ChessInFive</span>
-                </a>
-                <a href="../criptocaballo/index.html" class="hamburger-item hamburger-game">
-                    <span class="hamburger-item-icon">🔐</span>
-                    <span class="hamburger-item-text">CriptoCaballo</span>
-                </a>
-            </div>
-        </div>
+        <!-- Hamburger Menu se inserta dinámicamente via hamburger-menu.js -->
 
         <!-- Home Button (desktop only) -->
         <button class="btn-icon btn-home desktop-only" id="btnHome" aria-label="Volver al inicio" title="Back to Home">
@@ -285,91 +220,17 @@
         }
     </script>
 
-    <!-- ============================================
-         HAMBURGER MENU SCRIPT (MOBILE)
-         ============================================
-         NOTA EDUCATIVA: Este script maneja el menú hamburguesa en mobile.
-         - Toggle del menú al hacer clic en el botón ☰
-         - Cierra el menú al hacer clic fuera
-         - Sincroniza el estado del sonido con el toggle principal
-    -->
+    <!-- Hamburger Menu Library -->
+    <script src="../../js/hamburger-menu.js"></script>
     <script>
-        (function() {
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const hamburgerDropdown = document.getElementById('hamburgerDropdown');
-            const hamburgerLeaderboard = document.getElementById('hamburgerLeaderboard');
-            const hamburgerSound = document.getElementById('hamburgerSound');
-            const hamburgerSoundIcon = document.getElementById('hamburgerSoundIcon');
-            const hamburgerSoundText = document.getElementById('hamburgerSoundText');
-
-            // Toggle del menú hamburguesa
-            if (hamburgerBtn && hamburgerDropdown) {
-                hamburgerBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    hamburgerDropdown.classList.toggle('active');
-                    // Cambiar icono de ☰ a ✕ cuando está abierto
-                    hamburgerBtn.querySelector('.hamburger-icon').textContent =
-                        hamburgerDropdown.classList.contains('active') ? '✕' : '☰';
-                });
-
-                // Cerrar al hacer clic fuera
-                document.addEventListener('click', function(e) {
-                    if (!hamburgerBtn.contains(e.target) && !hamburgerDropdown.contains(e.target)) {
-                        hamburgerDropdown.classList.remove('active');
-                        hamburgerBtn.querySelector('.hamburger-icon').textContent = '☰';
-                    }
-                });
-
-                // Cerrar con Escape
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        hamburgerDropdown.classList.remove('active');
-                        hamburgerBtn.querySelector('.hamburger-icon').textContent = '☰';
-                    }
-                });
-            }
-
-            // Leaderboard desde hamburger menu
-            if (hamburgerLeaderboard) {
-                hamburgerLeaderboard.addEventListener('click', function() {
-                    // Cerrar menú
-                    hamburgerDropdown.classList.remove('active');
-                    hamburgerBtn.querySelector('.hamburger-icon').textContent = '☰';
-                    // Abrir leaderboard
-                    if (window.showLeaderboardModal) {
-                        window.showLeaderboardModal('square-rush');
-                    }
-                });
-            }
-
-            // Sound toggle desde hamburger menu
-            if (hamburgerSound) {
-                // Sincronizar estado inicial con el toggle principal
-                function updateHamburgerSoundState() {
-                    const mainSoundBtn = document.getElementById('soundToggle');
-                    const iconSoundOn = mainSoundBtn?.querySelector('.icon-sound-on');
-                    const isSoundOn = iconSoundOn && iconSoundOn.style.display !== 'none';
-
-                    if (hamburgerSoundIcon && hamburgerSoundText) {
-                        hamburgerSoundIcon.textContent = isSoundOn ? '🔊' : '🔇';
-                        hamburgerSoundText.textContent = isSoundOn ? 'Sound: ON' : 'Sound: OFF';
-                    }
-                }
-
-                // Actualizar al cargar
-                setTimeout(updateHamburgerSoundState, 100);
-
-                hamburgerSound.addEventListener('click', function() {
-                    // Simular clic en el toggle principal
-                    const mainSoundBtn = document.getElementById('soundToggle');
-                    if (mainSoundBtn) {
-                        mainSoundBtn.click();
-                        // Actualizar estado del hamburger después de un pequeño delay
-                        setTimeout(updateHamburgerSoundState, 50);
-                    }
-                });
-            }
-        })();
+        // Inicializar menú hamburguesa cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🍔 [Square Rush] Initializing hamburger menu...');
+            HamburgerMenu.init({
+                currentGame: 'square-rush',
+                gameId: 'square-rush'
+            });
+        });
     </script>
 </body>
 </html>

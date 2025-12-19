@@ -1,0 +1,233 @@
+/**
+ * ========================================
+ * HAMBURGER MENU - CSS Compartido
+ * ========================================
+ *
+ * Estilos estandarizados para el menu hamburguesa de ChessArcade.
+ * Usar junto con hamburger-menu.js
+ */
+
+/* ==========================================
+   CONTAINER
+   ========================================== */
+
+.hamburger-menu-container {
+    display: none; /* Oculto por defecto, mostrar en mobile */
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+}
+
+/* ==========================================
+   BOTON HAMBURGUESA
+   ========================================== */
+
+.hamburger-btn {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--neon-cyan, #00ffff);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    transition: all 0.2s ease;
+}
+
+.hamburger-btn:hover {
+    background: rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.hamburger-btn:active {
+    transform: scale(0.95);
+}
+
+.hamburger-icon {
+    font-size: 1.5rem;
+    color: var(--neon-cyan, #00ffff);
+}
+
+/* ==========================================
+   DROPDOWN MENU
+   ========================================== */
+
+.hamburger-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: rgba(10, 10, 26, 0.98);
+    border: 2px solid var(--neon-cyan, #00ffff);
+    border-radius: 12px;
+    min-width: 220px;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.4),
+                0 10px 40px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.hamburger-dropdown.show {
+    display: block;
+    animation: dropdownSlide 0.2s ease-out;
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   MENU ITEMS
+   ========================================== */
+
+.hamburger-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    color: white;
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Orbitron', 'Segoe UI', sans-serif;
+    font-size: 0.95rem;
+}
+
+.hamburger-item:hover {
+    background: rgba(0, 255, 255, 0.15);
+    padding-left: 22px;
+}
+
+.hamburger-item-icon {
+    font-size: 1.2rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+.hamburger-item-text {
+    flex: 1;
+}
+
+/* ==========================================
+   DIVIDER
+   ========================================== */
+
+.hamburger-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(0, 255, 255, 0.3) 20%,
+        rgba(0, 255, 255, 0.3) 80%,
+        transparent 100%);
+    margin: 5px 0;
+}
+
+/* ==========================================
+   GAMES TOGGLE
+   ========================================== */
+
+.hamburger-games-toggle {
+    justify-content: flex-start;
+}
+
+.hamburger-arrow {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--neon-cyan, #00ffff);
+    transition: transform 0.2s ease;
+}
+
+/* ==========================================
+   GAMES SUBMENU
+   ========================================== */
+
+.hamburger-games-submenu {
+    display: none;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.hamburger-games-submenu.show {
+    display: block;
+}
+
+@keyframes submenuExpand {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 400px;
+    }
+}
+
+/* ==========================================
+   GAME ITEMS
+   ========================================== */
+
+.hamburger-game {
+    padding-left: 30px;
+    font-size: 0.9rem;
+    border-left: 3px solid transparent;
+}
+
+.hamburger-game:hover {
+    border-left-color: var(--neon-cyan, #00ffff);
+    padding-left: 34px;
+}
+
+.hamburger-game.active {
+    background: linear-gradient(90deg, rgba(0, 255, 255, 0.2), transparent);
+    color: var(--neon-cyan, #00ffff);
+    border-left-color: var(--neon-cyan, #00ffff);
+    font-weight: bold;
+}
+
+.hamburger-game.active .hamburger-item-icon {
+    filter: drop-shadow(0 0 5px var(--neon-cyan, #00ffff));
+}
+
+/* ==========================================
+   MOBILE PORTRAIT - Mostrar menu
+   ========================================== */
+
+@media (max-width: 480px) and (orientation: portrait) {
+    .hamburger-menu-container {
+        display: block !important;
+    }
+}
+
+/* Tambien mostrar en tablets pequenas en portrait */
+@media (max-width: 600px) and (orientation: portrait) {
+    .hamburger-menu-container {
+        display: block !important;
+    }
+}
+
+/* ==========================================
+   CLASE PARA OCULTAR EN MOBILE
+   ========================================== */
+
+@media (max-width: 480px) and (orientation: portrait) {
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+    .desktop-only {
+        display: none !important;
+    }
+}

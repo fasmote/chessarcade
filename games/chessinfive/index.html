@@ -21,7 +21,8 @@
     <link rel="stylesheet" href="../../assets/css/neonchess-style.css">
 
     <!-- ChessInFive Styles -->
-    <link rel="stylesheet" href="css/chessinfive.css?v=2">
+    <link rel="stylesheet" href="css/chessinfive.css?v=3">
+    <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
 
     <!-- AI Toggle Styles -->
     <style>
@@ -121,7 +122,7 @@
 
     <!-- Header -->
     <header class="game-header">
-        <button id="btnHome" class="btn-home" title="Volver al inicio">
+        <button id="btnHome" class="btn-home desktop-only" title="Volver al inicio">
             <span class="icon-home">🏠</span>
             <span class="btn-text">HOME</span>
         </button>
@@ -132,7 +133,7 @@
             </h1>
             <p class="game-subtitle">Place. Move. Align Five. Win.</p>
         </div>
-        <div class="header-controls">
+        <div class="header-controls desktop-only">
             <!-- Sound Toggle -->
             <button id="soundToggle" class="btn-icon" title="Toggle Sound">
                 <span class="icon-sound-on">🔊</span>
@@ -143,6 +144,8 @@
                 <span class="icon-leaderboard">🏆</span>
             </button>
         </div>
+
+        <!-- Hamburger Menu se inserta dinámicamente via hamburger-menu.js -->
 
         <!-- Coin Counter (Now opens Games Menu) -->
         <div class="neon-coin-counter" id="gamesMenuBtn" style="cursor: pointer;">
@@ -355,25 +358,26 @@
 
     </main>
 
-    <!-- Game Over Modal -->
+    <!-- Game Over Modal - Simplificado (solo SUBMIT SCORE) -->
     <div id="gameOverModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <button class="modal-close" id="btnCloseGameOver">✕</button>
-            <h2 id="winnerTitle">CYAN PLAYER WINS!</h2>
+        <div class="modal-content modal-compact">
+            <button class="modal-close modal-close-large" id="btnCloseGameOver">✕</button>
+            <h2 id="winnerTitle">🏆 CYAN PLAYER WINS!</h2>
             <p id="winnerMessage">Five pieces aligned!</p>
 
+            <!-- Container para ranking animation -->
+            <div id="gameOverRankingContainer"></div>
+
             <!-- Player Name Input for Leaderboard -->
-            <div style="margin: 20px 0;">
-                <label for="gameOverPlayerNameInput" style="display: block; margin-bottom: 8px; color: var(--cyan-primary, #00ffff); font-weight: bold; font-family: 'Orbitron', sans-serif;">Enter Your Name:</label>
+            <div style="margin: 15px 0;">
+                <label for="gameOverPlayerNameInput" style="display: block; margin-bottom: 5px; color: var(--cyan-primary, #00ffff); font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 0.9rem;">Enter Your Name:</label>
                 <input type="text" id="gameOverPlayerNameInput" maxlength="20" placeholder="Your Name"
-                       style="width: 100%; padding: 10px; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--cyan-primary, #00ffff); border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 16px; text-align: center;">
+                       style="width: 100%; padding: 8px; background: rgba(0, 255, 255, 0.1); border: 2px solid var(--cyan-primary, #00ffff); border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 14px; text-align: center;">
             </div>
 
+            <!-- Solo SUBMIT SCORE - UX simplificada -->
             <div class="modal-actions">
                 <button id="gameOverSubmitScoreBtn" class="btn-primary">🏆 SUBMIT SCORE</button>
-                <button id="gameOverViewLeaderboardBtn" class="btn-secondary">👁️ VIEW LEADERBOARD</button>
-                <button id="btnPlayAgain" class="btn-primary">PLAY AGAIN</button>
-                <button id="btnBackHome" class="btn-secondary">BACK TO HOME</button>
             </div>
         </div>
     </div>
@@ -484,6 +488,18 @@
     <script src="js/ai-controller.js"></script>
     <script src="js/main.js"></script>
     <script src="js/leaderboard-integration.js"></script>
+    <script src="js/ranking-animation.js"></script>
+
+    <!-- Hamburger Menu Library -->
+    <script src="../../js/hamburger-menu.js"></script>
+    <script>
+        // Inicializar menú hamburguesa
+        HamburgerMenu.init({
+            currentGame: 'chessinfive',
+            gameId: 'chessinfive',
+            containerSelector: 'header.game-header'
+        });
+    </script>
 
     <!-- Games Menu Toggle Script -->
     <script>
