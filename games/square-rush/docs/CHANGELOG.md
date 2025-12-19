@@ -362,7 +362,196 @@ Si el jugador queda en posición > 10, el leaderboard muestra:
 
 ---
 
-**Última actualización:** 18 Diciembre 2025
-**Versión CSS:** 12
-**Estado:** Leaderboard con ranking animation y split view funcional
-**Próximo:** Ajustar posición del target display en mobile portrait
+---
+
+## 📱 Versión 13 - Mobile UX: Hamburger Menu y Fixes (19 Diciembre 2025)
+
+### Cambio principal: Menú hamburguesa y optimización mobile
+
+**Problemas resueltos:**
+1. En mobile portrait, el target display quedaba muy arriba y el usuario tenía que hacer scroll
+2. No había navegación móvil - los botones de sonido/leaderboard ocupaban espacio
+3. Al terminar el juego, el teclado aparecía automáticamente tapando el modal
+4. El modal Game Over era muy grande y no cabía en mobile
+
+---
+
+### 🍔 Menú Hamburguesa (NUEVO)
+
+#### Comportamiento:
+- **Posición:** Esquina superior derecha (fixed)
+- **Icono:** ☰ (tres líneas horizontales)
+- **Aparece:** Solo en mobile portrait (`@media (max-width: 480px) and (orientation: portrait)`)
+
+#### Contenido del menú:
+```
+┌─────────────────────┐
+│ 🏠 Home             │  → Vuelve al index principal
+│ 🏆 Leaderboard      │  → Abre el leaderboard modal
+│ 🔊 Sound: ON/OFF    │  → Toggle de sonido (sincronizado)
+│ 🎮 Games        ▼   │  → Submenú expandible
+│   ├─ ♟️ Square Rush │
+│   ├─ 🧠 Memory Matrix│
+│   ├─ 🎵 Master Sequence│
+│   ├─ ♞ Knight Quest │
+│   └─ 🔐 CriptoCaballo│
+└─────────────────────┘
+```
+
+#### Comportamiento del toggle Sound:
+- Se sincroniza con el estado actual del sonido del juego
+- Al hacer click, cambia el estado y actualiza el texto (ON ↔ OFF)
+- Guarda preferencia en localStorage
+
+#### Comportamiento del submenú Games:
+- Click en "Games" expande/colapsa el submenú
+- Cada juego es un link directo a su página
+- El juego actual (Square Rush) está marcado como activo
+
+#### CSS clave:
+```css
+.hamburger-menu-container {
+    display: none;  /* Oculto por defecto */
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+    .hamburger-menu-container {
+        display: block;  /* Visible solo en mobile portrait */
+    }
+    .desktop-only {
+        display: none !important;  /* Oculta botones de desktop */
+    }
+}
+```
+
+#### JavaScript del menú:
+```javascript
+// Toggle del menú
+hamburgerBtn.addEventListener('click', () => {
+    dropdown.classList.toggle('show');
+});
+
+// Cerrar al hacer click fuera
+document.addEventListener('click', (e) => {
+    if (!container.contains(e.target)) {
+        dropdown.classList.remove('show');
+    }
+});
+
+// Sincronización de sonido
+const isSoundEnabled = localStorage.getItem('squareRushSound') !== 'disabled';
+soundToggle.textContent = isSoundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+```
+
+---
+
+### 📐 Mobile Portrait Layout Fix
+
+#### Problema:
+El "level-info" (ej: "1 BABY STEPS") ocupaba espacio vertical valioso, empujando el tablero fuera de la pantalla.
+
+#### Solución:
+```css
+@media (max-width: 480px) and (orientation: portrait) {
+    .level-info {
+        display: none !important;  /* Ocultar nivel en portrait */
+    }
+
+    .game-title {
+        font-size: 1.5rem;
+    }
+
+    /* Salto de línea solo en mobile */
+    .mobile-break {
+        display: inline;  /* "SQUARE" + br + "RUSH" */
+    }
+}
+```
+
+---
+
+### ⌨️ Fix: Teclado automático en mobile
+
+#### Problema:
+Al terminar el juego, el input de nombre hacía `.focus()` automáticamente, lo que en mobile disparaba el teclado y tapaba todo el modal.
+
+#### Solución:
+Eliminar el `focus()` automático en `ranking-animation.js`:
+```javascript
+// ANTES (malo):
+nameInput.focus();  // Dispara teclado en mobile
+
+// DESPUÉS (bueno):
+nameInput.classList.add('highlight-input');
+// No hacer focus() - en mobile dispara el teclado y tapa todo
+```
+
+#### Input destacado sin focus:
+Para que el usuario sepa dónde escribir su nombre, el input ahora tiene una animación de pulso más prominente:
+```css
+.highlight-input {
+    animation: inputPulse 1s ease-in-out infinite;
+    border-color: #ff0080 !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.6),
+                0 0 40px rgba(255, 0, 128, 0.3),
+                inset 0 0 10px rgba(255, 0, 128, 0.2) !important;
+    background: rgba(255, 0, 128, 0.15) !important;
+}
+```
+
+**Aplicado a:** Square Rush, Memory Matrix, Knight Quest, Master Sequence
+
+---
+
+### 💀 Modal Game Over - Rediseño
+
+#### Cambios visuales:
+- **Emoji:** 💥 → 💀 (calavera)
+- **Botón X:** Más grande (50px), con borde rosa y fondo semitransparente
+- **Stats grid:** Más compacto (padding, gap, font-size reducidos)
+- **Modal:** Ancho fijo 320px, padding 1.5rem (antes 3rem)
+
+#### Antes vs Después:
+| Elemento | Antes | Después |
+|----------|-------|---------|
+| Padding modal | 3rem | 1.5rem |
+| Ancho modal | min-width: 400px | width: 320px |
+| Stats gap | 1rem | 0.5rem |
+| Stats padding | 1rem | 0.5rem |
+| Stats font-size | 1.8rem | 1.3rem |
+| Título | 2.5rem | 2rem |
+
+---
+
+### 📦 Archivos modificados:
+
+| Archivo | Cambio |
+|---------|--------|
+| `index.html` | Hamburger menu HTML, `mobile-break` en título |
+| `css/square-rush.css` | CSS hamburger, mobile portrait fixes, highlight-input mejorado |
+| `leaderboard-integration.js` | Modal compacto, calavera, X grande |
+| `ranking-animation.js` | Removido `.focus()` |
+
+**Otros juegos actualizados (fix teclado):**
+- `games/memory-matrix-v2/ranking-animation.js`
+- `games/knight-quest/ranking-animation.js`
+- `games/master-sequence/ranking-animation.js`
+
+---
+
+### 🎯 Próximos pasos:
+
+- [ ] Aplicar menú hamburguesa a todos los juegos
+- [ ] Consistencia de modales compactos en todos los juegos
+
+---
+
+**Última actualización:** 19 Diciembre 2025
+**Versión CSS:** 13
+**Estado:** Mobile UX optimizada con hamburger menu
+**Próximo:** Replicar hamburger menu en otros juegos

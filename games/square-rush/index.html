@@ -21,8 +21,76 @@
 </head>
 <body>
     <div class="game-container">
-        <!-- Home Button -->
-        <button class="btn-icon btn-home" id="btnHome" aria-label="Volver al inicio" title="Back to Home">
+        <!-- ============================================
+             MENÚ HAMBURGUESA (MOBILE)
+             ============================================
+             En mobile, todos los botones se consolidan en un menú hamburguesa
+             para ahorrar espacio y tener una UI más limpia.
+
+             NOTA EDUCATIVA: El menú hamburguesa (☰) es un patrón de UX muy común
+             en mobile. Agrupa acciones secundarias en un menú desplegable,
+             dejando más espacio para el contenido principal.
+        -->
+        <div class="hamburger-menu-container">
+            <!-- Botón hamburguesa (solo visible en mobile) -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú">
+                <span class="hamburger-icon">☰</span>
+            </button>
+
+            <!-- Menú desplegable -->
+            <div class="hamburger-dropdown" id="hamburgerDropdown">
+                <!-- Home -->
+                <a href="../../index.html" class="hamburger-item">
+                    <span class="hamburger-item-icon">🏠</span>
+                    <span class="hamburger-item-text">Home</span>
+                </a>
+
+                <!-- Leaderboard -->
+                <button class="hamburger-item" id="hamburgerLeaderboard">
+                    <span class="hamburger-item-icon">🏆</span>
+                    <span class="hamburger-item-text">Leaderboard</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button class="hamburger-item" id="hamburgerSound">
+                    <span class="hamburger-item-icon" id="hamburgerSoundIcon">🔊</span>
+                    <span class="hamburger-item-text" id="hamburgerSoundText">Sound: ON</span>
+                </button>
+
+                <!-- Separator -->
+                <div class="hamburger-separator"></div>
+
+                <!-- Games submenu -->
+                <div class="hamburger-games-title">Juegos</div>
+                <a href="../knight-quest/index.html" class="hamburger-item hamburger-game">
+                    <span class="hamburger-item-icon">🐴</span>
+                    <span class="hamburger-item-text">Knight Quest</span>
+                </a>
+                <a href="../square-rush/index.html" class="hamburger-item hamburger-game active">
+                    <span class="hamburger-item-icon">🎯</span>
+                    <span class="hamburger-item-text">Square Rush</span>
+                </a>
+                <a href="../memory-matrix-v2/index.html" class="hamburger-item hamburger-game">
+                    <span class="hamburger-item-icon">🧠</span>
+                    <span class="hamburger-item-text">Memory Matrix</span>
+                </a>
+                <a href="../master-sequence/index.html" class="hamburger-item hamburger-game">
+                    <span class="hamburger-item-icon">🟦</span>
+                    <span class="hamburger-item-text">Master Sequence</span>
+                </a>
+                <a href="../chessinfive/index.html" class="hamburger-item hamburger-game">
+                    <span class="hamburger-item-icon">⚔️</span>
+                    <span class="hamburger-item-text">ChessInFive</span>
+                </a>
+                <a href="../criptocaballo/index.html" class="hamburger-item hamburger-game">
+                    <span class="hamburger-item-icon">🔐</span>
+                    <span class="hamburger-item-text">CriptoCaballo</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Home Button (desktop only) -->
+        <button class="btn-icon btn-home desktop-only" id="btnHome" aria-label="Volver al inicio" title="Back to Home">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -30,8 +98,8 @@
             <span class="btn-label">HOME</span>
         </button>
 
-        <!-- Sound Toggle Button -->
-        <button class="btn-icon btn-sound" id="soundToggle" title="Toggle Sound">
+        <!-- Sound Toggle Button (desktop only) -->
+        <button class="btn-icon btn-sound desktop-only" id="soundToggle" title="Toggle Sound">
             <svg class="icon-sound-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -44,20 +112,20 @@
             <span class="btn-label">SOUND</span>
         </button>
 
-        <!-- Leaderboard Button -->
-        <button class="btn-icon btn-leaderboard" id="btnLeaderboard" title="View Leaderboard" style="top: 140px;">
+        <!-- Leaderboard Button (desktop only) -->
+        <button class="btn-icon btn-leaderboard desktop-only" id="btnLeaderboard" title="View Leaderboard" style="top: 140px;">
             <span class="icon-leaderboard">🏆</span>
             <span class="btn-label">LEADER</span>
         </button>
 
-        <!-- Coin Counter (Now opens Games Menu) -->
-        <div class="neon-coin-counter" id="gamesMenuBtn" style="cursor: pointer;">
+        <!-- Coin Counter (Now opens Games Menu) - desktop only -->
+        <div class="neon-coin-counter desktop-only" id="gamesMenuBtn" style="cursor: pointer;">
             <div class="neon-coin-icon">¢</div>
             <span>JUEGOS</span>
         </div>
 
-        <!-- Floating Games Menu Dropdown -->
-        <div class="floating-games-menu">
+        <!-- Floating Games Menu Dropdown (desktop only) -->
+        <div class="floating-games-menu desktop-only">
             <div class="games-menu-dropdown" id="gamesMenuDropdown">
                 <a href="../knight-quest/index.html" class="game-menu-item">
                     <span class="game-icon">🐴</span>
@@ -84,7 +152,7 @@
 
         <!-- Header -->
         <div class="game-header">
-            <div class="game-title">🎯 SQUARE RUSH</div>
+            <div class="game-title">🎯 SQUARE <br class="mobile-break">RUSH</div>
             <div class="game-subtitle">Find the coordinates like a chess master!</div>
         </div>
         
@@ -215,6 +283,93 @@
                 }
             });
         }
+    </script>
+
+    <!-- ============================================
+         HAMBURGER MENU SCRIPT (MOBILE)
+         ============================================
+         NOTA EDUCATIVA: Este script maneja el menú hamburguesa en mobile.
+         - Toggle del menú al hacer clic en el botón ☰
+         - Cierra el menú al hacer clic fuera
+         - Sincroniza el estado del sonido con el toggle principal
+    -->
+    <script>
+        (function() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const hamburgerDropdown = document.getElementById('hamburgerDropdown');
+            const hamburgerLeaderboard = document.getElementById('hamburgerLeaderboard');
+            const hamburgerSound = document.getElementById('hamburgerSound');
+            const hamburgerSoundIcon = document.getElementById('hamburgerSoundIcon');
+            const hamburgerSoundText = document.getElementById('hamburgerSoundText');
+
+            // Toggle del menú hamburguesa
+            if (hamburgerBtn && hamburgerDropdown) {
+                hamburgerBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    hamburgerDropdown.classList.toggle('active');
+                    // Cambiar icono de ☰ a ✕ cuando está abierto
+                    hamburgerBtn.querySelector('.hamburger-icon').textContent =
+                        hamburgerDropdown.classList.contains('active') ? '✕' : '☰';
+                });
+
+                // Cerrar al hacer clic fuera
+                document.addEventListener('click', function(e) {
+                    if (!hamburgerBtn.contains(e.target) && !hamburgerDropdown.contains(e.target)) {
+                        hamburgerDropdown.classList.remove('active');
+                        hamburgerBtn.querySelector('.hamburger-icon').textContent = '☰';
+                    }
+                });
+
+                // Cerrar con Escape
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        hamburgerDropdown.classList.remove('active');
+                        hamburgerBtn.querySelector('.hamburger-icon').textContent = '☰';
+                    }
+                });
+            }
+
+            // Leaderboard desde hamburger menu
+            if (hamburgerLeaderboard) {
+                hamburgerLeaderboard.addEventListener('click', function() {
+                    // Cerrar menú
+                    hamburgerDropdown.classList.remove('active');
+                    hamburgerBtn.querySelector('.hamburger-icon').textContent = '☰';
+                    // Abrir leaderboard
+                    if (window.showLeaderboardModal) {
+                        window.showLeaderboardModal('square-rush');
+                    }
+                });
+            }
+
+            // Sound toggle desde hamburger menu
+            if (hamburgerSound) {
+                // Sincronizar estado inicial con el toggle principal
+                function updateHamburgerSoundState() {
+                    const mainSoundBtn = document.getElementById('soundToggle');
+                    const iconSoundOn = mainSoundBtn?.querySelector('.icon-sound-on');
+                    const isSoundOn = iconSoundOn && iconSoundOn.style.display !== 'none';
+
+                    if (hamburgerSoundIcon && hamburgerSoundText) {
+                        hamburgerSoundIcon.textContent = isSoundOn ? '🔊' : '🔇';
+                        hamburgerSoundText.textContent = isSoundOn ? 'Sound: ON' : 'Sound: OFF';
+                    }
+                }
+
+                // Actualizar al cargar
+                setTimeout(updateHamburgerSoundState, 100);
+
+                hamburgerSound.addEventListener('click', function() {
+                    // Simular clic en el toggle principal
+                    const mainSoundBtn = document.getElementById('soundToggle');
+                    if (mainSoundBtn) {
+                        mainSoundBtn.click();
+                        // Actualizar estado del hamburger después de un pequeño delay
+                        setTimeout(updateHamburgerSoundState, 50);
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 </html>

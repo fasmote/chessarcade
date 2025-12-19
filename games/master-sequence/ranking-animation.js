@@ -210,12 +210,12 @@
         messageDisplay.textContent = message;
         messageDisplay.classList.add('show');
 
-        // 8. Destacar el input de nombre
+        // 8. Destacar el input de nombre (sin focus para evitar teclado automático en mobile)
         await sleep(300);
         const nameInput = document.getElementById('gameOverPlayerNameInput');
         if (nameInput) {
             nameInput.classList.add('highlight-input');
-            nameInput.focus();
+            // No hacer focus() - en mobile dispara el teclado y tapa todo
         }
 
         isAnimating = false;

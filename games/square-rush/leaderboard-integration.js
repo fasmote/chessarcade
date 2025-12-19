@@ -93,80 +93,77 @@ window.showLeaderboardGameOverModal = function() {
                 left: 50%;
                 transform: translate(-50%, -50%);
                 background: linear-gradient(145deg, rgba(0,0,0,0.95), rgba(26,0,51,0.9));
-                padding: 3rem;
-                border-radius: 20px;
+                padding: 1.5rem;
+                border-radius: 15px;
                 text-align: center;
                 z-index: 10000;
                 backdrop-filter: blur(20px);
-                border: 4px solid #ff0080;
+                border: 3px solid #ff0080;
                 box-shadow: 0 0 30px rgba(255, 0, 128, 0.5);
                 max-width: 90vw;
                 max-height: 90vh;
                 overflow-y: auto;
-                min-width: 400px;
+                width: 320px;
             ">
                 <button class="modal-close" onclick="closeLeaderboardGameOverModal(); if(window.playAgain) window.playAgain();" style="
                     position: absolute;
-                    top: 15px;
-                    right: 20px;
-                    background: none;
-                    border: none;
+                    top: 10px;
+                    right: 15px;
+                    background: rgba(255,0,0,0.3);
+                    border: 2px solid #ff0080;
                     color: white;
-                    font-size: 2rem;
+                    font-size: 2.5rem;
                     cursor: pointer;
-                    width: 40px;
-                    height: 40px;
+                    width: 50px;
+                    height: 50px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     border-radius: 50%;
                     transition: all 0.3s ease;
-                ">&times;</button>
+                ">✕</button>
 
-                <div style="font-size: 2.5rem; margin-bottom: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #ff0080;">
-                    💥 GAME OVER
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #ff0080;">
+                    💀 GAME OVER
                 </div>
 
-                <div style="font-size: 1.1rem; color: #e0e0e0; margin-bottom: 1.5rem; line-height: 1.4;">
-                    Can you beat your best score?<br>
+                <div style="font-size: 0.9rem; color: #e0e0e0; margin-bottom: 0.8rem; line-height: 1.3;">
                     <span style="color: #00ffff; font-weight: bold;">Submit and compete for the top rankings!</span>
                 </div>
 
-                <!-- Statistics Grid -->
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
-                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size: 0.9rem; color: #999; margin-bottom: 0.5rem;">SCORE</div>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: #00ffff;">${finalScore}</div>
+                <!-- Statistics Grid - Compacto para mobile -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 0.2rem;">SCORE</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: #00ffff;">${finalScore}</div>
                     </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size: 0.9rem; color: #999; margin-bottom: 0.5rem;">LEVEL REACHED</div>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: #00ffff;">${levelReached}</div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 0.2rem;">LEVEL</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: #00ffff;">${levelReached}</div>
                     </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size: 0.9rem; color: #999; margin-bottom: 0.5rem;">MAX COMBO</div>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: #00ffff;">x${maxCombo}</div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 0.2rem;">MAX COMBO</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: #00ffff;">x${maxCombo}</div>
                     </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size: 0.9rem; color: #999; margin-bottom: 0.5rem;">TARGETS FOUND</div>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: #00ffff;">${targetsFound}</div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 0.7rem; color: #999; margin-bottom: 0.2rem;">TARGETS</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: #00ffff;">${targetsFound}</div>
                     </div>
                 </div>
 
-                <!-- Player Name Input -->
-                <div style="margin: 20px 0;">
-                    <label for="playerNameGameOver" style="display: block; margin-bottom: 8px; color: #00ffff; font-weight: bold;">Enter Your Name:</label>
+                <!-- Player Name Input - Compacto -->
+                <div style="margin: 10px 0;">
+                    <label for="playerNameGameOver" style="display: block; margin-bottom: 5px; color: #00ffff; font-weight: bold; font-size: 0.9rem;">Enter Your Name:</label>
                     <input type="text" id="playerNameGameOver" maxlength="20" placeholder="PLAYER"
-                           style="width: 100%; padding: 10px; background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 16px; text-align: center;"
+                           style="width: 100%; padding: 8px; background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; border-radius: 8px; color: white; font-family: 'Orbitron', monospace; font-size: 14px; text-align: center;"
                            value="${localStorage.getItem('squareRushPlayerName') || ''}">
                 </div>
 
                 <!-- Container para ranking animation - se insertará aquí dinámicamente -->
                 <div id="gameOverRankingContainer"></div>
 
-                <!-- NOTA: Solo mostramos SUBMIT SCORE. Los botones VIEW LEADERBOARD y PLAY AGAIN
-                     fueron removidos porque el leaderboard se abre automáticamente después del submit
-                     y el modal se cierra solo. Menos botones = UX más limpia. -->
-                <button id="submitScoreGameOver" style="margin-bottom: 10px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 25px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white; width: 100%;">
+                <!-- Botón Submit compacto -->
+                <button id="submitScoreGameOver" style="margin-bottom: 5px; padding: 0.7rem 1.5rem; font-size: 1rem; font-weight: 700; border: none; border-radius: 20px; cursor: pointer; font-family: 'Orbitron', monospace; text-transform: uppercase; letter-spacing: 0.1em; background: linear-gradient(to bottom, #ff8a80 0%, #ff6b6b 30%, #ff5252 70%, #d32f2f 100%); color: white; width: 100%;">
                     🏆 SUBMIT SCORE
                 </button>
             </div>

@@ -178,6 +178,11 @@ body::before {
     text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
+/* Ocultar salto de línea por defecto (se muestra solo en mobile portrait) */
+.mobile-break {
+    display: none;
+}
+
 /* Game UI */
 .game-ui {
     display: flex;
@@ -1122,18 +1127,301 @@ body::before {
 .highlight-input,
 #playerNameGameOver.highlight-input,
 #playerNameVictory.highlight-input {
-    animation: inputPulse 1.5s ease-in-out infinite;
-    border-color: var(--neon-pink, #ff0080) !important;
-    box-shadow: 0 0 20px rgba(255, 0, 128, 0.5) !important;
+    animation: inputPulse 1s ease-in-out infinite;
+    border-color: #ff0080 !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.6),
+                0 0 40px rgba(255, 0, 128, 0.3),
+                inset 0 0 10px rgba(255, 0, 128, 0.2) !important;
+    background: rgba(255, 0, 128, 0.15) !important;
 }
 
 @keyframes inputPulse {
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
+        box-shadow: 0 0 15px rgba(255, 0, 128, 0.4),
+                    0 0 30px rgba(255, 0, 128, 0.2);
     }
     50% {
-        transform: scale(1.02);
-        box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+        transform: scale(1.03);
+        box-shadow: 0 0 30px rgba(255, 0, 128, 0.8),
+                    0 0 50px rgba(255, 0, 128, 0.4);
+    }
+}
+
+/* ============================================
+   MOBILE PORTRAIT - LAYOUT OPTIMIZADO
+   ============================================
+   PROBLEMA: En celulares en portrait, el level-info (1 BABY STEPS)
+   ocupa espacio vertical valioso, y el tablero queda cortado.
+
+   SOLUCIÓN:
+   - Ocultar el level-info (número y nombre del nivel) en portrait
+   - Mantener el target display prominente
+   - El tablero debe ser completamente visible
+   - Mover el botón del leaderboard a una posición que no estorbe
+
+   NOTA EDUCATIVA: En mobile portrait, cada pixel vertical cuenta.
+   Es mejor ocultar información secundaria (nivel actual) que
+   forzar al usuario a hacer scroll para ver el tablero.
+   ============================================ */
+
+@media (max-width: 480px) and (orientation: portrait),
+       (max-width: 600px) and (max-height: 800px) {
+
+    /* ====== OCULTAR LEVEL INFO EN PORTRAIT ======
+       El número y nombre del nivel ("1 BABY STEPS") no es crítico
+       durante el juego - el usuario ya sabe en qué nivel está.
+       Esto libera ~80px de espacio vertical. */
+    .level-info {
+        display: none !important;
+    }
+
+    /* ====== HEADER COMPACTO ====== */
+    .game-header {
+        padding: 0.3rem 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .game-title {
+        font-size: 1.5rem;
+    }
+
+    /* Mostrar salto de línea solo en mobile portrait */
+    .mobile-break {
+        display: inline;
+    }
+
+    /* Ocultar subtítulo - ahorra espacio */
+    .game-subtitle {
+        display: none;
+    }
+
+    /* ====== GAME UI REORGANIZADO ======
+       Sin el level-info, el layout es más limpio */
+    .game-ui {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        gap: 0.5rem;
+        /* Forzar que target, timer y score estén en una fila */
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-around !important;
+    }
+
+    /* Target display prominente */
+    .target-display {
+        padding: 0.3rem 0.8rem;
+        margin-bottom: 0;
+        flex: 0 0 auto;
+    }
+
+    .target-label {
+        font-size: 0.65rem;
+    }
+
+    .target-coordinate {
+        font-size: 2.2rem;
+        line-height: 1;
+    }
+
+    /* Timer visible */
+    .timer {
+        font-size: 2rem;
+        flex: 0 0 auto;
+    }
+
+    /* Score compacto */
+    .score-info {
+        flex: 0 0 auto;
+    }
+
+    .score {
+        font-size: 1rem;
+    }
+
+    .combo {
+        font-size: 0.75rem;
+    }
+
+    /* ====== PROGRESS MÁS DELGADO ====== */
+    .progress-container {
+        height: 8px;
+        margin-bottom: 0.3rem;
+    }
+
+    .progress-text {
+        font-size: 0.75rem;
+        margin-bottom: 0.3rem;
+    }
+
+    /* ====== BOTÓN LEADERBOARD REPOSICIONADO ======
+       Mover a la derecha del header, no encima del timer */
+    .btn-leaderboard {
+        top: 10px !important;
+        right: 70px !important; /* A la izquierda del botón JUEGOS */
+        left: auto !important;
+    }
+
+    /* ====== BOARD CONTAINER ====== */
+    .board-container {
+        padding: 0.3rem;
+    }
+
+    /* ====== BOTONES DE CONTROL COMPACTOS ====== */
+    .game-controls {
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .game-controls .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    /* ====== OCULTAR BOTONES DESKTOP EN MOBILE ====== */
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   MENÚ HAMBURGUESA (MOBILE)
+   ============================================
+   NOTA EDUCATIVA: El menú hamburguesa consolida todos los botones
+   de navegación en un solo menú desplegable. Esto:
+   - Ahorra espacio en pantalla
+   - Simplifica la UI
+   - Es un patrón familiar para usuarios mobile
+   ============================================ */
+
+/* Container del menú hamburguesa - oculto en desktop por defecto */
+.hamburger-menu-container {
+    display: none; /* Oculto en desktop */
+    position: fixed;
+    top: 10px;
+    right: 10px; /* Movido a la derecha */
+    z-index: 1000;
+}
+
+/* Botón hamburguesa */
+.hamburger-btn {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(26,0,51,0.9));
+    border: 2px solid var(--neon-cyan, #00ffff);
+    border-radius: 10px;
+    color: var(--neon-cyan, #00ffff);
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.hamburger-btn:hover,
+.hamburger-btn:active {
+    background: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.hamburger-icon {
+    line-height: 1;
+}
+
+/* Dropdown del menú */
+.hamburger-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0; /* Abre hacia la izquierda desde la derecha */
+    min-width: 200px;
+    background: linear-gradient(145deg, rgba(0,0,0,0.95), rgba(26,0,51,0.95));
+    border: 2px solid var(--neon-cyan, #00ffff);
+    border-radius: 12px;
+    padding: 0.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.hamburger-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Items del menú */
+.hamburger-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.hamburger-item:hover {
+    background: rgba(0, 255, 255, 0.15);
+}
+
+.hamburger-item.active {
+    background: rgba(0, 255, 255, 0.2);
+    border-left: 3px solid var(--neon-cyan, #00ffff);
+}
+
+.hamburger-item-icon {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.hamburger-item-text {
+    flex: 1;
+}
+
+/* Separador */
+.hamburger-separator {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+    margin: 0.5rem 0;
+}
+
+/* Título de sección de juegos */
+.hamburger-games-title {
+    padding: 0.5rem 1rem;
+    font-size: 0.7rem;
+    color: var(--neon-cyan, #00ffff);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+}
+
+/* Items de juegos - más compactos */
+.hamburger-game {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* En mobile portrait, mostrar el menú hamburguesa */
+@media (max-width: 480px) and (orientation: portrait),
+       (max-width: 600px) and (max-height: 800px) {
+
+    .hamburger-menu-container {
+        display: block;
     }
 }
