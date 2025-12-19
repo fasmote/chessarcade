@@ -23,6 +23,9 @@
 
     <!-- Estilos del juego -->
     <link rel="stylesheet" href="styles.css?v=2">
+
+    <!-- Hamburger Menu (mobile) -->
+    <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
 </head>
 <body>
 
@@ -37,8 +40,8 @@
              ================================================== -->
         <header class="header">
 
-            <!-- Botón HOME: Volver a página principal de ChessArcade -->
-            <button class="btn-icon btn-home" id="btnHome" aria-label="Volver al inicio">
+            <!-- Botón HOME: Volver a página principal de ChessArcade (desktop only) -->
+            <button class="btn-icon btn-home desktop-only" id="btnHome" aria-label="Volver al inicio">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -51,8 +54,8 @@
                 ▶ Comenzar
             </button>
 
-            <!-- Botón SONIDO: Mute/Unmute audio -->
-            <button class="btn-icon btn-sound" id="btnSound" aria-label="Activar/desactivar sonido">
+            <!-- Botón SONIDO: Mute/Unmute audio (desktop only) -->
+            <button class="btn-icon btn-sound desktop-only" id="btnSound" aria-label="Activar/desactivar sonido">
                 <svg class="icon-sound-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -65,20 +68,20 @@
                 <span class="btn-label">SONIDO</span>
             </button>
 
-            <!-- Botón LEADERBOARD: Ver ranking global -->
-            <button class="btn-icon btn-leaderboard" id="btnLeaderboard" aria-label="Ver tabla de líderes">
+            <!-- Botón LEADERBOARD: Ver ranking global (desktop only) -->
+            <button class="btn-icon btn-leaderboard desktop-only" id="btnLeaderboard" aria-label="Ver tabla de líderes">
                 <span class="icon-leaderboard">🏆</span>
                 <span class="btn-label">LEADER</span>
             </button>
 
-            <!-- Coin Counter (Now opens Games Menu) -->
-            <div class="neon-coin-counter" id="gamesMenuBtn" style="cursor: pointer;">
+            <!-- Coin Counter (Now opens Games Menu) - desktop only -->
+            <div class="neon-coin-counter desktop-only" id="gamesMenuBtn" style="cursor: pointer;">
                 <div class="neon-coin-icon">¢</div>
                 <span>JUEGOS</span>
             </div>
 
-            <!-- Floating Games Menu Dropdown -->
-            <div class="floating-games-menu">
+            <!-- Floating Games Menu Dropdown (desktop only) -->
+            <div class="floating-games-menu desktop-only">
                 <div class="games-menu-dropdown" id="gamesMenuDropdown">
                     <a href="../knight-quest/index.html" class="game-menu-item">
                         <span class="game-icon">🐴</span>
@@ -336,6 +339,7 @@
     <link rel="stylesheet" href="../../css/leaderboard.css">
     <script src="../../js/leaderboard-api.js"></script>
     <script src="../../js/leaderboard-ui.js"></script>
+    <script src="ranking-animation.js"></script>
     <script src="leaderboard-integration.js"></script>
 
     <!-- Footer -->
@@ -357,7 +361,7 @@
         </div>
     </footer>
 
-    <!-- Games Menu Toggle Script -->
+    <!-- Games Menu Toggle Script (desktop) -->
     <script>
         // Toggle games menu from coin counter
         const gamesMenuBtn = document.getElementById('gamesMenuBtn');
@@ -383,6 +387,17 @@
                 }
             });
         }
+    </script>
+
+    <!-- Hamburger Menu Library (mobile) -->
+    <script src="../../js/hamburger-menu.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            HamburgerMenu.init({
+                currentGame: 'memory-matrix',
+                gameId: 'memory-matrix'
+            });
+        });
     </script>
 
 </body>
