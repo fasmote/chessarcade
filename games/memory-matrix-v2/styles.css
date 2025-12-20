@@ -1808,18 +1808,87 @@ body::before {
     }
 }
 
-/* Parpadeo rojo para piezas incorrectas */
+/* Piezas incorrectas - se tiñen de rojo y se sacuden */
 .piece.incorrect-flash {
-    animation: incorrectPulse 0.6s ease-in-out 3;
+    animation: incorrectPulse 1.5s ease-in-out, pieceShake 0.5s ease-in-out;
 }
 
 @keyframes incorrectPulse {
-    0%, 100% {
+    0% {
         filter: drop-shadow(0 0 0 transparent);
+        transform: scale(1);
     }
-    50% {
-        filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.9))
-                drop-shadow(0 0 25px rgba(255, 0, 0, 0.6));
+    20%, 60% {
+        filter: brightness(0.2) sepia(1) hue-rotate(-50deg) saturate(10)
+                drop-shadow(0 0 20px rgba(255, 0, 0, 1))
+                drop-shadow(0 0 40px rgba(255, 0, 0, 0.8));
+        transform: scale(1.15);
+    }
+    100% {
+        filter: drop-shadow(0 0 0 transparent);
+        transform: scale(1);
+    }
+}
+
+@keyframes pieceShake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    10% { transform: translateX(-8px) rotate(-5deg); }
+    20% { transform: translateX(8px) rotate(5deg); }
+    30% { transform: translateX(-8px) rotate(-5deg); }
+    40% { transform: translateX(8px) rotate(5deg); }
+    50% { transform: translateX(-6px) rotate(-3deg); }
+    60% { transform: translateX(6px) rotate(3deg); }
+    70% { transform: translateX(-4px) rotate(-2deg); }
+    80% { transform: translateX(4px) rotate(2deg); }
+    90% { transform: translateX(-2px) rotate(-1deg); }
+}
+
+/* Sidebar (banco de piezas) parpadea rojo en error */
+.piece-bank-container.error-flash {
+    animation: sidebarErrorPulse 1.5s ease-in-out;
+}
+
+@keyframes sidebarErrorPulse {
+    0% {
+        border-color: var(--neon-orange);
+        box-shadow:
+            0 0 20px var(--neon-orange),
+            0 0 40px rgba(255, 128, 0, 0.3),
+            inset 0 0 20px rgba(255, 128, 0, 0.05);
+    }
+    25%, 50% {
+        border-color: #ff0040;
+        box-shadow:
+            0 0 30px rgba(255, 0, 64, 0.8),
+            0 0 50px rgba(255, 0, 64, 0.6),
+            0 0 70px rgba(255, 0, 64, 0.4),
+            inset 0 0 25px rgba(255, 0, 64, 0.15);
+        border-width: 5px;
+    }
+    100% {
+        border-color: var(--neon-orange);
+        box-shadow:
+            0 0 20px var(--neon-orange),
+            0 0 40px rgba(255, 128, 0, 0.3),
+            inset 0 0 20px rgba(255, 128, 0, 0.05);
+    }
+}
+
+/* Casillas incorrectas se vuelven rojas */
+.square.error-flash {
+    animation: squareErrorFlash 1.5s ease-in-out;
+}
+
+@keyframes squareErrorFlash {
+    0% {
+        background-color: inherit;
+    }
+    25%, 50% {
+        background-color: rgba(255, 0, 64, 0.7) !important;
+        box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.8);
+    }
+    100% {
+        background-color: inherit;
     }
 }
 

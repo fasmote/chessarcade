@@ -112,6 +112,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // PASO 6: Inicializar drag & drop
     initDragAndDrop();
 
+    // PASO 7: Click en tablero para iniciar juego (cuando está en idle)
+    const chessboard = document.getElementById('chessboard');
+    if (chessboard) {
+        chessboard.addEventListener('click', (e) => {
+            // Solo iniciar si el juego está en estado idle
+            if (gameState === 'idle') {
+                console.log('🖱️ Click en tablero - Iniciando juego...');
+                startGame();
+            }
+        });
+        console.log('✅ Click-to-start en tablero inicializado');
+    }
+
     // Mostrar posición inicial del nivel 1 (sin tablero vacío)
     showInitialPosition();
 
@@ -718,17 +731,23 @@ function onAttemptFailed(incorrectPieces) {
     // NO usar overlay - mantener concentración
     // ==========================================
 
-    // 1. Shake del tablero
+    // 1. Shake del tablero (incluye borde rojo)
     shakeBoardOnError();
 
     // 2. Parpadear piezas incorrectas en rojo
     const incorrectSquares = incorrectPieces.map(item => item.square);
     flashIncorrectPieces(incorrectSquares);
 
-    // 3. ✅ Cambiar título "MEMORY MATRIX" a rojo
+    // 3. ✅ Casillas incorrectas se vuelven rojas
+    flashSquaresRed(incorrectSquares);
+
+    // 4. ✅ Sidebar (banco de piezas) parpadea rojo
+    flashSidebarRed();
+
+    // 5. ✅ Cambiar título "MEMORY MATRIX" a rojo
     flashTitleRed();
 
-    // 4. Actualizar mensaje de estado con animación de error
+    // 6. Actualizar mensaje de estado con animación de error
     updateStatus(
         `❌ Incorrecto - Errores: ${failedAttempts}/${MAX_FAILED_ATTEMPTS} | Correctos: ${successfulAttempts}/${levelConfig.attemptsRequired}`,
         'error' // Activa animación rosa + inflado
@@ -2169,10 +2188,10 @@ function flashIncorrectPieces(squares) {
         // Agregar clase de parpadeo
         pieceImg.classList.add('incorrect-flash');
 
-        // Remover después de 3 parpadeos (1.8s)
+        // Remover después de la animación (1.5s)
         setTimeout(() => {
             pieceImg.classList.remove('incorrect-flash');
-        }, 1800);
+        }, 1500);
     });
 
     console.log(`🔴 ${squares.length} pieza${squares.length > 1 ? 's' : ''} parpadeando en rojo`);
@@ -2198,6 +2217,45 @@ function flashTitleRed() {
     }, 2000);
 
     console.log('🔴 Título cambiado a rojo');
+}
+
+/**
+ * Parpadea el sidebar (banco de piezas) en rojo cuando hay error
+ */
+function flashSidebarRed() {
+    const sidebar = document.querySelector('.piece-bank-container');
+    if (!sidebar) return;
+
+    // Agregar clase de error
+    sidebar.classList.add('error-flash');
+
+    // Remover después de la animación (1.5s)
+    setTimeout(() => {
+        sidebar.classList.remove('error-flash');
+    }, 1500);
+
+    console.log('🔴 Sidebar parpadeando en rojo');
+}
+
+/**
+ * Parpadea las casillas incorrectas en rojo (fondo rojo)
+ * @param {Array<string>} squares - Casillas incorrectas
+ */
+function flashSquaresRed(squares) {
+    squares.forEach(square => {
+        const squareElement = getSquareElement(square);
+        if (!squareElement) return;
+
+        // Agregar clase de error a la casilla
+        squareElement.classList.add('error-flash');
+
+        // Remover después de la animación (1.5s)
+        setTimeout(() => {
+            squareElement.classList.remove('error-flash');
+        }, 1500);
+    });
+
+    console.log(`🔴 ${squares.length} casilla${squares.length > 1 ? 's' : ''} parpadeando en rojo`);
 }
 
 // ==========================================
