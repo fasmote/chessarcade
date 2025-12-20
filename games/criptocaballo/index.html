@@ -357,6 +357,9 @@
         .message-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
         .message-visible { filter: none; }
     </style>
+
+    <!-- Hamburger Menu (mobile) -->
+    <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
 </head>
 <body class="min-h-screen flex flex-col py-4 px-2 md:py-6 md:px-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);">
     <!-- Wrapper para centrar todo el contenido -->
@@ -2536,5 +2539,16 @@
             </p>
         </div>
     </footer>
+
+    <!-- Hamburger Menu Library (mobile) -->
+    <script src="../../js/hamburger-menu.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            HamburgerMenu.init({
+                currentGame: 'criptocaballo',
+                gameId: 'criptocaballo'
+            });
+        });
+    </script>
 </body>
 </html>
