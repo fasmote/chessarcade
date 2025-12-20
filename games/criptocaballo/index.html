@@ -356,6 +356,57 @@
         .date-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         .message-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
         .message-visible { filter: none; }
+
+        /* ============================================
+           MOBILE PORTRAIT - UI compacta
+           ============================================ */
+        @media (max-width: 480px) and (orientation: portrait) {
+            /* Modal más compacto */
+            .modal-content {
+                padding: 1rem !important;
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+
+            .modal-content h2 {
+                font-size: 1.1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .modal-content label {
+                font-size: 0.7rem !important;
+            }
+
+            .modal-content input,
+            .modal-content select,
+            .modal-content textarea {
+                font-size: 0.85rem !important;
+                padding: 0.4rem !important;
+            }
+
+            .modal-content button {
+                font-size: 0.8rem !important;
+                padding: 0.5rem 1rem !important;
+            }
+
+            /* Tablero y mensaje de éxito más compactos */
+            .success-text {
+                font-size: 0.85rem !important;
+            }
+
+            /* Timer más pequeño */
+            .timer-display {
+                font-size: 1rem !important;
+                width: 120px !important;
+                padding: 2px 0 !important;
+            }
+
+            /* Botones arcade más compactos */
+            .arcade-btn {
+                font-size: 0.6rem !important;
+                padding: 0.4rem 0.6rem !important;
+            }
+        }
     </style>
 
     <!-- Hamburger Menu (mobile) -->
