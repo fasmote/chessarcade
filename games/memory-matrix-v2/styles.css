@@ -2567,3 +2567,69 @@ body::before {
         text-shadow: 0 0 30px var(--neon-yellow, #ffd700), 0 0 60px var(--neon-yellow, #ffd700);
     }
 }
+
+/* ============================================
+   MOBILE PORTRAIT - Modales compactos
+   ============================================
+   Los modales de victoria y game over se crean dinámicamente
+   con estilos inline, por eso usamos !important para sobrescribir.
+   ============================================ */
+@media (max-width: 480px) and (orientation: portrait) {
+    /* Modal content - más compacto */
+    .victory-modal-content {
+        padding: 1rem !important;
+        max-height: 85vh !important;
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+
+    /* Título más pequeño */
+    .victory-modal-content > div:first-of-type {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Stats más compactos */
+    #victoryStats, #gameOverStats {
+        font-size: 0.85rem !important;
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Botón de cerrar más pequeño */
+    .victory-modal-content .modal-close {
+        top: 5px !important;
+        right: 10px !important;
+        font-size: 1.5rem !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    /* Input de nombre */
+    #victoryPlayerNameInput, #gameOverPlayerNameInput {
+        font-size: 14px !important;
+        padding: 8px !important;
+    }
+
+    /* Ranking animation compacto */
+    .ranking-animation-container {
+        padding: 0.5rem !important;
+        margin: 0.5rem 0 !important;
+    }
+
+    .ranking-list-row {
+        padding: 0.4rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    .ranking-animation-message {
+        font-size: 0.9rem !important;
+    }
+
+    /* Botón submit más compacto */
+    #victorySubmitScoreBtn, #gameOverSubmitScoreBtn {
+        padding: 0.75rem 1.5rem !important;
+        font-size: 0.9rem !important;
+    }
+}
