@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.1.3] - 2025-12-20
+
+### Fixed 🐛
+- **✅ OVERFLOW HORIZONTAL EN MOBILE PORTRAIT SOLUCIONADO**
+  - **Síntoma:** Menú hamburguesa se desplazaba hacia la derecha gradualmente, aparecía scroll horizontal
+  - **Causa:** Animación `neonGridMove` con `transform: translate(40px, 40px)` causaba overflow en navegadores móviles reales
+  - **Nota:** El bug NO aparecía en el simulador de Chrome, solo en celulares físicos
+  - **Diagnóstico:** Script de debug reveló que `window.innerWidth` crecía cíclicamente mientras `document.offsetWidth` permanecía constante
+
+### Changed 🔄
+- **Stats reposicionados en mobile portrait**
+  - Desktop: Stats permanecen debajo del título (posición original)
+  - Mobile portrait: Stats movidos después de botones HINT/UNDO
+  - Implementación: Dos divs `.game-stats-desktop` y `.game-stats-mobile` con CSS condicional
+
+### Technical Details ⚙️
+```css
+/* Solución al overflow */
+@media (max-width: 767px) and (orientation: portrait) {
+    .neon-container::before {
+        animation: none !important;
+        transform: none !important;
+    }
+
+    .game-stats-desktop { display: none !important; }
+    .game-stats-mobile { display: grid !important; }
+}
+```
+
+```javascript
+// JavaScript actualizado para sincronizar ambos sets de stats
+function updateTimer() {
+    // Update both mobile and desktop
+    const timeEl = document.getElementById('timeCount');
+    const timeElD = document.getElementById('timeCountDesktop');
+    if (timeEl) timeEl.textContent = timeStr;
+    if (timeElD) timeElD.textContent = timeStr;
+}
+```
+
+### Files Modified 📝
+- `games/knight-quest/index.html`
+  - CSS: Desactivar animación grid en portrait
+  - CSS: Mostrar/ocultar stats según viewport
+  - HTML: Duplicar div de stats (desktop/mobile)
+  - JS: Actualizar ambos sets de stats
+
+### Documentation 📚
+- Bug documentado en `docs/ERRORES_Y_SOLUCIONES.md` (#20)
+- Incluye patrón de debug para overflow horizontal
+
+---
+
 ## [1.1.2] - 2025-10-14
 
 ### Fixed 🐛
