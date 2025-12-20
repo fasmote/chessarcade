@@ -262,8 +262,24 @@ body::before {
 
 .target-label {
     font-size: 1rem;
-    color: #00ffff;
+    color: white;
     margin-bottom: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
+    animation: targetLabelHighlight 1.5s ease-in-out infinite;
+}
+
+@keyframes targetLabelHighlight {
+    0%, 100% {
+        background: transparent;
+        color: #00ffff;
+        text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    }
+    50% {
+        background: linear-gradient(90deg, rgba(255, 200, 0, 0.8), rgba(255, 100, 0, 0.8));
+        color: white;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
 }
 
 .target-coordinate {
@@ -1192,9 +1208,12 @@ body::before {
         display: inline;
     }
 
-    /* Ocultar subtítulo - ahorra espacio */
+    /* Subtítulo compacto en portrait */
     .game-subtitle {
-        display: none;
+        display: block;
+        font-size: 0.75rem;
+        margin-top: 0.2rem;
+        margin-bottom: 0.3rem;
     }
 
     /* ====== GAME UI REORGANIZADO ======
