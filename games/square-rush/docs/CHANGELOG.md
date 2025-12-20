@@ -725,3 +725,86 @@ Eliminar el CSS duplicado de `square-rush.css` (líneas 1289-1427) y usar solo l
 - [x] CriptoCaballo
 
 **Todos los juegos de ChessArcade ahora tienen navegación móvil estandarizada.**
+
+---
+
+## 📱 Versión 15 - Modales Compactos para Mobile Portrait (20 Diciembre 2025)
+
+### Problema:
+En mobile portrait, los modales de Game Over/Victory ocupaban demasiado espacio:
+- Padding excesivo (2-3rem)
+- Fuentes muy grandes (2.5rem en títulos)
+- Ranking animation y name input quedaban fuera de la vista
+- Usuario no podía ver su posición ni el campo para guardar nombre
+
+### Solución:
+CSS media query `@media (max-width: 480px) and (orientation: portrait)` con:
+- Padding reducido (1rem)
+- Fuentes más pequeñas (1.3rem títulos, 0.8-0.9rem contenido)
+- max-height: 85vh con overflow-y: auto
+- Ranking animation compacta
+- Botones simplificados (removidos VIEW LEADERBOARD y PLAY AGAIN)
+
+### Cambios por juego:
+
+| Juego | Archivo | Cambios |
+|-------|---------|---------|
+| Square Rush | Ya tenía estilos compactos | - |
+| ChessInFive | `css/chessinfive.css` | Media query portrait |
+| Memory Matrix | `styles.css` | Media query con !important (modales inline) |
+| Master Sequence | `styles.css` | Ya tenía estilos compactos |
+| Knight Quest | `index.html` (inline) | Media query + removidos botones extras |
+| CriptoCaballo | `index.html` (inline) | Media query para modal y UI |
+
+### CSS Pattern usado:
+
+```css
+@media (max-width: 480px) and (orientation: portrait) {
+    .modal-content, .victory-modal-content, .game-over-message {
+        padding: 1rem !important;
+        max-height: 85vh !important;
+        width: 95vw !important;
+    }
+
+    /* Título compacto */
+    .modal-title {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Stats compactas */
+    .stats {
+        font-size: 0.85rem !important;
+        padding: 0.75rem !important;
+    }
+
+    /* Ranking animation compacta */
+    .ranking-animation-container {
+        padding: 0.5rem !important;
+        margin: 0.5rem 0 !important;
+    }
+
+    .ranking-list-row {
+        padding: 0.4rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Input highlight con pulso rosa */
+    .highlight-input {
+        animation: nameInputPulse 2s ease-in-out infinite !important;
+        border-color: var(--neon-magenta) !important;
+        box-shadow: 0 0 15px rgba(255, 0, 128, 0.5) !important;
+    }
+}
+```
+
+### ✅ Juegos con Modales Compactos (Completado 20 Dic 2025):
+
+- [x] Square Rush
+- [x] ChessInFive
+- [x] Memory Matrix
+- [x] Master Sequence
+- [x] Knight Quest
+- [x] CriptoCaballo
+
+**Todos los juegos de ChessArcade ahora tienen UI optimizada para mobile portrait.**
