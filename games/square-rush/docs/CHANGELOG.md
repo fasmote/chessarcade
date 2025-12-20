@@ -715,9 +715,13 @@ Eliminar el CSS duplicado de `square-rush.css` (líneas 1289-1427) y usar solo l
 
 ---
 
-### 🔮 Próximos pasos:
+### ✅ Juegos con Hamburger Menu (Completado 19 Dic 2025):
 
-- [ ] Aplicar biblioteca a Memory Matrix
-- [ ] Aplicar biblioteca a Master Sequence
-- [ ] Aplicar biblioteca a Knight Quest
-- [ ] Aplicar biblioteca a CriptoCaballo
+- [x] Square Rush
+- [x] ChessInFive
+- [x] Memory Matrix
+- [x] Master Sequence
+- [x] Knight Quest
+- [x] CriptoCaballo
+
+**Todos los juegos de ChessArcade ahora tienen navegación móvil estandarizada.**
