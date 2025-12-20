@@ -808,3 +808,56 @@ CSS media query `@media (max-width: 480px) and (orientation: portrait)` con:
 - [x] CriptoCaballo
 
 **Todos los juegos de ChessArcade ahora tienen UI optimizada para mobile portrait.**
+
+---
+
+## 🐛 Versión 16 - Fix Overflow Horizontal Mobile + Stats Reordering (20 Diciembre 2025)
+
+### Problema: Overflow horizontal en Knight Quest (solo en celulares reales)
+
+**Síntoma:**
+- El menú hamburguesa se desplazaba hacia la derecha gradualmente
+- Aparecía scroll horizontal
+- El ciclo se repetía cada ~35 segundos
+- Solo ocurría en celulares reales, NO en el simulador de Chrome
+
+**Causa raíz:**
+La animación `neonGridMove` del grid de fondo usaba `transform: translate(40px, 40px)` que en navegadores móviles causaba overflow aunque el padre tuviera `overflow: hidden`.
+
+**Diagnóstico:**
+Se agregó script de debug que reveló que `window.innerWidth` crecía cíclicamente de 520 → 557px mientras `document.offsetWidth` se mantenía en 520px.
+
+### ✅ Solución:
+
+```css
+@media (max-width: 767px) and (orientation: portrait) {
+    .neon-container::before {
+        animation: none !important;
+        transform: none !important;
+    }
+}
+```
+
+### Otros cambios incluidos:
+
+#### 1. Knight Quest - Stats reposicionados en mobile
+- **Desktop:** Stats debajo del título (posición original)
+- **Mobile portrait:** Stats después de HINT/UNDO buttons
+- Implementado con dos divs separados y CSS `display: none/grid`
+
+#### 2. Homepage - Banner compacto en mobile portrait
+- Título "Ejercita tu Memoria y Agilidad Mental" más pequeño (1.1rem)
+- Padding reducido (0.8rem)
+- Párrafo movido debajo de las cards (visible solo en portrait)
+
+### Archivos modificados:
+
+| Archivo | Cambios |
+|---------|---------|
+| `games/knight-quest/index.html` | Desactivar animación grid, dual stats, CSS compacto |
+| `index.html` | Banner compacto mobile portrait |
+| `docs/ERRORES_Y_SOLUCIONES.md` | Documentación del bug #20 |
+
+### 📚 Lección aprendida:
+
+> `transform: translate()` puede causar overflow horizontal en navegadores móviles incluso con `overflow: hidden` en el padre. Siempre testear en dispositivos reales.
