@@ -1380,6 +1380,87 @@
                 max-width: 400px;
             }
         }
+
+        /* ============================================
+           MOBILE PORTRAIT - Modales compactos
+           ============================================ */
+        @media (max-width: 480px) and (orientation: portrait) {
+            .victory-message, .game-over-message {
+                padding: 1rem;
+                max-height: 85vh;
+                width: 95vw;
+                max-width: 95vw;
+            }
+
+            .victory-title, .game-over-title {
+                font-size: 1.3rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .victory-stats, .game-over-stats {
+                font-size: 0.8rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .victory-stats p, .game-over-stats p {
+                margin: 0.25rem 0;
+            }
+
+            .modal-close {
+                top: 5px;
+                right: 10px;
+                font-size: 1.5rem;
+                width: 32px;
+                height: 32px;
+            }
+
+            /* Input de nombre prominente con pulso */
+            #playerNameInput, #playerNameInputGameOver {
+                font-size: 14px !important;
+                padding: 8px !important;
+            }
+
+            /* Ranking animation compacto */
+            .ranking-animation-container {
+                padding: 0.5rem;
+                margin: 0.5rem 0;
+            }
+
+            .ranking-list-row {
+                padding: 0.4rem;
+                font-size: 0.8rem;
+            }
+
+            .ranking-animation-message {
+                font-size: 0.9rem;
+            }
+
+            /* Botones más compactos */
+            .victory-message .btn,
+            .game-over-message .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                margin: 0.25rem 0;
+            }
+        }
+
+        /* Name input container con animación de pulso (como otros juegos) */
+        .highlight-input {
+            animation: nameInputPulse 2s ease-in-out infinite !important;
+            border-color: var(--neon-magenta) !important;
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.5) !important;
+        }
+
+        @keyframes nameInputPulse {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+                transform: scale(1.02);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1545,9 +1626,7 @@
             <span id="achievementText">New Achievement Unlocked!</span>
         </div>
 
-        <button class="btn btn-primary" id="submitScoreBtn" style="margin-bottom: 10px;">🏆 SUBMIT SCORE</button>
-        <button class="btn btn-secondary" id="viewLeaderboardBtn" style="margin-bottom: 10px;">👁️ VIEW LEADERBOARD</button>
-        <button class="btn btn-primary" onclick="newGame()" style="margin-top: 1rem;">🎮 PLAY AGAIN</button>
+        <button class="btn btn-primary" id="submitScoreBtn">🏆 SUBMIT SCORE</button>
     </div>
     
     <!-- Game Over Message -->
