@@ -2501,3 +2501,17 @@ body::before {
     pointer-events: none;
     filter: grayscale(50%);
 }
+
+/* ============================================
+   OCULTAR BEST EN PORTRAIT
+   ============================================
+   En mobile portrait, el contador BEST queda solo
+   y antiestético. Al ocultarlo el tablero sube
+   y queda mejor centrado.
+   ============================================ */
+
+@media (max-width: 767px) and (orientation: portrait) {
+    #bestStat {
+        display: none !important;
+    }
+}

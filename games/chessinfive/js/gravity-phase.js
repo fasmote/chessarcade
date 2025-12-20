@@ -60,12 +60,24 @@ const GravityPhase = {
         const square = e.currentTarget;
         const col = parseInt(square.dataset.col);
 
-        // Get selected piece type
-        const pieceType = GameState.selectedPieceType;
+        // Get selected piece type - auto-select first available if none selected
+        let pieceType = GameState.selectedPieceType;
         if (!pieceType) {
-            console.warn('⚠️ Please select a piece first');
-            SoundManager.play('invalid');
-            return;
+            // Auto-select first available piece (rook, knight, bishop, queen, king order)
+            const pieceTypes = ['rook', 'knight', 'bishop', 'queen', 'king'];
+            const inventory = GameState.inventory[GameState.currentPlayer];
+            const firstAvailable = pieceTypes.find(type => inventory[type] > 0);
+
+            if (firstAvailable) {
+                pieceType = firstAvailable;
+                GameState.selectedPieceType = pieceType;
+                UIController.selectPiece(pieceType, false); // false = no sound for auto-select
+                console.log(`🔄 Auto-selected ${pieceType} for ${GameState.currentPlayer}`);
+            } else {
+                console.warn('⚠️ No pieces available');
+                SoundManager.play('invalid');
+                return;
+            }
         }
 
         // Verify player has this piece available

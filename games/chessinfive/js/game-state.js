@@ -244,6 +244,8 @@ const GameState = {
      */
     switchPlayer() {
         this.currentPlayer = this.currentPlayer === 'cyan' ? 'magenta' : 'cyan';
+        // Reset selected piece so auto-select works for new player
+        this.selectedPieceType = null;
         console.log(`🔄 Turn: ${this.currentPlayer}`);
     },
 

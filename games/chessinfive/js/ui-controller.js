@@ -115,30 +115,62 @@ const UIController = {
     /**
      * Select a piece type
      */
-    selectPiece(pieceType) {
+    selectPiece(pieceType, playSound = true) {
         const player = GameState.currentPlayer;
 
         // Check if piece is available
         if (GameState.inventory[player][pieceType] <= 0) {
-            SoundManager.play('invalid');
+            if (playSound) SoundManager.play('invalid');
             return;
         }
 
         // Set selected piece
         GameState.selectedPieceType = pieceType;
 
-        // Update visual selection
-        const buttons = document.querySelectorAll('.piece-option');
-        buttons.forEach(btn => {
-            if (btn.dataset.piece === pieceType) {
-                btn.classList.add('selected');
-            } else {
-                btn.classList.remove('selected');
-            }
-        });
+        // Update visual selection - ONLY for the current player's selector (DESKTOP)
+        const selectorId = player === 'cyan' ? 'pieceSelector' : 'pieceSelectorMagenta';
+        const selector = document.getElementById(selectorId);
 
-        SoundManager.play('select');
-        console.log(`✅ Selected ${pieceType}`);
+        if (selector) {
+            const buttons = selector.querySelectorAll('.piece-option');
+            buttons.forEach(btn => {
+                if (btn.dataset.piece === pieceType) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        }
+
+        // Also clear selection from the OTHER player's selector
+        const otherSelectorId = player === 'cyan' ? 'pieceSelectorMagenta' : 'pieceSelector';
+        const otherSelector = document.getElementById(otherSelectorId);
+        if (otherSelector) {
+            const otherButtons = otherSelector.querySelectorAll('.piece-option');
+            otherButtons.forEach(btn => btn.classList.remove('selected'));
+        }
+
+        // MOBILE: Update visual selection in inventory pieces (only first available of type)
+        // First, clear ALL inventory selections
+        document.querySelectorAll('.inventory-piece.selected').forEach(p => p.classList.remove('selected'));
+
+        // Then select only from the CURRENT player's panel
+        const panelClass = player === 'cyan' ? '.player-panel-left' : '.player-panel-right';
+        const playerPanel = document.querySelector(panelClass);
+        if (playerPanel) {
+            const inventoryPieces = playerPanel.querySelectorAll('.inventory-piece[data-piece]');
+            let firstSelected = false;
+            inventoryPieces.forEach(piece => {
+                // Only mark the FIRST non-used piece of the selected type
+                if (piece.dataset.piece === pieceType && !piece.classList.contains('used') && !firstSelected) {
+                    piece.classList.add('selected');
+                    firstSelected = true;
+                }
+            });
+        }
+
+        if (playSound) SoundManager.play('select');
+        console.log(`✅ Selected ${pieceType} for ${player}`);
     },
 
     /**
@@ -173,7 +205,7 @@ const UIController = {
         if (!GameState.selectedPieceType || inventory[GameState.selectedPieceType] <= 0) {
             const firstAvailable = pieceTypes.find(type => inventory[type] > 0);
             if (firstAvailable) {
-                this.selectPiece(firstAvailable);
+                this.selectPiece(firstAvailable, false); // false = no sound for auto-select
             }
         }
     },
