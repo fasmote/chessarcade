@@ -29,6 +29,7 @@
 17. [Botón UNDO No Se Habilita Después de Hacer un Movimiento (Knight Quest)](#17-botón-undo-no-se-habilita-después-de-hacer-un-movimiento-knight-quest)
 18. [Menú Dropdown Invisible Bloquea Clics en el Tablero](#18-menú-dropdown-invisible-bloquea-clics-en-el-tablero)
 19. [CriptoCaballo: 8 Bugs Críticos Resueltos en Una Sesión](#19-criptocaballo-8-bugs-críticos-resueltos-en-una-sesión)
+20. [Animación CSS transform: translate() Causa Overflow Horizontal en Mobile](#20-animación-css-transform-translate-causa-overflow-horizontal-en-mobile-knight-quest)
 
 ---
 
@@ -4336,5 +4337,115 @@ El modal se desbordaba en landscape. Se agregó media query específico:
 - Data attributes para mapear clicks a recursos
 - Modal close button debe estar DENTRO del modal en mobile
 - `max-height` con `orientation: landscape` para viewports horizontales pequeños
+
+---
+
+## 20. Animación CSS `transform: translate()` Causa Overflow Horizontal en Mobile (Knight Quest)
+
+**Fecha:** 20 Diciembre 2025
+**Juego:** Knight Quest
+**Dispositivo:** Mobile portrait (celular real, no simulador)
+
+### 🔴 Síntoma
+
+El menú hamburguesa (position: fixed, right: 10px) se desplazaba hacia la derecha gradualmente hasta desaparecer del viewport, luego volvía a su posición original y el ciclo se repetía.
+
+También aparecía una barra de scroll horizontal y un "cursor" parpadeante a la derecha de los elementos.
+
+**Comportamiento cíclico observado:**
+- El viewport crecía ~5px cada 3 segundos
+- Al llegar a ~35-40px de exceso, reseteaba
+- El ciclo se repetía indefinidamente
+
+### 🔍 Diagnóstico
+
+Se agregó script de debug para detectar overflow:
+
+```javascript
+function detectOverflow() {
+    const docWidth = document.documentElement.offsetWidth;
+    const windowWidth = window.innerWidth;
+    console.log(`🔍 [DEBUG OVERFLOW] Document width: ${docWidth}, Window width: ${windowWidth}`);
+}
+setInterval(detectOverflow, 3000);
+```
+
+**Log revelador:**
+```
+🔍 [DEBUG OVERFLOW] Document width: 520, Window width: 520
+🔍 [DEBUG OVERFLOW] Document width: 520, Window width: 525
+🔍 [DEBUG OVERFLOW] Document width: 520, Window width: 530
+🔍 [DEBUG OVERFLOW] Document width: 520, Window width: 535
+🔍 [DEBUG OVERFLOW] Document width: 520, Window width: 540
+... (sigue creciendo hasta ~557, luego resetea a 520)
+```
+
+El document width se mantenía constante, pero el window.innerWidth CRECÍA cíclicamente.
+
+### 🔍 Causa Raíz
+
+La animación `neonGridMove` del grid de fondo usaba `transform: translate(40px, 40px)`:
+
+```css
+.neon-container::before {
+    animation: neonGridMove 25s linear infinite;
+}
+
+@keyframes neonGridMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(40px, 40px); }
+}
+```
+
+En ciertos navegadores móviles, esta transformación causaba que el pseudo-elemento se extendiera más allá del viewport, creando scroll horizontal aunque el padre tuviera `overflow: hidden`.
+
+**¿Por qué no se detectaba en el simulador?**
+El simulador de Chrome DevTools no reproduce exactamente el comportamiento de renderizado de navegadores móviles reales. Este bug solo aparecía en celulares físicos.
+
+### ✅ Solución
+
+Desactivar la animación del grid en mobile portrait:
+
+```css
+@media (max-width: 767px) and (orientation: portrait) {
+    /* DESACTIVAR animación del grid que causa overflow */
+    .neon-container::before {
+        animation: none !important;
+        transform: none !important;
+    }
+}
+```
+
+### 📚 Lecciones Aprendidas
+
+1. **`transform: translate()` puede causar overflow** incluso si el padre tiene `overflow: hidden`, especialmente en navegadores móviles
+2. **Siempre testear en dispositivos reales** - el simulador no detecta todos los bugs de renderizado
+3. **Scripts de debug son esenciales** - sin el log de `window.innerWidth` creciendo, hubiera sido imposible diagnosticar
+4. **Animaciones de fondo decorativas** pueden tener efectos secundarios inesperados en mobile
+5. **`position: fixed` con `right: Xpx`** se ve afectado cuando el viewport cambia de tamaño
+
+### 🔧 Patrón de Debug para Overflow Horizontal
+
+```javascript
+// Agregar esto temporalmente para diagnosticar overflow
+function detectOverflow() {
+    const docWidth = document.documentElement.offsetWidth;
+    const windowWidth = window.innerWidth;
+    console.log(`Document: ${docWidth}, Window: ${windowWidth}`);
+
+    if (docWidth !== windowWidth) {
+        console.error(`⚠️ OVERFLOW: diferencia de ${Math.abs(docWidth - windowWidth)}px`);
+    }
+
+    // Detectar elementos que exceden
+    document.querySelectorAll('*').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.right > windowWidth) {
+            console.warn('Elemento excede viewport:', el.tagName, el.className);
+        }
+    });
+}
+setInterval(detectOverflow, 3000);
+```
 
 ---

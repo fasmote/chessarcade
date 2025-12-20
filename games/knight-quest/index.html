@@ -1291,25 +1291,36 @@
             animation: shake 0.5s ease;
         }
 
+        /* Stats: mostrar desktop por defecto, ocultar mobile */
+        .game-stats-desktop {
+            display: flex;
+        }
+        .game-stats-mobile {
+            display: none;
+        }
+
         /* ========================================
            MOBILE PORTRAIT SPECIFIC ADJUSTMENTS
            ======================================== */
         @media (max-width: 767px) and (orientation: portrait) {
 
+            /* DESACTIVAR animación del grid que causa overflow */
+            .neon-container::before {
+                animation: none !important;
+                transform: none !important;
+            }
+
+            /* Stats: ocultar desktop, mostrar mobile */
+            .game-stats-desktop {
+                display: none !important;
+            }
+            .game-stats-mobile {
+                display: grid !important;
+            }
+
             /* Reducir espacio entre subtitle y size-selector */
             .game-subtitle {
                 margin-bottom: 0.5rem;
-            }
-
-            /* Reordenar: NEW GAME después del tablero, luego HINT/UNDO, luego Stats */
-            .game-controls-primary {
-                order: 5 !important; /* NEW GAME después del tablero */
-            }
-            .game-controls-secondary {
-                order: 6 !important; /* HINT, UNDO después de NEW GAME */
-            }
-            .game-stats {
-                order: 7 !important; /* Stats después de HINT/UNDO */
             }
 
             /* Botones de tamaño: 2x2 grid */
@@ -1327,19 +1338,27 @@
                 min-width: unset;
             }
 
-            /* Stats: 2x2 grid */
+            /* Stats: 2x2 grid - compact */
             .game-stats {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 grid-template-rows: auto auto;
-                gap: 0.75rem;
-                max-width: 400px;
-                margin: 1rem auto;
-                padding: 0 1rem;
+                gap: 0.4rem;
+                max-width: 320px;
+                margin: 0.5rem auto;
+                padding: 0 0.5rem;
             }
 
             .stat {
                 width: 100%;
+                padding: 0.4rem 0.6rem;
+                font-size: 0.7rem;
+                min-width: unset;
+                border-width: 2px;
+            }
+
+            .stat-number {
+                font-size: 1rem;
             }
 
             /* Controles primary (NEW GAME) */
@@ -1536,26 +1555,26 @@
             <p class="game-subtitle">Master the knight's L-shaped moves and visit every square!</p>
         </div>
 
-        <!-- Game Stats (separado para reordenar en mobile) -->
-        <div class="game-stats">
+        <!-- Game Stats - DESKTOP (visible solo en desktop) -->
+        <div class="game-stats game-stats-desktop">
             <div class="stat">
-                <span class="stat-number" id="moveCount">0</span>
+                <span class="stat-number" id="moveCountDesktop">0</span>
                 <div>Moves</div>
             </div>
             <div class="stat">
-                <span class="stat-number" id="visitedCount">0</span>
+                <span class="stat-number" id="visitedCountDesktop">0</span>
                 <div>Visited</div>
             </div>
             <div class="stat">
-                <span class="stat-number" id="remainingCount">16</span>
+                <span class="stat-number" id="remainingCountDesktop">16</span>
                 <div>Remaining</div>
             </div>
             <div class="stat">
-                <span class="stat-number" id="timeCount">00:00</span>
+                <span class="stat-number" id="timeCountDesktop">00:00</span>
                 <div>Time</div>
             </div>
         </div>
-        
+
         <!-- Size Selector -->
         <div class="size-selector">
             <button class="size-btn active" onclick="changeBoardSize(3, 4)" data-size="3x4">3x4</button>
@@ -1594,7 +1613,27 @@
             <button class="btn btn-secondary" onclick="getHint()" id="hintBtn">💡 HINT (3)</button>
             <button class="btn btn-secondary" onclick="undoMove()" id="undoBtn" disabled>↩️ UNDO</button>
         </div>
-        
+
+        <!-- Game Stats - MOBILE (visible solo en mobile portrait) -->
+        <div class="game-stats game-stats-mobile">
+            <div class="stat">
+                <span class="stat-number" id="moveCount">0</span>
+                <div>Moves</div>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="visitedCount">0</span>
+                <div>Visited</div>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="remainingCount">16</span>
+                <div>Remaining</div>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="timeCount">00:00</span>
+                <div>Time</div>
+            </div>
+        </div>
+
         <!-- Instructions -->
         <section class="neon-section">
             <div class="instructions">
@@ -2094,20 +2133,41 @@
                 console.log(`💡 Showing ${possibleMoves.length} possible moves`);
             }
             
-            // Update stats
-            document.getElementById('moveCount').textContent = gameState.moveHistory.length;
-            document.getElementById('visitedCount').textContent = gameState.visitedSquares.size;
-            document.getElementById('remainingCount').textContent = totalSquares - gameState.visitedSquares.size;
+            // Update stats (both desktop and mobile)
+            const moves = gameState.moveHistory.length;
+            const visited = gameState.visitedSquares.size;
+            const remaining = totalSquares - gameState.visitedSquares.size;
+
+            // Mobile stats
+            const moveEl = document.getElementById('moveCount');
+            const visitedEl = document.getElementById('visitedCount');
+            const remainingEl = document.getElementById('remainingCount');
+            if (moveEl) moveEl.textContent = moves;
+            if (visitedEl) visitedEl.textContent = visited;
+            if (remainingEl) remainingEl.textContent = remaining;
+
+            // Desktop stats
+            const moveElD = document.getElementById('moveCountDesktop');
+            const visitedElD = document.getElementById('visitedCountDesktop');
+            const remainingElD = document.getElementById('remainingCountDesktop');
+            if (moveElD) moveElD.textContent = moves;
+            if (visitedElD) visitedElD.textContent = visited;
+            if (remainingElD) remainingElD.textContent = remaining;
         }
-        
+
         // Update timer (Same as your working code)
         function updateTimer() {
             if (gameState.startTime) {
                 const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
                 const minutes = Math.floor(elapsed / 60);
                 const seconds = elapsed % 60;
-                document.getElementById('timeCount').textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                // Update both mobile and desktop
+                const timeEl = document.getElementById('timeCount');
+                const timeElD = document.getElementById('timeCountDesktop');
+                if (timeEl) timeEl.textContent = timeStr;
+                if (timeElD) timeElD.textContent = timeStr;
             }
         }
         
