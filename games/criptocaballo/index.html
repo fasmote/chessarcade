@@ -357,6 +357,15 @@
         .message-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
         .message-visible { filter: none; }
 
+        /* RETO DEL DÍA - visible en todos los dispositivos */
+        #retoDiaLabel {
+            font-size: 0.9rem;
+            color: #fff;
+            font-weight: 800;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.05em;
+        }
+
         /* ============================================
            MOBILE PORTRAIT - UI compacta
            ============================================ */
@@ -613,8 +622,8 @@
                         </span>
                         CriptoCaballo
                     </h1>
-                    <p class="text-slate-400 max-w-lg mx-auto text-sm md:text-base hidden sm:block mb-6">
-                        Generador de enigmas ajedrecísticos.
+                    <p class="text-slate-400 max-w-lg mx-auto text-sm md:text-base mb-6">
+                        Sigue el camino del caballo para descifrar el mensaje oculto
                     </p>
 
                     <div class="border-b border-cyan-900/50 pb-2 mb-4 flex justify-between items-end">
@@ -676,6 +685,75 @@
                     <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
                         <i class="fa-regular fa-eye"></i> Ver con Espacios
                     </button>
+                </div>
+
+                <!-- How to Play Section - Siempre abierto -->
+                <div style="max-width: 900px; margin: 1rem auto 0 auto; padding: 0 1rem;">
+                    <div style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.9), rgba(15, 23, 42, 0.95)); border: 2px solid #22d3ee; border-radius: 15px; padding: 1.5rem; box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);">
+                        <h3 style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: #22d3ee; text-shadow: 0 0 10px rgba(34, 211, 238, 0.8); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.8rem;">📖</span> Cómo Jugar - Guía Paso a Paso
+                        </h3>
+
+                        <div style="color: #cbd5e1; font-family: 'Roboto', sans-serif; line-height: 1.8;">
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>📋</span> El Objetivo
+                                </h3>
+                                <p>Descifra el mensaje oculto en el tablero siguiendo el movimiento en "L" del caballo. Cada tablero contiene una frase completa (cita, refrán o frase célebre) que se revela letra por letra al saltar correctamente.</p>
+                            </div>
+
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>♞</span> Reglas del Movimiento
+                                </h3>
+                                <p>El caballo se mueve en forma de "L": <strong style="color: #22d3ee;">2 casillas en una dirección + 1 casilla perpendicular</strong>. Por ejemplo:</p>
+                                <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                                    <li>2 arriba + 1 a la derecha</li>
+                                    <li>2 a la izquierda + 1 abajo</li>
+                                    <li>2 a la derecha + 1 arriba</li>
+                                    <li>...y así sucesivamente (8 movimientos posibles desde cada casilla)</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>🎮</span> Pasos para Resolver
+                                </h3>
+                                <ol style="margin-left: 2rem; margin-top: 0.5rem;">
+                                    <li><strong style="color: #22d3ee;">Selecciona un tamaño de tablero</strong> - Elige entre 3x4, 4x5, 5x5, 5x6, 6x7, o 8x8</li>
+                                    <li><strong style="color: #22d3ee;">Haz clic en una casilla</strong> - Las casillas válidas (a las que puedes saltar) se iluminarán</li>
+                                    <li><strong style="color: #22d3ee;">Construye el mensaje</strong> - Ve formando palabras letra por letra</li>
+                                    <li><strong style="color: #22d3ee;">Usa DESHACER si te equivocas</strong> - Retrocede y prueba otra ruta</li>
+                                    <li><strong style="color: #22d3ee;">¡Completa la frase!</strong> - Descifra el mensaje completo para ganar</li>
+                                </ol>
+                            </div>
+
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>🎯</span> Controles del Juego
+                                </h3>
+                                <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                                    <li><strong style="color: #22d3ee;">DESHACER</strong> - Retrocede un movimiento</li>
+                                    <li><strong style="color: #22d3ee;">REINICIAR</strong> - Limpia todo el progreso y vuelve a empezar</li>
+                                    <li><strong style="color: #22d3ee;">PISTA</strong> - Resalta todas las casillas donde el caballo puede saltar</li>
+                                    <li><strong style="color: #22d3ee;">VER ESPACIOS</strong> - Muestra los espacios entre palabras del mensaje</li>
+                                </ul>
+                            </div>
+
+                            <div style="background: rgba(34, 211, 238, 0.1); border-left: 4px solid #22d3ee; padding: 1rem; border-radius: 8px;">
+                                <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>💡</span> Consejos Pro
+                                </h3>
+                                <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                                    <li>Busca palabras comunes como "EL", "LA", "DE", "EN", "QUE"</li>
+                                    <li>Sigue la gramática: artículos van antes de sustantivos</li>
+                                    <li>Prueba varias casillas iniciales si te atascas</li>
+                                    <li>Los tableros pequeños (3x4, 4x5) son ideales para principiantes</li>
+                                    <li>Tu progreso se guarda automáticamente - puedes volver más tarde</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2523,75 +2601,6 @@
     </script>
 
     </div> <!-- Cierre del wrapper de contenido centrado -->
-
-    <!-- How to Play Section -->
-    <div style="max-width: 900px; margin: 0.5rem auto 2rem auto; padding: 1rem;">
-        <details style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.9), rgba(15, 23, 42, 0.95)); border: 2px solid #22d3ee; border-radius: 15px; padding: 1.5rem; box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);">
-            <summary style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: #22d3ee; cursor: pointer; text-shadow: 0 0 10px rgba(34, 211, 238, 0.8); margin-bottom: 1rem; list-style: none; display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-size: 1.8rem;">📖</span> Cómo Jugar - Guía Paso a Paso
-            </summary>
-
-            <div style="color: #cbd5e1; font-family: 'Roboto', sans-serif; line-height: 1.8;">
-                <div style="margin-bottom: 1.5rem;">
-                    <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>📋</span> El Objetivo
-                    </h3>
-                    <p>Descifra el mensaje oculto en el tablero siguiendo el movimiento en "L" del caballo. Cada tablero contiene una frase completa (cita, refrán o frase célebre) que se revela letra por letra al saltar correctamente.</p>
-                </div>
-
-                <div style="margin-bottom: 1.5rem;">
-                    <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>♞</span> Reglas del Movimiento
-                    </h3>
-                    <p>El caballo se mueve en forma de "L": <strong style="color: #22d3ee;">2 casillas en una dirección + 1 casilla perpendicular</strong>. Por ejemplo:</p>
-                    <ul style="margin-left: 2rem; margin-top: 0.5rem;">
-                        <li>2 arriba + 1 a la derecha</li>
-                        <li>2 a la izquierda + 1 abajo</li>
-                        <li>2 a la derecha + 1 arriba</li>
-                        <li>...y así sucesivamente (8 movimientos posibles desde cada casilla)</li>
-                    </ul>
-                </div>
-
-                <div style="margin-bottom: 1.5rem;">
-                    <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>🎮</span> Pasos para Resolver
-                    </h3>
-                    <ol style="margin-left: 2rem; margin-top: 0.5rem;">
-                        <li><strong style="color: #22d3ee;">Selecciona un tamaño de tablero</strong> - Elige entre 3x4, 4x5, 5x5, 5x6, 6x7, o 8x8</li>
-                        <li><strong style="color: #22d3ee;">Haz clic en una casilla</strong> - Las casillas válidas (a las que puedes saltar) se iluminarán</li>
-                        <li><strong style="color: #22d3ee;">Construye el mensaje</strong> - Ve formando palabras letra por letra</li>
-                        <li><strong style="color: #22d3ee;">Usa DESHACER si te equivocas</strong> - Retrocede y prueba otra ruta</li>
-                        <li><strong style="color: #22d3ee;">¡Completa la frase!</strong> - Descifra el mensaje completo para ganar</li>
-                    </ol>
-                </div>
-
-                <div style="margin-bottom: 1.5rem;">
-                    <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>🎯</span> Controles del Juego
-                    </h3>
-                    <ul style="margin-left: 2rem; margin-top: 0.5rem;">
-                        <li><strong style="color: #22d3ee;">DESHACER</strong> - Retrocede un movimiento</li>
-                        <li><strong style="color: #22d3ee;">REINICIAR</strong> - Limpia todo el progreso y vuelve a empezar</li>
-                        <li><strong style="color: #22d3ee;">PISTA</strong> - Resalta todas las casillas donde el caballo puede saltar</li>
-                        <li><strong style="color: #22d3ee;">VER ESPACIOS</strong> - Muestra los espacios entre palabras del mensaje</li>
-                    </ul>
-                </div>
-
-                <div style="background: rgba(34, 211, 238, 0.1); border-left: 4px solid #22d3ee; padding: 1rem; border-radius: 8px;">
-                    <h3 style="color: #f9a825; font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>💡</span> Consejos Pro
-                    </h3>
-                    <ul style="margin-left: 2rem; margin-top: 0.5rem;">
-                        <li>Busca palabras comunes como "EL", "LA", "DE", "EN", "QUE"</li>
-                        <li>Sigue la gramática: artículos van antes de sustantivos</li>
-                        <li>Prueba varias casillas iniciales si te atascas</li>
-                        <li>Los tableros pequeños (3x4, 4x5) son ideales para principiantes</li>
-                        <li>Tu progreso se guarda automáticamente - puedes volver más tarde</li>
-                    </ul>
-                </div>
-            </div>
-        </details>
-    </div>
 
     <!-- Footer común estilo ChessArcade -->
     <footer style="background: linear-gradient(180deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); padding: 1.5rem 1rem; margin-top: auto; border-top: 3px solid #22d3ee; box-shadow: 0 -4px 20px rgba(34, 211, 238, 0.3); text-align: center; width: 100%;">
