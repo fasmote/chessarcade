@@ -633,7 +633,7 @@
                                 <h2 id="gameModeTitle" class="text-xl font-bold text-cyan-400" style="font-family: 'Orbitron', sans-serif;">
                                     <i class="fa-solid fa-gamepad mr-2"></i>CriptoMensaje
                                 </h2>
-                                <p id="gameModeDesc" class="text-slate-500 text-xs mt-1">
+                                <p id="gameModeDesc" class="text-cyan-300 text-sm mt-1 font-medium">
                                     Descifra el mensaje oculto.
                                 </p>
                             </div>
@@ -1741,12 +1741,22 @@
             if(filesRow) filesRow.innerHTML = '';
             board.innerHTML = '';
             
+            // Detect portrait mode and 8x8 board for smaller cells
+            const isPortrait = window.matchMedia("(max-width: 480px) and (orientation: portrait)").matches;
+            const is8x8 = (rows === 8 && cols === 8);
+
+            // Use smaller max cell size for 8x8 in portrait (38px instead of 60px)
+            const maxCellSize = (isPortrait && is8x8) ? '38px' : '60px';
+
             const widthConstraint = `calc((100vw - 60px) / ${cols})`;
             const heightConstraint = `calc((80vh - 40px) / ${rows})`;
-            const cellSizeExpr = `min(60px, ${widthConstraint}, ${heightConstraint})`;
+            const cellSizeExpr = `min(${maxCellSize}, ${widthConstraint}, ${heightConstraint})`;
 
             board.style.gridTemplateColumns = `repeat(${cols}, ${cellSizeExpr})`;
             board.style.gridTemplateRows = `repeat(${rows}, ${cellSizeExpr})`;
+
+            // Add data attribute for CSS targeting
+            board.dataset.size = `${rows}x${cols}`;
 
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
