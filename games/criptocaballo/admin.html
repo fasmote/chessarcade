@@ -1807,6 +1807,39 @@
             const fillOption = document.getElementById('fillOption');
             const separator = document.getElementById('wordSeparator');
 
+            // Determine daily_number for this puzzle
+            let dailyNumber = null;
+            try {
+                // First check if this puzzle already exists and has a daily_number
+                const { data: existingPuzzle } = await supabaseClient
+                    .from('puzzles')
+                    .select('daily_number')
+                    .eq('puzzle_date', puzzleDate)
+                    .eq('board_size', boardSize)
+                    .single();
+
+                if (existingPuzzle && existingPuzzle.daily_number) {
+                    // Keep existing daily_number
+                    dailyNumber = existingPuzzle.daily_number;
+                    console.log(`📊 Puzzle existente, mantiene daily_number: ${dailyNumber}`);
+                } else {
+                    // New puzzle - get next available number
+                    const { data: maxResult } = await supabaseClient
+                        .from('puzzles')
+                        .select('daily_number')
+                        .order('daily_number', { ascending: false, nullsFirst: false })
+                        .limit(1)
+                        .single();
+
+                    dailyNumber = (maxResult?.daily_number || 0) + 1;
+                    console.log(`📊 Nuevo puzzle, asignando daily_number: ${dailyNumber}`);
+                }
+            } catch (err) {
+                // If no puzzles exist yet, start at 1
+                dailyNumber = 1;
+                console.log(`📊 Primer puzzle, asignando daily_number: 1`);
+            }
+
             const puzzleData = {
                 puzzle_date: puzzleDate,
                 board_size: boardSize,
@@ -1820,7 +1853,8 @@
                 difficulty: difficulty,
                 start_hints: lockedHintCount || 0,
                 end_hints: activeEndHints || 0,
-                admin_comments: adminComments
+                admin_comments: adminComments,
+                daily_number: dailyNumber
             };
 
             console.log("Guardando puzzle:", puzzleData);
@@ -1848,14 +1882,14 @@
                     const idDisplay = document.getElementById('puzzleIdDisplay');
                     const idText = document.getElementById('puzzleIdText');
                     if(idDisplay && idText) {
-                        idText.innerHTML = `<strong>✓ Guardado!</strong> ID: <strong>${puzzleId}</strong>${titleText}${authorText}`;
+                        idText.innerHTML = `<strong>✓ Guardado!</strong> Reto #${dailyNumber}${titleText}${authorText}`;
                         idDisplay.classList.remove('hidden');
                         // Hide after 8 seconds
                         setTimeout(() => idDisplay.classList.add('hidden'), 8000);
                     }
 
-                    // Update permanent ID display
-                    updatePuzzleIdDisplay(title, author);
+                    // Update permanent ID display with daily_number
+                    updatePuzzleIdDisplay(title, author, dailyNumber);
                 }
             } catch (err) {
                 console.error("Excepción al guardar:", err);
