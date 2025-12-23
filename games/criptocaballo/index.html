@@ -413,8 +413,13 @@
             /* Botones arcade - texto más grande sin agrandar contenedor */
             .arcade-btn {
                 font-size: 1rem !important;
-                padding: 0.4rem 0.6rem !important;
+                padding: 0.3rem 0.5rem !important;
                 font-weight: 700 !important;
+            }
+
+            /* Contenedor de botones arcade - menos margen */
+            .w-full.max-w-md.mb-4.grid {
+                margin-bottom: 0.5rem !important;
             }
 
             /* LETRAS MÁS GRANDES en las casillas (sin cambiar tamaño de casilla) */
@@ -429,6 +434,21 @@
                 color: #fff !important;
                 font-weight: 900 !important;
                 text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+
+            /* Reducir espacio entre datepicker y botones de tamaño */
+            .border-b.border-cyan-900\/50 {
+                margin-bottom: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+            }
+
+            /* Título del puzzle (ayuda para usuarios) más grande */
+            #puzzleIdDisplay {
+                font-size: 0.95rem !important;
+                padding: 0.75rem !important;
+            }
+            #puzzleIdDisplay #puzzleIdText {
+                font-weight: 600;
             }
         }
     </style>
@@ -638,9 +658,9 @@
                                 </p>
                             </div>
                         </div>
-                         <div class="flex flex-col items-end">
-                             <label id="retoDiaLabel" class="text-[0.6rem] text-slate-500 mb-1 font-bold">RETO DEL DÍA</label>
-                             <input type="date" class="date-input" onchange="console.log('📅 Usuario cambió fecha a:', this.value); loadDailyLevel(this.value);">
+                         <div class="flex flex-col items-center">
+                             <label id="retoDiaLabel" class="text-[0.6rem] text-slate-500 mb-1 font-bold text-center">RETO DEL DÍA <span id="dailyNumberDisplay" class="text-white"></span></label>
+                             <input type="date" class="date-input" min="2025-12-06" onchange="console.log('📅 Usuario cambió fecha a:', this.value); loadDailyLevel(this.value);">
                          </div>
                     </div>
                 </div>
@@ -1378,9 +1398,11 @@
             const showSpacesBtn = document.getElementById('showSpacesBtn');
             if(showSpacesBtn) showSpacesBtn.classList.add('hidden');
 
-            // Hide puzzle ID when changing board size (will reload if there's a puzzle)
+            // Hide puzzle ID and clear daily number when changing board size
             const idDisplay = document.getElementById('puzzleIdDisplay');
             if(idDisplay) idDisplay.classList.add('hidden');
+            const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
+            if(dailyNumDisplay) dailyNumDisplay.textContent = '';
 
             clearPossibleMoves();
         }
@@ -1437,16 +1459,28 @@
                         // User sees: #25 (sequential daily_number from database)
                         const internalId = `#${selectedDate.replace(/-/g, '')}-${boardSize}`;
                         const displayId = data.daily_number ? `#${data.daily_number}` : internalId;
-                        const titleText = data.title ? ` "${data.title}"` : '';
-                        const authorText = data.author ? ` por ${data.author}` : '';
 
-                        // Store internal ID for debugging (data attribute)
+                        // Update daily number display (next to RETO DEL DÍA label)
+                        const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
+                        if(dailyNumDisplay) {
+                            dailyNumDisplay.textContent = displayId;
+                        }
+
+                        // Show title and author with different colors
                         const idDisplay = document.getElementById('puzzleIdDisplay');
                         const idText = document.getElementById('puzzleIdText');
                         if(idDisplay && idText) {
                             idDisplay.dataset.internalId = internalId;
-                            idText.innerHTML = `<strong>Reto Diario</strong> <strong>${displayId}</strong>${titleText}${authorText}`;
-                            idDisplay.classList.remove('hidden');
+                            // Title in yellow, author in slate
+                            const titleHtml = data.title ? `<span class="text-yellow-300 font-bold">"${data.title}"</span>` : '';
+                            const authorHtml = data.author ? `<span class="text-slate-400 ml-2">por ${data.author}</span>` : '';
+                            idText.innerHTML = titleHtml + authorHtml;
+                            // Only show if there's title or author
+                            if(data.title || data.author) {
+                                idDisplay.classList.remove('hidden');
+                            } else {
+                                idDisplay.classList.add('hidden');
+                            }
                         }
 
                         // Show admin comments if available
@@ -1479,11 +1513,13 @@
                 input.value = '';
             }
 
-            // Hide puzzle ID when no official puzzle
+            // Hide puzzle ID and clear daily number when no official puzzle
             const idDisplay = document.getElementById('puzzleIdDisplay');
             if(idDisplay) {
                 idDisplay.classList.add('hidden');
             }
+            const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
+            if(dailyNumDisplay) dailyNumDisplay.textContent = '';
 
             // Show message to user
             const decodedText = document.getElementById('decodedText');
@@ -1675,8 +1711,6 @@
                     // User sees: #25 (sequential daily_number from database)
                     const internalId = `#${selectedDate.replace(/-/g, '')}-${boardSize}`;
                     const displayId = data.daily_number ? `#${data.daily_number}` : internalId;
-                    const titleText = data.title ? ` "${data.title}"` : '';
-                    const authorText = data.author ? ` por ${data.author}` : '';
 
                     // Load the message into input
                     const messageInput = document.getElementById('messageInput');
@@ -1702,13 +1736,27 @@
                         generateCryptogram();
                     }
 
-                    // Show ID in UI permanently
+                    // Update daily number display (next to RETO DEL DÍA label)
+                    const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
+                    if(dailyNumDisplay) {
+                        dailyNumDisplay.textContent = displayId;
+                    }
+
+                    // Show title and author with different colors
                     const idDisplay = document.getElementById('puzzleIdDisplay');
                     const idText = document.getElementById('puzzleIdText');
                     if(idDisplay && idText) {
                         idDisplay.dataset.internalId = internalId;
-                        idText.innerHTML = `<strong>Reto Diario</strong> <strong>${displayId}</strong>${titleText}${authorText}`;
-                        idDisplay.classList.remove('hidden');
+                        // Title in yellow, author in slate
+                        const titleHtml = data.title ? `<span class="text-yellow-300 font-bold">"${data.title}"</span>` : '';
+                        const authorHtml = data.author ? `<span class="text-slate-400 ml-2">por ${data.author}</span>` : '';
+                        idText.innerHTML = titleHtml + authorHtml;
+                        // Only show if there's title or author
+                        if(data.title || data.author) {
+                            idDisplay.classList.remove('hidden');
+                        } else {
+                            idDisplay.classList.add('hidden');
+                        }
                     }
 
                     // Show admin comments if available
@@ -1745,8 +1793,8 @@
             const isPortrait = window.matchMedia("(max-width: 480px) and (orientation: portrait)").matches;
             const is8x8 = (rows === 8 && cols === 8);
 
-            // Use smaller max cell size for 8x8 in portrait (38px instead of 60px)
-            const maxCellSize = (isPortrait && is8x8) ? '38px' : '60px';
+            // Use smaller max cell size for 8x8 in portrait (36px instead of 60px)
+            const maxCellSize = (isPortrait && is8x8) ? '36px' : '60px';
 
             const widthConstraint = `calc((100vw - 60px) / ${cols})`;
             const heightConstraint = `calc((80vh - 40px) / ${rows})`;
