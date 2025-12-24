@@ -26,28 +26,263 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&family=Courier+Prime:wght@700&display=swap');
 
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-magenta: #ff0080;
+            --neon-yellow: #ffd700;
+            --dark-bg: #0a0a0a;
+            --dark-secondary: #1a0033;
+        }
+
         body {
-            background-color: #0f172a;
-            background-image:
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 49px,
-                    rgba(0, 255, 255, 0.03) 49px,
-                    rgba(0, 255, 255, 0.03) 50px
-                ),
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 49px,
-                    rgba(0, 255, 255, 0.03) 49px,
-                    rgba(0, 255, 255, 0.03) 50px
-                );
-            background-size: 50px 50px;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 50%, #0f172a 100%);
+            background-attachment: fixed;
             font-family: 'Roboto Mono', monospace;
             color: #e2e8f0;
             overflow-x: hidden;
             touch-action: pan-y;
+        }
+
+        /* Animated grid background - desktop only */
+        @media (min-width: 768px) {
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image:
+                    linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px);
+                background-size: 50px 50px;
+                pointer-events: none;
+                animation: gridMove 20s linear infinite;
+                z-index: 0;
+            }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Desktop navigation styles */
+        .desktop-nav {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .desktop-nav {
+                display: flex;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                gap: 12px;
+                z-index: 1001;
+            }
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            min-height: 44px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.btn-home {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        .nav-btn.btn-home:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+        }
+
+        .nav-btn.btn-sound {
+            border-color: #ff8000;
+            color: #ff8000;
+            box-shadow: 0 0 10px rgba(255, 128, 0, 0.3);
+        }
+        .nav-btn.btn-sound:hover {
+            background: rgba(255, 128, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 128, 0, 0.6);
+        }
+
+        /* ChessArcade Logo - desktop left */
+        .desktop-logo {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .desktop-logo {
+                display: flex;
+                position: fixed;
+                top: 15px;
+                left: 20px;
+                z-index: 1001;
+            }
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.03);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-magenta);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .joystick-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Desktop layout: board center, message right */
+        .game-layout-desktop {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        @media (min-width: 1024px) {
+            .game-layout-desktop {
+                position: relative;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                min-height: 500px;
+            }
+
+            .board-section {
+                flex: 0 0 auto;
+            }
+
+            .message-section {
+                position: absolute;
+                right: 40px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 280px;
+                margin-top: 0 !important;
+            }
+
+            .message-section.decoded-box {
+                min-height: 200px;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .message-section {
+                right: 40px;
+                width: 320px;
+            }
+        }
+
+        /* Games menu dropdown */
+        .games-menu-container {
+            position: relative;
+        }
+
+        .nav-btn.btn-games {
+            border-color: var(--neon-yellow);
+            color: var(--neon-yellow);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        .nav-btn.btn-games:hover {
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .games-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(10, 10, 26, 0.98);
+            border: 2px solid var(--neon-yellow);
+            border-radius: 10px;
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .games-menu-container:hover .games-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .game-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.2s ease;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+        }
+
+        .game-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .game-menu-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--neon-yellow);
+            padding-left: 20px;
+        }
+
+        .game-menu-item.current {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--neon-yellow);
+        }
+
+        .game-icon {
+            font-size: 1.3rem;
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
         }
 
         h1, h2, h3 {
@@ -457,10 +692,111 @@
     <!-- Hamburger Menu (mobile) -->
     <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
 </head>
-<body class="min-h-screen flex flex-col items-center py-4 px-2 md:py-6 md:px-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);">
+<body class="min-h-screen flex flex-col items-center py-4 px-2 md:py-6 md:px-4">
+    <!-- Desktop Logo -->
+    <div class="desktop-logo">
+        <a href="../../index.html" class="logo-link">
+            <svg class="joystick-icon" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" style="animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 15px #00d9ff);">
+                <defs>
+                    <filter id="glow-cyan" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="glow-red" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <g filter="url(#glow-cyan)">
+                    <path d="M 60 100 L 85 87 L 60 74 L 35 87 Z" fill="#1a1a2e" stroke="#00d9ff" stroke-width="2.5"/>
+                    <path d="M 60 74 L 85 87 L 85 95 L 60 108 Z" fill="#0f0f1a" stroke="#00d9ff" stroke-width="2"/>
+                    <path d="M 60 74 L 35 87 L 35 95 L 60 108 Z" fill="#16161f" stroke="#00d9ff" stroke-width="2"/>
+                </g>
+                <g>
+                    <rect x="55" y="65" width="10" height="17" fill="#2a2a3e" stroke="#666" stroke-width="1.2"/>
+                    <ellipse cx="60" cy="82" rx="5" ry="2.5" fill="#1f1f2e" stroke="#555" stroke-width="1"/>
+                </g>
+                <g filter="url(#glow-red)">
+                    <ellipse cx="60" cy="55" rx="15" ry="12" fill="#ff0040" stroke="#ff3366" stroke-width="1"/>
+                    <ellipse cx="56" cy="50" rx="5" ry="4" fill="#ff6690" opacity="0.9"/>
+                </g>
+            </svg>
+            <span class="logo-text">ChessArcade</span>
+            <svg class="joystick-icon" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" style="animation: float 3s ease-in-out infinite 1.5s; filter: drop-shadow(0 0 15px #ff0080);">
+                <defs>
+                    <filter id="glow-magenta" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="glow-yellow" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <g filter="url(#glow-magenta)">
+                    <path d="M 60 100 L 85 87 L 60 74 L 35 87 Z" fill="#1a1a2e" stroke="#ff0080" stroke-width="2.5"/>
+                    <path d="M 60 74 L 85 87 L 85 95 L 60 108 Z" fill="#0f0f1a" stroke="#ff0080" stroke-width="2"/>
+                    <path d="M 60 74 L 35 87 L 35 95 L 60 108 Z" fill="#16161f" stroke="#ff0080" stroke-width="2"/>
+                </g>
+                <g>
+                    <rect x="55" y="65" width="10" height="17" fill="#2a2a3e" stroke="#666" stroke-width="1.2"/>
+                    <ellipse cx="60" cy="82" rx="5" ry="2.5" fill="#1f1f2e" stroke="#555" stroke-width="1"/>
+                </g>
+                <g filter="url(#glow-yellow)">
+                    <ellipse cx="60" cy="55" rx="15" ry="12" fill="#ffd700" stroke="#ffee00" stroke-width="1"/>
+                    <ellipse cx="56" cy="50" rx="5" ry="4" fill="#ffff80" opacity="0.9"/>
+                </g>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav">
+        <a href="../../index.html" class="nav-btn btn-home">
+            <i class="fa-solid fa-home"></i>
+            <span>HOME</span>
+        </a>
+        <button class="nav-btn btn-sound" onclick="toggleSound()" id="soundBtn">
+            <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+            <span>SONIDO</span>
+        </button>
+        <div class="games-menu-container">
+            <button class="nav-btn btn-games">
+                <i class="fa-solid fa-gamepad"></i>
+                <span>JUEGOS</span>
+            </button>
+            <div class="games-dropdown">
+                <a href="../knight-quest/index.html" class="game-menu-item">
+                    <span class="game-icon">🐴</span>
+                    <span>Knight Quest</span>
+                </a>
+                <a href="../memory-matrix-v2/index.html" class="game-menu-item">
+                    <span class="game-icon">🧠</span>
+                    <span>Memory Matrix</span>
+                </a>
+                <a href="../square-rush/index.html" class="game-menu-item">
+                    <span class="game-icon">⚡</span>
+                    <span>Square Rush</span>
+                </a>
+                <a href="../master-sequence/index.html" class="game-menu-item">
+                    <span class="game-icon">🎯</span>
+                    <span>Master Sequence</span>
+                </a>
+                <a href="../vision-blitz/index.html" class="game-menu-item">
+                    <span class="game-icon">👁️</span>
+                    <span>Vision Blitz</span>
+                </a>
+                <a href="index.html" class="game-menu-item current">
+                    <span class="game-icon">🔐</span>
+                    <span>CriptoCaballo</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
     <!-- Wrapper para centrar todo el contenido -->
     <div class="w-full max-w-[1400px] flex flex-col items-center">
-    
+
     <div id="confetti-container" class="confetti-container"></div>
 
     <!-- MODAL SAVE -->
@@ -686,27 +1022,32 @@
                     <i class="fa-solid fa-comment-dots mr-1"></i><span id="commentsText"></span>
                 </div>
 
-                <div class="board-wrapper" id="boardWrapper">
-                    <div class="game-header text-center"></div>
-                    <div class="timer-row">
-                        <div id="timer" class="timer-display">00:00:00</div>
-                        <div class="reset-btn-wrapper">
-                            <button onclick="resetCurrentLevel()" class="reset-btn" title="Jugar de nuevo">
-                                <i class="fa-solid fa-rotate-right"></i>
-                            </button>
+                <!-- Desktop layout: board center, message right -->
+                <div class="game-layout-desktop">
+                    <div class="board-section">
+                        <div class="board-wrapper" id="boardWrapper">
+                            <div class="game-header text-center"></div>
+                            <div class="timer-row">
+                                <div id="timer" class="timer-display">00:00:00</div>
+                                <div class="reset-btn-wrapper">
+                                    <button onclick="resetCurrentLevel()" class="reset-btn" title="Jugar de nuevo">
+                                        <i class="fa-solid fa-rotate-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="ranks-col" class="ranks-col"></div>
+                            <div id="board" class="chess-grid"></div>
+                            <div id="files-row" class="files-row"></div>
                         </div>
                     </div>
-                    <div id="ranks-col" class="ranks-col"></div>
-                    <div id="board" class="chess-grid"></div>
-                    <div id="files-row" class="files-row"></div>
-                </div>
-                
-                <div class="mt-6 p-4 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] flex flex-col justify-center max-w-md relative">
-                    <p class="text-xs text-slate-500 mb-1">MENSAJE DECODIFICADO</p>
-                    <h3 id="decodedText" class="text-lg md:text-2xl font-bold break-words leading-relaxed"></h3>
-                    <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
-                        <i class="fa-regular fa-eye"></i> Ver con Espacios
-                    </button>
+
+                    <div class="message-section mt-6 p-4 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] flex flex-col justify-center max-w-md relative decoded-box">
+                        <p class="text-xs text-slate-500 mb-1">MENSAJE DECODIFICADO</p>
+                        <h3 id="decodedText" class="text-lg md:text-2xl font-bold break-words leading-relaxed"></h3>
+                        <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
+                            <i class="fa-regular fa-eye"></i> Ver con Espacios
+                        </button>
+                    </div>
                 </div>
 
                 <!-- How to Play Section - Siempre abierto -->
@@ -868,6 +1209,19 @@
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
+        }
+
+        // Sound toggle (placeholder for future implementation)
+        let soundEnabled = true;
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (icon) {
+                icon.className = soundEnabled
+                    ? 'fa-solid fa-volume-high'
+                    : 'fa-solid fa-volume-xmark';
+            }
+            console.log(`🔊 Sonido: ${soundEnabled ? 'ON' : 'OFF'}`);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1790,15 +2144,24 @@
             if(filesRow) filesRow.innerHTML = '';
             board.innerHTML = '';
             
-            // Detect portrait mode and 8x8 board for smaller cells
+            // Detect portrait mode and screen size for responsive board
             const isPortrait = window.matchMedia("(max-width: 480px) and (orientation: portrait)").matches;
+            const isSmallDesktop = window.matchMedia("(max-height: 800px)").matches;
             const is8x8 = (rows === 8 && cols === 8);
 
-            // Use smaller max cell size for 8x8 in portrait (36px instead of 60px)
-            const maxCellSize = (isPortrait && is8x8) ? '36px' : '60px';
+            // Adjust max cell size based on screen and board size
+            let maxCellSize = '60px';
+            if (isPortrait && is8x8) {
+                maxCellSize = '36px';
+            } else if (is8x8 && isSmallDesktop) {
+                maxCellSize = '50px'; // Smaller cells for 8x8 on small desktop monitors
+            } else if (is8x8) {
+                maxCellSize = '55px'; // Slightly smaller for 8x8 on any desktop
+            }
 
-            const widthConstraint = `calc((100vw - 60px) / ${cols})`;
-            const heightConstraint = `calc((80vh - 40px) / ${rows})`;
+            // More conservative constraints for desktop to ensure board fits
+            const widthConstraint = `calc((100vw - 100px) / ${cols})`;
+            const heightConstraint = `calc((85vh - 200px) / ${rows})`; // Leave room for header/footer
             const cellSizeExpr = `min(${maxCellSize}, ${widthConstraint}, ${heightConstraint})`;
 
             board.style.gridTemplateColumns = `repeat(${cols}, ${cellSizeExpr})`;
