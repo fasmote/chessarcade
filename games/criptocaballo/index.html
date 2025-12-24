@@ -182,24 +182,23 @@
         @media (min-width: 1024px) {
             .game-layout-desktop {
                 display: flex;
-                flex-direction: row;
-                justify-content: center;
+                flex-direction: column;
                 align-items: center;
                 width: 100%;
-                gap: 2rem;
             }
 
             .board-section {
-                flex: 0 0 auto;
+                position: relative;
             }
 
             .message-section {
-                position: relative !important;
-                flex: 0 0 auto;
+                position: absolute !important;
+                left: calc(100% + 2rem) !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
                 width: 220px !important;
                 max-width: 220px !important;
                 margin-top: 0 !important;
-                align-self: center;
             }
 
             .message-section.decoded-box {
@@ -211,10 +210,7 @@
             .message-section {
                 width: 280px !important;
                 max-width: 280px !important;
-            }
-
-            .game-layout-desktop {
-                gap: 3rem;
+                left: calc(100% + 3rem) !important;
             }
         }
 
@@ -1043,14 +1039,15 @@
                             <div id="board" class="chess-grid"></div>
                             <div id="files-row" class="files-row"></div>
                         </div>
-                    </div>
 
-                    <div class="message-section mt-6 p-4 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] flex flex-col justify-center max-w-md relative decoded-box">
-                        <p class="text-xs text-slate-500 mb-1">MENSAJE DECODIFICADO</p>
-                        <h3 id="decodedText" class="text-lg md:text-2xl font-bold break-words leading-relaxed"></h3>
-                        <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
-                            <i class="fa-regular fa-eye"></i> Ver con Espacios
-                        </button>
+                        <!-- Message panel - positioned to the right on desktop -->
+                        <div class="message-section mt-6 p-4 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] flex flex-col justify-center max-w-md relative decoded-box">
+                            <p class="text-xs text-slate-500 mb-1">MENSAJE DECODIFICADO</p>
+                            <h3 id="decodedText" class="text-lg md:text-2xl font-bold break-words leading-relaxed"></h3>
+                            <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
+                                <i class="fa-regular fa-eye"></i> Ver con Espacios
+                            </button>
+                        </div>
                     </div>
                 </div>
 
