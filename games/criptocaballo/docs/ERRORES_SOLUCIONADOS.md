@@ -1,12 +1,12 @@
-# 🐛 Errores Solucionados - CriptoCaballo
+# 🐛 Errores Solucionados y Mejoras - CriptoCaballo
 
-**Última actualización:** 5 de diciembre de 2025
+**Última actualización:** 24 de diciembre de 2025
 
-Este documento registra todos los bugs que han sido identificados y resueltos en el juego CriptoCaballo.
+Este documento registra todos los bugs que han sido identificados y resueltos, así como las mejoras implementadas en el juego CriptoCaballo.
 
 ---
 
-## 📋 Índice de Bugs Resueltos
+## 📋 Índice de Bugs Resueltos y Mejoras
 
 1. [Config.js no cargaba (404)](#bug-1-configjs-no-cargaba-404)
 2. [No se auto-cargaba puzzle del día](#bug-2-no-se-auto-cargaba-puzzle-del-día)
@@ -16,6 +16,7 @@ Este documento registra todos los bugs que han sido identificados y resueltos en
 6. [toggleSpaces mostraba respuesta correcta](#bug-6-togglespaces-mostraba-respuesta-correcta)
 7. [Marcaba como resuelto sin validar orden](#bug-7-marcaba-como-resuelto-sin-validar-orden-crítico)
 8. [Casillas rojas revelaban dónde termina mensaje](#bug-8-casillas-rojas-revelaban-dónde-termina-mensaje-crítico)
+9. [Mejora: Mensaje decodificado a la derecha en desktop](#mejora-9-mensaje-decodificado-a-la-derecha-en-desktop)
 
 ---
 
@@ -410,20 +411,65 @@ Ahora:
 
 ---
 
-## 📊 Resumen de la Sesión
+## Mejora #9: Mensaje decodificado a la derecha en desktop
 
-| Bug | Prioridad | Estado | Fecha |
-|-----|-----------|--------|-------|
-| Config 404 | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
-| No auto-carga | 🟡 MEDIA | ✅ RESUELTO | 2025-12-05 |
-| Múltiples inicios | 🟢 BAJA | ✅ RESUELTO | 2025-12-05 |
-| Colores persisten | 🟢 BAJA | ✅ RESUELTO | 2025-12-05 |
-| Puzzle no carga | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
-| toggleSpaces incorrecto | 🟡 MEDIA | ✅ RESUELTO | 2025-12-05 |
-| Validación de orden | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
-| Casillas rojas spoiler | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
+### 📝 Descripción
+En la versión desktop, el mensaje decodificado se mostraba debajo del tablero, desperdiciando espacio horizontal. Se implementó un nuevo layout donde el mensaje aparece a la derecha del tablero, manteniendo el tablero centrado.
+
+### 🎯 Objetivo
+Aprovechar mejor el espacio horizontal en pantallas grandes, mostrando el mensaje decodificado al lado del tablero para una mejor experiencia de usuario.
+
+### ✅ Solución
+Se implementó un layout con CSS que:
+1. **Desktop (≥1024px):** El panel de mensaje se posiciona absolutamente a la derecha del tablero usando `left: calc(100% + 2rem)`
+2. **El tablero permanece centrado** en la pantalla
+3. **Mobile/Portrait:** El layout permanece igual (mensaje debajo del tablero)
+
+```css
+@media (min-width: 1024px) {
+    .board-section {
+        position: relative;
+    }
+
+    .message-section {
+        position: absolute !important;
+        left: calc(100% + 2rem) !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 220px !important;
+    }
+}
+```
+
+### 📁 Archivos Modificados
+- `games/criptocaballo/index.html` - CSS y estructura HTML
+
+### 🚀 Commits
+- `feat: Move decoded message to right side of board on desktop`
+- `fix: Add padding-bottom to message panel for 'Ver con Espacios' button`
+- `fix: Increase spacing for message panel (pb-12) and How to Play section`
+
+### ✅ Estado
+**IMPLEMENTADO** - 24 de diciembre de 2025
+
+---
+
+## 📊 Resumen
+
+| Item | Tipo | Prioridad | Estado | Fecha |
+|------|------|-----------|--------|-------|
+| Config 404 | Bug | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
+| No auto-carga | Bug | 🟡 MEDIA | ✅ RESUELTO | 2025-12-05 |
+| Múltiples inicios | Bug | 🟢 BAJA | ✅ RESUELTO | 2025-12-05 |
+| Colores persisten | Bug | 🟢 BAJA | ✅ RESUELTO | 2025-12-05 |
+| Puzzle no carga | Bug | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
+| toggleSpaces incorrecto | Bug | 🟡 MEDIA | ✅ RESUELTO | 2025-12-05 |
+| Validación de orden | Bug | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
+| Casillas rojas spoiler | Bug | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
+| Mensaje lateral desktop | Mejora | 🟡 MEDIA | ✅ IMPLEMENTADO | 2025-12-24 |
 
 **Total de bugs resueltos:** 8
+**Mejoras implementadas:** 1
 **Bugs críticos resueltos:** 4
 
 ---
@@ -437,5 +483,5 @@ Ahora:
 
 ---
 
-**Última sesión de debugging:** 5 de diciembre de 2025
-**Deployado a producción:** ✅ https://chessarcade-2j0ig0aar-claudios-projects.vercel.app/games/criptocaballo/
+**Última actualización:** 24 de diciembre de 2025
+**Preview más reciente:** ✅ https://chessarcade-bjd3e9gn1-claudios-projects.vercel.app/games/criptocaballo/
