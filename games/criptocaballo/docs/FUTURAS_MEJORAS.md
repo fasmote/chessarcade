@@ -303,6 +303,9 @@ Puzzle: "El caballo salta en L"
 | Refranes | 💬 | lime | Dichos populares y refranes |
 | Humor | 😄 | yellow | Frases graciosas y chistes |
 | Motivación | 💪 | cyan | Frases inspiradoras |
+| Autores | ✍️ | slate | Filtrar por autor de la frase |
+
+> **Nota:** El sistema es expandible - se pueden agregar nuevas categorías según necesidad.
 
 ---
 
@@ -331,10 +334,14 @@ Puzzle: "El caballo salta en L"
 ---
 
 ### ✅ Estado
-**PROPUESTO** - 24 de diciembre de 2025
+**APROBADO** - 24 de diciembre de 2025
 
-### 🗳️ Recomendación
-Empezar con **Opción A (Categoría Única)** por simplicidad, y evaluar si se necesita expandir a tags múltiples basándose en el uso real.
+### 🗳️ Decisión
+Se elige **Opción B (Sistema de Tags Múltiples)** por su flexibilidad y capacidad de expansión. Permite:
+- Asignar múltiples tags a cada puzzle
+- Nube de tags interactiva para usuarios
+- Agregar nuevas categorías fácilmente (como "Autores")
+- Búsquedas más precisas combinando tags
 
 ---
 
