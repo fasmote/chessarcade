@@ -194,11 +194,12 @@
             }
 
             .message-section {
-                position: absolute;
-                right: 40px;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 280px;
+                position: absolute !important;
+                right: 40px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                width: 280px !important;
+                max-width: 280px !important;
                 margin-top: 0 !important;
             }
 
@@ -209,8 +210,9 @@
 
         @media (min-width: 1280px) {
             .message-section {
-                right: 40px;
-                width: 320px;
+                right: 60px !important;
+                width: 320px !important;
+                max-width: 320px !important;
             }
         }
 
