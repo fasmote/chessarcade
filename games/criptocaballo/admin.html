@@ -325,6 +325,42 @@
         .date-input:hover { border-color: #06b6d4; }
         .date-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
+        /* TAG CHIPS para selector de categorías */
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 9999px;
+            border: 1px solid #475569;
+            background: rgba(30, 41, 59, 0.6);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .tag-chip:hover {
+            border-color: #64748b;
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+        }
+        .tag-chip.active {
+            border-color: var(--tag-color, #22d3ee);
+            background: color-mix(in srgb, var(--tag-color, #22d3ee) 20%, transparent);
+            color: var(--tag-color, #22d3ee);
+            box-shadow: 0 0 8px color-mix(in srgb, var(--tag-color, #22d3ee) 40%, transparent);
+        }
+        .tag-chip .tag-emoji {
+            font-size: 0.85rem;
+        }
+        .tag-chip .tag-count {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-left: 0.25rem;
+        }
+
         /* RETO DEL DÍA - destacado */
         #retoDiaLabel {
             font-size: 0.9rem;
@@ -421,6 +457,14 @@
                 <label class="block text-slate-400 text-xs font-bold mb-1">💬 COMENTARIOS (Opcional)</label>
                 <textarea id="lvlComments" class="neon-input w-full p-2 rounded text-sm" rows="3" placeholder="Ej: Traducción EN: 'Practice makes perfect' | Pista: Empieza en A1 | Dificultad: Media" style="text-align: left; resize: vertical; background: #0f172a; border: 1px solid #334155; color: #22d3ee;"></textarea>
                 <p class="text-[0.6rem] text-slate-500 mt-1">Visible para usuarios. Usa '|' para separar múltiples notas (traducciones, pistas, etc.).</p>
+            </div>
+            <div class="mb-6">
+                <label class="block text-slate-400 text-xs font-bold mb-1">🏷️ TAGS / CATEGORÍAS</label>
+                <div id="tagSelector" class="flex flex-wrap gap-2 mt-2">
+                    <!-- Tags se cargan dinámicamente desde Supabase -->
+                    <span class="text-slate-500 text-xs">Cargando tags...</span>
+                </div>
+                <p class="text-[0.6rem] text-slate-500 mt-1">Selecciona uno o más tags para categorizar el puzzle. Click para activar/desactivar.</p>
             </div>
             <div class="flex gap-2 justify-end">
                 <button onclick="closeSaveModal()" class="text-slate-400 hover:text-white px-4 py-2 text-sm">Cancelar</button>
@@ -681,6 +725,10 @@
         let startTime = 0;
         let isTimerRunning = false;
         let lockedHintCount = 0;
+
+        // --- TAG SYSTEM ---
+        let allTags = [];  // All tags loaded from Supabase
+        let selectedTags = [];  // Currently selected tag keys
 
         const CROSS_MARKER = "@@CROSS@@"; 
         const CROSS_MEDIUM_MARKER = "@@CROSS_MEDIUM@@";
@@ -1762,7 +1810,7 @@
         function resetTimer() { stopTimer(); const t=document.getElementById('timer'); if(t) t.textContent = "00:00:00"; }
         function updateTimer() { const now = Date.now(); const diff = now - startTime; const minutes = Math.floor(diff / 60000); const seconds = Math.floor((diff % 60000) / 1000); const centiseconds = Math.floor((diff % 1000) / 10); const mStr = minutes.toString().padStart(2, '0'); const sStr = seconds.toString().padStart(2, '0'); const csStr = centiseconds.toString().padStart(2, '0'); const t=document.getElementById('timer'); if(t) t.textContent = `${mStr}:${sStr}:${csStr}`; }
         function resetCurrentLevel() { console.log("Botón presionado: Reset Level"); userPath = []; isAutoSolved = false; activeEndHints = 0; lockedHintCount = 0; resetTimer(); const b=document.getElementById('board'); if(b) b.classList.remove('success'); const s=document.getElementById('showSpacesBtn'); if(s) s.classList.add('hidden'); const d=document.getElementById('decodedText'); if(d) { d.textContent = "LISTO PARA RESOLVER"; d.className = "text-lg md:text-xl font-bold text-slate-600"; } renderBoardState(); const sv=document.getElementById('solveBtn'); if(sv) sv.classList.remove('hidden'); const c=document.getElementById('continueBtn'); if(c) c.classList.add('hidden'); }
-        function openSaveModal() {
+        async function openSaveModal() {
             console.log("Botón presionado: Abrir Guardar");
             if (!currentPath || currentPath.length === 0) return;
             const m=document.getElementById('saveModal');
@@ -1779,8 +1827,168 @@
                 const today = getLocalDateString();
                 dateInput.value = today;
             }
+            // Load tags and reset selection
+            clearSelectedTags();
+            await loadTagsFromSupabase();
         }
         function closeSaveModal() { const m=document.getElementById('saveModal'); if(m) m.classList.remove('active'); }
+
+        // --- TAG FUNCTIONS ---
+        async function loadTagsFromSupabase() {
+            if (!supabaseClient) {
+                console.warn("⚠️ Supabase no disponible para cargar tags");
+                renderTagSelector();
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('puzzle_tags')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+
+                if (error) {
+                    console.error("Error cargando tags:", error);
+                    allTags = getDefaultTags();
+                } else {
+                    allTags = data || getDefaultTags();
+                    console.log(`✅ ${allTags.length} tags cargados de Supabase`);
+                }
+            } catch (err) {
+                console.error("Error en loadTagsFromSupabase:", err);
+                allTags = getDefaultTags();
+            }
+
+            renderTagSelector();
+        }
+
+        function getDefaultTags() {
+            // Tags por defecto si Supabase no está disponible
+            return [
+                { id: 1, tag_key: 'general', display_name: 'General', emoji: '🎯', color: '#22d3ee' },
+                { id: 2, tag_key: 'matematicas', display_name: 'Matemáticas', emoji: '🔢', color: '#f59e0b' },
+                { id: 3, tag_key: 'ajedrez', display_name: 'Ajedrez', emoji: '♞', color: '#10b981' },
+                { id: 4, tag_key: 'navidad', display_name: 'Navidad', emoji: '🎄', color: '#ef4444' },
+                { id: 5, tag_key: 'ciencia', display_name: 'Ciencia', emoji: '🔬', color: '#8b5cf6' },
+                { id: 6, tag_key: 'historia', display_name: 'Historia', emoji: '📜', color: '#6366f1' },
+                { id: 7, tag_key: 'filosofia', display_name: 'Filosofía', emoji: '🤔', color: '#ec4899' },
+                { id: 8, tag_key: 'deportes', display_name: 'Deportes', emoji: '⚽', color: '#14b8a6' },
+                { id: 9, tag_key: 'arte', display_name: 'Arte/Cultura', emoji: '🎨', color: '#f97316' },
+                { id: 10, tag_key: 'refranes', display_name: 'Refranes', emoji: '💬', color: '#84cc16' },
+                { id: 11, tag_key: 'humor', display_name: 'Humor', emoji: '😄', color: '#fbbf24' },
+                { id: 12, tag_key: 'motivacion', display_name: 'Motivación', emoji: '💪', color: '#06b6d4' },
+                { id: 13, tag_key: 'autores', display_name: 'Autores', emoji: '✍️', color: '#64748b' }
+            ];
+        }
+
+        function renderTagSelector() {
+            const container = document.getElementById('tagSelector');
+            if (!container) return;
+
+            if (allTags.length === 0) {
+                container.innerHTML = '<span class="text-slate-500 text-xs">No hay tags disponibles</span>';
+                return;
+            }
+
+            container.innerHTML = allTags.map(tag => {
+                const isSelected = selectedTags.includes(tag.tag_key);
+                const activeClass = isSelected ? 'active' : '';
+                const countText = tag.usage_count ? `<span class="tag-count">(${tag.usage_count})</span>` : '';
+
+                return `
+                    <button type="button"
+                            class="tag-chip ${activeClass}"
+                            style="--tag-color: ${tag.color}"
+                            onclick="toggleTag('${tag.tag_key}')"
+                            data-tag="${tag.tag_key}">
+                        <span class="tag-emoji">${tag.emoji}</span>
+                        <span>${tag.display_name}</span>
+                        ${countText}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function toggleTag(tagKey) {
+            const index = selectedTags.indexOf(tagKey);
+            if (index === -1) {
+                selectedTags.push(tagKey);
+                console.log(`🏷️ Tag añadido: ${tagKey}`);
+            } else {
+                selectedTags.splice(index, 1);
+                console.log(`🏷️ Tag removido: ${tagKey}`);
+            }
+            renderTagSelector();
+        }
+
+        function clearSelectedTags() {
+            selectedTags = [];
+            renderTagSelector();
+        }
+
+        async function savePuzzleTags(puzzleId) {
+            if (!supabaseClient || !puzzleId || selectedTags.length === 0) {
+                console.log("⏭️ No hay tags seleccionados para guardar");
+                return;
+            }
+
+            try {
+                // First, delete existing tags for this puzzle
+                await supabaseClient
+                    .from('puzzle_tag_relations')
+                    .delete()
+                    .eq('puzzle_id', puzzleId);
+
+                // Get tag IDs from tag_keys
+                const { data: tagData } = await supabaseClient
+                    .from('puzzle_tags')
+                    .select('id, tag_key')
+                    .in('tag_key', selectedTags);
+
+                if (!tagData || tagData.length === 0) {
+                    console.warn("⚠️ No se encontraron los tags seleccionados en BD");
+                    return;
+                }
+
+                // Insert new relations
+                const relations = tagData.map(tag => ({
+                    puzzle_id: puzzleId,
+                    tag_id: tag.id
+                }));
+
+                const { error } = await supabaseClient
+                    .from('puzzle_tag_relations')
+                    .insert(relations);
+
+                if (error) {
+                    console.error("Error guardando tags:", error);
+                } else {
+                    console.log(`✅ ${selectedTags.length} tags guardados para puzzle ${puzzleId}`);
+                }
+            } catch (err) {
+                console.error("Error en savePuzzleTags:", err);
+            }
+        }
+
+        async function loadPuzzleTags(puzzleId) {
+            if (!supabaseClient || !puzzleId) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('puzzle_tag_relations')
+                    .select('puzzle_tags(tag_key)')
+                    .eq('puzzle_id', puzzleId);
+
+                if (!error && data) {
+                    selectedTags = data.map(r => r.puzzle_tags?.tag_key).filter(Boolean);
+                    renderTagSelector();
+                    console.log(`🏷️ Tags cargados para puzzle: ${selectedTags.join(', ')}`);
+                }
+            } catch (err) {
+                console.error("Error cargando tags del puzzle:", err);
+            }
+        }
 
         async function confirmSave() {
             console.log("Botón presionado: Confirmar Guardar");
@@ -1886,6 +2094,12 @@
                     alert(`❌ Error al guardar: ${error.message}`);
                 } else {
                     console.log("Puzzle guardado exitosamente:", data);
+
+                    // Save tags for this puzzle
+                    if (data && data[0] && data[0].id) {
+                        await savePuzzleTags(data[0].id);
+                    }
+
                     closeSaveModal();
                     const titleText = title ? ` "${title}"` : '';
                     const authorText = author ? ` por ${author}` : '';
