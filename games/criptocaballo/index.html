@@ -181,12 +181,12 @@
 
         @media (min-width: 1024px) {
             .game-layout-desktop {
-                position: relative;
                 display: flex;
+                flex-direction: row;
                 justify-content: center;
                 align-items: center;
                 width: 100%;
-                min-height: 500px;
+                gap: 2rem;
             }
 
             .board-section {
@@ -194,25 +194,27 @@
             }
 
             .message-section {
-                position: absolute !important;
-                right: 40px !important;
-                top: 50% !important;
-                transform: translateY(-50%) !important;
-                width: 280px !important;
-                max-width: 280px !important;
+                position: relative !important;
+                flex: 0 0 auto;
+                width: 220px !important;
+                max-width: 220px !important;
                 margin-top: 0 !important;
+                align-self: center;
             }
 
             .message-section.decoded-box {
-                min-height: 200px;
+                min-height: 150px;
             }
         }
 
-        @media (min-width: 1280px) {
+        @media (min-width: 1400px) {
             .message-section {
-                right: 60px !important;
-                width: 320px !important;
-                max-width: 320px !important;
+                width: 280px !important;
+                max-width: 280px !important;
+            }
+
+            .game-layout-desktop {
+                gap: 3rem;
             }
         }
 
