@@ -1827,9 +1827,33 @@
                 const today = getLocalDateString();
                 dateInput.value = today;
             }
-            // Load tags and reset selection
+
+            // Load tags first
             clearSelectedTags();
             await loadTagsFromSupabase();
+
+            // Check if puzzle exists and load its tags
+            if (supabaseClient && dateInput) {
+                const puzzleDate = dateInput.value || getLocalDateString();
+                const boardSize = `${rows}x${cols}`;
+
+                try {
+                    const { data: existingPuzzle } = await supabaseClient
+                        .from('puzzles')
+                        .select('id')
+                        .eq('puzzle_date', puzzleDate)
+                        .eq('board_size', boardSize)
+                        .single();
+
+                    if (existingPuzzle && existingPuzzle.id) {
+                        console.log(`📝 Puzzle existente encontrado, cargando tags...`);
+                        await loadPuzzleTags(existingPuzzle.id);
+                    }
+                } catch (err) {
+                    // No existing puzzle, that's fine
+                    console.log(`📝 Puzzle nuevo, sin tags previos`);
+                }
+            }
         }
         function closeSaveModal() { const m=document.getElementById('saveModal'); if(m) m.classList.remove('active'); }
 
