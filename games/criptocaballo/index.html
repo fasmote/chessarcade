@@ -258,26 +258,27 @@
             align-items: start;
             padding-bottom: 6rem; /* Espacio extra para evitar solapamiento con footer */
         }
-        
+
+        /* En modo jugador, el panel admin está oculto, así que siempre una columna */
         @media (min-width: 1024px) {
             .main-layout {
-                grid-template-columns: 24rem 1fr; 
+                grid-template-columns: 1fr;
                 padding-top: 2rem;
             }
         }
 
         .board-wrapper {
             position: relative;
-            display: grid;
-            grid-template-columns: max-content max-content;
+            display: inline-grid;
+            grid-template-columns: max-content auto;
             grid-template-rows: min-content min-content auto min-content;
             gap: 0px;
             column-gap: 6px;
             row-gap: 0px;
+            margin: 0 auto;
             max-width: 100%;
+            align-self: center;
             overflow: visible;
-            justify-self: center;
-            /* Centering: justify-self centers the grid element within the flex parent */
         }
 
         .game-header { grid-column: 2; grid-row: 1; text-align: center; margin-bottom: 0.5rem; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -456,9 +457,9 @@
     <!-- Hamburger Menu (mobile) -->
     <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
 </head>
-<body class="min-h-screen flex flex-col py-4 px-2 md:py-6 md:px-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);">
+<body class="min-h-screen flex flex-col items-center py-4 px-2 md:py-6 md:px-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);">
     <!-- Wrapper para centrar todo el contenido -->
-    <div class="w-full max-w-[1400px] mx-auto flex flex-col items-center flex-1">
+    <div class="w-full max-w-[1400px] flex flex-col items-center">
     
     <div id="confetti-container" class="confetti-container"></div>
 
