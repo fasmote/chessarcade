@@ -594,6 +594,56 @@
         .message-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
         .message-visible { filter: none; }
 
+        /* TAG CHIPS para filtros y badges */
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.65rem;
+            font-weight: 500;
+            border-radius: 9999px;
+            border: 1px solid #475569;
+            background: rgba(30, 41, 59, 0.6);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .tag-chip:hover {
+            border-color: #64748b;
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+        }
+        .tag-chip.active {
+            border-color: var(--tag-color, #22d3ee);
+            background: color-mix(in srgb, var(--tag-color, #22d3ee) 20%, transparent);
+            color: var(--tag-color, #22d3ee);
+            box-shadow: 0 0 8px color-mix(in srgb, var(--tag-color, #22d3ee) 40%, transparent);
+        }
+        .tag-chip .tag-emoji { font-size: 0.75rem; }
+        .tag-chip.small { padding: 0.15rem 0.4rem; font-size: 0.6rem; }
+        .tag-chip.small .tag-emoji { font-size: 0.65rem; }
+
+        /* Tag filter container */
+        .tag-filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+            max-width: 28rem;
+        }
+
+        /* Tags display for current puzzle */
+        .puzzle-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
         /* RETO DEL DÍA - visible en todos los dispositivos */
         #retoDiaLabel {
             font-size: 0.9rem;
@@ -1003,8 +1053,13 @@
                     </div>
                 </div>
 
+                <!-- Tag Filter Buttons -->
+                <div id="tagFilterContainer" class="tag-filter-container">
+                    <!-- Tags de filtro se cargan dinámicamente -->
+                </div>
+
                 <!-- NUEVO MENÚ JUGADOR (v4.2): BOTONES ARCADE -->
-                <div class="w-full max-w-md mb-4 grid grid-cols-3 gap-2"> 
+                <div class="w-full max-w-md mb-4 grid grid-cols-3 gap-2">
                     <button onclick="playerSelectSize(3,4)" class="arcade-btn py-1 rounded" data-rows="3" data-cols="4">3x4</button>
                     <button onclick="playerSelectSize(4,5)" class="arcade-btn py-1 rounded" data-rows="4" data-cols="5">4x5</button>
                     <button onclick="playerSelectSize(5,5)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="5">5x5</button>
@@ -1021,6 +1076,11 @@
                 <!-- Admin Comments Display -->
                 <div id="commentsDisplay" class="hidden mt-2 mb-2 text-yellow-300 text-xs bg-yellow-900/10 p-2 rounded border border-yellow-700/30 max-w-md">
                     <i class="fa-solid fa-comment-dots mr-1"></i><span id="commentsText"></span>
+                </div>
+
+                <!-- Puzzle Tags Display -->
+                <div id="puzzleTagsDisplay" class="hidden puzzle-tags max-w-md mb-2">
+                    <!-- Tags del puzzle actual se cargan dinámicamente -->
                 </div>
 
                 <!-- Desktop layout: board center, message right -->
@@ -1183,6 +1243,11 @@
         let isTimerRunning = false;
         let lockedHintCount = 0;
 
+        // --- TAG SYSTEM ---
+        let allTags = [];  // All tags loaded from Supabase
+        let activeFilterTag = null;  // Currently selected filter tag (null = show all)
+        let currentPuzzleTags = [];  // Tags of the currently loaded puzzle
+
         const CROSS_MARKER = "@@CROSS@@"; 
         const CROSS_MEDIUM_MARKER = "@@CROSS_MEDIUM@@";
         const BLOCK_MARKER = "@@BLOCK@@";
@@ -1226,6 +1291,244 @@
             console.log(`🔊 Sonido: ${soundEnabled ? 'ON' : 'OFF'}`);
         }
 
+        // --- TAG FUNCTIONS ---
+        async function loadTagFilters() {
+            if (!supabaseClient) {
+                console.warn("⚠️ Supabase no disponible para cargar tags");
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('puzzle_tags')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+
+                if (!error && data) {
+                    allTags = data;
+                    console.log(`🏷️ ${allTags.length} tags cargados para filtros`);
+                    renderTagFilters();
+                }
+            } catch (err) {
+                console.error("Error cargando tags:", err);
+            }
+        }
+
+        function renderTagFilters() {
+            const container = document.getElementById('tagFilterContainer');
+            if (!container || allTags.length === 0) return;
+
+            // Only show tags that have puzzles (usage_count > 0) plus "Todos"
+            const tagsWithPuzzles = allTags.filter(t => t.usage_count > 0);
+
+            let html = `
+                <button type="button"
+                        class="tag-chip ${!activeFilterTag ? 'active' : ''}"
+                        style="--tag-color: #22d3ee"
+                        onclick="filterByTag(null)">
+                    <span class="tag-emoji">🎯</span>
+                    <span>Todos</span>
+                </button>
+            `;
+
+            tagsWithPuzzles.forEach(tag => {
+                const isActive = activeFilterTag === tag.tag_key;
+                html += `
+                    <button type="button"
+                            class="tag-chip ${isActive ? 'active' : ''}"
+                            style="--tag-color: ${tag.color}"
+                            onclick="filterByTag('${tag.tag_key}')">
+                        <span class="tag-emoji">${tag.emoji}</span>
+                        <span>${tag.display_name}</span>
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        async function filterByTag(tagKey) {
+            activeFilterTag = tagKey;
+            renderTagFilters();
+
+            if (!tagKey) {
+                // "Todos" selected - load normal daily puzzle
+                console.log("🏷️ Filtro: Todos los puzzles");
+                loadDailyLevel();
+                return;
+            }
+
+            console.log(`🏷️ Filtrando por tag: ${tagKey}`);
+
+            // Load a random puzzle with this tag
+            try {
+                const { data, error } = await supabaseClient
+                    .from('puzzle_tag_relations')
+                    .select(`
+                        puzzle_id,
+                        puzzles (
+                            id, puzzle_date, board_size, message, title, author,
+                            solution_path, tokens, daily_number
+                        )
+                    `)
+                    .eq('puzzle_tags.tag_key', tagKey)
+                    .not('puzzles', 'is', null);
+
+                // Join with puzzle_tags to filter by tag_key
+                const { data: puzzlesWithTag } = await supabaseClient
+                    .rpc('get_puzzles_by_tag', { p_tag_key: tagKey });
+
+                if (puzzlesWithTag && puzzlesWithTag.length > 0) {
+                    // Pick a random puzzle from results
+                    const randomPuzzle = puzzlesWithTag[Math.floor(Math.random() * puzzlesWithTag.length)];
+                    console.log(`🏷️ Encontrados ${puzzlesWithTag.length} puzzles con tag "${tagKey}"`);
+
+                    // Load this puzzle
+                    await loadPuzzleById(randomPuzzle.puzzle_id);
+                } else {
+                    console.log(`🏷️ No hay puzzles con tag "${tagKey}"`);
+                    alert(`No hay puzzles con la categoría "${tagKey}" todavía.`);
+                    // Reset filter
+                    activeFilterTag = null;
+                    renderTagFilters();
+                }
+            } catch (err) {
+                console.error("Error filtrando por tag:", err);
+            }
+        }
+
+        async function loadPuzzleById(puzzleId) {
+            if (!supabaseClient || !puzzleId) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('puzzles')
+                    .select('*')
+                    .eq('id', puzzleId)
+                    .single();
+
+                if (data && !error) {
+                    // Set board size
+                    const [r, c] = data.board_size.split('x').map(Number);
+                    setBoardSize(r, c);
+
+                    // Load the puzzle
+                    loadPuzzleFromData(data);
+
+                    // Load and display tags for this puzzle
+                    await loadAndDisplayPuzzleTags(puzzleId);
+                }
+            } catch (err) {
+                console.error("Error cargando puzzle por ID:", err);
+            }
+        }
+
+        async function loadAndDisplayPuzzleTags(puzzleId) {
+            const container = document.getElementById('puzzleTagsDisplay');
+            if (!container) return;
+
+            if (!supabaseClient || !puzzleId) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('puzzle_tag_relations')
+                    .select('puzzle_tags(tag_key, display_name, emoji, color)')
+                    .eq('puzzle_id', puzzleId);
+
+                if (!error && data && data.length > 0) {
+                    currentPuzzleTags = data.map(r => r.puzzle_tags).filter(Boolean);
+
+                    let html = currentPuzzleTags.map(tag => `
+                        <span class="tag-chip small active" style="--tag-color: ${tag.color}; cursor: default;">
+                            <span class="tag-emoji">${tag.emoji}</span>
+                            <span>${tag.display_name}</span>
+                        </span>
+                    `).join('');
+
+                    container.innerHTML = html;
+                    container.classList.remove('hidden');
+                    console.log(`🏷️ Mostrando ${currentPuzzleTags.length} tags del puzzle`);
+                } else {
+                    container.classList.add('hidden');
+                    currentPuzzleTags = [];
+                }
+            } catch (err) {
+                console.error("Error cargando tags del puzzle:", err);
+                container.classList.add('hidden');
+            }
+        }
+
+        function loadPuzzleFromData(data) {
+            // This function loads a puzzle from data object (used by both loadDailyLevel and loadPuzzleById)
+            console.log(`✅ Cargando puzzle desde datos:`);
+            console.log(`   📅 Fecha: ${data.puzzle_date}`);
+            console.log(`   📐 Tamaño: ${data.board_size}`);
+            console.log(`   💬 Mensaje: "${data.message}"`);
+
+            const input = document.getElementById('messageInput');
+            if(input) input.value = data.message;
+
+            // Load saved tokens if available
+            if(data.tokens && Array.isArray(data.tokens) && data.tokens.length > 0) {
+                console.log("Cargando puzzle desde datos guardados (sin re-encriptar)");
+                currentPuzzleMessage = data.message;
+                console.log(`💾 Cargando lastDecodedMessageOriginal: "${data.message}"`);
+
+                globalTokens = data.tokens;
+                console.log("✅ Usando tokens guardados:", globalTokens);
+
+                if(data.solution_path) {
+                    currentPath = data.solution_path;
+                    validMessageLength = currentPath.length;
+                }
+
+                renderBoardFromTokens();
+
+                // Show puzzle info
+                showPuzzleInfo(data);
+            } else {
+                // No saved tokens, generate new
+                generateCryptogram();
+                showPuzzleInfo(data);
+            }
+        }
+
+        function showPuzzleInfo(data) {
+            // Update daily number display
+            const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
+            if(dailyNumDisplay && data.daily_number) {
+                dailyNumDisplay.textContent = `#${data.daily_number}`;
+            }
+
+            // Update puzzle ID display
+            const idDisplay = document.getElementById('puzzleIdDisplay');
+            const idText = document.getElementById('puzzleIdText');
+            if(idDisplay && idText) {
+                const titleText = data.title ? `"${data.title}"` : '';
+                const authorText = data.author ? ` - ${data.author}` : '';
+                idText.innerHTML = `${titleText}${authorText}`;
+                if(titleText || authorText) {
+                    idDisplay.classList.remove('hidden');
+                } else {
+                    idDisplay.classList.add('hidden');
+                }
+            }
+
+            // Show comments if available
+            const commentsDisplay = document.getElementById('commentsDisplay');
+            const commentsText = document.getElementById('commentsText');
+            if(commentsDisplay && commentsText && data.admin_comments) {
+                commentsText.textContent = data.admin_comments;
+                commentsDisplay.classList.remove('hidden');
+            } else if(commentsDisplay) {
+                commentsDisplay.classList.add('hidden');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             console.log(`CriptoCaballo v${APP_VERSION} cargado.`);
 
@@ -1257,6 +1560,11 @@
             setTimeout(() => {
                 loadDailyLevel();
             }, 500);
+
+            // Load tag filters
+            setTimeout(() => {
+                loadTagFilters();
+            }, 600);
         });
 
         // --- HELPERS ---
@@ -2130,6 +2438,9 @@
                     } else if(commentsDisplay) {
                         commentsDisplay.classList.add('hidden');
                     }
+
+                    // Show puzzle tags
+                    await loadAndDisplayPuzzleTags(data.id);
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);
