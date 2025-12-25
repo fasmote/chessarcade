@@ -315,7 +315,7 @@
         .spaces-btn.active { color: #38bdf8; border-color: #38bdf8; background: rgba(14, 165, 233, 0.2); }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.active { opacity: 1; pointer-events: all; }
-        .modal-content { background: #1e293b; border: 2px solid #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.3); border-radius: 1rem; padding: 2rem; width: 90%; max-width: 400px; transform: translateY(20px); transition: transform 0.3s; }
+        .modal-content { background: #1e293b; border: 2px solid #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.3); border-radius: 1rem; padding: 2rem; width: 90%; max-width: 400px; max-height: 85vh; overflow-y: auto; transform: translateY(20px); transition: transform 0.3s; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .timer-display { font-family: 'Courier Prime', 'Courier New', monospace; color: #fbbf24; font-weight: bold; font-size: 1.25rem; text-shadow: 0 0 5px rgba(251, 191, 36, 0.6); background: rgba(15, 23, 42, 0.8); padding: 4px 0; border-radius: 6px; border: 1px solid #d97706; display: flex; align-items: center; justify-content: center; width: 140px; font-variant-numeric: tabular-nums; }
         .reset-btn-wrapper { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
@@ -1821,37 +1821,64 @@
                 // Copiar toda la frase como nombre del nivel
                 n.value = i.value;
             }
-            // Set default date to today
-            const dateInput = document.getElementById('puzzleDate');
-            if(dateInput && !dateInput.value) {
-                const today = getLocalDateString();
-                dateInput.value = today;
+
+            // FIXED: Copy date from main date picker, not default to today
+            const mainDateInput = document.getElementById('dailyLevelDate');
+            const modalDateInput = document.getElementById('puzzleDate');
+            if (modalDateInput) {
+                if (mainDateInput && mainDateInput.value) {
+                    modalDateInput.value = mainDateInput.value;
+                } else {
+                    modalDateInput.value = getLocalDateString();
+                }
             }
 
             // Load tags first
             clearSelectedTags();
             await loadTagsFromSupabase();
 
-            // Check if puzzle exists and load its tags
-            if (supabaseClient && dateInput) {
-                const puzzleDate = dateInput.value || getLocalDateString();
-                const boardSize = `${rows}x${cols}`;
+            // Check if puzzle exists and load its data (tags + author)
+            const puzzleDate = modalDateInput ? modalDateInput.value : getLocalDateString();
+            const boardSize = `${rows}x${cols}`;
 
+            if (supabaseClient) {
                 try {
                     const { data: existingPuzzle } = await supabaseClient
                         .from('puzzles')
-                        .select('id')
+                        .select('id, author, title')
                         .eq('puzzle_date', puzzleDate)
                         .eq('board_size', boardSize)
                         .single();
 
-                    if (existingPuzzle && existingPuzzle.id) {
-                        console.log(`📝 Puzzle existente encontrado, cargando tags...`);
-                        await loadPuzzleTags(existingPuzzle.id);
+                    if (existingPuzzle) {
+                        console.log(`📝 Puzzle existente encontrado, cargando datos...`);
+
+                        // FIXED: Always set author field (empty string if no author)
+                        const authorInput = document.getElementById('lvlAuthor');
+                        if (authorInput) {
+                            authorInput.value = existingPuzzle.author || '';
+                            if (existingPuzzle.author) {
+                                console.log(`📝 Autor cargado: "${existingPuzzle.author}"`);
+                            } else {
+                                console.log(`📝 Puzzle sin autor, campo limpiado`);
+                            }
+                        }
+
+                        // Load tags
+                        if (existingPuzzle.id) {
+                            await loadPuzzleTags(existingPuzzle.id);
+                        }
+                    } else {
+                        // Clear author for new puzzle
+                        const authorInput = document.getElementById('lvlAuthor');
+                        if (authorInput) authorInput.value = '';
+                        console.log(`📝 Puzzle nuevo, campo autor limpiado`);
                     }
                 } catch (err) {
-                    // No existing puzzle, that's fine
-                    console.log(`📝 Puzzle nuevo, sin tags previos`);
+                    // No existing puzzle, that's fine - clear author field
+                    console.log(`📝 Puzzle nuevo, sin datos previos`);
+                    const authorInput = document.getElementById('lvlAuthor');
+                    if (authorInput) authorInput.value = '';
                 }
             }
         }

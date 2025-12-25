@@ -193,7 +193,7 @@
 
             .message-section {
                 position: absolute !important;
-                left: calc(100% + 2rem) !important;
+                left: calc(100% + 4rem) !important;
                 top: 50% !important;
                 transform: translateY(-50%) !important;
                 width: 220px !important;
@@ -211,8 +211,82 @@
             .message-section {
                 width: 280px !important;
                 max-width: 280px !important;
-                left: calc(100% + 3rem) !important;
+                left: calc(100% + 5rem) !important;
             }
+        }
+
+        /* Tag Cloud Styles */
+        .tag-cloud-section {
+            display: none; /* Hidden on mobile by default */
+        }
+
+        @media (min-width: 1024px) {
+            .tag-cloud-section {
+                display: block;
+                position: absolute !important;
+                right: calc(100% + 3rem) !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                width: 280px !important;
+                max-width: 280px !important;
+                padding: 0 !important;
+                background: transparent !important;
+                border: none !important;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .tag-cloud-section {
+                right: calc(100% + 4rem) !important;
+                width: 300px !important;
+                max-width: 300px !important;
+            }
+        }
+
+        .tag-cloud {
+            position: relative;
+            min-height: 380px;
+            width: 280px;
+            margin: 0 auto;
+            /* Sin contenedor - los tags flotan libres */
+        }
+
+        .tag-cloud-item {
+            position: absolute;
+            padding: 0.15rem 0.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            color: var(--tag-color, #94a3b8);
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            background: transparent;
+            border: none;
+        }
+
+        .tag-cloud-item:hover {
+            transform: scale(1.2);
+            text-shadow: 0 0 20px var(--tag-color, #22d3ee);
+            z-index: 10;
+        }
+
+        .tag-cloud-item.active-tag {
+            text-shadow: 0 0 15px var(--tag-color, #22d3ee), 0 0 30px var(--tag-color, #22d3ee);
+            z-index: 5;
+        }
+
+        /* Tag sizes based on usage - larger fonts */
+        .tag-size-xs { font-size: 0.7rem; opacity: 0.75; }
+        .tag-size-sm { font-size: 0.8rem; opacity: 0.85; }
+        .tag-size-md { font-size: 0.95rem; opacity: 0.9; }
+        .tag-size-lg { font-size: 1.1rem; font-weight: 500; }
+        .tag-size-xl { font-size: 1.25rem; font-weight: 600; }
+
+        /* Tag count in parentheses */
+        .tag-count {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-left: 0.2rem;
         }
 
         /* Games menu dropdown */
@@ -593,56 +667,6 @@
         .date-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         .message-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
         .message-visible { filter: none; }
-
-        /* TAG CHIPS para filtros y badges */
-        .tag-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.2rem;
-            padding: 0.25rem 0.6rem;
-            font-size: 0.65rem;
-            font-weight: 500;
-            border-radius: 9999px;
-            border: 1px solid #475569;
-            background: rgba(30, 41, 59, 0.6);
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        .tag-chip:hover {
-            border-color: #64748b;
-            background: rgba(51, 65, 85, 0.8);
-            color: #e2e8f0;
-        }
-        .tag-chip.active {
-            border-color: var(--tag-color, #22d3ee);
-            background: color-mix(in srgb, var(--tag-color, #22d3ee) 20%, transparent);
-            color: var(--tag-color, #22d3ee);
-            box-shadow: 0 0 8px color-mix(in srgb, var(--tag-color, #22d3ee) 40%, transparent);
-        }
-        .tag-chip .tag-emoji { font-size: 0.75rem; }
-        .tag-chip.small { padding: 0.15rem 0.4rem; font-size: 0.6rem; }
-        .tag-chip.small .tag-emoji { font-size: 0.65rem; }
-
-        /* Tag filter container */
-        .tag-filter-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            justify-content: center;
-            margin-bottom: 0.75rem;
-            max-width: 28rem;
-        }
-
-        /* Tags display for current puzzle */
-        .puzzle-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.3rem;
-            justify-content: center;
-            margin-top: 0.5rem;
-        }
 
         /* RETO DEL DÍA - visible en todos los dispositivos */
         #retoDiaLabel {
@@ -1053,10 +1077,6 @@
                     </div>
                 </div>
 
-                <!-- Tag Filter Buttons -->
-                <div id="tagFilterContainer" class="tag-filter-container">
-                    <!-- Tags de filtro se cargan dinámicamente -->
-                </div>
 
                 <!-- NUEVO MENÚ JUGADOR (v4.2): BOTONES ARCADE -->
                 <div class="w-full max-w-md mb-4 grid grid-cols-3 gap-2">
@@ -1078,12 +1098,7 @@
                     <i class="fa-solid fa-comment-dots mr-1"></i><span id="commentsText"></span>
                 </div>
 
-                <!-- Puzzle Tags Display -->
-                <div id="puzzleTagsDisplay" class="hidden puzzle-tags max-w-md mb-2">
-                    <!-- Tags del puzzle actual se cargan dinámicamente -->
-                </div>
-
-                <!-- Desktop layout: board center, message right -->
+                <!-- Desktop layout: board center, tag cloud left, message right -->
                 <div class="game-layout-desktop">
                     <div class="board-section">
                         <div class="board-wrapper" id="boardWrapper">
@@ -1099,6 +1114,13 @@
                             <div id="ranks-col" class="ranks-col"></div>
                             <div id="board" class="chess-grid"></div>
                             <div id="files-row" class="files-row"></div>
+                        </div>
+
+                        <!-- Tag Cloud - positioned to the left on desktop -->
+                        <div id="tagCloudPanel" class="tag-cloud-section">
+                            <div id="tagCloud" class="tag-cloud">
+                                <!-- Tags se cargan dinámicamente -->
+                            </div>
                         </div>
 
                         <!-- Message panel - positioned to the right on desktop -->
@@ -1245,7 +1267,6 @@
 
         // --- TAG SYSTEM ---
         let allTags = [];  // All tags loaded from Supabase
-        let activeFilterTag = null;  // Currently selected filter tag (null = show all)
         let currentPuzzleTags = [];  // Tags of the currently loaded puzzle
 
         const CROSS_MARKER = "@@CROSS@@"; 
@@ -1291,7 +1312,7 @@
             console.log(`🔊 Sonido: ${soundEnabled ? 'ON' : 'OFF'}`);
         }
 
-        // --- TAG FUNCTIONS ---
+        // --- TAG CLOUD FUNCTIONS ---
         async function loadTagFilters() {
             if (!supabaseClient) {
                 console.warn("⚠️ Supabase no disponible para cargar tags");
@@ -1307,94 +1328,124 @@
 
                 if (!error && data) {
                     allTags = data;
-                    console.log(`🏷️ ${allTags.length} tags cargados para filtros`);
-                    renderTagFilters();
+                    console.log(`🏷️ ${allTags.length} tags cargados para nube`);
+                    renderTagCloud();
                 }
             } catch (err) {
                 console.error("Error cargando tags:", err);
             }
         }
 
-        function renderTagFilters() {
-            const container = document.getElementById('tagFilterContainer');
+        function renderTagCloud() {
+            const container = document.getElementById('tagCloud');
             if (!container || allTags.length === 0) return;
 
-            // Only show tags that have puzzles (usage_count > 0) plus "Todos"
+            // Only show tags that have puzzles (usage_count > 0)
             const tagsWithPuzzles = allTags.filter(t => t.usage_count > 0);
+            if (tagsWithPuzzles.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-500">Sin categorías</p>';
+                return;
+            }
 
-            let html = `
-                <button type="button"
-                        class="tag-chip ${!activeFilterTag ? 'active' : ''}"
-                        style="--tag-color: #22d3ee"
-                        onclick="filterByTag(null)">
-                    <span class="tag-emoji">🎯</span>
-                    <span>Todos</span>
-                </button>
-            `;
+            // Calculate min/max for size scaling
+            const counts = tagsWithPuzzles.map(t => t.usage_count);
+            const minCount = Math.min(...counts);
+            const maxCount = Math.max(...counts);
+            const range = maxCount - minCount || 1;
 
-            tagsWithPuzzles.forEach(tag => {
-                const isActive = activeFilterTag === tag.tag_key;
-                html += `
-                    <button type="button"
-                            class="tag-chip ${isActive ? 'active' : ''}"
-                            style="--tag-color: ${tag.color}"
-                            onclick="filterByTag('${tag.tag_key}')">
-                        <span class="tag-emoji">${tag.emoji}</span>
-                        <span>${tag.display_name}</span>
-                    </button>
+            // Cloud-shaped positions - bigger tags in center, smaller on edges
+            // More spread out for better readability
+            const cloudPositions = [
+                { top: '40%', left: '25%' },   // Center (biggest - most used)
+                { top: '25%', left: '55%' },   // Upper-right
+                { top: '58%', left: '50%' },   // Lower-center
+                { top: '12%', left: '30%' },   // Top-left
+                { top: '70%', left: '20%' },   // Bottom-left
+                { top: '45%', left: '75%' },   // Right
+                { top: '78%', left: '55%' },   // Bottom-right
+                { top: '5%', left: '60%' },    // Top-right (edge)
+                { top: '55%', left: '5%' },    // Far left (edge)
+                { top: '20%', left: '5%' },    // Top-far-left (edge)
+                { top: '88%', left: '35%' },   // Bottom (edge)
+                { top: '32%', left: '90%' },   // Far right (edge)
+                { top: '85%', left: '75%' },   // Bottom-far-right (edge)
+            ];
+
+            // Sort by usage_count descending - bigger tags get center positions
+            const sortedTags = [...tagsWithPuzzles].sort((a, b) => b.usage_count - a.usage_count);
+
+            let html = sortedTags.map((tag, index) => {
+                // Calculate size class based on usage_count
+                const normalized = (tag.usage_count - minCount) / range;
+                let sizeClass;
+                if (normalized < 0.2) sizeClass = 'tag-size-xs';
+                else if (normalized < 0.4) sizeClass = 'tag-size-sm';
+                else if (normalized < 0.6) sizeClass = 'tag-size-md';
+                else if (normalized < 0.8) sizeClass = 'tag-size-lg';
+                else sizeClass = 'tag-size-xl';
+
+                // Check if this tag is in current puzzle's tags
+                const isActive = currentPuzzleTags.some(pt => pt.tag_key === tag.tag_key);
+
+                // Show count in parentheses
+                const countText = tag.usage_count > 0 ? `<span class="tag-count">(${tag.usage_count})</span>` : '';
+
+                // Get position from predefined positions
+                const pos = cloudPositions[index % cloudPositions.length];
+
+                return `
+                    <span class="tag-cloud-item ${sizeClass} ${isActive ? 'active-tag' : ''}"
+                          style="--tag-color: ${tag.color}; top: ${pos.top}; left: ${pos.left};"
+                          onclick="loadRandomPuzzleByTag('${tag.tag_key}')"
+                          title="${tag.display_name}: ${tag.usage_count} puzzles">
+                        ${tag.emoji} ${tag.display_name} ${countText}
+                    </span>
                 `;
-            });
+            }).join('');
 
             container.innerHTML = html;
         }
 
-        async function filterByTag(tagKey) {
-            activeFilterTag = tagKey;
-            renderTagFilters();
+        async function loadRandomPuzzleByTag(tagKey) {
+            if (!supabaseClient || !tagKey) return;
 
-            if (!tagKey) {
-                // "Todos" selected - load normal daily puzzle
-                console.log("🏷️ Filtro: Todos los puzzles");
-                loadDailyLevel();
-                return;
-            }
+            console.log(`🎲 Cargando puzzle aleatorio de categoría: ${tagKey}`);
 
-            console.log(`🏷️ Filtrando por tag: ${tagKey}`);
-
-            // Load a random puzzle with this tag
             try {
-                const { data, error } = await supabaseClient
+                // Step 1: Get tag_id from tag_key
+                const { data: tagData, error: tagError } = await supabaseClient
+                    .from('puzzle_tags')
+                    .select('id')
+                    .eq('tag_key', tagKey)
+                    .single();
+
+                if (tagError || !tagData) {
+                    console.error("Error obteniendo tag:", tagError);
+                    return;
+                }
+
+                // Step 2: Get all puzzle_ids with this tag
+                const { data: relations, error: relError } = await supabaseClient
                     .from('puzzle_tag_relations')
-                    .select(`
-                        puzzle_id,
-                        puzzles (
-                            id, puzzle_date, board_size, message, title, author,
-                            solution_path, tokens, daily_number
-                        )
-                    `)
-                    .eq('puzzle_tags.tag_key', tagKey)
-                    .not('puzzles', 'is', null);
+                    .select('puzzle_id')
+                    .eq('tag_id', tagData.id);
 
-                // Join with puzzle_tags to filter by tag_key
-                const { data: puzzlesWithTag } = await supabaseClient
-                    .rpc('get_puzzles_by_tag', { p_tag_key: tagKey });
-
-                if (puzzlesWithTag && puzzlesWithTag.length > 0) {
-                    // Pick a random puzzle from results
-                    const randomPuzzle = puzzlesWithTag[Math.floor(Math.random() * puzzlesWithTag.length)];
-                    console.log(`🏷️ Encontrados ${puzzlesWithTag.length} puzzles con tag "${tagKey}"`);
-
-                    // Load this puzzle
-                    await loadPuzzleById(randomPuzzle.puzzle_id);
-                } else {
+                if (relError || !relations || relations.length === 0) {
                     console.log(`🏷️ No hay puzzles con tag "${tagKey}"`);
                     alert(`No hay puzzles con la categoría "${tagKey}" todavía.`);
-                    // Reset filter
-                    activeFilterTag = null;
-                    renderTagFilters();
+                    return;
                 }
+
+                // Step 3: Pick a random puzzle_id
+                const randomIndex = Math.floor(Math.random() * relations.length);
+                const randomPuzzleId = relations[randomIndex].puzzle_id;
+                console.log(`🎲 Encontrados ${relations.length} puzzles con tag "${tagKey}", seleccionado #${randomIndex + 1}`);
+
+                // Step 4: Load the puzzle
+                await loadPuzzleById(randomPuzzleId);
+
             } catch (err) {
-                console.error("Error filtrando por tag:", err);
+                console.error("Error cargando puzzle aleatorio:", err);
             }
         }
 
@@ -1409,15 +1460,57 @@
                     .single();
 
                 if (data && !error) {
-                    // Set board size
+                    // Set board size first
                     const [r, c] = data.board_size.split('x').map(Number);
                     setBoardSize(r, c);
 
-                    // Load the puzzle
-                    loadPuzzleFromData(data);
+                    // Update date picker to match puzzle date
+                    const dateInput = document.querySelector('.date-input');
+                    if (dateInput && data.puzzle_date) {
+                        dateInput.value = data.puzzle_date;
+                    }
 
-                    // Load and display tags for this puzzle
+                    // Reset game state
+                    userPath = [];
+                    messageCompletedCorrectly = false;
+                    isShowingSpaces = false;
+                    lastDecodedMessageOriginal = '';
+                    lockedHintCount = 0;
+                    activeEndHints = 0;
+
+                    // Load message into input
+                    const messageInput = document.getElementById('messageInput');
+                    if (messageInput) {
+                        messageInput.value = data.message;
+                    }
+
+                    // Use existing function to load puzzle
+                    loadPuzzleFromSavedData(data);
+
+                    // Update UI elements
+                    const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
+                    if (dailyNumDisplay && data.daily_number) {
+                        dailyNumDisplay.textContent = `#${data.daily_number}`;
+                    }
+
+                    // Show title/author
+                    const idDisplay = document.getElementById('puzzleIdDisplay');
+                    const idText = document.getElementById('puzzleIdText');
+                    if (idDisplay && idText) {
+                        const titleHtml = data.title ? `<span class="text-yellow-300 font-bold">"${data.title}"</span>` : '';
+                        const authorHtml = data.author ? `<span class="text-slate-400 ml-2">por ${data.author}</span>` : '';
+                        idText.innerHTML = titleHtml + authorHtml;
+                        if (data.title || data.author) {
+                            idDisplay.classList.remove('hidden');
+                        } else {
+                            idDisplay.classList.add('hidden');
+                        }
+                    }
+
+                    // Load tags for this puzzle and update cloud
                     await loadAndDisplayPuzzleTags(puzzleId);
+
+                    console.log(`✅ Puzzle cargado: "${data.message}" (${data.puzzle_date})`);
                 }
             } catch (err) {
                 console.error("Error cargando puzzle por ID:", err);
@@ -1425,11 +1518,9 @@
         }
 
         async function loadAndDisplayPuzzleTags(puzzleId) {
-            const container = document.getElementById('puzzleTagsDisplay');
-            if (!container) return;
-
             if (!supabaseClient || !puzzleId) {
-                container.classList.add('hidden');
+                currentPuzzleTags = [];
+                renderTagCloud();
                 return;
             }
 
@@ -1441,24 +1532,17 @@
 
                 if (!error && data && data.length > 0) {
                     currentPuzzleTags = data.map(r => r.puzzle_tags).filter(Boolean);
-
-                    let html = currentPuzzleTags.map(tag => `
-                        <span class="tag-chip small active" style="--tag-color: ${tag.color}; cursor: default;">
-                            <span class="tag-emoji">${tag.emoji}</span>
-                            <span>${tag.display_name}</span>
-                        </span>
-                    `).join('');
-
-                    container.innerHTML = html;
-                    container.classList.remove('hidden');
-                    console.log(`🏷️ Mostrando ${currentPuzzleTags.length} tags del puzzle`);
+                    console.log(`🏷️ Puzzle tiene ${currentPuzzleTags.length} tags:`, currentPuzzleTags.map(t => t.tag_key));
                 } else {
-                    container.classList.add('hidden');
                     currentPuzzleTags = [];
                 }
+
+                // Re-render tag cloud to highlight active tags
+                renderTagCloud();
             } catch (err) {
                 console.error("Error cargando tags del puzzle:", err);
-                container.classList.add('hidden');
+                currentPuzzleTags = [];
+                renderTagCloud();
             }
         }
 
