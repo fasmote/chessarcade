@@ -1354,21 +1354,21 @@
             const range = maxCount - minCount || 1;
 
             // Cloud-shaped positions - bigger tags in center, smaller on edges
-            // More spread out for better readability
+            // Spread out with minimum ~18% vertical/horizontal separation
             const cloudPositions = [
-                { top: '40%', left: '25%' },   // Center (biggest - most used)
-                { top: '25%', left: '55%' },   // Upper-right
-                { top: '58%', left: '50%' },   // Lower-center
-                { top: '12%', left: '30%' },   // Top-left
-                { top: '70%', left: '20%' },   // Bottom-left
-                { top: '45%', left: '75%' },   // Right
-                { top: '78%', left: '55%' },   // Bottom-right
-                { top: '5%', left: '60%' },    // Top-right (edge)
-                { top: '55%', left: '5%' },    // Far left (edge)
-                { top: '20%', left: '5%' },    // Top-far-left (edge)
-                { top: '88%', left: '35%' },   // Bottom (edge)
-                { top: '32%', left: '90%' },   // Far right (edge)
-                { top: '85%', left: '75%' },   // Bottom-far-right (edge)
+                { top: '40%', left: '15%' },   // Center (biggest - most used)
+                { top: '15%', left: '45%' },   // Upper-center
+                { top: '62%', left: '50%' },   // Lower-center
+                { top: '2%', left: '20%' },    // Top-left
+                { top: '78%', left: '15%' },   // Bottom-left
+                { top: '32%', left: '70%' },   // Right
+                { top: '85%', left: '45%' },   // Bottom-center
+                { top: '5%', left: '70%' },    // Top-right
+                { top: '55%', left: '0%' },    // Far left
+                { top: '22%', left: '0%' },    // Top-far-left
+                { top: '92%', left: '20%' },   // Bottom-left edge
+                { top: '48%', left: '85%' },   // Far right
+                { top: '75%', left: '75%' },   // Bottom-right
             ];
 
             // Sort by usage_count descending - bigger tags get center positions
