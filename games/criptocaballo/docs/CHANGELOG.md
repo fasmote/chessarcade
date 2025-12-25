@@ -4,6 +4,30 @@ Todos los cambios notables en CriptoCaballo serán documentados aquí.
 
 ---
 
+## [v5.11] - 2025-12-25
+
+### Added - Sistema de Tags/Categorías (Fase 2: UI Usuario)
+
+#### Filtros de Tags
+- Botones de filtro por categoría sobre el selector de fecha
+- Solo se muestran tags con puzzles asignados (usage_count > 0)
+- Botón "Todos" para volver a vista normal
+- Estado activo visual con colores de cada categoría
+
+#### Display de Tags
+- Tags del puzzle actual se muestran bajo la info del puzzle
+- Chips con emoji, nombre y color de cada categoría
+- Se cargan automáticamente al cargar cualquier puzzle
+
+#### Funciones JavaScript
+- `loadTagFilters()` - carga tags desde Supabase
+- `renderTagFilters()` - renderiza botones de filtro
+- `filterByTag()` - filtra puzzles usando RPC `get_puzzles_by_tag()`
+- `loadAndDisplayPuzzleTags()` - muestra tags del puzzle actual
+- `loadPuzzleById()` y `loadPuzzleFromData()` - helpers para carga
+
+---
+
 ## [v5.10] - 2025-12-24
 
 ### Added - Sistema de Tags/Categorías (Fase 1: Admin)
@@ -43,17 +67,17 @@ Todos los cambios notables en CriptoCaballo serán documentados aquí.
 
 ---
 
-## Pendiente - Fase 2: UI Usuario
+## Pendiente - Mejoras Futuras
 
 ### Por implementar
-- [ ] Mostrar tags en cada puzzle (badge/chip)
-- [ ] Filtros por categoría en pantalla de usuario
-- [ ] Nube de tags interactiva
-- [ ] Búsqueda de puzzles por tag
+- [ ] Nube de tags interactiva (visualización gráfica)
 - [ ] Estadísticas de puzzles por categoría
+- [ ] Internacionalización de nombres de tags
 
-### Archivos a modificar
-- `games/criptocaballo/index.html` - UI de filtros y badges
+### Completado en v5.11
+- [x] Mostrar tags en cada puzzle (badge/chip)
+- [x] Filtros por categoría en pantalla de usuario
+- [x] Búsqueda de puzzles por tag
 
 ---
 
