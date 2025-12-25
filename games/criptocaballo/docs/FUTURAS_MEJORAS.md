@@ -358,57 +358,43 @@ Actualmente la nube de tags flotante solo se muestra en desktop (≥1024px). En 
 - Mantener la experiencia de juego limpia sin ocupar espacio del tablero
 - Acceso rápido y fácil a las categorías
 
-### 💡 Propuestas de Implementación
-
-#### Opción A: Menú Hamburguesa de Tags
-```
-┌──────────────────────────────┐
-│  🏷️ (botón flotante)         │
-│                              │
-│      [TABLERO]               │
-│                              │
-└──────────────────────────────┘
-
-Al tocar 🏷️:
-┌──────────────────────────────┐
-│  ╔══════════════════════╗    │
-│  ║ 🏷️ CATEGORÍAS       ✕║    │
-│  ║                      ║    │
-│  ║ 🎯 General (102)     ║    │
-│  ║ 🎄 Navidad (12)      ║    │
-│  ║ 🎨 Arte (6)          ║    │
-│  ║ ♞ Ajedrez (2)        ║    │
-│  ║ ...                  ║    │
-│  ╚══════════════════════╝    │
-└──────────────────────────────┘
-```
-
-**Pros:**
-- ✅ No ocupa espacio permanente
-- ✅ Familiar para usuarios mobile
-- ✅ Puede incluir todas las categorías
-
-**Contras:**
-- ❌ Requiere tap adicional para ver categorías
-- ❌ No tan visual como la nube desktop
-
-#### Opción B: Drawer/Panel Deslizable
-Panel que se desliza desde la izquierda al swipe o tocar botón.
-
-#### Opción C: Tags Colapsables
-Fila de tags horizontales colapsable arriba del tablero:
-```
-[🏷️ ▼] → expande a → [🎯] [🎄] [🎨] [♞] [...]
-```
-
-### 📊 Recomendación
-**Opción A (Menú Hamburguesa)** parece la mejor opción porque:
-- Patrón familiar en mobile
-- No interfiere con el juego
-- Fácil de implementar
-
 ### ✅ Estado
-**PENDIENTE** - Prioridad media
+**IMPLEMENTADO** - 25 de diciembre de 2025
+
+### 🗳️ Decisión
+Se eligió una **solución híbrida** combinando las mejores partes de las opciones propuestas:
+
+#### Implementación Final:
+```
+┌─────────────────────────────────────────┐
+│  [🎄 Navidad] [♞ Ajedrez] [🏷️]  RETO   │
+│                                   #115  │
+│                               25/12/25  │
+├─────────────────────────────────────────┤
+│           [TABLERO]                     │
+└─────────────────────────────────────────┘
+```
+
+**Características:**
+1. **Tags del puzzle actual** se muestran como cápsulas (pills) junto a "RETO DEL DÍA"
+2. **Botón 🏷️** abre modal con todas las categorías disponibles
+3. **Modal de categorías** muestra todas las tags con emoji, nombre y conteo
+4. **Click en cualquier tag** carga un puzzle aleatorio de esa categoría
+5. **Tags se actualizan** al cambiar fecha o tamaño de tablero
+
+**Ventajas de esta solución:**
+- ✅ Muestra contexto inmediato (tags del puzzle actual)
+- ✅ No ocupa espacio extra
+- ✅ Acceso rápido a todas las categorías via modal
+- ✅ Patrón familiar para usuarios mobile
+- ✅ No interfiere con el juego
+
+**Archivos modificados:**
+- `games/criptocaballo/index.html`:
+  - CSS: `.mobile-tag-pills`, `.tag-pill`, `.tag-menu-btn`, `.tags-modal-overlay`, `.tags-modal`
+  - HTML: `#mobileTagPills` container, `#tagsModalOverlay` modal
+  - JS: `renderMobileTagPills()`, `renderTagsModal()`, `openTagsModal()`, `closeTagsModal()`
+  - Fix: `loadAndDisplayPuzzleTags()` ahora se llama en `playerSelectSize()`
 
 ---
 
