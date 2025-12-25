@@ -1,6 +1,6 @@
 # 🚀 Futuras Mejoras - CriptoCaballo
 
-**Última actualización:** 24 de diciembre de 2025
+**Última actualización:** 25 de diciembre de 2025
 
 Este documento registra las mejoras planificadas y propuestas para el juego CriptoCaballo.
 
@@ -8,7 +8,8 @@ Este documento registra las mejoras planificadas y propuestas para el juego Crip
 
 ## 📋 Índice de Mejoras Propuestas
 
-1. [Sistema de Categorías/Tags para Puzzles](#mejora-1-sistema-de-categoríastags-para-puzzles)
+1. [Sistema de Categorías/Tags para Puzzles](#mejora-1-sistema-de-categoríastags-para-puzzles) - ✅ **IMPLEMENTADO**
+2. [Nube de Tags para Mobile/Portrait](#mejora-2-nube-de-tags-para-mobileportrait) - 📋 PENDIENTE
 
 ---
 
@@ -342,6 +343,72 @@ Se elige **Opción B (Sistema de Tags Múltiples)** por su flexibilidad y capaci
 - Nube de tags interactiva para usuarios
 - Agregar nuevas categorías fácilmente (como "Autores")
 - Búsquedas más precisas combinando tags
+
+---
+
+---
+
+## Mejora #2: Nube de Tags para Mobile/Portrait
+
+### 📝 Descripción
+Actualmente la nube de tags flotante solo se muestra en desktop (≥1024px). En mobile/portrait no hay espacio lateral para mostrarla. Se necesita una solución alternativa para acceder a la navegación por categorías en dispositivos móviles.
+
+### 🎯 Objetivo
+- Permitir a usuarios mobile filtrar puzzles por categoría
+- Mantener la experiencia de juego limpia sin ocupar espacio del tablero
+- Acceso rápido y fácil a las categorías
+
+### 💡 Propuestas de Implementación
+
+#### Opción A: Menú Hamburguesa de Tags
+```
+┌──────────────────────────────┐
+│  🏷️ (botón flotante)         │
+│                              │
+│      [TABLERO]               │
+│                              │
+└──────────────────────────────┘
+
+Al tocar 🏷️:
+┌──────────────────────────────┐
+│  ╔══════════════════════╗    │
+│  ║ 🏷️ CATEGORÍAS       ✕║    │
+│  ║                      ║    │
+│  ║ 🎯 General (102)     ║    │
+│  ║ 🎄 Navidad (12)      ║    │
+│  ║ 🎨 Arte (6)          ║    │
+│  ║ ♞ Ajedrez (2)        ║    │
+│  ║ ...                  ║    │
+│  ╚══════════════════════╝    │
+└──────────────────────────────┘
+```
+
+**Pros:**
+- ✅ No ocupa espacio permanente
+- ✅ Familiar para usuarios mobile
+- ✅ Puede incluir todas las categorías
+
+**Contras:**
+- ❌ Requiere tap adicional para ver categorías
+- ❌ No tan visual como la nube desktop
+
+#### Opción B: Drawer/Panel Deslizable
+Panel que se desliza desde la izquierda al swipe o tocar botón.
+
+#### Opción C: Tags Colapsables
+Fila de tags horizontales colapsable arriba del tablero:
+```
+[🏷️ ▼] → expande a → [🎯] [🎄] [🎨] [♞] [...]
+```
+
+### 📊 Recomendación
+**Opción A (Menú Hamburguesa)** parece la mejor opción porque:
+- Patrón familiar en mobile
+- No interfiere con el juego
+- Fácil de implementar
+
+### ✅ Estado
+**PENDIENTE** - Prioridad media
 
 ---
 
