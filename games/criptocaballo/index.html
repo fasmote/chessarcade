@@ -380,11 +380,57 @@
         }
 
         @media (max-width: 1023px) {
+            .mobile-section-title {
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #ffffff;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-bottom: 0.25rem;
+            }
+
+            .mobile-section-title.clickable {
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.3rem;
+            }
+
+            .mobile-section-title.clickable:active {
+                opacity: 0.7;
+            }
+
+            .mobile-section-title .tag-icon-circle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 1.4rem;
+                height: 1.4rem;
+                border-radius: 50%;
+                background: rgba(34, 211, 238, 0.2);
+                border: 1px solid #22d3ee;
+                font-size: 0.75rem;
+            }
+
+            /* Ocultar traducción en portrait para ganar espacio */
+            #commentsDisplay {
+                display: none !important;
+            }
+
             .mobile-tag-pills {
                 display: flex;
                 flex-direction: row;
+                flex-wrap: wrap;
                 align-items: center;
                 gap: 0.35rem;
+                max-width: 65vw;
+            }
+
+            .tag-more {
+                font-size: 0.7rem;
+                color: #94a3b8;
+                cursor: pointer;
+                padding: 0.2rem 0.4rem;
             }
 
             .desktop-title-section {
@@ -1023,6 +1069,9 @@
             #puzzleIdDisplay {
                 font-size: 0.95rem !important;
                 padding: 0.75rem !important;
+                max-width: 85vw !important; /* Limitar ancho en portrait */
+                margin-left: auto;
+                margin-right: auto;
             }
             #puzzleIdDisplay #puzzleIdText {
                 font-weight: 600;
@@ -1388,12 +1437,15 @@
 
                     <!-- Mobile: header stays here -->
                     <div class="border-b border-cyan-900/50 pb-2 mb-4 flex justify-between items-start lg:hidden">
-                        <div id="mobileTagPills" class="mobile-tag-pills">
-                            <!-- Tags se cargan dinámicamente -->
+                        <div class="flex flex-col items-start">
+                            <label class="mobile-section-title clickable" onclick="openTagsModal()"><span class="tag-icon-circle">🏷️</span> CATEGORÍAS</label>
+                            <div id="mobileTagPills" class="mobile-tag-pills">
+                                <!-- Tags se cargan dinámicamente -->
+                            </div>
                         </div>
                          <div class="flex flex-col items-center">
-                             <label class="text-[0.6rem] text-slate-500 font-bold text-center leading-tight">RETO DEL DÍA</label>
-                             <span id="dailyNumberDisplayMobile" class="text-white text-base font-bold"></span>
+                             <label class="mobile-section-title">RETO DEL DÍA</label>
+                             <span id="dailyNumberDisplayMobile" class="text-white text-xl font-bold"></span>
                              <input type="date" class="date-input date-input-mobile mt-1" min="2025-12-06" onchange="console.log('📅 Usuario cambió fecha a:', this.value); loadDailyLevel(this.value);">
                          </div>
                     </div>
@@ -1402,7 +1454,7 @@
 
                 <!-- NUEVO MENÚ JUGADOR (v4.2): BOTONES ARCADE -->
                 <div class="w-full max-w-md mb-4">
-                    <p class="text-center text-xs mb-2 uppercase tracking-wider" style="background: linear-gradient(90deg, #0ea5e9, #06b6d4); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; display: inline-block; width: 100%;">SELECCIONA EL TAMAÑO DE TABLERO</p>
+                    <p class="text-center text-xs mb-2 uppercase tracking-wider" style="background: linear-gradient(90deg, #0ea5e9, #06b6d4); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; display: inline-block; width: 100%; font-weight: 700;">SELECCIONA EL TAMAÑO DE TABLERO</p>
                     <div class="grid grid-cols-3 gap-2">
                     <button onclick="playerSelectSize(3,4)" class="arcade-btn py-1 rounded" data-rows="3" data-cols="4">3x4</button>
                     <button onclick="playerSelectSize(4,5)" class="arcade-btn py-1 rounded" data-rows="4" data-cols="5">4x5</button>
@@ -1825,9 +1877,10 @@
             }).filter(Boolean);
 
             let html = '';
+            const maxVisible = 3;
 
-            // Show current puzzle's tags (max 2)
-            currentTags.slice(0, 2).forEach(tag => {
+            // Show current puzzle's tags (max 3)
+            currentTags.slice(0, maxVisible).forEach(tag => {
                 html += `
                     <button class="tag-pill"
                             style="--pill-color: ${tag.color}; color: ${tag.color}; border-color: ${tag.color};"
@@ -1839,8 +1892,10 @@
                 `;
             });
 
-            // Add menu button for all tags
-            html += `<button class="tag-menu-btn" onclick="openTagsModal()" title="Ver todas las categorías">🏷️</button>`;
+            // Show "..." if there are more tags
+            if (currentTags.length > maxVisible) {
+                html += `<span class="tag-more" onclick="openTagsModal()" title="Ver todas las categorías">+${currentTags.length - maxVisible} más</span>`;
+            }
 
             container.innerHTML = html;
 
@@ -3064,17 +3119,27 @@
 
             // Adjust max cell size based on screen and board size
             let maxCellSize = '60px';
+            let widthConstraint, heightConstraint;
+
             if (isPortrait && is8x8) {
-                maxCellSize = '36px';
+                // Portrait 8x8: maximize board size using full width
+                maxCellSize = '50px';
+                widthConstraint = `calc((94vw - 40px) / ${cols})`; // Use almost full width
+                heightConstraint = `calc((70vh - 150px) / ${rows})`;
             } else if (is8x8 && isSmallDesktop) {
-                maxCellSize = '50px'; // Smaller cells for 8x8 on small desktop monitors
+                maxCellSize = '50px';
+                widthConstraint = `calc((100vw - 100px) / ${cols})`;
+                heightConstraint = `calc((85vh - 200px) / ${rows})`;
             } else if (is8x8) {
-                maxCellSize = '55px'; // Slightly smaller for 8x8 on any desktop
+                maxCellSize = '55px';
+                widthConstraint = `calc((100vw - 100px) / ${cols})`;
+                heightConstraint = `calc((85vh - 200px) / ${rows})`;
+            } else {
+                // Default for other board sizes
+                widthConstraint = `calc((100vw - 100px) / ${cols})`;
+                heightConstraint = `calc((85vh - 200px) / ${rows})`;
             }
 
-            // More conservative constraints for desktop to ensure board fits
-            const widthConstraint = `calc((100vw - 100px) / ${cols})`;
-            const heightConstraint = `calc((85vh - 200px) / ${rows})`; // Leave room for header/footer
             const cellSizeExpr = `min(${maxCellSize}, ${widthConstraint}, ${heightConstraint})`;
 
             board.style.gridTemplateColumns = `repeat(${cols}, ${cellSizeExpr})`;
