@@ -1,6 +1,6 @@
 # 🐛 Errores Solucionados y Mejoras - CriptoCaballo
 
-**Última actualización:** 24 de diciembre de 2025
+**Última actualización:** 27 de diciembre de 2025
 
 Este documento registra todos los bugs que han sido identificados y resueltos, así como las mejoras implementadas en el juego CriptoCaballo.
 
@@ -17,6 +17,7 @@ Este documento registra todos los bugs que han sido identificados y resueltos, a
 7. [Marcaba como resuelto sin validar orden](#bug-7-marcaba-como-resuelto-sin-validar-orden-crítico)
 8. [Casillas rojas revelaban dónde termina mensaje](#bug-8-casillas-rojas-revelaban-dónde-termina-mensaje-crítico)
 9. [Mejora: Mensaje decodificado a la derecha en desktop](#mejora-9-mensaje-decodificado-a-la-derecha-en-desktop)
+10. [Mejora: Rediseño desktop - nube de tags y panel derecho](#mejora-10-rediseño-desktop-nube-de-tags-y-panel-derecho)
 
 ---
 
@@ -468,8 +469,62 @@ Se implementó un layout con CSS que:
 | Casillas rojas spoiler | Bug | 🔴 ALTA | ✅ RESUELTO | 2025-12-05 |
 | Mensaje lateral desktop | Mejora | 🟡 MEDIA | ✅ IMPLEMENTADO | 2025-12-24 |
 
+---
+
+## Mejora #10: Rediseño desktop - nube de tags y panel derecho
+
+### 📝 Descripción
+Rediseño completo del layout desktop para CriptoCaballo, incluyendo:
+- Nube de categorías (tags) a la izquierda del tablero con forma de nube SVG
+- Panel de información del juego a la derecha (CriptoMensaje, RETO DEL DÍA, fecha)
+- Tarjeta de misión "DESCUBRE ESTA FRASE" más prominente
+- Sincronización automática entre elementos desktop y mobile
+
+### 🔍 Problema con CSS
+**IMPORTANTE:** Los estilos CSS definidos en `<style>` o media queries NO se aplicaban a elementos generados dinámicamente con JavaScript. A pesar de usar selectores específicos y `!important`, Tailwind CSS tenía mayor especificidad.
+
+### ✅ Solución
+**Usar estilos inline directamente en el HTML/JavaScript:**
+
+```javascript
+// ❌ NO FUNCIONABA - CSS en <style> ignorado por Tailwind
+const titleHtml = `<span class="text-yellow-300 font-bold">"${data.title}"</span>`;
+
+// ✅ FUNCIONA - Estilos inline
+const titleHtml = `<span class="text-yellow-300 font-bold" style="font-size: 1.4rem; display: block; text-align: center;">"${data.title}"</span>`;
+```
+
+```html
+<!-- ❌ NO FUNCIONABA - CSS ignorado -->
+<div class="mission-instruction hidden lg:block">
+
+<!-- ✅ FUNCIONA - Estilos inline -->
+<div class="mission-instruction hidden lg:block" style="font-size: 0.7rem; color: #94a3b8; opacity: 0.8;">
+```
+
+### 🎯 Lección Aprendida
+Cuando se usa Tailwind CSS, los estilos inline (`style=""`) tienen mayor prioridad que las reglas CSS normales. Para elementos generados dinámicamente o que usan clases de Tailwind, es más confiable usar estilos inline.
+
+### 📁 Archivos Modificados
+- `games/criptocaballo/index.html`
+  - CSS: `.tag-cloud-section`, `.right-panel-desktop`, `.mission-card`
+  - JS: `titleHtml` y `authorHtml` con estilos inline
+  - HTML: `.mission-instruction` con estilos inline
+
+### 🚀 Commits
+- `feat: Move game info panel to right side on desktop`
+- `fix: Use inline styles to force phrase styling`
+- `fix: Make instruction text more readable`
+
+### ✅ Estado
+**RESUELTO** - 27 de diciembre de 2025
+
+---
+
+## 📊 Estadísticas
+
 **Total de bugs resueltos:** 8
-**Mejoras implementadas:** 1
+**Mejoras implementadas:** 2
 **Bugs críticos resueltos:** 4
 
 ---
@@ -483,5 +538,5 @@ Se implementó un layout con CSS que:
 
 ---
 
-**Última actualización:** 24 de diciembre de 2025
-**Preview más reciente:** ✅ https://chessarcade-bjd3e9gn1-claudios-projects.vercel.app/games/criptocaballo/
+**Última actualización:** 27 de diciembre de 2025
+**Preview más reciente:** ✅ https://chessarcade.vercel.app/games/criptocaballo/
