@@ -223,70 +223,113 @@
         @media (min-width: 1024px) {
             .tag-cloud-section {
                 display: block;
-                position: absolute !important;
-                right: calc(100% + 3rem) !important;
+                position: fixed !important;
+                left: 2rem !important;
                 top: 50% !important;
                 transform: translateY(-50%) !important;
-                width: 280px !important;
-                max-width: 280px !important;
-                padding: 0 !important;
+                width: 460px !important;
+                max-width: 460px !important;
+                min-height: 320px !important;
+                padding: 1.5rem 2rem !important;
                 background: transparent !important;
                 border: none !important;
+                z-index: 50;
+            }
+
+            /* Cloud shape container */
+            .cloud-shape {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: -1;
+                /* Outer glow only - no internal lines */
+                filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.4)) drop-shadow(0 0 4px rgba(34, 211, 238, 0.6));
+            }
+
+            .cloud-shape svg {
+                width: 100%;
+                height: 100%;
             }
         }
 
         @media (min-width: 1400px) {
             .tag-cloud-section {
-                right: calc(100% + 4rem) !important;
-                width: 300px !important;
-                max-width: 300px !important;
+                left: 3rem !important;
+                width: 500px !important;
+                max-width: 500px !important;
             }
+        }
+
+        .tag-cloud-title {
+            text-align: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .tag-cloud-title h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(34, 211, 238, 0.8), 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tag-cloud-title p {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            margin: 0.35rem 0 0 0;
+            opacity: 0.9;
         }
 
         .tag-cloud {
             position: relative;
-            min-height: 380px;
-            width: 280px;
+            min-height: 240px;
+            width: 100%;
             margin: 0 auto;
-            /* Sin contenedor - los tags flotan libres */
         }
 
         .tag-cloud-item {
             position: absolute;
-            padding: 0.15rem 0.3rem;
+            padding: 0.35rem 0.7rem;
             cursor: pointer;
             transition: all 0.3s ease;
             white-space: nowrap;
-            color: var(--tag-color, #94a3b8);
+            color: #fff;
             text-decoration: none;
-            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            background: transparent;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            background: var(--tag-color, #64748b);
             border: none;
+            border-radius: 9999px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .tag-cloud-item:hover {
-            transform: scale(1.2);
-            text-shadow: 0 0 20px var(--tag-color, #22d3ee);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 15px var(--tag-color, #22d3ee);
             z-index: 10;
         }
 
         .tag-cloud-item.active-tag {
-            text-shadow: 0 0 15px var(--tag-color, #22d3ee), 0 0 30px var(--tag-color, #22d3ee);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
             z-index: 5;
         }
 
         /* Tag sizes based on usage - larger fonts */
-        .tag-size-xs { font-size: 0.7rem; opacity: 0.75; }
-        .tag-size-sm { font-size: 0.8rem; opacity: 0.85; }
-        .tag-size-md { font-size: 0.95rem; opacity: 0.9; }
-        .tag-size-lg { font-size: 1.1rem; font-weight: 500; }
-        .tag-size-xl { font-size: 1.25rem; font-weight: 600; }
+        .tag-size-xs { font-size: 0.85rem; opacity: 0.85; }
+        .tag-size-sm { font-size: 0.95rem; opacity: 0.9; }
+        .tag-size-md { font-size: 1.05rem; opacity: 0.95; }
+        .tag-size-lg { font-size: 1.15rem; font-weight: 500; }
+        .tag-size-xl { font-size: 1.3rem; font-weight: 600; }
 
         /* Tag count in parentheses */
         .tag-count {
-            font-size: 0.75em;
-            opacity: 0.7;
-            margin-left: 0.2rem;
+            font-size: 0.7em;
+            opacity: 0.6;
+            margin-left: 0.15rem;
         }
 
         /* Mobile Tag Pills - shown instead of CriptoMensaje title on mobile */
@@ -801,6 +844,40 @@
         .spaces-btn { background: rgba(30, 41, 59, 0.8); border: 1px solid #475569; font-size: 0.75rem; margin-top: 0.5rem; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
         .spaces-btn:hover { color: #fff; border-color: #94a3b8; background: rgba(51, 65, 85, 0.8); }
         .spaces-btn.active { color: #38bdf8; border-color: #38bdf8; background: rgba(14, 165, 233, 0.2); }
+
+        /* Info tooltip for message */
+        .info-tooltip-wrapper { display: inline-block; }
+        .info-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            text-align: left;
+            border: 1px solid #38bdf8;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(56, 189, 248, 0.2);
+            z-index: 100;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .info-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #38bdf8;
+        }
+        .info-tooltip-wrapper:hover .info-tooltip { visibility: visible; opacity: 1; }
+
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.active { opacity: 1; pointer-events: all; }
         .modal-content { background: #1e293b; border: 2px solid #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.3); border-radius: 1rem; padding: 2rem; width: 90%; max-width: 400px; transform: translateY(20px); transition: transform 0.3s; }
@@ -1271,6 +1348,45 @@
 
                         <!-- Tag Cloud - positioned to the left on desktop -->
                         <div id="tagCloudPanel" class="tag-cloud-section">
+                            <!-- Cloud SVG background - wide horizontal cloud -->
+                            <div class="cloud-shape">
+                                <svg viewBox="0 0 400 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" style="stop-color:rgba(140,155,175,0.94)"/>
+                                            <stop offset="50%" style="stop-color:rgba(100,115,140,0.92)"/>
+                                            <stop offset="100%" style="stop-color:rgba(70,85,110,0.90)"/>
+                                        </linearGradient>
+                                        <filter id="blurEdges" x="-5%" y="-5%" width="110%" height="110%">
+                                            <feGaussianBlur in="SourceGraphic" stdDeviation="2"/>
+                                        </filter>
+                                    </defs>
+                                    <!-- Cloud shape with blurred edges -->
+                                    <g fill="url(#cloudGradient)" filter="url(#blurEdges)">
+                                        <!-- Main wide horizontal body -->
+                                        <ellipse cx="200" cy="105" rx="180" ry="75"/>
+                                        <!-- Top bumps - flatter -->
+                                        <ellipse cx="50" cy="55" rx="45" ry="35"/>
+                                        <ellipse cx="120" cy="38" rx="50" ry="32"/>
+                                        <ellipse cx="200" cy="32" rx="55" ry="30"/>
+                                        <ellipse cx="280" cy="38" rx="50" ry="32"/>
+                                        <ellipse cx="350" cy="55" rx="45" ry="35"/>
+                                        <!-- Side bumps -->
+                                        <ellipse cx="22" cy="95" rx="28" ry="40"/>
+                                        <ellipse cx="378" cy="95" rx="28" ry="40"/>
+                                        <!-- Bottom bumps - flatter -->
+                                        <ellipse cx="55" cy="155" rx="42" ry="30"/>
+                                        <ellipse cx="130" cy="168" rx="48" ry="28"/>
+                                        <ellipse cx="200" cy="172" rx="50" ry="26"/>
+                                        <ellipse cx="270" cy="168" rx="48" ry="28"/>
+                                        <ellipse cx="345" cy="155" rx="42" ry="30"/>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div class="tag-cloud-title">
+                                <h3>🏷️ Categorías</h3>
+                                <p>Click para explorar</p>
+                            </div>
                             <div id="tagCloud" class="tag-cloud">
                                 <!-- Tags se cargan dinámicamente -->
                             </div>
@@ -1278,8 +1394,14 @@
 
                         <!-- Message panel - positioned to the right on desktop -->
                         <div class="message-section mt-6 p-4 pb-12 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] flex flex-col justify-center max-w-md relative decoded-box">
-                            <p class="text-xs text-slate-500 mb-1">MENSAJE DECODIFICADO</p>
-                            <h3 id="decodedText" class="text-lg md:text-2xl font-bold break-words leading-relaxed"></h3>
+                            <p class="text-xs text-slate-500 mb-1 flex items-center justify-center gap-1">
+                                MENSAJE DECODIFICADO
+                                <span class="info-tooltip-wrapper relative cursor-help">
+                                    <i class="fa-solid fa-circle-info text-cyan-400 hover:text-cyan-300"></i>
+                                    <span class="info-tooltip">Este es el mensaje secreto oculto en el tablero. Sigue el camino del caballo (movimientos en L) para descubrir la frase completa letra por letra.</span>
+                                </span>
+                            </p>
+                            <h3 id="decodedText" class="text-lg md:text-2xl lg:text-3xl font-bold break-words leading-relaxed"></h3>
                             <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
                                 <i class="fa-regular fa-eye"></i> Ver con Espacios
                             </button>
@@ -1506,22 +1628,21 @@
             const maxCount = Math.max(...counts);
             const range = maxCount - minCount || 1;
 
-            // Cloud-shaped positions - bigger tags in center, smaller on edges
-            // Spread out with minimum ~18% vertical/horizontal separation
+            // Grid-like positions - distributed across cloud (larger space now)
             const cloudPositions = [
-                { top: '40%', left: '15%' },   // Center (biggest - most used)
-                { top: '15%', left: '45%' },   // Upper-center
-                { top: '62%', left: '50%' },   // Lower-center
-                { top: '2%', left: '20%' },    // Top-left
-                { top: '78%', left: '15%' },   // Bottom-left
-                { top: '32%', left: '70%' },   // Right
-                { top: '85%', left: '45%' },   // Bottom-center
-                { top: '5%', left: '70%' },    // Top-right
-                { top: '55%', left: '0%' },    // Far left
-                { top: '22%', left: '0%' },    // Top-far-left
-                { top: '92%', left: '20%' },   // Bottom-left edge
-                { top: '48%', left: '85%' },   // Far right
-                { top: '75%', left: '75%' },   // Bottom-right
+                { top: '35%', left: '28%' },   // Center (biggest - most used)
+                { top: '2%', left: '5%' },     // Row 1 - left
+                { top: '2%', left: '32%' },    // Row 1 - center
+                { top: '2%', left: '58%' },    // Row 1 - right
+                { top: '28%', left: '3%' },    // Row 2 - left
+                { top: '26%', left: '55%' },   // Row 2 - right
+                { top: '55%', left: '5%' },    // Row 3 - left
+                { top: '58%', left: '35%' },   // Row 3 - center
+                { top: '55%', left: '62%' },   // Row 3 - right
+                { top: '82%', left: '12%' },   // Row 4 - left
+                { top: '82%', left: '42%' },   // Row 4 - center
+                { top: '28%', left: '78%' },   // Row 2 - far right
+                { top: '55%', left: '82%' },   // Row 3 - far right
             ];
 
             // Sort by usage_count descending - bigger tags get center positions
