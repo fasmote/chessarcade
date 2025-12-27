@@ -331,8 +331,29 @@
         }
 
         .tag-cloud-item.active-tag {
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 5;
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+            font-weight: 700;
+            z-index: 15;
+            animation: tag-heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes tag-heartbeat {
+            0%, 100% {
+                transform: scale(1);
+            }
+            15% {
+                transform: scale(1.06);
+            }
+            30% {
+                transform: scale(1);
+            }
+            45% {
+                transform: scale(1.04);
+            }
+            60% {
+                transform: scale(1);
+            }
         }
 
         /* Tag sizes based on usage - larger fonts */
