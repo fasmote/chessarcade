@@ -780,7 +780,11 @@
         @media (min-width: 1024px) {
             .main-layout {
                 grid-template-columns: 1fr;
-                padding-top: 2rem;
+                padding-top: 0.5rem; /* Reducido para ganar espacio vertical en 8x8 */
+            }
+            /* Reducir espacio del subtítulo en desktop */
+            .subtitle-desktop {
+                margin-bottom: 0.5rem !important;
             }
         }
 
@@ -1357,7 +1361,7 @@
                         </span>
                         CriptoCaballo
                     </h1>
-                    <p class="text-slate-400 max-w-lg mx-auto text-sm md:text-base mb-6">
+                    <p class="text-slate-400 max-w-lg mx-auto text-sm md:text-base mb-6 subtitle-desktop">
                         Sigue el camino del caballo para descifrar el mensaje oculto
                     </p>
 
@@ -1376,13 +1380,16 @@
 
 
                 <!-- NUEVO MENÚ JUGADOR (v4.2): BOTONES ARCADE -->
-                <div class="w-full max-w-md mb-4 grid grid-cols-3 gap-2">
+                <div class="w-full max-w-md mb-4">
+                    <p class="text-center text-xs mb-2 uppercase tracking-wider" style="background: linear-gradient(90deg, #0ea5e9, #06b6d4); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; display: inline-block; width: 100%;">SELECCIONA EL TAMAÑO DE TABLERO</p>
+                    <div class="grid grid-cols-3 gap-2">
                     <button onclick="playerSelectSize(3,4)" class="arcade-btn py-1 rounded" data-rows="3" data-cols="4">3x4</button>
                     <button onclick="playerSelectSize(4,5)" class="arcade-btn py-1 rounded" data-rows="4" data-cols="5">4x5</button>
                     <button onclick="playerSelectSize(5,5)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="5">5x5</button>
                     <button onclick="playerSelectSize(5,6)" class="arcade-btn py-1 rounded" data-rows="5" data-cols="6">5x6</button> 
-                    <button onclick="playerSelectSize(6,7)" class="arcade-btn py-1 rounded" data-rows="6" data-cols="7">6x7</button> 
+                    <button onclick="playerSelectSize(6,7)" class="arcade-btn py-1 rounded" data-rows="6" data-cols="7">6x7</button>
                     <button onclick="playerSelectSize(8,8)" class="arcade-btn py-1 rounded" data-rows="8" data-cols="8">8x8</button>
+                    </div>
                 </div>
 
                 <!-- Puzzle ID Display - Mission Card Style on Desktop -->
