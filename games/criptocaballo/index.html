@@ -985,6 +985,52 @@
             #puzzleIdDisplay #puzzleIdText {
                 font-weight: 600;
             }
+
+            /* Mission Card Style - Desktop Only */
+            .mission-card {
+                background: linear-gradient(135deg, rgba(6, 78, 92, 0.4), rgba(15, 23, 42, 0.8)) !important;
+                border: 2px solid #22d3ee !important;
+                box-shadow: 0 0 20px rgba(34, 211, 238, 0.3), 0 0 40px rgba(34, 211, 238, 0.1), inset 0 1px 0 rgba(255,255,255,0.1);
+                animation: missionPulse 3s ease-in-out infinite;
+                text-align: center;
+            }
+
+            @keyframes missionPulse {
+                0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3), 0 0 40px rgba(34, 211, 238, 0.1); }
+                50% { box-shadow: 0 0 25px rgba(34, 211, 238, 0.5), 0 0 50px rgba(34, 211, 238, 0.2); }
+            }
+
+            .mission-title {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #fbbf24;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-bottom: 0.5rem;
+                text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+            }
+
+            .mission-icon {
+                font-size: 1.1rem;
+            }
+
+            .mission-card #puzzleIdText {
+                font-size: 1.1rem !important;
+                color: #fff;
+                line-height: 1.5;
+            }
+
+            .mission-instruction {
+                font-size: 0.75rem;
+                color: #94a3b8;
+                margin-top: 0.5rem;
+                opacity: 0.9;
+            }
+
+            .mission-instruction i {
+                color: #22d3ee;
+            }
         }
     </style>
 
@@ -1318,13 +1364,23 @@
                     <button onclick="playerSelectSize(8,8)" class="arcade-btn py-1 rounded" data-rows="8" data-cols="8">8x8</button>
                 </div>
 
-                <!-- Puzzle ID Display -->
-                <div id="puzzleIdDisplay" class="hidden mt-2 mb-2 text-cyan-400 text-xs lg:text-sm bg-cyan-900/20 p-2 lg:p-3 rounded border border-cyan-900/50 max-w-md">
-                    <span class="info-tooltip-wrapper relative cursor-help">
+                <!-- Puzzle ID Display - Mission Card Style on Desktop -->
+                <div id="puzzleIdDisplay" class="hidden mt-2 mb-2 text-cyan-400 text-xs lg:text-sm bg-cyan-900/20 p-2 lg:p-4 rounded lg:rounded-xl border border-cyan-900/50 max-w-md mission-card">
+                    <!-- Desktop: Title -->
+                    <div class="mission-title hidden lg:block">
+                        <span class="mission-icon">🎯</span> DESCUBRE ESTA FRASE
+                    </div>
+                    <!-- Mobile: just info icon -->
+                    <span class="info-tooltip-wrapper relative cursor-help lg:hidden">
                         <i class="fa-solid fa-info-circle mr-1"></i>
-                        <span class="info-tooltip" style="width: 240px;">Esta es la frase oculta en el tablero. Sigue el camino del caballo (movimientos en L) para descubrirla letra por letra.</span>
+                        <span class="info-tooltip" style="width: 240px;">Esta es la frase oculta en el tablero. Sigue el camino del caballo para descubrirla.</span>
                     </span>
-                    <span id="puzzleIdText" class="lg:text-base"></span>
+                    <!-- The phrase -->
+                    <span id="puzzleIdText" class="lg:text-base lg:block lg:my-2"></span>
+                    <!-- Desktop: Instruction -->
+                    <div class="mission-instruction hidden lg:block">
+                        <i class="fa-solid fa-chess-knight mr-1"></i> Sigue el camino del caballo para descubrirla
+                    </div>
                 </div>
 
                 <!-- Admin Comments Display -->
