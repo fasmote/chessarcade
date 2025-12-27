@@ -1319,8 +1319,12 @@
                 </div>
 
                 <!-- Puzzle ID Display -->
-                <div id="puzzleIdDisplay" class="hidden mt-2 mb-2 text-cyan-400 text-xs bg-cyan-900/20 p-2 rounded border border-cyan-900/50 max-w-md">
-                    <i class="fa-solid fa-info-circle mr-1"></i><span id="puzzleIdText"></span>
+                <div id="puzzleIdDisplay" class="hidden mt-2 mb-2 text-cyan-400 text-xs lg:text-sm bg-cyan-900/20 p-2 lg:p-3 rounded border border-cyan-900/50 max-w-md">
+                    <span class="info-tooltip-wrapper relative cursor-help">
+                        <i class="fa-solid fa-info-circle mr-1"></i>
+                        <span class="info-tooltip" style="width: 240px;">Esta es la frase oculta en el tablero. Sigue el camino del caballo (movimientos en L) para descubrirla letra por letra.</span>
+                    </span>
+                    <span id="puzzleIdText" class="lg:text-base"></span>
                 </div>
 
                 <!-- Admin Comments Display -->
@@ -1393,14 +1397,8 @@
                         </div>
 
                         <!-- Message panel - positioned to the right on desktop -->
-                        <div class="message-section mt-6 p-4 pb-12 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] flex flex-col justify-center max-w-md relative decoded-box">
-                            <p class="text-xs text-slate-500 mb-1 flex items-center justify-center gap-1">
-                                MENSAJE DECODIFICADO
-                                <span class="info-tooltip-wrapper relative cursor-help">
-                                    <i class="fa-solid fa-circle-info text-cyan-400 hover:text-cyan-300"></i>
-                                    <span class="info-tooltip">Este es el mensaje secreto oculto en el tablero. Sigue el camino del caballo (movimientos en L) para descubrir la frase completa letra por letra.</span>
-                                </span>
-                            </p>
+                        <div class="message-section mt-6 p-4 pb-12 bg-slate-900 rounded-lg w-full text-center border border-slate-800 min-h-[80px] md:min-h-[100px] lg:min-h-[120px] flex flex-col justify-center max-w-md relative decoded-box">
+                            <p class="text-xs text-slate-500 mb-1">MENSAJE DECODIFICADO</p>
                             <h3 id="decodedText" class="text-lg md:text-2xl lg:text-3xl font-bold break-words leading-relaxed"></h3>
                             <button onclick="toggleSpaces()" id="showSpacesBtn" class="hidden spaces-btn px-3 py-1 rounded-full absolute -bottom-3 left-1/2 transform -translate-x-1/2 shadow-lg z-20 flex items-center gap-1">
                                 <i class="fa-regular fa-eye"></i> Ver con Espacios
