@@ -1399,8 +1399,8 @@
                     <!-- The phrase -->
                     <span id="puzzleIdText" class="lg:text-base lg:block lg:my-2"></span>
                     <!-- Desktop: Instruction -->
-                    <div class="mission-instruction hidden lg:block">
-                        <i class="fa-solid fa-chess-knight mr-1"></i> Sigue el camino del caballo para descubrirla
+                    <div class="mission-instruction hidden lg:block" style="font-size: 0.55rem; color: #475569; opacity: 0.5; margin-top: 0.75rem;">
+                        <i class="fa-solid fa-chess-knight mr-1" style="color: #475569;"></i> Sigue el camino del caballo para descubrirla
                     </div>
                 </div>
 
@@ -1945,8 +1945,8 @@
                     const idDisplay = document.getElementById('puzzleIdDisplay');
                     const idText = document.getElementById('puzzleIdText');
                     if (idDisplay && idText) {
-                        const titleHtml = data.title ? `<span class="text-yellow-300 font-bold">"${data.title}"</span>` : '';
-                        const authorHtml = data.author ? `<span class="text-slate-400 ml-2">por ${data.author}</span>` : '';
+                        const titleHtml = data.title ? `<span class="text-yellow-300 font-bold" style="font-size: 1.4rem; display: block; text-align: center; margin-bottom: 0.5rem;">"${data.title}"</span>` : '';
+                        const authorHtml = data.author ? `<span class="text-slate-400" style="font-size: 0.8rem; display: block; text-align: center;">por ${data.author}</span>` : '';
                         idText.innerHTML = titleHtml + authorHtml;
                         if (data.title || data.author) {
                             idDisplay.classList.remove('hidden');
@@ -2985,8 +2985,8 @@
                     if(idDisplay && idText) {
                         idDisplay.dataset.internalId = internalId;
                         // Title in yellow, author in slate
-                        const titleHtml = data.title ? `<span class="text-yellow-300 font-bold">"${data.title}"</span>` : '';
-                        const authorHtml = data.author ? `<span class="text-slate-400 ml-2">por ${data.author}</span>` : '';
+                        const titleHtml = data.title ? `<span class="text-yellow-300 font-bold" style="font-size: 1.4rem; display: block; text-align: center; margin-bottom: 0.5rem;">"${data.title}"</span>` : '';
+                        const authorHtml = data.author ? `<span class="text-slate-400" style="font-size: 0.8rem; display: block; text-align: center;">por ${data.author}</span>` : '';
                         idText.innerHTML = titleHtml + authorHtml;
                         // Only show if there's title or author
                         if(data.title || data.author) {
