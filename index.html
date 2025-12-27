@@ -389,6 +389,18 @@
                     </button>
                 </article>
 
+                <!-- CriptoCaballo Game -->
+                <article class="neon-card criptocaballo-card" tabindex="0" role="button">
+                    <div class="neon-card-icon" aria-hidden="true">🔐</div>
+                    <h2 class="neon-heading">CriptoCaballo</h2>
+                    <p class="neon-text neon-mb-md">
+                        Decode hidden messages following the knight's path! Solve cryptic puzzles by finding the correct sequence through the board.
+                    </p>
+                    <button class="neon-play-btn" type="button" data-game="criptocaballo">
+                        Play Now
+                    </button>
+                </article>
+
                 <!-- ============================================
                      PRÓXIMAMENTE (OCULTOS PARA GOOGLE ADS)
                      ============================================ -->
@@ -595,7 +607,7 @@
             console.log(`🔍 Checking if game is available...`);
 
             // Check if game is available
-            if (gameId === 'knight-quest' || gameId === 'square-rush' || gameId === 'memory-matrix' || gameId === 'master-sequence' || gameId === 'chessinfive' || gameId === 'cripto-caballo') {
+            if (gameId === 'knight-quest' || gameId === 'square-rush' || gameId === 'memory-matrix' || gameId === 'master-sequence' || gameId === 'chessinfive' || gameId === 'criptocaballo') {
                 console.log(`✅ Game ${gameId} is available, proceeding...`);
                 // Add screen flash effect
                 document.body.style.background = 'white';
@@ -622,8 +634,8 @@
                     console.log(`🔗 Target URL: ${targetUrl}`);
                     // Versión v2 - rebuild desde cero, paso a paso
                     window.location.href = targetUrl;
-                } else if (gameId === 'cripto-caballo') {
-                    console.log(`🔐 Redirecting to Cripto-Caballo...`);
+                } else if (gameId === 'criptocaballo') {
+                    console.log(`🔐 Redirecting to CriptoCaballo...`);
                     window.location.href = 'games/criptocaballo/index.html';
                 } else {
                     console.log(`🎮 Redirecting to ${gameId}...`);
