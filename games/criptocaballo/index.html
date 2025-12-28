@@ -1943,6 +1943,9 @@
             console.log(`🎲 Cargando puzzle aleatorio de categoría: ${tagKey}`);
 
             try {
+                // Get today's date to filter out future puzzles
+                const today = new Date().toISOString().split('T')[0];
+
                 // Step 1: Get tag_id from tag_key
                 const { data: tagData, error: tagError } = await supabaseClient
                     .from('puzzle_tags')
@@ -1955,22 +1958,23 @@
                     return;
                 }
 
-                // Step 2: Get all puzzle_ids with this tag
+                // Step 2: Get all puzzle_ids with this tag that are NOT in the future
                 const { data: relations, error: relError } = await supabaseClient
                     .from('puzzle_tag_relations')
-                    .select('puzzle_id')
-                    .eq('tag_id', tagData.id);
+                    .select('puzzle_id, puzzles!inner(puzzle_date)')
+                    .eq('tag_id', tagData.id)
+                    .lte('puzzles.puzzle_date', today);
 
                 if (relError || !relations || relations.length === 0) {
-                    console.log(`🏷️ No hay puzzles con tag "${tagKey}"`);
-                    alert(`No hay puzzles con la categoría "${tagKey}" todavía.`);
+                    console.log(`🏷️ No hay puzzles con tag "${tagKey}" disponibles`);
+                    alert(`No hay puzzles con la categoría "${tagKey}" disponibles todavía.`);
                     return;
                 }
 
                 // Step 3: Pick a random puzzle_id
                 const randomIndex = Math.floor(Math.random() * relations.length);
                 const randomPuzzleId = relations[randomIndex].puzzle_id;
-                console.log(`🎲 Encontrados ${relations.length} puzzles con tag "${tagKey}", seleccionado #${randomIndex + 1}`);
+                console.log(`🎲 Encontrados ${relations.length} puzzles con tag "${tagKey}" (hasta ${today}), seleccionado #${randomIndex + 1}`);
 
                 // Step 4: Load the puzzle
                 await loadPuzzleById(randomPuzzleId);
@@ -1995,10 +1999,12 @@
                     const [r, c] = data.board_size.split('x').map(Number);
                     setBoardSize(r, c);
 
-                    // Update date picker to match puzzle date
-                    const dateInput = document.querySelector('.date-input');
-                    if (dateInput && data.puzzle_date) {
-                        dateInput.value = data.puzzle_date;
+                    // Update ALL date pickers to match puzzle date (desktop and mobile)
+                    if (data.puzzle_date) {
+                        const dateInputs = document.querySelectorAll('.date-input');
+                        dateInputs.forEach(input => {
+                            input.value = data.puzzle_date;
+                        });
                     }
 
                     // Reset game state
@@ -2018,10 +2024,12 @@
                     // Use existing function to load puzzle
                     loadPuzzleFromSavedData(data);
 
-                    // Update UI elements
-                    const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
-                    if (dailyNumDisplay && data.daily_number) {
-                        dailyNumDisplay.textContent = `#${data.daily_number}`;
+                    // Update UI elements - BOTH desktop and mobile daily number displays
+                    if (data.daily_number) {
+                        const dailyNumDisplay = document.getElementById('dailyNumberDisplay');
+                        const dailyNumMobile = document.getElementById('dailyNumberDisplayMobile');
+                        if (dailyNumDisplay) dailyNumDisplay.textContent = `#${data.daily_number}`;
+                        if (dailyNumMobile) dailyNumMobile.textContent = `#${data.daily_number}`;
                     }
 
                     // Show title/author
