@@ -2052,8 +2052,12 @@
                     // Update admin form fields (clear if no value, populate if has value)
                     const lvlDifficulty = document.getElementById('lvlDifficulty');
                     const lvlComments = document.getElementById('lvlComments');
+                    const lvlName = document.getElementById('lvlName');
+                    const lvlAuthor = document.getElementById('lvlAuthor');
                     if(lvlDifficulty) lvlDifficulty.value = data.difficulty || 'medium';
                     if(lvlComments) lvlComments.value = data.admin_comments || '';
+                    if(lvlName) lvlName.value = data.title || '';
+                    if(lvlAuthor) lvlAuthor.value = data.author || '';
 
                     console.log(`✅ Puzzle cargado: "${data.message}" (${data.puzzle_date})`);
                 }
@@ -2482,6 +2486,16 @@
             console.log("Botón presionado: Encriptar");
             const input = document.getElementById('messageInput');
             if (!input) return;
+
+            // Clear admin form fields when generating a NEW puzzle
+            const lvlDifficulty = document.getElementById('lvlDifficulty');
+            const lvlComments = document.getElementById('lvlComments');
+            const lvlName = document.getElementById('lvlName');
+            const lvlAuthor = document.getElementById('lvlAuthor');
+            if(lvlDifficulty) lvlDifficulty.value = 'medium';
+            if(lvlComments) lvlComments.value = '';
+            if(lvlName) lvlName.value = '';
+            if(lvlAuthor) lvlAuthor.value = '';
 
             const fillOption = document.getElementById('fillOption').value;
             const separator = document.getElementById('wordSeparator').value;
@@ -3114,8 +3128,12 @@
                     // Update admin form fields (clear if no value, populate if has value)
                     const lvlDifficulty = document.getElementById('lvlDifficulty');
                     const lvlComments = document.getElementById('lvlComments');
+                    const lvlName = document.getElementById('lvlName');
+                    const lvlAuthor = document.getElementById('lvlAuthor');
                     if(lvlDifficulty) lvlDifficulty.value = data.difficulty || 'medium';
                     if(lvlComments) lvlComments.value = data.admin_comments || '';
+                    if(lvlName) lvlName.value = data.title || '';
+                    if(lvlAuthor) lvlAuthor.value = data.author || '';
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);
