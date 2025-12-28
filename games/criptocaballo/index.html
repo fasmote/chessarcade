@@ -2049,6 +2049,12 @@
                     // Load tags for this puzzle and update cloud
                     await loadAndDisplayPuzzleTags(puzzleId);
 
+                    // Update admin form fields (clear if no value, populate if has value)
+                    const lvlDifficulty = document.getElementById('lvlDifficulty');
+                    const lvlComments = document.getElementById('lvlComments');
+                    if(lvlDifficulty) lvlDifficulty.value = data.difficulty || 'medium';
+                    if(lvlComments) lvlComments.value = data.admin_comments || '';
+
                     console.log(`✅ Puzzle cargado: "${data.message}" (${data.puzzle_date})`);
                 }
             } catch (err) {
@@ -3104,6 +3110,12 @@
 
                     // Show puzzle tags
                     await loadAndDisplayPuzzleTags(data.id);
+
+                    // Update admin form fields (clear if no value, populate if has value)
+                    const lvlDifficulty = document.getElementById('lvlDifficulty');
+                    const lvlComments = document.getElementById('lvlComments');
+                    if(lvlDifficulty) lvlDifficulty.value = data.difficulty || 'medium';
+                    if(lvlComments) lvlComments.value = data.admin_comments || '';
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);
