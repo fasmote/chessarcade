@@ -2492,10 +2492,13 @@
             const lvlComments = document.getElementById('lvlComments');
             const lvlName = document.getElementById('lvlName');
             const lvlAuthor = document.getElementById('lvlAuthor');
+            console.log('🧹 Limpiando campos admin en generateCryptogram...');
+            console.log('   lvlComments encontrado:', !!lvlComments, lvlComments?.value);
             if(lvlDifficulty) lvlDifficulty.value = 'medium';
             if(lvlComments) lvlComments.value = '';
             if(lvlName) lvlName.value = '';
             if(lvlAuthor) lvlAuthor.value = '';
+            console.log('   lvlComments después de limpiar:', lvlComments?.value);
 
             const fillOption = document.getElementById('fillOption').value;
             const separator = document.getElementById('wordSeparator').value;
