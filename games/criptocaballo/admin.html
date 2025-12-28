@@ -1051,10 +1051,12 @@
             const lvlName = document.getElementById('lvlName');
             const lvlAuthor = document.getElementById('lvlAuthor');
             console.log('🧹 Limpiando campos admin en generateCryptogram...');
+            console.log('   lvlComments antes:', lvlComments?.value || '(vacío)');
             if(lvlDifficulty) lvlDifficulty.value = 'medium';
             if(lvlComments) lvlComments.value = '';
             if(lvlName) lvlName.value = '';
             if(lvlAuthor) lvlAuthor.value = '';
+            console.log('   lvlComments después:', lvlComments?.value || '(vacío)');
 
             const fillOption = document.getElementById('fillOption').value;
             const separator = document.getElementById('wordSeparator').value;
