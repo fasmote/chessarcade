@@ -225,13 +225,13 @@
             grid-template-columns: 1fr;
             gap: 1.5rem;
             width: 100%;
-            max-width: 1400px; 
+            max-width: 1400px;
             align-items: start;
         }
-        
+
         @media (min-width: 1024px) {
             .main-layout {
-                grid-template-columns: 24rem 1fr; 
+                grid-template-columns: 24rem 1fr 16rem;
                 padding-top: 2rem;
             }
         }
@@ -359,6 +359,64 @@
             font-size: 0.65rem;
             opacity: 0.7;
             margin-left: 0.25rem;
+        }
+
+        /* Categories panel (desktop only) */
+        .categories-panel {
+            display: none;
+        }
+
+        @media (min-width: 1024px) {
+            .categories-panel {
+                display: block;
+                position: sticky;
+                top: 2rem;
+                background: rgba(15, 23, 42, 0.6);
+                border: 1px solid #334155;
+                border-radius: 0.75rem;
+                padding: 1rem;
+                height: fit-content;
+                max-height: calc(100vh - 4rem);
+                overflow-y: auto;
+            }
+
+            .categories-panel-title {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 0.75rem;
+                font-weight: bold;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 0.75rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid #334155;
+            }
+
+            .category-list-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem;
+                margin-bottom: 0.5rem;
+                background: rgba(15, 23, 42, 0.8);
+                border: 1px solid #334155;
+                border-radius: 0.5rem;
+                font-size: 0.75rem;
+                color: #94a3b8;
+                transition: all 0.2s ease;
+            }
+
+            .category-list-item .emoji {
+                font-size: 1rem;
+            }
+
+            .category-list-empty {
+                color: #64748b;
+                font-size: 0.7rem;
+                text-align: center;
+                padding: 2rem 1rem;
+                font-style: italic;
+            }
         }
 
         /* RETO DEL DÍA - destacado */
@@ -678,6 +736,18 @@
                     </button>
                 </div>
             </div>
+
+            <!-- COLUMNA 3: PANEL DE CATEGORÍAS (Desktop only) -->
+            <div class="categories-panel order-3">
+                <div class="categories-panel-title">
+                    <i class="fa-solid fa-tags mr-1"></i> Categorías
+                </div>
+                <div id="categoriesList">
+                    <div class="category-list-empty">
+                        Cargando...
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -760,7 +830,7 @@
             return `${year}-${month}-${day}`;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             console.log(`CriptoCaballo v${APP_VERSION} cargado.`);
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -781,6 +851,10 @@
                 // Update ID display after setting date
                 setTimeout(() => updatePuzzleIdDisplay(), 100);
             }
+
+            // Load tags on page load
+            console.log('🏷️ Cargando tags al iniciar página...');
+            await loadTagsFromSupabase();
         });
 
         // --- HELPERS ---
@@ -1394,6 +1468,12 @@
 
                     // Update ID display with loaded title, author, and daily_number
                     updatePuzzleIdDisplay(data.title || '', data.author || '', data.daily_number || null);
+
+                    // Load puzzle tags
+                    if(data.id) {
+                        console.log('🏷️ Cargando tags del puzzle ID:', data.id);
+                        await loadPuzzleTags(data.id);
+                    }
                 } else {
                     console.log(`No hay puzzle en Supabase para ${boardSize}, dejando tablero vacío`);
                     // Clear the board but don't generate random message
@@ -1924,7 +2004,10 @@
                 allTags = getDefaultTags();
             }
 
+            console.log('[loadTagsFromSupabase] Finalizando carga de tags');
             renderTagSelector();
+            console.log('[loadTagsFromSupabase] Llamando a renderCategoriesList...');
+            renderCategoriesList();
         }
 
         function getDefaultTags() {
@@ -1984,11 +2067,52 @@
                 console.log(`🏷️ Tag removido: ${tagKey}`);
             }
             renderTagSelector();
+            renderCategoriesList();
         }
 
         function clearSelectedTags() {
             selectedTags = [];
             renderTagSelector();
+            renderCategoriesList();
+        }
+
+        function renderCategoriesList() {
+            console.log('[renderCategoriesList] Ejecutando...');
+            const container = document.getElementById('categoriesList');
+            console.log('[renderCategoriesList] Container:', container);
+
+            if (!container) {
+                console.warn('[renderCategoriesList] Container no encontrado');
+                return;
+            }
+
+            console.log('[renderCategoriesList] selectedTags:', selectedTags);
+            console.log('[renderCategoriesList] allTags:', allTags);
+
+            if (selectedTags.length === 0) {
+                console.log('[renderCategoriesList] Sin categorías seleccionadas');
+                container.innerHTML = '<div class="category-list-empty">Sin categorías asignadas</div>';
+                return;
+            }
+
+            const categoryItems = selectedTags
+                .map(tagKey => {
+                    const tag = allTags.find(t => t.tag_key === tagKey);
+                    console.log(`[renderCategoriesList] Tag ${tagKey}:`, tag);
+                    if (!tag) return '';
+
+                    return `
+                        <div class="category-list-item" style="border-color: ${tag.color}">
+                            <span class="emoji">${tag.emoji}</span>
+                            <span>${tag.display_name}</span>
+                        </div>
+                    `;
+                })
+                .filter(Boolean)
+                .join('');
+
+            console.log('[renderCategoriesList] Renderizando', selectedTags.length, 'categorías');
+            container.innerHTML = categoryItems;
         }
 
         async function savePuzzleTags(puzzleId) {
@@ -2047,6 +2171,7 @@
                 if (!error && data) {
                     selectedTags = data.map(r => r.puzzle_tags?.tag_key).filter(Boolean);
                     renderTagSelector();
+                    renderCategoriesList();
                     console.log(`🏷️ Tags cargados para puzzle: ${selectedTags.join(', ')}`);
                 }
             } catch (err) {
@@ -2251,6 +2376,12 @@
                     if(lvlName) lvlName.value = data.title || '';
                     if(lvlAuthor) lvlAuthor.value = data.author || '';
                     console.log('🧹 Campos admin actualizados desde puzzle cargado');
+
+                    // Load puzzle tags
+                    if(data.id) {
+                        console.log('🏷️ Cargando tags del puzzle ID:', data.id);
+                        await loadPuzzleTags(data.id);
+                    }
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);
