@@ -1468,6 +1468,12 @@
 
                     // Update ID display with loaded title, author, and daily_number
                     updatePuzzleIdDisplay(data.title || '', data.author || '', data.daily_number || null);
+
+                    // Load puzzle tags
+                    if(data.id) {
+                        console.log('🏷️ Cargando tags del puzzle ID:', data.id);
+                        await loadPuzzleTags(data.id);
+                    }
                 } else {
                     console.log(`No hay puzzle en Supabase para ${boardSize}, dejando tablero vacío`);
                     // Clear the board but don't generate random message
@@ -2370,6 +2376,12 @@
                     if(lvlName) lvlName.value = data.title || '';
                     if(lvlAuthor) lvlAuthor.value = data.author || '';
                     console.log('🧹 Campos admin actualizados desde puzzle cargado');
+
+                    // Load puzzle tags
+                    if(data.id) {
+                        console.log('🏷️ Cargando tags del puzzle ID:', data.id);
+                        await loadPuzzleTags(data.id);
+                    }
                 }
             } catch (err) {
                 console.error("Error al cargar:", err);
