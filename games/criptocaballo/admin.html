@@ -1994,7 +1994,9 @@
                 allTags = getDefaultTags();
             }
 
+            console.log('[loadTagsFromSupabase] Finalizando carga de tags');
             renderTagSelector();
+            console.log('[loadTagsFromSupabase] Llamando a renderCategoriesList...');
             renderCategoriesList();
         }
 
@@ -2065,10 +2067,20 @@
         }
 
         function renderCategoriesList() {
+            console.log('[renderCategoriesList] Ejecutando...');
             const container = document.getElementById('categoriesList');
-            if (!container) return;
+            console.log('[renderCategoriesList] Container:', container);
+
+            if (!container) {
+                console.warn('[renderCategoriesList] Container no encontrado');
+                return;
+            }
+
+            console.log('[renderCategoriesList] selectedTags:', selectedTags);
+            console.log('[renderCategoriesList] allTags:', allTags);
 
             if (selectedTags.length === 0) {
+                console.log('[renderCategoriesList] Sin categorías seleccionadas');
                 container.innerHTML = '<div class="category-list-empty">Sin categorías asignadas</div>';
                 return;
             }
@@ -2076,6 +2088,7 @@
             const categoryItems = selectedTags
                 .map(tagKey => {
                     const tag = allTags.find(t => t.tag_key === tagKey);
+                    console.log(`[renderCategoriesList] Tag ${tagKey}:`, tag);
                     if (!tag) return '';
 
                     return `
@@ -2088,6 +2101,7 @@
                 .filter(Boolean)
                 .join('');
 
+            console.log('[renderCategoriesList] Renderizando', selectedTags.length, 'categorías');
             container.innerHTML = categoryItems;
         }
 
