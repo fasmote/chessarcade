@@ -446,28 +446,29 @@ function renderBoard() {
 
                 // Multiple words share this cell
                 if (foundDataArray.length > 1) {
-                    // Create gradient border from all colors
-                    const colors = foundDataArray.map(fd => fd.color.hex);
-                    const gradientStops = colors.map((color, idx) => {
-                        const start = (idx / colors.length) * 100;
-                        const end = ((idx + 1) / colors.length) * 100;
-                        return `${color} ${start}%, ${color} ${end}%`;
-                    }).join(', ');
+                    // Create diagonal split background using linear-gradient
+                    const numWords = foundDataArray.length;
+                    let backgroundGradient;
 
-                    cell.style.borderImage = `linear-gradient(135deg, ${gradientStops}) 1`;
-                    cell.style.borderWidth = '3px';
-                    cell.style.borderStyle = 'solid';
+                    if (numWords === 2) {
+                        // Diagonal split: top-left = color1, bottom-right = color2
+                        backgroundGradient = `linear-gradient(135deg, ${foundDataArray[0].color.hex} 0%, ${foundDataArray[0].color.hex} 50%, ${foundDataArray[1].color.hex} 50%, ${foundDataArray[1].color.hex} 100%)`;
+                    } else if (numWords === 3) {
+                        // Three-way split: top-left, top-right, bottom
+                        backgroundGradient = `linear-gradient(135deg, ${foundDataArray[0].color.hex} 0%, ${foundDataArray[0].color.hex} 33%, ${foundDataArray[1].color.hex} 33%, ${foundDataArray[1].color.hex} 66%, ${foundDataArray[2].color.hex} 66%, ${foundDataArray[2].color.hex} 100%)`;
+                    } else {
+                        // Four or more: quarters
+                        backgroundGradient = `linear-gradient(135deg, ${foundDataArray[0].color.hex} 0%, ${foundDataArray[0].color.hex} 25%, ${foundDataArray[1].color.hex} 25%, ${foundDataArray[1].color.hex} 50%, ${foundDataArray[2].color.hex} 50%, ${foundDataArray[2].color.hex} 75%, ${foundDataArray[3]?.color.hex || foundDataArray[0].color.hex} 75%, ${foundDataArray[3]?.color.hex || foundDataArray[0].color.hex} 100%)`;
+                    }
 
-                    // Use first color for text
-                    cell.style.color = foundDataArray[0].color.hex;
+                    cell.style.background = backgroundGradient;
+                    cell.style.border = '3px solid white';
+                    cell.style.color = 'white';
+                    cell.style.fontWeight = 'bold';
 
                     // Combine text shadows from all colors
                     const textShadows = foundDataArray.map(fd => `0 0 10px ${fd.color.hex}`).join(', ');
                     cell.style.textShadow = textShadows;
-
-                    // Combine box shadows
-                    const boxShadows = foundDataArray.map(fd => fd.color.glow).join(', ');
-                    cell.style.boxShadow = boxShadows;
 
                     // Wave animation if any word is hovered
                     const isAnyHovered = foundDataArray.some(fd => gameState.hoveredWord === fd.word);
@@ -476,27 +477,31 @@ function renderBoard() {
                         cell.style.animationDelay = `${foundDataArray[0].index * 0.5}s`;
                     }
 
-                    // Create multiple badges stacked
-                    const badgeContainer = document.createElement('div');
-                    badgeContainer.style.position = 'absolute';
-                    badgeContainer.style.top = '-8px';
-                    badgeContainer.style.right = '-8px';
-                    badgeContainer.style.display = 'flex';
-                    badgeContainer.style.flexDirection = 'column';
-                    badgeContainer.style.gap = '2px';
+                    // Create badges in corners based on number of words
+                    const cornerPositions = [
+                        { top: '-6px', right: '-6px' },     // Top-right
+                        { bottom: '-6px', left: '-6px' },   // Bottom-left
+                        { top: '-6px', left: '-6px' },      // Top-left
+                        { bottom: '-6px', right: '-6px' }   // Bottom-right
+                    ];
 
-                    foundDataArray.forEach(fd => {
+                    foundDataArray.forEach((fd, idx) => {
                         const badge = document.createElement('div');
                         badge.className = 'step-badge badge-found';
+                        badge.style.position = 'absolute';
                         badge.style.backgroundColor = fd.color.hex;
+                        badge.style.color = 'black';
                         badge.style.fontSize = '0.6rem';
                         badge.style.width = '18px';
                         badge.style.height = '18px';
+                        badge.style.border = '2px solid white';
                         badge.textContent = fd.index + 1;
-                        badgeContainer.appendChild(badge);
-                    });
 
-                    cell.appendChild(badgeContainer);
+                        // Position in corners
+                        Object.assign(badge.style, cornerPositions[idx % 4]);
+
+                        cell.appendChild(badge);
+                    });
                 } else {
                     // Single word (original behavior)
                     const fd = foundDataArray[0];
