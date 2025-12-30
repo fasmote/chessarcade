@@ -574,10 +574,7 @@ function renderBoard() {
                 cell.appendChild(letter);
             }
 
-            // Click event (original behavior)
-            cell.addEventListener('click', () => handleCellClick(r, c));
-
-            // Drag events (new feature)
+            // Drag events (handles both click and drag)
             cell.addEventListener('mousedown', (e) => {
                 e.preventDefault(); // Prevent text selection
                 gameState.isDragging = true;
