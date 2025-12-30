@@ -1,51 +1,43 @@
 /**
- * CriptoSopa - Word Search Chess Game
- * Find chess-related words hidden in the grid
+ * CriptoSopa - Knight Movement Word Search
+ * Find words by moving like a chess knight (L-shaped moves)
  */
 
 // Game Configuration
 const CONFIG = {
-    GRID_SIZE: 8,
-    WORDS: [
-        'REY',
-        'DAMA',
-        'TORRE',
-        'ALFIL',
-        'CABALLO',
-        'PEON',
-        'JAQUE',
-        'MATE'
+    BOARD_SIZE: 8,
+    DEFAULT_WORDS: [
+        "CABALLO", "ALFIL", "TORRE", "REINA", "REY",
+        "PEON", "JAQUE", "MATE", "TABLERO", "ENROQUE",
+        "CAPTURA", "GAMBITO", "ELO", "FIDE", "RELOJ"
     ],
-    DIRECTIONS: [
-        { dx: 1, dy: 0 },   // horizontal →
-        { dx: 0, dy: 1 },   // vertical ↓
-        { dx: 1, dy: 1 },   // diagonal ↘
-        { dx: 1, dy: -1 },  // diagonal ↗
-        { dx: -1, dy: 0 },  // horizontal ←
-        { dx: 0, dy: -1 },  // vertical ↑
-        { dx: -1, dy: -1 }, // diagonal ↖
-        { dx: -1, dy: 1 }   // diagonal ↙
+    NEON_COLORS: [
+        { hex: '#ff00ff', glow: '0 0 15px #ff00ff' }, // Pink
+        { hex: '#00ffff', glow: '0 0 15px #00ffff' }, // Cyan
+        { hex: '#ffff00', glow: '0 0 15px #ffff00' }, // Yellow
+        { hex: '#ff9900', glow: '0 0 15px #ff9900' }, // Orange
+        { hex: '#39ff14', glow: '0 0 15px #39ff14' }, // Green
+        { hex: '#b026ff', glow: '0 0 15px #b026ff' }, // Purple
     ],
+    WORDS_PER_LEVEL: 6,
     POINTS_PER_WORD: 100,
-    TIME_BONUS_THRESHOLD: 180, // 3 minutes
-    TIME_BONUS_POINTS: 500
+    HINTS_PER_LEVEL: 3
 };
 
 // Game State
 let gameState = {
-    grid: [],
-    words: [],
-    foundWords: [],
-    level: 1,
+    board: [],
+    currentWordList: [],
+    targetWords: [],
+    foundPaths: [],
+    selectedPath: [],
     score: 0,
-    startTime: null,
+    level: 1,
+    hintsRemaining: CONFIG.HINTS_PER_LEVEL,
+    timer: 0,
     timerInterval: null,
-    isSelecting: false,
-    selectionStart: null,
-    selectionEnd: null,
-    selectedCells: [],
-    hintsRemaining: 3,
-    totalSeconds: 0
+    hoveredWord: null,
+    gameStatus: 'playing' // 'playing', 'won'
 };
 
 // DOM Elements
@@ -54,21 +46,23 @@ const elements = {
     wordList: null,
     scoreDisplay: null,
     timerDisplay: null,
-    levelDisplay: null,
-    foundDisplay: null,
+    wordsFound: null,
+    currentSelection: null,
     hintsLeft: null,
-    newGameBtn: null,
+    resetBtn: null,
     hintBtn: null,
+    helpBtn: null,
+    closeHelpBtn: null,
+    closeHelpBtn2: null,
     victoryModal: null,
+    helpModal: null,
     nextLevelBtn: null,
     submitScoreBtn: null,
-    modalLevel: null,
     modalTime: null,
-    modalScore: null,
-    victoryMessage: null
+    modalScore: null
 };
 
-// Initialize game when DOM is loaded
+// Initialize game
 document.addEventListener('DOMContentLoaded', () => {
     initializeDOM();
     setupEventListeners();
@@ -81,349 +75,242 @@ function initializeDOM() {
     elements.wordList = document.getElementById('wordList');
     elements.scoreDisplay = document.getElementById('scoreDisplay');
     elements.timerDisplay = document.getElementById('timerDisplay');
-    elements.levelDisplay = document.getElementById('levelDisplay');
-    elements.foundDisplay = document.getElementById('foundDisplay');
+    elements.wordsFound = document.getElementById('wordsFound');
+    elements.currentSelection = document.getElementById('currentSelection');
     elements.hintsLeft = document.getElementById('hintsLeft');
-    elements.newGameBtn = document.getElementById('newGameBtn');
+    elements.resetBtn = document.getElementById('resetBtn');
     elements.hintBtn = document.getElementById('hintBtn');
+    elements.helpBtn = document.getElementById('helpBtn');
+    elements.closeHelpBtn = document.getElementById('closeHelpBtn');
+    elements.closeHelpBtn2 = document.getElementById('closeHelpBtn2');
     elements.victoryModal = document.getElementById('victoryModal');
+    elements.helpModal = document.getElementById('helpModal');
     elements.nextLevelBtn = document.getElementById('nextLevelBtn');
     elements.submitScoreBtn = document.getElementById('submitScoreBtn');
-    elements.modalLevel = document.getElementById('modalLevel');
     elements.modalTime = document.getElementById('modalTime');
     elements.modalScore = document.getElementById('modalScore');
-    elements.victoryMessage = document.getElementById('victoryMessage');
 }
 
 // Setup event listeners
 function setupEventListeners() {
-    elements.newGameBtn?.addEventListener('click', resetGame);
+    elements.resetBtn?.addEventListener('click', startNewGame);
     elements.hintBtn?.addEventListener('click', showHint);
+    elements.helpBtn?.addEventListener('click', () => showHelpModal(true));
+    elements.closeHelpBtn?.addEventListener('click', () => showHelpModal(false));
+    elements.closeHelpBtn2?.addEventListener('click', () => showHelpModal(false));
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
-
-    // Mouse events for word selection
-    elements.gameBoard?.addEventListener('mousedown', handleMouseDown);
-    elements.gameBoard?.addEventListener('mousemove', handleMouseMove);
-    elements.gameBoard?.addEventListener('mouseup', handleMouseUp);
-    elements.gameBoard?.addEventListener('mouseleave', handleMouseUp);
-
-    // Touch events for mobile
-    elements.gameBoard?.addEventListener('touchstart', handleTouchStart, { passive: false });
-    elements.gameBoard?.addEventListener('touchmove', handleTouchMove, { passive: false });
-    elements.gameBoard?.addEventListener('touchend', handleTouchEnd);
 }
 
 // Start new game
 function startNewGame() {
-    gameState.words = [...CONFIG.WORDS];
-    gameState.foundWords = [];
-    gameState.grid = createEmptyGrid();
-    gameState.hintsRemaining = 3;
+    gameState.foundPaths = [];
+    gameState.selectedPath = [];
+    gameState.gameStatus = 'playing';
+    gameState.hoveredWord = null;
+    gameState.hintsRemaining = CONFIG.HINTS_PER_LEVEL;
 
-    placeWordsInGrid();
-    fillEmptySpaces();
-    renderGrid();
-    renderWordList();
-    startTimer();
-    updateDisplay();
-}
-
-// Reset game (keep level and score)
-function resetGame() {
     clearInterval(gameState.timerInterval);
-    startNewGame();
+    gameState.timer = 0;
+
+    // Create board and place words
+    gameState.board = createEmptyBoard();
+    gameState.currentWordList = [...CONFIG.DEFAULT_WORDS];
+    placeWords();
+    fillRandomLetters();
+
+    // Start timer
+    startTimer();
+
+    // Render
+    renderBoard();
+    renderWordList();
+    updateDisplay();
 }
 
 // Next level
 function nextLevel() {
     gameState.level++;
-    gameState.hintsRemaining = 3;
-    clearInterval(gameState.timerInterval);
+    gameState.hintsRemaining = CONFIG.HINTS_PER_LEVEL;
     closeVictoryModal();
     startNewGame();
 }
 
-// Create empty 8x8 grid
-function createEmptyGrid() {
-    return Array(CONFIG.GRID_SIZE).fill(null).map(() =>
-        Array(CONFIG.GRID_SIZE).fill('')
+// Create empty board
+function createEmptyBoard() {
+    return Array(CONFIG.BOARD_SIZE).fill(null).map(() =>
+        Array(CONFIG.BOARD_SIZE).fill('')
     );
 }
 
-// Place words in grid
-function placeWordsInGrid() {
-    const placedWords = [];
+// Check if move is valid knight move
+function isKnightMove(r1, c1, r2, c2) {
+    const dr = Math.abs(r1 - r2);
+    const dc = Math.abs(c1 - c2);
+    return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
+}
 
-    for (const word of gameState.words) {
-        let placed = false;
-        let attempts = 0;
-        const maxAttempts = 100;
+// Place words on board
+function placeWords() {
+    const selectedWords = [];
+    const shuffled = [...gameState.currentWordList].sort(() => 0.5 - Math.random());
 
-        while (!placed && attempts < maxAttempts) {
-            const direction = CONFIG.DIRECTIONS[Math.floor(Math.random() * CONFIG.DIRECTIONS.length)];
-            const row = Math.floor(Math.random() * CONFIG.GRID_SIZE);
-            const col = Math.floor(Math.random() * CONFIG.GRID_SIZE);
+    for (const word of shuffled) {
+        if (selectedWords.length >= CONFIG.WORDS_PER_LEVEL) break;
+        if (placeWord(word)) {
+            selectedWords.push(word);
+        }
+    }
 
-            if (canPlaceWord(word, row, col, direction)) {
-                placeWord(word, row, col, direction);
-                placedWords.push({
-                    word,
-                    start: { row, col },
-                    direction
-                });
-                placed = true;
+    gameState.targetWords = selectedWords;
+}
+
+// Place single word on board
+function placeWord(word) {
+    const maxAttempts = 100;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const r = Math.floor(Math.random() * CONFIG.BOARD_SIZE);
+        const c = Math.floor(Math.random() * CONFIG.BOARD_SIZE);
+
+        if (gameState.board[r][c] !== '') continue;
+
+        const path = [{ r, c }];
+        const tempBoard = JSON.parse(JSON.stringify(gameState.board));
+
+        let placed = true;
+
+        for (let i = 0; i < word.length; i++) {
+            const char = word[i];
+            const pos = path[i];
+
+            if (tempBoard[pos.r][pos.c] === '') {
+                tempBoard[pos.r][pos.c] = char;
+            } else {
+                placed = false;
+                break;
             }
-            attempts++;
-        }
 
-        if (!placed) {
-            console.warn(`Could not place word: ${word}`);
-        }
-    }
+            // Find next position (if not last letter)
+            if (i < word.length - 1) {
+                const validMoves = getValidKnightMoves(pos.r, pos.c, tempBoard, path);
 
-    return placedWords;
-}
+                if (validMoves.length === 0) {
+                    placed = false;
+                    break;
+                }
 
-// Check if word can be placed
-function canPlaceWord(word, row, col, direction) {
-    const { dx, dy } = direction;
-
-    for (let i = 0; i < word.length; i++) {
-        const newRow = row + (dy * i);
-        const newCol = col + (dx * i);
-
-        // Check bounds
-        if (newRow < 0 || newRow >= CONFIG.GRID_SIZE || newCol < 0 || newCol >= CONFIG.GRID_SIZE) {
-            return false;
-        }
-
-        // Check if cell is empty or matches the letter
-        const currentCell = gameState.grid[newRow][newCol];
-        if (currentCell !== '' && currentCell !== word[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-// Place word in grid
-function placeWord(word, row, col, direction) {
-    const { dx, dy } = direction;
-
-    for (let i = 0; i < word.length; i++) {
-        const newRow = row + (dy * i);
-        const newCol = col + (dx * i);
-        gameState.grid[newRow][newCol] = word[i];
-    }
-}
-
-// Fill empty spaces with random letters
-function fillEmptySpaces() {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-    for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
-        for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
-            if (gameState.grid[row][col] === '') {
-                gameState.grid[row][col] = letters[Math.floor(Math.random() * letters.length)];
+                const nextMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+                path.push(nextMove);
             }
         }
+
+        if (placed) {
+            // Apply to actual board
+            for (let i = 0; i < word.length; i++) {
+                gameState.board[path[i].r][path[i].c] = word[i];
+            }
+            return true;
+        }
     }
+
+    return false;
 }
 
-// Render grid
-function renderGrid() {
-    if (!elements.gameBoard) return;
+// Get valid knight moves from position
+function getValidKnightMoves(r, c, board, excludePath = []) {
+    const moves = [
+        { r: r - 2, c: c - 1 }, { r: r - 2, c: c + 1 },
+        { r: r - 1, c: c - 2 }, { r: r - 1, c: c + 2 },
+        { r: r + 1, c: c - 2 }, { r: r + 1, c: c + 2 },
+        { r: r + 2, c: c - 1 }, { r: r + 2, c: c + 1 }
+    ];
 
-    elements.gameBoard.innerHTML = '';
+    return moves.filter(m =>
+        m.r >= 0 && m.r < CONFIG.BOARD_SIZE &&
+        m.c >= 0 && m.c < CONFIG.BOARD_SIZE &&
+        board[m.r][m.c] === '' &&
+        !excludePath.some(p => p.r === m.r && p.c === m.c)
+    );
+}
 
-    for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
-        for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
-            const cell = document.createElement('div');
-            cell.className = 'grid-cell';
-            cell.textContent = gameState.grid[row][col];
-            cell.dataset.row = row;
-            cell.dataset.col = col;
-            elements.gameBoard.appendChild(cell);
+// Fill empty cells with random letters
+function fillRandomLetters() {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (let r = 0; r < CONFIG.BOARD_SIZE; r++) {
+        for (let c = 0; c < CONFIG.BOARD_SIZE; c++) {
+            if (gameState.board[r][c] === '') {
+                gameState.board[r][c] = letters[Math.floor(Math.random() * letters.length)];
+            }
         }
     }
 }
 
-// Render word list
-function renderWordList() {
-    if (!elements.wordList) return;
+// Handle cell click
+function handleCellClick(r, c) {
+    if (gameState.gameStatus !== 'playing') return;
 
-    elements.wordList.innerHTML = gameState.words.map(word => `
-        <li class="word-item ${gameState.foundWords.includes(word) ? 'found' : ''}" data-word="${word}">
-            ${word}
-        </li>
-    `).join('');
-}
-
-// Mouse handlers
-function handleMouseDown(e) {
-    if (!e.target.classList.contains('grid-cell')) return;
-
-    gameState.isSelecting = true;
-    gameState.selectionStart = {
-        row: parseInt(e.target.dataset.row),
-        col: parseInt(e.target.dataset.col)
-    };
-    gameState.selectedCells = [gameState.selectionStart];
-    e.target.classList.add('selecting');
-}
-
-function handleMouseMove(e) {
-    if (!gameState.isSelecting) return;
-    if (!e.target.classList.contains('grid-cell')) return;
-
-    const currentCell = {
-        row: parseInt(e.target.dataset.row),
-        col: parseInt(e.target.dataset.col)
-    };
-
-    updateSelection(currentCell);
-}
-
-function handleMouseUp() {
-    if (!gameState.isSelecting) return;
-
-    gameState.isSelecting = false;
-    checkSelectedWord();
-    clearSelection();
-}
-
-// Touch handlers
-function handleTouchStart(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (target && target.classList.contains('grid-cell')) {
-        gameState.isSelecting = true;
-        gameState.selectionStart = {
-            row: parseInt(target.dataset.row),
-            col: parseInt(target.dataset.col)
-        };
-        gameState.selectedCells = [gameState.selectionStart];
-        target.classList.add('selecting');
-    }
-}
-
-function handleTouchMove(e) {
-    e.preventDefault();
-    if (!gameState.isSelecting) return;
-
-    const touch = e.touches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (target && target.classList.contains('grid-cell')) {
-        const currentCell = {
-            row: parseInt(target.dataset.row),
-            col: parseInt(target.dataset.col)
-        };
-        updateSelection(currentCell);
-    }
-}
-
-function handleTouchEnd(e) {
-    if (!gameState.isSelecting) return;
-
-    gameState.isSelecting = false;
-    checkSelectedWord();
-    clearSelection();
-}
-
-// Update selection
-function updateSelection(endCell) {
-    const start = gameState.selectionStart;
-    const dx = Math.sign(endCell.col - start.col);
-    const dy = Math.sign(endCell.row - start.row);
-
-    // Only allow straight lines (horizontal, vertical, diagonal)
-    if (dx !== 0 && dy !== 0 && Math.abs(endCell.col - start.col) !== Math.abs(endCell.row - start.row)) {
+    // First click
+    if (gameState.selectedPath.length === 0) {
+        gameState.selectedPath.push({ r, c });
+        renderBoard();
+        updateSelectionText();
         return;
     }
 
-    // Clear previous selection
-    document.querySelectorAll('.grid-cell.selecting').forEach(cell => {
-        if (!cell.classList.contains('found')) {
-            cell.classList.remove('selecting');
-        }
-    });
+    const lastPos = gameState.selectedPath[gameState.selectedPath.length - 1];
 
-    // Select cells in line
-    gameState.selectedCells = [];
-    let currentRow = start.row;
-    let currentCol = start.col;
-
-    while (true) {
-        gameState.selectedCells.push({ row: currentRow, col: currentCol });
-
-        const cell = document.querySelector(`[data-row="${currentRow}"][data-col="${currentCol}"]`);
-        if (cell && !cell.classList.contains('found')) {
-            cell.classList.add('selecting');
-        }
-
-        if (currentRow === endCell.row && currentCol === endCell.col) break;
-
-        currentRow += dy;
-        currentCol += dx;
-
-        // Safety check
-        if (currentRow < 0 || currentRow >= CONFIG.GRID_SIZE ||
-            currentCol < 0 || currentCol >= CONFIG.GRID_SIZE) {
-            break;
-        }
-    }
-}
-
-// Check if selected word is valid
-function checkSelectedWord() {
-    const selectedWord = gameState.selectedCells
-        .map(({ row, col }) => gameState.grid[row][col])
-        .join('');
-
-    const reversedWord = selectedWord.split('').reverse().join('');
-
-    let foundWord = null;
-    if (gameState.words.includes(selectedWord) && !gameState.foundWords.includes(selectedWord)) {
-        foundWord = selectedWord;
-    } else if (gameState.words.includes(reversedWord) && !gameState.foundWords.includes(reversedWord)) {
-        foundWord = reversedWord;
+    // Click on same cell (deselect last)
+    if (lastPos.r === r && lastPos.c === c) {
+        gameState.selectedPath.pop();
+        renderBoard();
+        updateSelectionText();
+        return;
     }
 
-    if (foundWord) {
-        markWordFound(foundWord);
-        gameState.foundWords.push(foundWord);
-        gameState.score += CONFIG.POINTS_PER_WORD;
-        updateDisplay();
-        renderWordList();
+    // Check if valid knight move
+    if (!isKnightMove(lastPos.r, lastPos.c, r, c)) return;
 
-        // Check if all words found
-        if (gameState.foundWords.length === gameState.words.length) {
-            handleLevelComplete();
+    // Check if not already in path
+    if (gameState.selectedPath.some(p => p.r === r && p.c === c)) return;
+
+    // Add to path
+    const newPath = [...gameState.selectedPath, { r, c }];
+    const currentWord = newPath.map(p => gameState.board[p.r][p.c]).join('');
+
+    // Check if word is complete
+    if (gameState.targetWords.includes(currentWord)) {
+        if (!gameState.foundPaths.some(fp => fp.word === currentWord)) {
+            const color = CONFIG.NEON_COLORS[gameState.foundPaths.length % CONFIG.NEON_COLORS.length];
+
+            gameState.foundPaths.push({
+                word: currentWord,
+                path: newPath,
+                color: color
+            });
+
+            gameState.selectedPath = [];
+            gameState.score += CONFIG.POINTS_PER_WORD;
+
+            // Check win condition
+            if (gameState.foundPaths.length === gameState.targetWords.length) {
+                winGame();
+            }
+        }
+    } else {
+        // Check if word is too long
+        const maxLen = Math.max(...gameState.targetWords.map(w => w.length));
+        if (currentWord.length > maxLen) {
+            gameState.selectedPath = [{ r, c }];
+        } else {
+            gameState.selectedPath = newPath;
         }
     }
-}
 
-// Mark found word cells
-function markWordFound(word) {
-    gameState.selectedCells.forEach(({ row, col }) => {
-        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-        if (cell) {
-            cell.classList.remove('selecting');
-            cell.classList.add('found');
-        }
-    });
-}
-
-// Clear selection
-function clearSelection() {
-    document.querySelectorAll('.grid-cell.selecting').forEach(cell => {
-        cell.classList.remove('selecting');
-    });
-    gameState.selectedCells = [];
-    gameState.selectionStart = null;
+    renderBoard();
+    renderWordList();
+    updateSelectionText();
+    updateDisplay();
 }
 
 // Show hint
@@ -433,80 +320,230 @@ function showHint() {
         return;
     }
 
-    const remainingWords = gameState.words.filter(word => !gameState.foundWords.includes(word));
-    if (remainingWords.length === 0) return;
+    const missingWords = gameState.targetWords.filter(w =>
+        !gameState.foundPaths.some(fp => fp.word === w)
+    );
 
-    const wordToHint = remainingWords[0];
-    const positions = findWordPositions(wordToHint);
+    if (missingWords.length === 0) return;
 
-    if (positions.length > 0) {
-        const firstLetter = positions[0];
-        const cell = document.querySelector(`[data-row="${firstLetter.row}"][data-col="${firstLetter.col}"]`);
+    // Find a missing word in the board
+    const wordToHint = missingWords[0];
+    const startPos = findWordStart(wordToHint);
+
+    if (startPos) {
+        const cell = document.querySelector(`[data-row="${startPos.r}"][data-col="${startPos.c}"]`);
         if (cell) {
-            cell.classList.add('hint');
-            setTimeout(() => cell.classList.remove('hint'), 3000);
+            cell.classList.add('cell-hint-flash');
+            setTimeout(() => cell.classList.remove('cell-hint-flash'), 3000);
         }
 
         gameState.hintsRemaining--;
-        gameState.score = Math.max(0, gameState.score - 50); // Penalty for hint
+        gameState.score = Math.max(0, gameState.score - 50);
         updateDisplay();
     }
 }
 
-// Find word positions in grid
-function findWordPositions(word) {
-    for (let row = 0; row < CONFIG.GRID_SIZE; row++) {
-        for (let col = 0; col < CONFIG.GRID_SIZE; col++) {
-            for (const direction of CONFIG.DIRECTIONS) {
-                const positions = checkWordAtPosition(word, row, col, direction);
-                if (positions.length > 0) {
-                    return positions;
+// Find word start position
+function findWordStart(word) {
+    for (let r = 0; r < CONFIG.BOARD_SIZE; r++) {
+        for (let c = 0; c < CONFIG.BOARD_SIZE; c++) {
+            if (gameState.board[r][c] === word[0]) {
+                // Try to trace the word
+                if (canTraceWord(word, r, c)) {
+                    return { r, c };
                 }
             }
         }
     }
-    return [];
+    return null;
 }
 
-// Check if word exists at position
-function checkWordAtPosition(word, row, col, direction) {
-    const { dx, dy } = direction;
-    const positions = [];
+// Check if word can be traced from position
+function canTraceWord(word, startR, startC) {
+    const path = [{ r: startR, c: startC }];
 
-    for (let i = 0; i < word.length; i++) {
-        const newRow = row + (dy * i);
-        const newCol = col + (dx * i);
+    for (let i = 1; i < word.length; i++) {
+        const validNext = getValidKnightMoves(
+            path[i - 1].r,
+            path[i - 1].c,
+            gameState.board,
+            path
+        ).filter(m => gameState.board[m.r][m.c] === word[i]);
 
-        if (newRow < 0 || newRow >= CONFIG.GRID_SIZE ||
-            newCol < 0 || newCol >= CONFIG.GRID_SIZE ||
-            gameState.grid[newRow][newCol] !== word[i]) {
-            return [];
-        }
-
-        positions.push({ row: newRow, col: newCol });
+        if (validNext.length === 0) return false;
+        path.push(validNext[0]);
     }
 
-    return positions;
+    return true;
+}
+
+// Render board
+function renderBoard() {
+    if (!elements.gameBoard) return;
+
+    elements.gameBoard.innerHTML = '';
+
+    for (let r = 0; r < CONFIG.BOARD_SIZE; r++) {
+        for (let c = 0; c < CONFIG.BOARD_SIZE; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'board-cell';
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+
+            let isSelected = false;
+            let isFound = false;
+            let foundData = null;
+            let foundIndex = -1;
+
+            // Check if selected
+            const selIdx = gameState.selectedPath.findIndex(p => p.r === r && p.c === c);
+            if (selIdx !== -1) {
+                isSelected = true;
+                cell.classList.add('cell-selected');
+
+                const badge = document.createElement('div');
+                badge.className = 'step-badge badge-selected';
+                badge.textContent = selIdx + 1;
+                cell.appendChild(badge);
+            }
+
+            // Check if found (only if not selected)
+            if (!isSelected) {
+                for (let i = gameState.foundPaths.length - 1; i >= 0; i--) {
+                    const fp = gameState.foundPaths[i];
+                    const pIdx = fp.path.findIndex(p => p.r === r && p.c === c);
+                    if (pIdx !== -1) {
+                        isFound = true;
+                        foundData = fp;
+                        foundIndex = pIdx;
+                        break;
+                    }
+                }
+            }
+
+            // Apply found styles
+            if (isFound && foundData) {
+                cell.classList.add('cell-found');
+                cell.style.borderColor = foundData.color.hex;
+                cell.style.color = foundData.color.hex;
+                cell.style.textShadow = `0 0 10px ${foundData.color.hex}`;
+                cell.style.boxShadow = foundData.color.glow;
+
+                // Wave animation on hover
+                if (gameState.hoveredWord === foundData.word) {
+                    cell.classList.add('cell-wave');
+                    cell.style.animationDelay = `${foundIndex * 0.5}s`;
+                }
+
+                const badge = document.createElement('div');
+                badge.className = 'step-badge badge-found';
+                badge.style.backgroundColor = foundData.color.hex;
+                badge.textContent = foundIndex + 1;
+                cell.appendChild(badge);
+            }
+
+            // Check if hint cell (available next move)
+            if (!isSelected && !isFound && gameState.selectedPath.length > 0) {
+                const last = gameState.selectedPath[gameState.selectedPath.length - 1];
+                if (isKnightMove(last.r, last.c, r, c) &&
+                    !gameState.selectedPath.some(p => p.r === r && p.c === c)) {
+                    cell.classList.add('cell-hint');
+                }
+            }
+
+            // Default state
+            if (!isSelected && !isFound && !cell.classList.contains('cell-hint')) {
+                cell.classList.add('cell-default');
+            }
+
+            // Set letter
+            const letter = document.createTextNode(gameState.board[r][c]);
+            if (cell.children.length > 0) {
+                cell.insertBefore(letter, cell.firstChild);
+            } else {
+                cell.appendChild(letter);
+            }
+
+            cell.addEventListener('click', () => handleCellClick(r, c));
+            elements.gameBoard.appendChild(cell);
+        }
+    }
+}
+
+// Render word list
+function renderWordList() {
+    if (!elements.wordList) return;
+
+    elements.wordList.innerHTML = '';
+
+    gameState.targetWords.forEach(word => {
+        const foundData = gameState.foundPaths.find(fp => fp.word === word);
+        const li = document.createElement('li');
+
+        li.className = `word-item ${foundData ? 'word-found' : 'word-default'}`;
+
+        if (foundData) {
+            li.style.borderColor = foundData.color.hex;
+            li.style.boxShadow = `inset 0 0 10px ${foundData.color.hex}20`;
+
+            li.addEventListener('mouseenter', () => {
+                gameState.hoveredWord = word;
+                renderBoard();
+            });
+            li.addEventListener('mouseleave', () => {
+                gameState.hoveredWord = null;
+                renderBoard();
+            });
+
+            li.innerHTML = `
+                <span>${word}</span>
+                <span class="word-badge" style="background-color:${foundData.color.hex}">OK</span>
+            `;
+        } else {
+            li.innerHTML = `
+                <span>${word}</span>
+                <div class="word-dot"></div>
+            `;
+        }
+
+        elements.wordList.appendChild(li);
+    });
+}
+
+// Update selection text
+function updateSelectionText() {
+    if (!elements.currentSelection) return;
+    const text = gameState.selectedPath.map(p => gameState.board[p.r][p.c]).join('');
+    elements.currentSelection.textContent = text;
 }
 
 // Timer
 function startTimer() {
-    gameState.startTime = Date.now();
-    gameState.totalSeconds = 0;
-
     clearInterval(gameState.timerInterval);
+    gameState.timer = 0;
+
     gameState.timerInterval = setInterval(() => {
-        gameState.totalSeconds = Math.floor((Date.now() - gameState.startTime) / 1000);
+        gameState.timer++;
         updateTimerDisplay();
-    }, 1000);
+    }, 10); // 10ms = centiseconds
 }
 
 function updateTimerDisplay() {
-    const minutes = Math.floor(gameState.totalSeconds / 60);
-    const seconds = gameState.totalSeconds % 60;
-    if (elements.timerDisplay) {
-        elements.timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
+    if (!elements.timerDisplay) return;
+
+    const totalSeconds = Math.floor(gameState.timer / 100);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    elements.timerDisplay.textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatTime(centiseconds) {
+    const totalSeconds = Math.floor(centiseconds / 100);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 // Update display
@@ -514,46 +551,34 @@ function updateDisplay() {
     if (elements.scoreDisplay) {
         elements.scoreDisplay.textContent = gameState.score.toLocaleString();
     }
-    if (elements.levelDisplay) {
-        elements.levelDisplay.textContent = gameState.level;
-    }
-    if (elements.foundDisplay) {
-        elements.foundDisplay.textContent = `${gameState.foundWords.length}/${gameState.words.length}`;
+    if (elements.wordsFound) {
+        elements.wordsFound.textContent =
+            `${gameState.foundPaths.length}/${gameState.targetWords.length}`;
     }
     if (elements.hintsLeft) {
         elements.hintsLeft.textContent = gameState.hintsRemaining;
     }
 }
 
-// Handle level complete
-function handleLevelComplete() {
+// Win game
+function winGame() {
+    gameState.gameStatus = 'won';
     clearInterval(gameState.timerInterval);
 
-    // Time bonus
-    if (gameState.totalSeconds < CONFIG.TIME_BONUS_THRESHOLD) {
-        gameState.score += CONFIG.TIME_BONUS_POINTS;
-    }
-
-    showVictoryModal();
+    setTimeout(() => {
+        showVictoryModal();
+    }, 1000);
 }
 
-// Victory modal
+// Show victory modal
 function showVictoryModal() {
     if (!elements.victoryModal) return;
 
-    if (elements.modalLevel) elements.modalLevel.textContent = gameState.level;
-    if (elements.modalTime) elements.modalTime.textContent = elements.timerDisplay?.textContent || '00:00';
-    if (elements.modalScore) elements.modalScore.textContent = gameState.score.toLocaleString();
-
-    const messages = [
-        '¡Excelente trabajo! Todas las palabras encontradas.',
-        '¡Fantástico! Tu mente es rápida como un caballo.',
-        '¡Impresionante! Dominas el arte de la búsqueda.',
-        '¡Increíble! Tus ojos de águila lo encontraron todo.'
-    ];
-
-    if (elements.victoryMessage) {
-        elements.victoryMessage.textContent = messages[Math.floor(Math.random() * messages.length)];
+    if (elements.modalTime) {
+        elements.modalTime.textContent = formatTime(gameState.timer);
+    }
+    if (elements.modalScore) {
+        elements.modalScore.textContent = gameState.score.toLocaleString();
     }
 
     elements.victoryModal.classList.add('active');
@@ -561,6 +586,16 @@ function showVictoryModal() {
 
 function closeVictoryModal() {
     elements.victoryModal?.classList.remove('active');
+}
+
+// Show help modal
+function showHelpModal(show) {
+    if (!elements.helpModal) return;
+    if (show) {
+        elements.helpModal.classList.add('active');
+    } else {
+        elements.helpModal.classList.remove('active');
+    }
 }
 
 // Submit score
@@ -580,8 +615,8 @@ async function submitScore() {
 
         const result = await submitGameScore('criptosopa', playerName, gameState.score, {
             level: gameState.level,
-            time: gameState.totalSeconds,
-            words_found: gameState.foundWords.length
+            time: gameState.timer,
+            words_found: gameState.foundPaths.length
         });
 
         if (result.success) {
@@ -599,5 +634,5 @@ async function submitScore() {
     }
 }
 
-// Initialize game
-console.log('CriptoSopa loaded successfully!');
+// Initialize
+console.log('CriptoSopa (Knight Word Search) loaded successfully!');

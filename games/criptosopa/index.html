@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CriptoSopa - Sopa de Letras de Ajedrez | ChessArcade</title>
+    <title>CriptoSopa - Descifra con Movimientos de Caballo | ChessArcade</title>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Encuentra palabras de ajedrez en esta sopa de letras arcade. Entrena tu concentración y velocidad de búsqueda visual.">
-    <meta name="keywords" content="sopa de letras ajedrez, word search chess, juego de palabras, concentración">
+    <meta name="description" content="Encuentra palabras de ajedrez moviéndote como un caballo. Un desafío único que combina búsqueda de palabras con movimientos de ajedrez.">
+    <meta name="keywords" content="sopa de letras ajedrez, word search chess, juego de palabras, concentración, movimiento caballo">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,69 +33,107 @@
                 ← MENÚ
             </a>
             <h1 class="neon-title">
-                <span class="neon-icon">🔍</span>
+                <span class="neon-icon">🐴🔍</span>
                 CriptoSopa
-                <span class="neon-subtitle">Word Search Chess</span>
+                <span class="neon-subtitle">Knight Word Search</span>
             </h1>
         </header>
 
+        <!-- Timer -->
+        <div class="timer-container">
+            <div class="timer-display">
+                <span id="timerDisplay">00:00</span>
+            </div>
+        </div>
+
         <!-- Game Container -->
         <div class="game-wrapper">
-            <!-- Left Panel: Info & Controls -->
+            <!-- Left Panel: Board -->
+            <div class="board-panel">
+                <div class="board-container">
+                    <div id="gameBoard" class="game-board">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Current Selection Bar -->
+                <div class="selection-bar">
+                    <span id="currentSelection"></span>
+                    <span class="cursor-blink">_</span>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls-panel">
+                    <button id="resetBtn" class="neon-arcade-btn neon-arcade-btn--primary">
+                        🔄 NUEVO TABLERO
+                    </button>
+                    <button id="hintBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
+                        💡 PISTA (<span id="hintsLeft">3</span>)
+                    </button>
+                    <button id="helpBtn" class="neon-arcade-btn neon-arcade-btn--tertiary">
+                        ❓ AYUDA
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Words & Stats -->
             <aside class="info-panel">
                 <div class="info-card">
                     <h2 class="info-title">📊 ESTADÍSTICAS</h2>
                     <div class="stat-item">
-                        <span class="stat-label">Nivel:</span>
-                        <span id="levelDisplay" class="stat-value neon-glow-cyan">1</span>
+                        <span class="stat-label">Palabras:</span>
+                        <span id="wordsFound" class="stat-value neon-glow-cyan">0/6</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Puntos:</span>
                         <span id="scoreDisplay" class="stat-value neon-glow-pink">0</span>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Tiempo:</span>
-                        <span id="timerDisplay" class="stat-value neon-glow-yellow">00:00</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Encontradas:</span>
-                        <span id="foundDisplay" class="stat-value neon-glow-green">0/8</span>
-                    </div>
                 </div>
 
                 <div class="info-card">
-                    <h2 class="info-title">🎯 PALABRAS</h2>
+                    <h2 class="info-title">🎯 PALABRAS OCULTAS</h2>
                     <ul id="wordList" class="word-list">
                         <!-- Populated by JavaScript -->
                     </ul>
                 </div>
 
                 <div class="info-card">
-                    <h2 class="info-title">🎮 INSTRUCCIONES</h2>
+                    <h2 class="info-title">🐴 INSTRUCCIONES</h2>
                     <ul class="instructions-list">
-                        <li>Encuentra todas las palabras de ajedrez</li>
-                        <li>Click y arrastra para seleccionar</li>
-                        <li>Las palabras pueden estar en 8 direcciones</li>
-                        <li>Completa rápido para más puntos</li>
+                        <li>Click en la primera letra</li>
+                        <li>Muévete como un CABALLO (en L)</li>
+                        <li>Las casillas válidas se iluminan</li>
+                        <li>Forma la palabra letra por letra</li>
                     </ul>
                 </div>
-
-                <div class="controls-panel">
-                    <button id="newGameBtn" class="neon-arcade-btn neon-arcade-btn--primary">
-                        🔄 NUEVO JUEGO
-                    </button>
-                    <button id="hintBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
-                        💡 PISTA (<span id="hintsLeft">3</span>)
-                    </button>
-                </div>
             </aside>
+        </div>
+    </div>
 
-            <!-- Center Panel: Game Board -->
-            <main class="board-container">
-                <div id="gameBoard" class="word-search-grid">
-                    <!-- Populated by JavaScript -->
+    <!-- Help Modal -->
+    <div id="helpModal" class="neon-modal">
+        <div class="neon-modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🐴 MOVIMIENTO DEL CABALLO</h2>
+                <button id="closeHelpBtn" class="modal-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="help-text">El caballo se mueve en forma de <strong>L</strong>:</p>
+                <ul class="help-list">
+                    <li>2 casillas en una dirección</li>
+                    <li>1 casilla perpendicular</li>
+                </ul>
+                <div class="help-example">
+                    <p>Ejemplo: desde A1 puedes ir a:</p>
+                    <p class="example-moves">B3, C2</p>
                 </div>
-            </main>
+                <p class="help-tip">💡 Las casillas disponibles se iluminan automáticamente</p>
+            </div>
+            <div class="modal-footer">
+                <button id="closeHelpBtn2" class="neon-arcade-btn neon-arcade-btn--primary">
+                    ¡ENTENDIDO!
+                </button>
+            </div>
         </div>
     </div>
 
@@ -108,19 +146,15 @@
             <div class="modal-body">
                 <div class="victory-stats">
                     <div class="victory-stat">
-                        <span class="victory-label">Nivel:</span>
-                        <span id="modalLevel" class="victory-value">1</span>
-                    </div>
-                    <div class="victory-stat">
-                        <span class="victory-label">Tiempo:</span>
+                        <span class="victory-label">Tiempo</span>
                         <span id="modalTime" class="victory-value">00:00</span>
                     </div>
                     <div class="victory-stat">
-                        <span class="victory-label">Puntos:</span>
+                        <span class="victory-label">Puntos</span>
                         <span id="modalScore" class="victory-value neon-glow-pink">0</span>
                     </div>
                 </div>
-                <p id="victoryMessage" class="victory-message"></p>
+                <p class="victory-message">¡Has encontrado todas las palabras!</p>
             </div>
             <div class="modal-footer">
                 <button id="nextLevelBtn" class="neon-arcade-btn neon-arcade-btn--primary">
@@ -129,21 +163,6 @@
                 <button id="submitScoreBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
                     📊 ENVIAR PUNTUACIÓN
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Leaderboard Modal -->
-    <div id="leaderboardModal" class="neon-modal">
-        <div class="neon-modal-content neon-modal-content--large">
-            <div class="modal-header">
-                <h2 class="modal-title">🏆 RANKING GLOBAL</h2>
-                <button id="closeLeaderboardBtn" class="modal-close-btn">✕</button>
-            </div>
-            <div class="modal-body">
-                <div id="leaderboardContainer">
-                    <!-- Populated by leaderboard API -->
-                </div>
             </div>
         </div>
     </div>
