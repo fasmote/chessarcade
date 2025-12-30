@@ -37,7 +37,8 @@ let gameState = {
     timer: 0,
     timerInterval: null,
     hoveredWord: null,
-    gameStatus: 'playing' // 'playing', 'won'
+    gameStatus: 'playing', // 'playing', 'won'
+    isDragging: false // Track if mouse is being held down
 };
 
 // DOM Elements
@@ -100,6 +101,16 @@ function setupEventListeners() {
     elements.closeHelpBtn2?.addEventListener('click', () => showHelpModal(false));
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
+
+    // Global mouseup to stop dragging
+    document.addEventListener('mouseup', () => {
+        gameState.isDragging = false;
+    });
+
+    // Stop dragging when mouse leaves the window
+    document.addEventListener('mouseleave', () => {
+        gameState.isDragging = false;
+    });
 }
 
 // Start new game
@@ -563,7 +574,22 @@ function renderBoard() {
                 cell.appendChild(letter);
             }
 
+            // Click event (original behavior)
             cell.addEventListener('click', () => handleCellClick(r, c));
+
+            // Drag events (new feature)
+            cell.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Prevent text selection
+                gameState.isDragging = true;
+                handleCellClick(r, c);
+            });
+
+            cell.addEventListener('mouseenter', () => {
+                if (gameState.isDragging) {
+                    handleCellClick(r, c);
+                }
+            });
+
             elements.gameBoard.appendChild(cell);
         }
     }
