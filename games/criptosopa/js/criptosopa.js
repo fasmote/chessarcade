@@ -402,14 +402,37 @@ function canTraceWord(word, startR, startC) {
 function renderBoard() {
     if (!elements.gameBoard) return;
 
-    elements.gameBoard.innerHTML = '';
+    // Check if we need to recreate the board or just update styles
+    const shouldRecreate = elements.gameBoard.children.length === 0;
+
+    if (shouldRecreate) {
+        elements.gameBoard.innerHTML = '';
+    }
 
     for (let r = 0; r < CONFIG.BOARD_SIZE; r++) {
         for (let c = 0; c < CONFIG.BOARD_SIZE; c++) {
-            const cell = document.createElement('div');
-            cell.className = 'board-cell';
-            cell.dataset.row = r;
-            cell.dataset.col = c;
+            let cell;
+
+            if (shouldRecreate) {
+                cell = document.createElement('div');
+                cell.className = 'board-cell';
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+            } else {
+                // Find existing cell and clear its styles/classes
+                const cellIndex = r * CONFIG.BOARD_SIZE + c;
+                cell = elements.gameBoard.children[cellIndex];
+                if (!cell) continue;
+
+                // Reset cell styles
+                cell.className = 'board-cell';
+                cell.style.cssText = '';
+
+                // Remove all children except the text node (letter)
+                while (cell.children.length > 0) {
+                    cell.removeChild(cell.children[0]);
+                }
+            }
 
             let isSelected = false;
             let isFound = false;
@@ -566,28 +589,37 @@ function renderBoard() {
                 cell.classList.add('cell-default');
             }
 
-            // Set letter
-            const letter = document.createTextNode(gameState.board[r][c]);
-            if (cell.children.length > 0) {
-                cell.insertBefore(letter, cell.firstChild);
-            } else {
+            // Set letter (only when recreating or as first child)
+            if (shouldRecreate) {
+                const letter = document.createTextNode(gameState.board[r][c]);
                 cell.appendChild(letter);
+            } else {
+                // Update existing letter text if needed
+                if (cell.firstChild && cell.firstChild.nodeType === Node.TEXT_NODE) {
+                    cell.firstChild.textContent = gameState.board[r][c];
+                } else {
+                    const letter = document.createTextNode(gameState.board[r][c]);
+                    cell.insertBefore(letter, cell.firstChild);
+                }
             }
 
-            // Drag events (handles both click and drag)
-            cell.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // Prevent text selection
-                gameState.isDragging = true;
-                handleCellClick(r, c);
-            });
-
-            cell.addEventListener('mouseenter', () => {
-                if (gameState.isDragging) {
+            // Only add event listeners when creating new cells
+            if (shouldRecreate) {
+                // Drag events (handles both click and drag)
+                cell.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // Prevent text selection
+                    gameState.isDragging = true;
                     handleCellClick(r, c);
-                }
-            });
+                });
 
-            elements.gameBoard.appendChild(cell);
+                cell.addEventListener('mouseenter', () => {
+                    if (gameState.isDragging) {
+                        handleCellClick(r, c);
+                    }
+                });
+
+                elements.gameBoard.appendChild(cell);
+            }
         }
     }
 }
