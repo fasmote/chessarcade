@@ -165,9 +165,9 @@ function placeWords() {
     gameState.targetWords = selectedWords;
 }
 
-// Place single word on board
+// Place single word on board (avoid sharing cells if possible)
 function placeWord(word) {
-    const maxAttempts = 100;
+    const maxAttempts = 200; // Increased attempts to find non-overlapping position
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const r = Math.floor(Math.random() * CONFIG.BOARD_SIZE);
@@ -179,14 +179,20 @@ function placeWord(word) {
         const tempBoard = JSON.parse(JSON.stringify(gameState.board));
 
         let placed = true;
+        let hasOverlap = false;
 
         for (let i = 0; i < word.length; i++) {
             const char = word[i];
             const pos = path[i];
 
+            // Check if cell is empty
             if (tempBoard[pos.r][pos.c] === '') {
                 tempBoard[pos.r][pos.c] = char;
+            } else if (tempBoard[pos.r][pos.c] === char) {
+                // Allow overlap if same letter (rare case)
+                hasOverlap = true;
             } else {
+                // Different letter already there - can't place
                 placed = false;
                 break;
             }
@@ -205,7 +211,8 @@ function placeWord(word) {
             }
         }
 
-        if (placed) {
+        // Prefer placements without overlap, but allow if necessary after many attempts
+        if (placed && (!hasOverlap || attempt > 150)) {
             // Apply to actual board
             for (let i = 0; i < word.length; i++) {
                 gameState.board[path[i].r][path[i].c] = word[i];
@@ -288,6 +295,9 @@ function handleCellClick(r, c) {
                 path: newPath,
                 color: color
             });
+
+            console.log(`[WORD FOUND] "${currentWord}" with path:`,
+                newPath.map(p => `(${p.r},${p.c})=${gameState.board[p.r][p.c]}`).join(' -> '));
 
             gameState.selectedPath = [];
             gameState.score += CONFIG.POINTS_PER_WORD;
@@ -408,38 +418,105 @@ function renderBoard() {
             }
 
             // Check if found (only if not selected)
+            const foundDataArray = [];
             if (!isSelected) {
-                for (let i = gameState.foundPaths.length - 1; i >= 0; i--) {
+                for (let i = 0; i < gameState.foundPaths.length; i++) {
                     const fp = gameState.foundPaths[i];
                     const pIdx = fp.path.findIndex(p => p.r === r && p.c === c);
                     if (pIdx !== -1) {
-                        isFound = true;
-                        foundData = fp;
-                        foundIndex = pIdx;
-                        break;
+                        foundDataArray.push({
+                            word: fp.word,
+                            color: fp.color,
+                            index: pIdx
+                        });
                     }
+                }
+                isFound = foundDataArray.length > 0;
+
+                // Debug: Log shared cells
+                if (foundDataArray.length > 1) {
+                    console.log(`[SHARED CELL] (${r},${c}) Letter: ${gameState.board[r][c]}`,
+                        foundDataArray.map(fd => `${fd.word}[${fd.index}]`).join(' + '));
                 }
             }
 
             // Apply found styles
-            if (isFound && foundData) {
+            if (isFound && foundDataArray.length > 0) {
                 cell.classList.add('cell-found');
-                cell.style.borderColor = foundData.color.hex;
-                cell.style.color = foundData.color.hex;
-                cell.style.textShadow = `0 0 10px ${foundData.color.hex}`;
-                cell.style.boxShadow = foundData.color.glow;
 
-                // Wave animation on hover
-                if (gameState.hoveredWord === foundData.word) {
-                    cell.classList.add('cell-wave');
-                    cell.style.animationDelay = `${foundIndex * 0.5}s`;
+                // Multiple words share this cell
+                if (foundDataArray.length > 1) {
+                    // Create gradient border from all colors
+                    const colors = foundDataArray.map(fd => fd.color.hex);
+                    const gradientStops = colors.map((color, idx) => {
+                        const start = (idx / colors.length) * 100;
+                        const end = ((idx + 1) / colors.length) * 100;
+                        return `${color} ${start}%, ${color} ${end}%`;
+                    }).join(', ');
+
+                    cell.style.borderImage = `linear-gradient(135deg, ${gradientStops}) 1`;
+                    cell.style.borderWidth = '3px';
+                    cell.style.borderStyle = 'solid';
+
+                    // Use first color for text
+                    cell.style.color = foundDataArray[0].color.hex;
+
+                    // Combine text shadows from all colors
+                    const textShadows = foundDataArray.map(fd => `0 0 10px ${fd.color.hex}`).join(', ');
+                    cell.style.textShadow = textShadows;
+
+                    // Combine box shadows
+                    const boxShadows = foundDataArray.map(fd => fd.color.glow).join(', ');
+                    cell.style.boxShadow = boxShadows;
+
+                    // Wave animation if any word is hovered
+                    const isAnyHovered = foundDataArray.some(fd => gameState.hoveredWord === fd.word);
+                    if (isAnyHovered) {
+                        cell.classList.add('cell-wave');
+                        cell.style.animationDelay = `${foundDataArray[0].index * 0.5}s`;
+                    }
+
+                    // Create multiple badges stacked
+                    const badgeContainer = document.createElement('div');
+                    badgeContainer.style.position = 'absolute';
+                    badgeContainer.style.top = '-8px';
+                    badgeContainer.style.right = '-8px';
+                    badgeContainer.style.display = 'flex';
+                    badgeContainer.style.flexDirection = 'column';
+                    badgeContainer.style.gap = '2px';
+
+                    foundDataArray.forEach(fd => {
+                        const badge = document.createElement('div');
+                        badge.className = 'step-badge badge-found';
+                        badge.style.backgroundColor = fd.color.hex;
+                        badge.style.fontSize = '0.6rem';
+                        badge.style.width = '18px';
+                        badge.style.height = '18px';
+                        badge.textContent = fd.index + 1;
+                        badgeContainer.appendChild(badge);
+                    });
+
+                    cell.appendChild(badgeContainer);
+                } else {
+                    // Single word (original behavior)
+                    const fd = foundDataArray[0];
+                    cell.style.borderColor = fd.color.hex;
+                    cell.style.color = fd.color.hex;
+                    cell.style.textShadow = `0 0 10px ${fd.color.hex}`;
+                    cell.style.boxShadow = fd.color.glow;
+
+                    // Wave animation on hover
+                    if (gameState.hoveredWord === fd.word) {
+                        cell.classList.add('cell-wave');
+                        cell.style.animationDelay = `${fd.index * 0.5}s`;
+                    }
+
+                    const badge = document.createElement('div');
+                    badge.className = 'step-badge badge-found';
+                    badge.style.backgroundColor = fd.color.hex;
+                    badge.textContent = fd.index + 1;
+                    cell.appendChild(badge);
                 }
-
-                const badge = document.createElement('div');
-                badge.className = 'step-badge badge-found';
-                badge.style.backgroundColor = foundData.color.hex;
-                badge.textContent = foundIndex + 1;
-                cell.appendChild(badge);
             }
 
             // Check if hint cell (available next move)
