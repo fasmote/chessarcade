@@ -296,6 +296,9 @@ function handleCellClick(r, c) {
                 color: color
             });
 
+            console.log(`[WORD FOUND] "${currentWord}" with path:`,
+                newPath.map(p => `(${p.r},${p.c})=${gameState.board[p.r][p.c]}`).join(' -> '));
+
             gameState.selectedPath = [];
             gameState.score += CONFIG.POINTS_PER_WORD;
 
@@ -429,6 +432,12 @@ function renderBoard() {
                     }
                 }
                 isFound = foundDataArray.length > 0;
+
+                // Debug: Log shared cells
+                if (foundDataArray.length > 1) {
+                    console.log(`[SHARED CELL] (${r},${c}) Letter: ${gameState.board[r][c]}`,
+                        foundDataArray.map(fd => `${fd.word}[${fd.index}]`).join(' + '));
+                }
             }
 
             // Apply found styles
