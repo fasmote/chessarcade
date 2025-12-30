@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CriptoSopa - Sopa de Letras de Ajedrez | ChessArcade</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Encuentra palabras de ajedrez en esta sopa de letras arcade. Entrena tu concentración y velocidad de búsqueda visual.">
+    <meta name="keywords" content="sopa de letras ajedrez, word search chess, juego de palabras, concentración">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- NeonChess Styles -->
+    <link rel="stylesheet" href="../../assets/css/neonchess-style.css">
+    <link rel="stylesheet" href="css/criptosopa.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+</head>
+<body class="neon-body">
+    <!-- Particles Background -->
+    <canvas id="particlesCanvas" class="particles-canvas"></canvas>
+
+    <!-- Main Container -->
+    <div class="neon-container">
+        <!-- Header -->
+        <header class="neon-header">
+            <a href="../../index.html" class="neon-back-btn" aria-label="Volver al menú">
+                ← MENÚ
+            </a>
+            <h1 class="neon-title">
+                <span class="neon-icon">🔍</span>
+                CriptoSopa
+                <span class="neon-subtitle">Word Search Chess</span>
+            </h1>
+        </header>
+
+        <!-- Game Container -->
+        <div class="game-wrapper">
+            <!-- Left Panel: Info & Controls -->
+            <aside class="info-panel">
+                <div class="info-card">
+                    <h2 class="info-title">📊 ESTADÍSTICAS</h2>
+                    <div class="stat-item">
+                        <span class="stat-label">Nivel:</span>
+                        <span id="levelDisplay" class="stat-value neon-glow-cyan">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Puntos:</span>
+                        <span id="scoreDisplay" class="stat-value neon-glow-pink">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Tiempo:</span>
+                        <span id="timerDisplay" class="stat-value neon-glow-yellow">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Encontradas:</span>
+                        <span id="foundDisplay" class="stat-value neon-glow-green">0/8</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h2 class="info-title">🎯 PALABRAS</h2>
+                    <ul id="wordList" class="word-list">
+                        <!-- Populated by JavaScript -->
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h2 class="info-title">🎮 INSTRUCCIONES</h2>
+                    <ul class="instructions-list">
+                        <li>Encuentra todas las palabras de ajedrez</li>
+                        <li>Click y arrastra para seleccionar</li>
+                        <li>Las palabras pueden estar en 8 direcciones</li>
+                        <li>Completa rápido para más puntos</li>
+                    </ul>
+                </div>
+
+                <div class="controls-panel">
+                    <button id="newGameBtn" class="neon-arcade-btn neon-arcade-btn--primary">
+                        🔄 NUEVO JUEGO
+                    </button>
+                    <button id="hintBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
+                        💡 PISTA (<span id="hintsLeft">3</span>)
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Center Panel: Game Board -->
+            <main class="board-container">
+                <div id="gameBoard" class="word-search-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victoryModal" class="neon-modal">
+        <div class="neon-modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🎉 ¡COMPLETADO!</h2>
+            </div>
+            <div class="modal-body">
+                <div class="victory-stats">
+                    <div class="victory-stat">
+                        <span class="victory-label">Nivel:</span>
+                        <span id="modalLevel" class="victory-value">1</span>
+                    </div>
+                    <div class="victory-stat">
+                        <span class="victory-label">Tiempo:</span>
+                        <span id="modalTime" class="victory-value">00:00</span>
+                    </div>
+                    <div class="victory-stat">
+                        <span class="victory-label">Puntos:</span>
+                        <span id="modalScore" class="victory-value neon-glow-pink">0</span>
+                    </div>
+                </div>
+                <p id="victoryMessage" class="victory-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="nextLevelBtn" class="neon-arcade-btn neon-arcade-btn--primary">
+                    ▶️ SIGUIENTE NIVEL
+                </button>
+                <button id="submitScoreBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
+                    📊 ENVIAR PUNTUACIÓN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModal" class="neon-modal">
+        <div class="neon-modal-content neon-modal-content--large">
+            <div class="modal-header">
+                <h2 class="modal-title">🏆 RANKING GLOBAL</h2>
+                <button id="closeLeaderboardBtn" class="modal-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="leaderboardContainer">
+                    <!-- Populated by leaderboard API -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../../assets/js/neonchess-effects.js"></script>
+    <script src="../../js/leaderboard-api.js"></script>
+    <script src="../../js/leaderboard-ui.js"></script>
+    <script src="js/criptosopa.js"></script>
+</body>
+</html>
