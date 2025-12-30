@@ -1,11 +1,11 @@
-/* CriptoSopa - Word Search Chess Game Styles */
+/* CriptoSopa - Knight Movement Word Search */
 
 :root {
-    --cell-size: clamp(35px, 8vw, 55px);
-    --grid-gap: 2px;
+    --cell-size: clamp(40px, 8vw, 60px);
+    --grid-gap: 4px;
 }
 
-/* Game Layout */
+/* Layout */
 .game-wrapper {
     display: grid;
     grid-template-columns: 1fr;
@@ -17,8 +17,201 @@
 
 @media (min-width: 1024px) {
     .game-wrapper {
-        grid-template-columns: 320px 1fr;
+        grid-template-columns: 1fr 320px;
     }
+}
+
+/* Timer */
+.timer-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.timer-display {
+    background-color: rgba(9, 9, 11, 0.9);
+    border: 2px solid var(--neon-orange);
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 20px rgba(255, 153, 0, 0.3);
+}
+
+.timer-display span {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: var(--neon-orange);
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 10px var(--neon-orange);
+}
+
+/* Board Panel */
+.board-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.board-container {
+    position: relative;
+    padding: 1rem;
+    background-color: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 12px;
+    box-shadow:
+        0 0 30px rgba(6, 182, 212, 0.3),
+        inset 0 0 20px rgba(6, 182, 212, 0.1);
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(8, var(--cell-size));
+    grid-template-rows: repeat(8, var(--cell-size));
+    gap: var(--grid-gap);
+}
+
+/* Cell States */
+.board-cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+}
+
+.cell-default {
+    background-color: rgba(15, 23, 42, 0.5);
+    color: #475569;
+    border: 2px solid #1e293b;
+}
+
+.cell-default:hover {
+    border-color: #475569;
+    background-color: rgba(30, 41, 59, 0.6);
+}
+
+.cell-hint {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+}
+
+.cell-hint:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.08);
+}
+
+.cell-selected {
+    background-color: white;
+    color: black;
+    border: 2px solid white;
+    transform: scale(1.1);
+    z-index: 20;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+}
+
+.cell-found {
+    background-color: rgba(15, 23, 42, 0.9);
+    color: white;
+    border: 2px solid currentColor;
+    z-index: 10;
+}
+
+/* Step Badge */
+.step-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 50%;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.badge-selected {
+    background-color: black;
+    color: white;
+    border: 2px solid white;
+}
+
+.badge-found {
+    color: black;
+}
+
+/* Wave Animation for Found Words */
+@keyframes waveSequence {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.25);
+        filter: brightness(1.8);
+        box-shadow: 0 0 25px currentColor;
+    }
+}
+
+.cell-wave {
+    animation: waveSequence 3s ease-in-out infinite;
+}
+
+/* Selection Bar */
+.selection-bar {
+    width: 100%;
+    max-width: 500px;
+    height: 4rem;
+    background-color: rgba(15, 23, 42, 0.9);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+.selection-bar span {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.3em;
+    color: white;
+    z-index: 10;
+}
+
+.cursor-blink {
+    animation: blink 1s infinite;
+    color: var(--neon-cyan);
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Controls */
+.controls-panel {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 /* Info Panel */
@@ -48,7 +241,7 @@
     text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
 }
 
-/* Statistics */
+/* Stats */
 .stat-item {
     display: flex;
     justify-content: space-between;
@@ -80,30 +273,58 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .word-item {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.85rem;
-    padding: 0.5rem 0.75rem;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(100, 116, 139, 0.4);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
     border-radius: 6px;
-    color: var(--neon-text-muted);
-    transition: all 0.3s ease;
-    text-align: center;
-    font-weight: 600;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    cursor: default;
 }
 
-.word-item.found {
-    background: rgba(34, 197, 94, 0.2);
-    border-color: var(--neon-green);
-    color: var(--neon-green);
-    text-decoration: line-through;
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+.word-item span {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+.word-default {
+    color: #64748b;
+}
+
+.word-found {
+    background-color: rgba(30, 41, 59, 0.6);
+    border-color: #475569;
+    transform: translateX(0.5rem);
+    color: white;
+}
+
+.word-found:hover {
+    background-color: rgba(51, 65, 85, 0.8);
+    cursor: help;
+}
+
+.word-badge {
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    color: black;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.word-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #334155;
 }
 
 /* Instructions */
@@ -131,118 +352,66 @@
     font-weight: bold;
 }
 
-/* Controls Panel */
-.controls-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-/* Board Container */
-.board-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 500px;
-    padding: 1rem;
-}
-
-/* Word Search Grid */
-.word-search-grid {
-    display: grid;
-    grid-template-columns: repeat(8, var(--cell-size));
-    grid-template-rows: repeat(8, var(--cell-size));
-    gap: var(--grid-gap);
-    padding: 1rem;
-    background: rgba(15, 23, 42, 0.9);
-    border: 2px solid var(--neon-cyan);
-    border-radius: 12px;
-    box-shadow:
-        0 0 30px rgba(6, 182, 212, 0.3),
-        inset 0 0 20px rgba(6, 182, 212, 0.1);
-    user-select: none;
-}
-
-/* Grid Cell */
-.grid-cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(100, 116, 139, 0.3);
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Orbitron', sans-serif;
-    font-size: clamp(1rem, 4vw, 1.4rem);
-    font-weight: 700;
+/* Help Modal */
+.help-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
     color: var(--neon-text);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    position: relative;
+    text-align: center;
+    margin-bottom: 1rem;
 }
 
-.grid-cell:hover {
-    background: rgba(56, 189, 248, 0.2);
-    border-color: var(--neon-cyan);
-    transform: scale(1.05);
+.help-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    text-align: center;
 }
 
-.grid-cell.selecting {
-    background: rgba(251, 191, 36, 0.3);
-    border-color: var(--neon-yellow);
-    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+.help-list li {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    color: var(--neon-text-muted);
+    padding: 0.5rem 0;
 }
 
-.grid-cell.found {
-    background: rgba(34, 197, 94, 0.3);
-    border-color: var(--neon-green);
-    color: var(--neon-green);
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
-    animation: cellFound 0.5s ease;
+.help-example {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    text-align: center;
 }
 
-.grid-cell.hint {
-    animation: hintPulse 1s ease-in-out 3;
+.help-example p {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    color: var(--neon-text-muted);
+    margin: 0.5rem 0;
 }
 
-@keyframes cellFound {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-    }
+.example-moves {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    color: var(--neon-cyan);
+    margin-top: 0.5rem;
 }
 
-@keyframes hintPulse {
-    0%, 100% {
-        background: rgba(30, 41, 59, 0.8);
-        transform: scale(1);
-    }
-    50% {
-        background: rgba(251, 191, 36, 0.5);
-        border-color: var(--neon-yellow);
-        transform: scale(1.15);
-        box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
-    }
+.help-tip {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    color: var(--neon-yellow);
+    text-align: center;
+    margin-top: 1rem;
 }
 
 /* Victory Modal */
 .victory-stats {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     margin-bottom: 1.5rem;
-}
-
-@media (min-width: 640px) {
-    .victory-stats {
-        grid-template-columns: repeat(3, 1fr);
-    }
 }
 
 .victory-stat {
@@ -291,51 +460,52 @@
     }
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 640px) {
     :root {
-        --cell-size: clamp(30px, 10vw, 40px);
+        --cell-size: clamp(35px, 10vw, 45px);
     }
 
-    .word-search-grid {
+    .game-board {
+        gap: 2px;
+    }
+
+    .board-container {
         padding: 0.5rem;
-        gap: 1px;
     }
 
-    .grid-cell {
-        font-size: clamp(0.85rem, 4vw, 1.1rem);
+    .selection-bar {
+        height: 3rem;
     }
 
-    .word-list {
-        grid-template-columns: 1fr;
+    .selection-bar span {
+        font-size: 1.2rem;
     }
 
-    .game-wrapper {
-        padding: 0.5rem;
-        gap: 1rem;
+    .controls-panel {
+        width: 100%;
+    }
+
+    .controls-panel button {
+        flex: 1;
+        min-width: 120px;
     }
 }
 
-/* Loading State */
-.grid-cell.loading {
-    animation: loadingPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes loadingPulse {
+/* Hint Flash Animation */
+@keyframes hintFlash {
     0%, 100% {
-        opacity: 0.4;
+        background-color: rgba(251, 191, 36, 0.2);
+        border-color: var(--neon-yellow);
     }
     50% {
-        opacity: 1;
+        background-color: rgba(251, 191, 36, 0.5);
+        border-color: var(--neon-yellow);
+        transform: scale(1.15);
+        box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
     }
 }
 
-/* Empty State */
-.board-container.empty::after {
-    content: 'Presiona NUEVO JUEGO para comenzar';
-    position: absolute;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.2rem;
-    color: var(--neon-text-muted);
-    text-align: center;
+.cell-hint-flash {
+    animation: hintFlash 1s ease-in-out 3;
 }
