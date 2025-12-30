@@ -477,13 +477,30 @@ function renderBoard() {
                         cell.style.animationDelay = `${foundDataArray[0].index * 0.5}s`;
                     }
 
-                    // Create badges in corners based on number of words
-                    const cornerPositions = [
-                        { top: '-6px', right: '-6px' },     // Top-right
-                        { bottom: '-6px', left: '-6px' },   // Bottom-left
-                        { top: '-6px', left: '-6px' },      // Top-left
-                        { bottom: '-6px', right: '-6px' }   // Bottom-right
-                    ];
+                    // Create badges in corners matching color zones
+                    // For 2 words: diagonal split (135deg: top-left=word0, bottom-right=word1)
+                    // For 3 words: word0=top-left, word1=middle, word2=bottom-right
+                    // For 4 words: word0=top-left, word1=top-right, word2=bottom-left, word3=bottom-right
+
+                    const cornerPositionsMap = {
+                        2: [
+                            { top: '-6px', left: '-6px' },      // word 0: top-left (matches top-left color)
+                            { bottom: '-6px', right: '-6px' }   // word 1: bottom-right (matches bottom-right color)
+                        ],
+                        3: [
+                            { top: '-6px', left: '-6px' },      // word 0
+                            { top: '-6px', right: '-6px' },     // word 1
+                            { bottom: '-6px', right: '-6px' }   // word 2
+                        ],
+                        4: [
+                            { top: '-6px', left: '-6px' },      // word 0
+                            { top: '-6px', right: '-6px' },     // word 1
+                            { bottom: '-6px', left: '-6px' },   // word 2
+                            { bottom: '-6px', right: '-6px' }   // word 3
+                        ]
+                    };
+
+                    const positions = cornerPositionsMap[numWords] || cornerPositionsMap[4];
 
                     foundDataArray.forEach((fd, idx) => {
                         const badge = document.createElement('div');
@@ -497,8 +514,8 @@ function renderBoard() {
                         badge.style.border = '2px solid white';
                         badge.textContent = fd.index + 1;
 
-                        // Position in corners
-                        Object.assign(badge.style, cornerPositions[idx % 4]);
+                        // Position in corners matching color zones
+                        Object.assign(badge.style, positions[idx]);
 
                         cell.appendChild(badge);
                     });
