@@ -348,6 +348,12 @@ function showHint() {
 
     if (missingWords.length === 0) return;
 
+    // Shake the board
+    if (elements.gameBoard) {
+        elements.gameBoard.classList.add('board-shake');
+        setTimeout(() => elements.gameBoard.classList.remove('board-shake'), 500);
+    }
+
     // Find a missing word in the board
     const wordToHint = missingWords[0];
     const startPos = findWordStart(wordToHint);
