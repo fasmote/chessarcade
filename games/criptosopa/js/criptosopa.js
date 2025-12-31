@@ -29,6 +29,7 @@ let gameState = {
     board: [],
     currentWordList: [],
     targetWords: [],
+    wordPaths: {}, // Store paths for each placed word {word: path}
     foundPaths: [],
     selectedPath: [],
     score: 0,
@@ -118,6 +119,7 @@ function setupEventListeners() {
 function startNewGame() {
     gameState.foundPaths = [];
     gameState.selectedPath = [];
+    gameState.wordPaths = {}; // Clear word paths
     gameState.gameStatus = 'playing';
     gameState.hoveredWord = null;
     gameState.hintsRemaining = CONFIG.HINTS_PER_LEVEL;
@@ -229,6 +231,9 @@ function placeWord(word) {
             for (let i = 0; i < word.length; i++) {
                 gameState.board[path[i].r][path[i].c] = word[i];
             }
+            // Store the path for this word
+            gameState.wordPaths[word] = path;
+            console.log(`[PLACE WORD] "${word}" placed at path:`, path);
             return true;
         }
     }
@@ -337,6 +342,8 @@ function handleCellClick(r, c) {
 
 // Show hint
 function showHint() {
+    console.log('[HINT] Button clicked');
+
     if (gameState.hintsRemaining <= 0) {
         alert('¡No te quedan pistas!');
         return;
@@ -346,7 +353,14 @@ function showHint() {
         !gameState.foundPaths.some(fp => fp.word === w)
     );
 
-    if (missingWords.length === 0) return;
+    console.log('[HINT] Missing words:', missingWords);
+    console.log('[HINT] Target words:', gameState.targetWords);
+    console.log('[HINT] Found paths:', gameState.foundPaths);
+
+    if (missingWords.length === 0) {
+        console.log('[HINT] No missing words!');
+        return;
+    }
 
     // Shake the board
     if (elements.gameBoard) {
@@ -356,7 +370,10 @@ function showHint() {
 
     // Find a missing word in the board
     const wordToHint = missingWords[0];
+    console.log('[HINT] Looking for word:', wordToHint);
+
     const startPos = findWordStart(wordToHint);
+    console.log('[HINT] Start position found:', startPos);
 
     if (startPos) {
         // Store hint cell in gameState so it survives re-renders
@@ -367,6 +384,7 @@ function showHint() {
         };
 
         console.log(`[HINT] Showing first letter of "${wordToHint}" at (${startPos.r},${startPos.c}) = ${gameState.board[startPos.r][startPos.c]}`);
+        console.log('[HINT] hintCell stored:', gameState.hintCell);
 
         gameState.hintsRemaining--;
         gameState.score = Math.max(0, gameState.score - 50);
@@ -378,11 +396,22 @@ function showHint() {
             gameState.hintCell = null;
             renderBoard();
         }, 3000);
+    } else {
+        console.log('[HINT] ERROR: Could not find start position for word:', wordToHint);
     }
 }
 
 // Find word start position
 function findWordStart(word) {
+    // Use stored path if available
+    if (gameState.wordPaths[word] && gameState.wordPaths[word].length > 0) {
+        const startPos = gameState.wordPaths[word][0];
+        console.log(`[FIND WORD] Found "${word}" in stored paths at (${startPos.r},${startPos.c})`);
+        return startPos;
+    }
+
+    // Fallback: search the board (shouldn't happen normally)
+    console.log(`[FIND WORD] WARNING: "${word}" not in stored paths, searching board...`);
     for (let r = 0; r < CONFIG.BOARD_SIZE; r++) {
         for (let c = 0; c < CONFIG.BOARD_SIZE; c++) {
             if (gameState.board[r][c] === word[0]) {
@@ -622,11 +651,14 @@ function renderBoard() {
                 Date.now() < gameState.hintCell.endTime;
 
             if (isHintCell) {
+                console.log(`[RENDER HINT] Cell (${r},${c}) is the hint cell!`);
                 // Clear the hint if time expired
                 if (Date.now() >= gameState.hintCell.endTime) {
+                    console.log('[RENDER HINT] Hint time expired, clearing');
                     gameState.hintCell = null;
                 } else {
                     // Apply hint flash animation
+                    console.log('[RENDER HINT] Applying cell-hint-flash class');
                     cell.classList.add('cell-hint-flash');
                 }
             }
