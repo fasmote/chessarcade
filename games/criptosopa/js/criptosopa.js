@@ -876,5 +876,22 @@ async function submitScore() {
     }
 }
 
+// Sound toggle function
+let soundEnabled = true;
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const icon = document.getElementById('soundIcon');
+    if (icon) {
+        icon.className = soundEnabled
+            ? 'fa-solid fa-volume-high'
+            : 'fa-solid fa-volume-xmark';
+    }
+    console.log(`🔊 Sonido: ${soundEnabled ? 'ON' : 'OFF'}`);
+}
+
+// Make toggleSound available globally for onclick handler
+window.toggleSound = toggleSound;
+
 // Initialize
 console.log('CriptoSopa (Knight Word Search) loaded successfully!');
