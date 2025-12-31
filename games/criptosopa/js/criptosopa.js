@@ -38,7 +38,8 @@ let gameState = {
     timerInterval: null,
     hoveredWord: null,
     gameStatus: 'playing', // 'playing', 'won'
-    isDragging: false // Track if mouse is being held down
+    isDragging: false, // Track if mouse is being held down
+    hintCell: null // {r, c, endTime} - Currently hinted cell
 };
 
 // DOM Elements
@@ -352,15 +353,25 @@ function showHint() {
     const startPos = findWordStart(wordToHint);
 
     if (startPos) {
-        const cell = document.querySelector(`[data-row="${startPos.r}"][data-col="${startPos.c}"]`);
-        if (cell) {
-            cell.classList.add('cell-hint-flash');
-            setTimeout(() => cell.classList.remove('cell-hint-flash'), 3000);
-        }
+        // Store hint cell in gameState so it survives re-renders
+        gameState.hintCell = {
+            r: startPos.r,
+            c: startPos.c,
+            endTime: Date.now() + 3000 // Flash for 3 seconds
+        };
+
+        console.log(`[HINT] Showing first letter of "${wordToHint}" at (${startPos.r},${startPos.c}) = ${gameState.board[startPos.r][startPos.c]}`);
 
         gameState.hintsRemaining--;
         gameState.score = Math.max(0, gameState.score - 50);
         updateDisplay();
+        renderBoard(); // Re-render to apply hint styling
+
+        // Auto-clear hint after 3 seconds
+        setTimeout(() => {
+            gameState.hintCell = null;
+            renderBoard();
+        }, 3000);
     }
 }
 
@@ -598,8 +609,24 @@ function renderBoard() {
                 }
             }
 
+            // Check if this is the hint cell (word start being hinted)
+            const isHintCell = gameState.hintCell &&
+                gameState.hintCell.r === r &&
+                gameState.hintCell.c === c &&
+                Date.now() < gameState.hintCell.endTime;
+
+            if (isHintCell) {
+                // Clear the hint if time expired
+                if (Date.now() >= gameState.hintCell.endTime) {
+                    gameState.hintCell = null;
+                } else {
+                    // Apply hint flash animation
+                    cell.classList.add('cell-hint-flash');
+                }
+            }
+
             // Check if hint cell (available next move)
-            if (!isSelected && !isFound && gameState.selectedPath.length > 0) {
+            if (!isSelected && !isFound && !isHintCell && gameState.selectedPath.length > 0) {
                 const last = gameState.selectedPath[gameState.selectedPath.length - 1];
                 if (isKnightMove(last.r, last.c, r, c) &&
                     !gameState.selectedPath.some(p => p.r === r && p.c === c)) {
@@ -608,7 +635,7 @@ function renderBoard() {
             }
 
             // Default state
-            if (!isSelected && !isFound && !cell.classList.contains('cell-hint')) {
+            if (!isSelected && !isFound && !isHintCell && !cell.classList.contains('cell-hint')) {
                 cell.classList.add('cell-default');
             }
 
