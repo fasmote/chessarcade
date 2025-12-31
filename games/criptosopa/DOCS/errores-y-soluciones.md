@@ -245,6 +245,54 @@ document.addEventListener('mouseleave', () => {
 
 ---
 
+### Error #007: Sistema de pistas no funcionaba
+**Fecha**: 2025-12-30
+**Severidad**: Alta
+**Descripción**: Al hacer click en el botón "PISTA", solo se observaba una "vibración" del tablero pero no se destacaba visualmente dónde empieza la palabra.
+
+**User Report**: "puedes mejorar la AYUDA, ahora mismo no hace nada, solo 'vibra' el tablero, pero no da pista de donde empieza alguna palabra"
+
+**Causa Raíz**:
+- La función `showHint()` agregaba la clase 'cell-hint-flash' directamente al DOM
+- `renderBoard()` se ejecuta constantemente y limpia los estilos de las celdas
+- La clase 'cell-hint-flash' era removida inmediatamente en el siguiente re-render
+- La animación CSS nunca se podía ver porque la clase desaparecía
+
+**Solución**:
+Implementar estado persistente de hint:
+```javascript
+// En gameState
+hintCell: null // {r, c, endTime}
+
+// En showHint()
+gameState.hintCell = {
+    r: startPos.r,
+    c: startPos.c,
+    endTime: Date.now() + 3000
+};
+renderBoard();
+
+// En renderBoard() - aplicar estilo si hint está activo
+const isHintCell = gameState.hintCell &&
+    gameState.hintCell.r === r &&
+    gameState.hintCell.c === c &&
+    Date.now() < gameState.hintCell.endTime;
+
+if (isHintCell) {
+    cell.classList.add('cell-hint-flash');
+}
+```
+
+**Beneficios**:
+- El hint sobrevive a los re-renders
+- La animación se ve por completos 3 segundos
+- Console log muestra exactamente qué palabra y posición se está destacando
+- Auto-limpieza después del timeout
+
+**Commit**: `b776af2 - feat: Improve hint system to actually highlight word start`
+
+---
+
 ## 6. Bugs Conocidos (No Resueltos)
 
 ### Bug #001: Console logs de debug
@@ -289,6 +337,12 @@ if (DEBUG) {
 - **Solución**: Colores, animaciones, badges
 - **Impacto**: UX significativamente mejorada
 
+### 7.5 Estado Persistente vs. DOM Directo
+- **Problema**: Modificaciones directas al DOM se pierden en re-renders
+- **Solución**: Almacenar estado en gameState, aplicar durante render
+- **Impacto**: Animaciones y efectos visuales funcionan correctamente
+- **Ejemplo**: hintCell con endTime sobrevive a re-renders
+
 ---
 
 ## 8. Herramientas de Debugging Utilizadas
@@ -296,6 +350,7 @@ if (DEBUG) {
 ### 8.1 Console Logs
 - `[WORD FOUND]`: Path completo de palabra encontrada
 - `[SHARED CELL]`: Detección de celdas compartidas
+- `[HINT]`: Palabra y posición siendo destacada por el sistema de pistas
 
 ### 8.2 Chrome DevTools
 - Inspección de eventos (Event Listeners panel)
