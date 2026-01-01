@@ -1126,17 +1126,6 @@
                 display: block;
                 text-align: center;
             }
-
-            .mission-instruction {
-                font-size: 0.55rem !important;
-                color: #1e293b !important;
-                margin-top: 0.75rem;
-                opacity: 0.4;
-            }
-
-            .mission-instruction i {
-                color: #1e293b !important;
-            }
         }
     </style>
 
@@ -1478,10 +1467,6 @@
                     </span>
                     <!-- The phrase -->
                     <span id="puzzleIdText" class="lg:text-base lg:block lg:my-2"></span>
-                    <!-- Desktop: Instruction -->
-                    <div class="mission-instruction hidden lg:block" style="font-size: 0.7rem; color: #94a3b8; opacity: 0.8; margin-top: 0.75rem;">
-                        <i class="fa-solid fa-chess-knight mr-1" style="color: #64748b;"></i> Sigue el camino del caballo para descubrirla
-                    </div>
                 </div>
 
                 <!-- Admin Comments Display -->
@@ -2058,6 +2043,21 @@
                     if(lvlComments) lvlComments.value = data.admin_comments || '';
                     if(lvlName) lvlName.value = data.title || '';
                     if(lvlAuthor) lvlAuthor.value = data.author || '';
+
+                    // Show/hide admin comments display
+                    const commentsDisplay = document.getElementById('commentsDisplay');
+                    const commentsText = document.getElementById('commentsText');
+                    if(data.admin_comments && commentsDisplay && commentsText) {
+                        const comments = data.admin_comments.split('|').map(c => c.trim()).filter(c => c);
+                        if(comments.length > 0) {
+                            commentsText.innerHTML = comments.map(comment => `<div class="mb-1">• ${comment}</div>`).join('');
+                            commentsDisplay.classList.remove('hidden');
+                        } else {
+                            commentsDisplay.classList.add('hidden');
+                        }
+                    } else if(commentsDisplay) {
+                        commentsDisplay.classList.add('hidden');
+                    }
 
                     console.log(`✅ Puzzle cargado: "${data.message}" (${data.puzzle_date})`);
                 }
@@ -2815,7 +2815,7 @@
                             idDisplay.dataset.internalId = internalId;
                             // Title in yellow, author in slate
                             const titleHtml = data.title ? `<span class="text-yellow-300 font-bold">"${data.title}"</span>` : '';
-                            const authorHtml = data.author ? `<span class="text-slate-400 ml-2">por ${data.author}</span>` : '';
+                            const authorHtml = data.author ? `<span class="text-slate-400" style="font-size: 0.8rem; display: block; text-align: center;">por ${data.author}</span>` : '';
                             idText.innerHTML = titleHtml + authorHtml;
                             // Only show if there's title or author
                             if(data.title || data.author) {

@@ -1359,9 +1359,9 @@
             }
 
             if(titleSpan) {
-                const titleText = title ? `"${title}"` : '';
-                const authorText = author ? ` por ${author}` : '';
-                titleSpan.textContent = titleText + authorText;
+                const titleHtml = title ? `<span>"${title}"</span>` : '';
+                const authorHtml = author ? `<span style="display: block; font-size: 0.7rem;">por ${author}</span>` : '';
+                titleSpan.innerHTML = titleHtml + authorHtml;
             }
         }
 
@@ -2290,14 +2290,14 @@
                     }
 
                     closeSaveModal();
-                    const titleText = title ? ` "${title}"` : '';
-                    const authorText = author ? ` por ${author}` : '';
+                    const titleHtml = title ? ` "${title}"` : '';
+                    const authorHtml = author ? `<span style="display: block; font-size: 0.8rem;">por ${author}</span>` : '';
 
                     // Show ID in UI
                     const idDisplay = document.getElementById('puzzleIdDisplay');
                     const idText = document.getElementById('puzzleIdText');
                     if(idDisplay && idText) {
-                        idText.innerHTML = `<strong>✓ Guardado!</strong> Reto #${dailyNumber}${titleText}${authorText}`;
+                        idText.innerHTML = `<strong>✓ Guardado!</strong> Reto #${dailyNumber}${titleHtml}${authorHtml}`;
                         idDisplay.classList.remove('hidden');
                         // Hide after 8 seconds
                         setTimeout(() => idDisplay.classList.add('hidden'), 8000);
