@@ -14,6 +14,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- NeonChess Styles -->
     <link rel="stylesheet" href="../../assets/css/neonchess-style.css">
     <link rel="stylesheet" href="css/criptosopa.css">
@@ -24,6 +27,111 @@
 <body class="neon-body">
     <!-- Particles Background -->
     <canvas id="particlesCanvas" class="particles-canvas"></canvas>
+
+    <!-- Desktop Logo (top left) -->
+    <div class="desktop-logo">
+        <a href="../../index.html" class="logo-link">
+            <svg class="joystick-icon" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" style="animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 15px #00d9ff);">
+                <defs>
+                    <filter id="glow-cyan" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="glow-red" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <g filter="url(#glow-cyan)">
+                    <path d="M 60 100 L 85 87 L 60 74 L 35 87 Z" fill="#1a1a2e" stroke="#00d9ff" stroke-width="2.5"/>
+                    <path d="M 60 74 L 85 87 L 85 95 L 60 108 Z" fill="#0f0f1a" stroke="#00d9ff" stroke-width="2"/>
+                    <path d="M 60 74 L 35 87 L 35 95 L 60 108 Z" fill="#16161f" stroke="#00d9ff" stroke-width="2"/>
+                </g>
+                <g>
+                    <rect x="55" y="65" width="10" height="17" fill="#2a2a3e" stroke="#666" stroke-width="1.2"/>
+                    <ellipse cx="60" cy="82" rx="5" ry="2.5" fill="#1f1f2e" stroke="#555" stroke-width="1"/>
+                </g>
+                <g filter="url(#glow-red)">
+                    <ellipse cx="60" cy="55" rx="15" ry="12" fill="#ff0040" stroke="#ff3366" stroke-width="1"/>
+                    <ellipse cx="56" cy="50" rx="5" ry="4" fill="#ff6690" opacity="0.9"/>
+                </g>
+            </svg>
+            <span class="logo-text">ChessArcade</span>
+            <svg class="joystick-icon" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" style="animation: float 3s ease-in-out infinite 1.5s; filter: drop-shadow(0 0 15px #ff0080);">
+                <defs>
+                    <filter id="glow-magenta" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="glow-yellow" x="-150%" y="-150%" width="400%" height="400%">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <g filter="url(#glow-magenta)">
+                    <path d="M 60 100 L 85 87 L 60 74 L 35 87 Z" fill="#1a1a2e" stroke="#ff0080" stroke-width="2.5"/>
+                    <path d="M 60 74 L 85 87 L 85 95 L 60 108 Z" fill="#0f0f1a" stroke="#ff0080" stroke-width="2"/>
+                    <path d="M 60 74 L 35 87 L 35 95 L 60 108 Z" fill="#16161f" stroke="#ff0080" stroke-width="2"/>
+                </g>
+                <g>
+                    <rect x="55" y="65" width="10" height="17" fill="#2a2a3e" stroke="#666" stroke-width="1.2"/>
+                    <ellipse cx="60" cy="82" rx="5" ry="2.5" fill="#1f1f2e" stroke="#555" stroke-width="1"/>
+                </g>
+                <g filter="url(#glow-yellow)">
+                    <ellipse cx="60" cy="55" rx="15" ry="12" fill="#ffd700" stroke="#ffee00" stroke-width="1"/>
+                    <ellipse cx="56" cy="50" rx="5" ry="4" fill="#ffff80" opacity="0.9"/>
+                </g>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Desktop Navigation (top right) -->
+    <nav class="desktop-nav">
+        <a href="../../index.html" class="nav-btn btn-home">
+            <i class="fa-solid fa-home"></i>
+            <span>HOME</span>
+        </a>
+        <button class="nav-btn btn-sound" onclick="toggleSound()" id="soundBtn">
+            <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+            <span>SONIDO</span>
+        </button>
+        <div class="games-menu-container">
+            <button class="nav-btn btn-games">
+                <i class="fa-solid fa-gamepad"></i>
+                <span>JUEGOS</span>
+            </button>
+            <div class="games-dropdown">
+                <a href="../knight-quest/index.html" class="game-menu-item">
+                    <span class="game-icon">🐴</span>
+                    <span>Knight Quest</span>
+                </a>
+                <a href="../memory-matrix-v2/index.html" class="game-menu-item">
+                    <span class="game-icon">🧠</span>
+                    <span>Memory Matrix</span>
+                </a>
+                <a href="../square-rush/index.html" class="game-menu-item">
+                    <span class="game-icon">⚡</span>
+                    <span>Square Rush</span>
+                </a>
+                <a href="../master-sequence/index.html" class="game-menu-item">
+                    <span class="game-icon">🟦</span>
+                    <span>Master Sequence</span>
+                </a>
+                <a href="../chessinfive/index.html" class="game-menu-item">
+                    <span class="game-icon">⚔️</span>
+                    <span>ChessInFive</span>
+                </a>
+                <a href="../criptocaballo/index.html" class="game-menu-item">
+                    <span class="game-icon">🔐</span>
+                    <span>CriptoCaballo</span>
+                </a>
+                <a href="index.html" class="game-menu-item current">
+                    <span class="game-icon">🐴🔍</span>
+                    <span>CriptoSopa</span>
+                </a>
+            </div>
+        </div>
+    </nav>
 
     <!-- Main Container -->
     <div class="neon-container">
