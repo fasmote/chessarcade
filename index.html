@@ -66,6 +66,8 @@
             backdrop-filter: blur(10px);
         }
         .nav-btn:hover { transform: translateY(-2px); }
+        .nav-btn.btn-leaderboard { border-color: #a855f7; color: #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.3); }
+        .nav-btn.btn-leaderboard:hover { background: rgba(168,85,247,0.1); box-shadow: 0 0 20px rgba(168,85,247,0.6); }
         .nav-btn.btn-games { border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
         .nav-btn.btn-games:hover { background: rgba(255,215,0,0.1); box-shadow: 0 0 20px rgba(255,215,0,0.6); }
         .games-menu-container { position: relative; }
@@ -95,6 +97,18 @@
 <body>
     <!-- Desktop Navigation (top right) -->
     <nav class="desktop-nav">
+        <div class="games-menu-container">
+            <button class="nav-btn btn-leaderboard"><i class="fa-solid fa-trophy"></i><span>RANKING</span></button>
+            <div class="games-dropdown" style="border-color: #a855f7; box-shadow: 0 0 30px rgba(168,85,247,0.3);">
+                <a href="games/knight-quest/index.html#leaderboard" class="game-menu-item" style="border-color: rgba(168,85,247,0.2);"><span class="game-icon">🐴</span><span>Knight Quest</span></a>
+                <a href="games/memory-matrix-v2/index.html#leaderboard" class="game-menu-item" style="border-color: rgba(168,85,247,0.2);"><span class="game-icon">🧠</span><span>Memory Matrix</span></a>
+                <a href="games/square-rush/index.html#leaderboard" class="game-menu-item" style="border-color: rgba(168,85,247,0.2);"><span class="game-icon">⚡</span><span>Square Rush</span></a>
+                <a href="games/master-sequence/index.html#leaderboard" class="game-menu-item" style="border-color: rgba(168,85,247,0.2);"><span class="game-icon">🟦</span><span>Master Sequence</span></a>
+                <a href="games/chessinfive/index.html#leaderboard" class="game-menu-item" style="border-color: rgba(168,85,247,0.2);"><span class="game-icon">⚔️</span><span>ChessInFive</span></a>
+                <a href="games/criptocaballo/index.html#leaderboard" class="game-menu-item" style="border-color: rgba(168,85,247,0.2);"><span class="game-icon">🔐</span><span>CriptoCaballo</span></a>
+                <a href="games/criptosopa/index.html#leaderboard" class="game-menu-item" style="border-color: rgba(168,85,247,0.2);"><span class="game-icon">🔍</span><span>CriptoSopa</span></a>
+            </div>
+        </div>
         <div class="games-menu-container">
             <button class="nav-btn btn-games"><i class="fa-solid fa-gamepad"></i><span>JUEGOS</span></button>
             <div class="games-dropdown">
