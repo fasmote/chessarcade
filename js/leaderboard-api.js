@@ -185,6 +185,44 @@ async function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
 }
 
 /**
+ * Fetch con retry automático para errores de servidor
+ *
+ * @param {string} url - URL a llamar
+ * @param {object} options - Opciones de fetch
+ * @param {number} maxRetries - Número máximo de reintentos (default: 2)
+ * @returns {Promise<Response>} - Response del fetch
+ */
+async function fetchWithRetry(url, options = {}, maxRetries = 2) {
+  let lastError;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetchWithTimeout(url, options);
+
+      // Si el servidor devuelve 500, reintentar
+      if (response.status >= 500 && attempt < maxRetries) {
+        console.log(`[leaderboard-api] Server error ${response.status}, retrying (${attempt + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))); // Backoff: 1s, 2s, 3s...
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error;
+
+      // Si es error de red/timeout y no hemos agotado reintentos, reintentar
+      if (attempt < maxRetries) {
+        console.log(`[leaderboard-api] Request failed, retrying (${attempt + 1}/${maxRetries})...`, error.message);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        continue;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+/**
  * Procesa la respuesta de la API
  *
  * Todas nuestras respuestas tienen el formato:
@@ -336,8 +374,8 @@ async function submitScore(game, playerName, score, options = {}) {
       payload.metadata = options.metadata;
     }
 
-    // Hacer POST request a /api/scores
-    const response = await fetchWithTimeout(API_BASE_URL, {
+    // Hacer POST request a /api/scores (con retry automático)
+    const response = await fetchWithRetry(API_BASE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -428,8 +466,8 @@ async function getLeaderboard(game, options = {}) {
     // Ejemplo: /api/scores/leaderboard?game=square-rush&limit=50&offset=0
     const url = `${API_BASE_URL}/leaderboard?${params.toString()}`;
 
-    // Hacer GET request
-    const response = await fetchWithTimeout(url);
+    // Hacer GET request (con retry automático)
+    const response = await fetchWithRetry(url);
 
     // Procesar respuesta
     const data = await processResponse(response);
