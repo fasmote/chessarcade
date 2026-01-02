@@ -195,8 +195,18 @@ async function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
  * @throws {Error} - Si la respuesta no es exitosa
  */
 async function processResponse(response) {
-  // Parsear el JSON
-  const data = await response.json();
+  // Obtener el texto de la respuesta primero
+  const responseText = await response.text();
+
+  // Intentar parsear como JSON
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (parseError) {
+    // Si no es JSON válido, el servidor devolvió un error como texto plano
+    console.error('[leaderboard-api] Server returned non-JSON response:', responseText);
+    throw new Error(responseText || `Server error (HTTP ${response.status})`);
+  }
 
   // Si la API devolvió success: false, lanzar error
   if (!data.success) {
