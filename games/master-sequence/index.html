@@ -21,6 +21,86 @@
 
     <!-- Google Fonts: Orbitron para títulos estilo futurista -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Standard Desktop Menu Styles -->
+    <style>
+        .desktop-nav { display: none; }
+        @media (min-width: 768px) {
+            .desktop-nav {
+                display: flex;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                gap: 12px;
+                z-index: 1001;
+            }
+        }
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            min-height: 44px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+        .nav-btn:hover { transform: translateY(-2px); }
+        .nav-btn.btn-nav-home { border-color: #00ffff; color: #00ffff; box-shadow: 0 0 10px rgba(0,255,255,0.3); }
+        .nav-btn.btn-nav-home:hover { background: rgba(0,255,255,0.1); box-shadow: 0 0 20px rgba(0,255,255,0.6); }
+        .nav-btn.btn-nav-leaderboard { border-color: #a855f7; color: #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.3); }
+        .nav-btn.btn-nav-leaderboard:hover { background: rgba(168,85,247,0.1); box-shadow: 0 0 20px rgba(168,85,247,0.6); }
+        .nav-btn.btn-nav-sound { border-color: #ff8000; color: #ff8000; box-shadow: 0 0 10px rgba(255,128,0,0.3); min-width: 130px; }
+        .nav-btn.btn-nav-sound:hover { background: rgba(255,128,0,0.1); box-shadow: 0 0 20px rgba(255,128,0,0.6); }
+        .nav-btn.btn-nav-sound i { font-size: 1.2rem; }
+        .nav-btn.btn-nav-sound.muted { border-color: #ff4444; color: #ff4444; box-shadow: 0 0 10px rgba(255,68,68,0.3); }
+        .nav-btn.btn-nav-sound.muted:hover { background: rgba(255,68,68,0.1); box-shadow: 0 0 20px rgba(255,68,68,0.6); }
+        .nav-btn.btn-nav-games { border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        .nav-btn.btn-nav-games:hover { background: rgba(255,215,0,0.1); box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+        .games-menu-container { position: relative; }
+        .games-dropdown {
+            position: absolute; top: 100%; right: 0; margin-top: 8px;
+            background: rgba(10,10,26,0.98); border: 2px solid #ffd700; border-radius: 10px;
+            min-width: 220px; opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: all 0.3s ease; box-shadow: 0 0 30px rgba(255,215,0,0.3);
+            backdrop-filter: blur(10px); z-index: 1002;
+        }
+        .games-menu-container:hover .games-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .games-dropdown .game-menu-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            color: rgba(255,255,255,0.7); text-decoration: none;
+            border-bottom: 1px solid rgba(255,215,0,0.2); transition: all 0.2s ease;
+            font-family: 'Orbitron', sans-serif; font-size: 11px;
+        }
+        .games-dropdown .game-menu-item:last-child { border-bottom: none; }
+        .games-dropdown .game-menu-item:hover { background: rgba(255,215,0,0.1); color: #ffd700; padding-left: 20px; }
+        .games-dropdown .game-menu-item.current { background: rgba(255,215,0,0.15); color: #ffd700; }
+        .games-dropdown .game-icon { font-size: 1.3rem; filter: drop-shadow(0 0 5px rgba(255,215,0,0.5)); }
+        .desktop-logo { display: none; }
+        @media (min-width: 768px) {
+            .desktop-logo { display: flex; position: fixed; top: 15px; left: 20px; z-index: 1001; }
+            /* Hide old desktop controls */
+            .header .btn-home.desktop-only,
+            .header .btn-sound.desktop-only,
+            .header .btn-leaderboard.desktop-only,
+            .header .neon-coin-counter.desktop-only,
+            .header .floating-games-menu.desktop-only { display: none !important; }
+        }
+        .logo-link { display: flex; align-items: center; gap: 0.8rem; text-decoration: none; transition: all 0.3s ease; }
+        .logo-link:hover { transform: scale(1.03); }
+        .logo-text { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 700; color: #fff; text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #ff0080; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+        .joystick-icon { width: 40px; height: 40px; }
+    </style>
 
     <!-- Estilos del juego -->
     <link rel="stylesheet" href="styles.css?v=6">
@@ -29,6 +109,44 @@
     <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
 </head>
 <body>
+
+    <!-- Desktop Logo (top left) -->
+    <div class="desktop-logo">
+        <a href="../../index.html" class="logo-link">
+            <svg class="joystick-icon" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" style="animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 15px #00d9ff);">
+                <defs><filter id="glow-cyan" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="glow-red" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <g filter="url(#glow-cyan)"><path d="M 60 100 L 85 87 L 60 74 L 35 87 Z" fill="#1a1a2e" stroke="#00d9ff" stroke-width="2.5"/><path d="M 60 74 L 85 87 L 85 95 L 60 108 Z" fill="#0f0f1a" stroke="#00d9ff" stroke-width="2"/><path d="M 60 74 L 35 87 L 35 95 L 60 108 Z" fill="#16161f" stroke="#00d9ff" stroke-width="2"/></g>
+                <g><rect x="55" y="65" width="10" height="17" fill="#2a2a3e" stroke="#666" stroke-width="1.2"/><ellipse cx="60" cy="82" rx="5" ry="2.5" fill="#1f1f2e" stroke="#555" stroke-width="1"/></g>
+                <g filter="url(#glow-red)"><ellipse cx="60" cy="55" rx="15" ry="12" fill="#ff0040" stroke="#ff3366" stroke-width="1"/><ellipse cx="56" cy="50" rx="5" ry="4" fill="#ff6690" opacity="0.9"/></g>
+            </svg>
+            <span class="logo-text">ChessArcade</span>
+            <svg class="joystick-icon" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" style="animation: float 3s ease-in-out infinite 1.5s; filter: drop-shadow(0 0 15px #ff0080);">
+                <defs><filter id="glow-magenta" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="glow-yellow" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <g filter="url(#glow-magenta)"><path d="M 60 100 L 85 87 L 60 74 L 35 87 Z" fill="#1a1a2e" stroke="#ff0080" stroke-width="2.5"/><path d="M 60 74 L 85 87 L 85 95 L 60 108 Z" fill="#0f0f1a" stroke="#ff0080" stroke-width="2"/><path d="M 60 74 L 35 87 L 35 95 L 60 108 Z" fill="#16161f" stroke="#ff0080" stroke-width="2"/></g>
+                <g><rect x="55" y="65" width="10" height="17" fill="#2a2a3e" stroke="#666" stroke-width="1.2"/><ellipse cx="60" cy="82" rx="5" ry="2.5" fill="#1f1f2e" stroke="#555" stroke-width="1"/></g>
+                <g filter="url(#glow-yellow)"><ellipse cx="60" cy="55" rx="15" ry="12" fill="#ffd700" stroke="#ffee00" stroke-width="1"/><ellipse cx="56" cy="50" rx="5" ry="4" fill="#ffff80" opacity="0.9"/></g>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Desktop Navigation (top right) -->
+    <nav class="desktop-nav">
+        <a href="../../index.html" class="nav-btn btn-nav-home"><i class="fa-solid fa-home"></i><span>HOME</span></a>
+        <button class="nav-btn btn-nav-leaderboard" onclick="document.getElementById('btnLeaderboard') && document.getElementById('btnLeaderboard').click()" id="btnLeaderboardNav"><i class="fa-solid fa-trophy"></i><span>RANKING</span></button>
+        <button class="nav-btn btn-nav-sound" onclick="toggleSoundNav()" id="soundBtnNav"><i class="fa-solid fa-volume-high" id="soundIconNav"></i><span>SONIDO</span></button>
+        <div class="games-menu-container">
+            <button class="nav-btn btn-nav-games"><i class="fa-solid fa-gamepad"></i><span>JUEGOS</span></button>
+            <div class="games-dropdown">
+                <a href="../knight-quest/index.html" class="game-menu-item"><span class="game-icon">🐴</span><span>Knight Quest</span></a>
+                <a href="../memory-matrix-v2/index.html" class="game-menu-item"><span class="game-icon">🧠</span><span>Memory Matrix</span></a>
+                <a href="../square-rush/index.html" class="game-menu-item"><span class="game-icon">⚡</span><span>Square Rush</span></a>
+                <a href="index.html" class="game-menu-item current"><span class="game-icon">🟦</span><span>Master Sequence</span></a>
+                <a href="../chessinfive/index.html" class="game-menu-item"><span class="game-icon">⚔️</span><span>ChessInFive</span></a>
+                <a href="../criptocaballo/index.html" class="game-menu-item"><span class="game-icon">🔐</span><span>CriptoCaballo</span></a>
+                <a href="../criptosopa/index.html" class="game-menu-item"><span class="game-icon">🔍</span><span>CriptoSopa</span></a>
+            </div>
+        </div>
+    </nav>
 
     <!-- ==================================================
          CONTAINER PRINCIPAL
@@ -547,6 +665,40 @@
                 gameId: 'master-sequence'
             });
         });
+
+        // Toggle sound for new nav menu
+        function toggleSoundNav() {
+            const btnSound = document.getElementById('btnSound');
+            if (btnSound) {
+                btnSound.click();
+                updateSoundNavIcon();
+            }
+        }
+
+        function updateSoundNavIcon() {
+            const iconNav = document.getElementById('soundIconNav');
+            const btnNav = document.getElementById('soundBtnNav');
+            const soundOffIcon = document.querySelector('#btnSound .icon-sound-off');
+            const isMuted = soundOffIcon && soundOffIcon.style.display !== 'none';
+
+            if (iconNav) {
+                iconNav.className = isMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+            }
+            if (btnNav) {
+                if (isMuted) {
+                    btnNav.classList.add('muted');
+                } else {
+                    btnNav.classList.remove('muted');
+                }
+            }
+        }
+
+        // Observe sound toggle changes
+        const btnSoundObs = document.getElementById('btnSound');
+        if (btnSoundObs) {
+            const observer = new MutationObserver(updateSoundNavIcon);
+            observer.observe(btnSoundObs, { childList: true, subtree: true, attributes: true });
+        }
     </script>
 
 </body>
