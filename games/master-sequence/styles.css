@@ -2503,14 +2503,14 @@ body::before {
 }
 
 /* ============================================
-   OCULTAR BEST EN PORTRAIT
+   OCULTAR BEST EN MOBILE
    ============================================
-   En mobile portrait, el contador BEST queda solo
-   y antiestético. Al ocultarlo el tablero sube
-   y queda mejor centrado.
+   En mobile, el contador BEST 'baja' el tablero
+   y queda antiestético. Al ocultarlo el tablero
+   queda mejor centrado.
    ============================================ */
 
-@media (max-width: 767px) and (orientation: portrait) {
+@media (max-width: 767px) {
     #bestStat {
         display: none !important;
     }

@@ -29,6 +29,11 @@
      */
     window.lastSubmittedPlayerName = null;
 
+    /**
+     * Flag para prevenir doble-submit del score
+     */
+    let isSubmitting = false;
+
     // ========================================
     // CARGAR NOMBRE GUARDADO
     // ========================================
@@ -78,8 +83,9 @@
             if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                 const gameOverOverlay = document.getElementById('gameOverOverlay');
                 if (gameOverOverlay && !gameOverOverlay.classList.contains('hidden')) {
-                    // Overlay ahora visible - cargar nombre
+                    // Overlay ahora visible - cargar nombre y resetear flag
                     loadSavedName();
+                    resetSubmitFlag();
 
                     // Obtener el score final
                     const finalScoreElement = document.getElementById('finalScore');
@@ -122,6 +128,13 @@
     // ========================================
 
     async function submitGameOverScore() {
+        // Prevenir doble-submit
+        if (isSubmitting) {
+            console.log('⚠️ Score submission already in progress, ignoring duplicate click');
+            return;
+        }
+        isSubmitting = true;
+
         const playerInput = document.getElementById('gameOverPlayerNameInput');
         const playerName = playerInput.value.trim() || 'SEQUENCER';
 
@@ -226,6 +239,17 @@
             const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
             submitBtn.disabled = false;
             submitBtn.textContent = '🏆 SUBMIT SCORE';
+            isSubmitting = false; // Reset flag on error
+        }
+    }
+
+    // Reset submit flag when Game Over overlay is shown (new game ended)
+    function resetSubmitFlag() {
+        isSubmitting = false;
+        const submitBtn = document.getElementById('gameOverSubmitScoreBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🏆 GUARDAR SCORE';
         }
     }
 
