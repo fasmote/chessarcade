@@ -664,6 +664,15 @@
                 currentGame: 'master-sequence',
                 gameId: 'master-sequence'
             });
+
+            // Auto-open leaderboard if URL has #leaderboard
+            if (window.location.hash === '#leaderboard') {
+                setTimeout(() => {
+                    if (window.showLeaderboardModal) {
+                        showLeaderboardModal('master-sequence');
+                    }
+                }, 500);
+            }
         });
 
         // Toggle sound for new nav menu

@@ -621,6 +621,14 @@
             containerSelector: 'header.game-header'
         });
 
+        // Auto-open leaderboard if URL has #leaderboard
+        if (window.location.hash === '#leaderboard') {
+            setTimeout(() => {
+                const btnLeaderboard = document.getElementById('btnLeaderboard');
+                if (btnLeaderboard) btnLeaderboard.click();
+            }, 500);
+        }
+
         // Toggle sound for new nav menu
         function toggleSoundNav() {
             const soundToggle = document.getElementById('soundToggle');

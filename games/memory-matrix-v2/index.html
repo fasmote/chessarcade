@@ -725,6 +725,15 @@
                 currentGame: 'memory-matrix',
                 gameId: 'memory-matrix'
             });
+
+            // Auto-open leaderboard if URL has #leaderboard
+            if (window.location.hash === '#leaderboard') {
+                setTimeout(() => {
+                    if (window.showLeaderboardModal) {
+                        showLeaderboardModal('memory-matrix');
+                    }
+                }, 500);
+            }
         });
 
         // Toggle sound for new nav menu

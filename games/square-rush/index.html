@@ -283,6 +283,15 @@
                 currentGame: 'square-rush',
                 gameId: 'square-rush'
             });
+
+            // Auto-open leaderboard if URL has #leaderboard
+            if (window.location.hash === '#leaderboard') {
+                setTimeout(() => {
+                    if (window.showLeaderboardModal) {
+                        showLeaderboardModal('square-rush');
+                    }
+                }, 500);
+            }
         });
 
         // Toggle sound for new nav menu

@@ -3075,6 +3075,15 @@
             showLeaderboardModal('knight-quest');
         });
 
+        // Auto-open leaderboard if URL has #leaderboard
+        if (window.location.hash === '#leaderboard') {
+            setTimeout(() => {
+                if (window.showLeaderboardModal) {
+                    showLeaderboardModal('knight-quest');
+                }
+            }, 500);
+        }
+
         /**
          * Toggle games menu from coin counter
          */

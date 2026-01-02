@@ -4109,6 +4109,15 @@
                 currentGame: 'criptocaballo',
                 gameId: 'criptocaballo'
             });
+
+            // Auto-open leaderboard if URL has #leaderboard
+            if (window.location.hash === '#leaderboard') {
+                setTimeout(() => {
+                    if (window.showLeaderboardModal) {
+                        showLeaderboardModal('criptocaballo');
+                    }
+                }, 500);
+            }
         });
     </script>
 

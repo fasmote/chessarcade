@@ -296,6 +296,15 @@
                 currentGame: 'criptosopa',
                 gameId: 'criptosopa'
             });
+
+            // Auto-open leaderboard if URL has #leaderboard
+            if (window.location.hash === '#leaderboard') {
+                setTimeout(() => {
+                    if (window.showLeaderboardModal) {
+                        showLeaderboardModal('criptosopa');
+                    }
+                }, 500);
+            }
         });
     </script>
 </body>
