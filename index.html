@@ -32,12 +32,83 @@
 
     <!-- NeonChess System Styles -->
     <link rel="stylesheet" href="assets/css/neonchess-style.css">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Standard Desktop Menu Styles -->
+    <style>
+        .desktop-nav { display: none; }
+        @media (min-width: 768px) {
+            .desktop-nav {
+                display: flex;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                gap: 12px;
+                z-index: 1001;
+            }
+        }
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            min-height: 44px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+        .nav-btn:hover { transform: translateY(-2px); }
+        .nav-btn.btn-games { border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        .nav-btn.btn-games:hover { background: rgba(255,215,0,0.1); box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+        .games-menu-container { position: relative; }
+        .games-dropdown {
+            position: absolute; top: 100%; right: 0; margin-top: 8px;
+            background: rgba(10,10,26,0.98); border: 2px solid #ffd700; border-radius: 10px;
+            min-width: 220px; opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: all 0.3s ease; box-shadow: 0 0 30px rgba(255,215,0,0.3);
+            backdrop-filter: blur(10px); z-index: 1002;
+        }
+        .games-menu-container:hover .games-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .games-dropdown .game-menu-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            color: rgba(255,255,255,0.7); text-decoration: none;
+            border-bottom: 1px solid rgba(255,215,0,0.2); transition: all 0.2s ease;
+            font-family: 'Orbitron', sans-serif; font-size: 11px;
+        }
+        .games-dropdown .game-menu-item:last-child { border-bottom: none; }
+        .games-dropdown .game-menu-item:hover { background: rgba(255,215,0,0.1); color: #ffd700; padding-left: 20px; }
+        .games-dropdown .game-icon { font-size: 1.3rem; filter: drop-shadow(0 0 5px rgba(255,215,0,0.5)); }
+    </style>
+
     <!-- Preload critical resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body>
+    <!-- Desktop Navigation (top right) -->
+    <nav class="desktop-nav">
+        <div class="games-menu-container">
+            <button class="nav-btn btn-games"><i class="fa-solid fa-gamepad"></i><span>JUEGOS</span></button>
+            <div class="games-dropdown">
+                <a href="games/knight-quest/index.html" class="game-menu-item"><span class="game-icon">🐴</span><span>Knight Quest</span></a>
+                <a href="games/memory-matrix-v2/index.html" class="game-menu-item"><span class="game-icon">🧠</span><span>Memory Matrix</span></a>
+                <a href="games/square-rush/index.html" class="game-menu-item"><span class="game-icon">⚡</span><span>Square Rush</span></a>
+                <a href="games/master-sequence/index.html" class="game-menu-item"><span class="game-icon">🟦</span><span>Master Sequence</span></a>
+                <a href="games/chessinfive/index.html" class="game-menu-item"><span class="game-icon">⚔️</span><span>ChessInFive</span></a>
+                <a href="games/criptocaballo/index.html" class="game-menu-item"><span class="game-icon">🔐</span><span>CriptoCaballo</span></a>
+                <a href="games/criptosopa/index.html" class="game-menu-item"><span class="game-icon">🔍</span><span>CriptoSopa</span></a>
+            </div>
+        </div>
+    </nav>
+
     <!-- Main Container with Grid Background -->
     <div class="neon-container neon-grid-bg">
 
