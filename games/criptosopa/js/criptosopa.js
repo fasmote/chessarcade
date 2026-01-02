@@ -882,10 +882,18 @@ let soundEnabled = true;
 function toggleSound() {
     soundEnabled = !soundEnabled;
     const icon = document.getElementById('soundIcon');
+    const btn = document.getElementById('soundBtn');
     if (icon) {
         icon.className = soundEnabled
             ? 'fa-solid fa-volume-high'
             : 'fa-solid fa-volume-xmark';
+    }
+    if (btn) {
+        if (soundEnabled) {
+            btn.classList.remove('muted');
+        } else {
+            btn.classList.add('muted');
+        }
     }
     console.log(`🔊 Sonido: ${soundEnabled ? 'ON' : 'OFF'}`);
 }

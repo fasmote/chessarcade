@@ -107,11 +107,27 @@
     border-color: #ff8000;
     color: #ff8000;
     box-shadow: 0 0 10px rgba(255, 128, 0, 0.3);
+    min-width: 130px;
 }
 
 .nav-btn.btn-sound:hover {
     background: rgba(255, 128, 0, 0.1);
     box-shadow: 0 0 20px rgba(255, 128, 0, 0.6);
+}
+
+.nav-btn.btn-sound i {
+    font-size: 1.2rem;
+}
+
+.nav-btn.btn-sound.muted {
+    border-color: #ff4444;
+    color: #ff4444;
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
+.nav-btn.btn-sound.muted:hover {
+    background: rgba(255, 68, 68, 0.1);
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
 }
 
 .nav-btn.btn-leaderboard {

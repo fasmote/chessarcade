@@ -788,43 +788,7 @@ body::before {
         max-width: 1400px;
     }
 
-    /* Leaderboard button: Posicionar más a la derecha con borde visible */
-    .btn-leaderboard {
-        top: 1rem !important;
-        left: 60% !important; /* Más a la derecha */
-        transform: translateX(-50%) !important;
-        right: auto !important;
-        border-color: #ffd700 !important; /* Dorado visible */
-        color: #ffd700 !important;
-        border-width: 2px !important;
-        border-style: solid !important;
-    }
-
-    .btn-leaderboard:hover {
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
-        background: rgba(255, 215, 0, 0.1) !important;
-    }
-
-    /* Responsive: Pantallas medianas - Ajustar para evitar solapamiento */
-    @media (min-width: 768px) and (max-width: 900px) {
-        .btn-leaderboard {
-            left: auto !important;
-            right: 5.5rem !important; /* Más a la derecha */
-            transform: none !important;
-        }
-    }
-
-    @media (min-width: 901px) and (max-width: 1100px) {
-        .btn-leaderboard {
-            left: 62% !important; /* Más a la derecha */
-        }
-    }
-
-    @media (min-width: 1101px) {
-        .btn-leaderboard {
-            left: 65% !important; /* Aún más a la derecha en pantallas grandes */
-        }
-    }
+    /* Old leaderboard button styles removed - now using standard nav menu */
 
     /* Game header: Reducir margen inferior */
     .game-header {
@@ -1272,14 +1236,6 @@ body::before {
     .progress-text {
         font-size: 0.75rem;
         margin-bottom: 0.3rem;
-    }
-
-    /* ====== BOTÓN LEADERBOARD REPOSICIONADO ======
-       Mover a la derecha del header, no encima del timer */
-    .btn-leaderboard {
-        top: 10px !important;
-        right: 70px !important; /* A la izquierda del botón JUEGOS */
-        left: auto !important;
     }
 
     /* ====== BOARD CONTAINER ====== */
