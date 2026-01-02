@@ -23,6 +23,9 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+
+    <!-- Hamburger Menu (mobile) -->
+    <link rel="stylesheet" href="../../css/hamburger-menu.css?v=1">
 </head>
 <body class="neon-body">
     <!-- Particles Background -->
@@ -91,6 +94,10 @@
             <i class="fa-solid fa-home"></i>
             <span>HOME</span>
         </a>
+        <button class="nav-btn btn-leaderboard" onclick="showLeaderboardModal && showLeaderboardModal('criptosopa')" id="btnLeaderboard">
+            <i class="fa-solid fa-trophy"></i>
+            <span>RANKING</span>
+        </button>
         <button class="nav-btn btn-sound" onclick="toggleSound()" id="soundBtn">
             <i class="fa-solid fa-volume-high" id="soundIcon"></i>
             <span>SONIDO</span>
@@ -280,5 +287,16 @@
     <script src="../../js/leaderboard-api.js"></script>
     <script src="../../js/leaderboard-ui.js"></script>
     <script src="js/criptosopa.js"></script>
+
+    <!-- Hamburger Menu Library (mobile) -->
+    <script src="../../js/hamburger-menu.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            HamburgerMenu.init({
+                currentGame: 'criptosopa',
+                gameId: 'criptosopa'
+            });
+        });
+    </script>
 </body>
 </html>

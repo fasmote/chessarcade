@@ -114,6 +114,17 @@
     box-shadow: 0 0 20px rgba(255, 128, 0, 0.6);
 }
 
+.nav-btn.btn-leaderboard {
+    border-color: #a855f7;
+    color: #a855f7;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+.nav-btn.btn-leaderboard:hover {
+    background: rgba(168, 85, 247, 0.1);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+}
+
 /* Games Menu Container */
 .games-menu-container {
     position: relative;

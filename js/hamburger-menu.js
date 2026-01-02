@@ -30,7 +30,8 @@
         { id: 'memory-matrix', name: 'Memory Matrix', icon: '🧠', path: '../memory-matrix-v2/index.html' },
         { id: 'master-sequence', name: 'Master Sequence', icon: '🎵', path: '../master-sequence/index.html' },
         { id: 'chessinfive', name: 'ChessInFive', icon: '⚔️', path: '../chessinfive/index.html' },
-        { id: 'criptocaballo', name: 'CriptoCaballo', icon: '🔐', path: '../criptocaballo/index.html' }
+        { id: 'criptocaballo', name: 'CriptoCaballo', icon: '🔐', path: '../criptocaballo/index.html' },
+        { id: 'criptosopa', name: 'CriptoSopa', icon: '🔍', path: '../criptosopa/index.html' }
     ];
 
     // ========================================
