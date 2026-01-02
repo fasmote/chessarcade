@@ -2511,7 +2511,8 @@ body::before {
    ============================================ */
 
 @media (max-width: 767px) {
-    #bestStat {
+    #bestStat,
+    #streakStat {
         display: none !important;
     }
 }

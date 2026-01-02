@@ -1505,15 +1505,11 @@ function updateUI() {
     const hearts = '❤️'.repeat(gameState.lives) + '🖤'.repeat(gameState.maxLives - gameState.lives);
     document.getElementById('livesDisplay').textContent = hearts;
 
-    // Perfect Streak (solo mostrar si hay racha >= 3)
+    // Perfect Streak - siempre visible en desktop (CSS oculta en mobile)
     const streakStat = document.getElementById('streakStat');
     const streakDisplay = document.getElementById('streakDisplay');
-    if (gameState.perfectStreak >= 3) {
-        streakStat.style.display = 'flex';
-        streakDisplay.textContent = `${gameState.perfectStreak}🔥`;
-    } else {
-        streakStat.style.display = 'none';
-    }
+    streakStat.style.display = 'flex';
+    streakDisplay.textContent = gameState.perfectStreak > 0 ? `${gameState.perfectStreak}🔥` : '0';
 
     // Best Score
     document.getElementById('bestDisplay').textContent = gameState.highScores.topScore;
