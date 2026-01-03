@@ -964,6 +964,10 @@ function toggleSound() {
     saveSoundPreference();
     updateSoundIcon();
     console.log(soundEnabled ? '🔊 Sonido activado' : '🔇 Sonido desactivado');
+    // Reproducir sonido de confirmación al activar
+    if (soundEnabled && ChessArcade && ChessArcade.playSound) {
+        ChessArcade.playSound('click');
+    }
 }
 
 // Función de prueba para debuggear

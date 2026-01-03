@@ -1693,6 +1693,10 @@ function toggleSound() {
         iconOn.style.display = 'block';
         iconOff.style.display = 'none';
         console.log('🔊 Sound enabled');
+        // Reproducir sonido de confirmación al activar
+        if (typeof playBeep === 'function') {
+            playBeep(660); // Tono agradable
+        }
     } else {
         iconOn.style.display = 'none';
         iconOff.style.display = 'block';

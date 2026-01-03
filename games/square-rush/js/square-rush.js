@@ -77,6 +77,8 @@ function toggleSound() {
             if (iconOff) iconOff.style.display = 'none';
             soundBtn.classList.remove('muted');
             soundBtn.title = 'Mute Sound';
+            // Reproducir sonido de confirmación al activar
+            playSound('correct');
         } else {
             if (iconOn) iconOn.style.display = 'none';
             if (iconOff) iconOff.style.display = 'block';
