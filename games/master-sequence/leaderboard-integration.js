@@ -155,11 +155,13 @@
         const sequenceLength = stats.sequenceLength || 1;
         const streak = stats.streak || 0;
         const totalTimeMs = stats.totalTimeMs || 0;
+        const totalHintsUsed = stats.totalHintsUsed || 0;
 
         console.log('🔍 [DEBUG] Extracted values:');
         console.log('   - sequenceLength:', sequenceLength);
         console.log('   - streak:', streak);
         console.log('   - totalTimeMs:', totalTimeMs);
+        console.log('   - totalHintsUsed:', totalHintsUsed);
 
         console.log('📊 Submitting score:', {
             playerName,
@@ -181,7 +183,8 @@
                 metadata: {
                     level_reached: finalLevel,
                     sequence_length: sequenceLength,
-                    perfect_streak: streak
+                    perfect_streak: streak,
+                    hints_used: totalHintsUsed
                 }
             };
 

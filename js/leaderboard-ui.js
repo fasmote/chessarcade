@@ -657,26 +657,10 @@ function renderMasterSequenceScoreRow(score, highlightTop3 = true) {
 
   const lengthDisplay = (score.metadata && score.metadata.sequence_length) ? score.metadata.sequence_length : '-';
 
-  // LEVEL - número + nombre del nivel
-  let levelDisplay = '-';
-  if (score.metadata && score.metadata.level_reached) {
-    const level = score.metadata.level_reached;
-
-    // Obtener nombre del nivel basado en el número
-    let levelName = '';
-    if (level === 1) levelName = 'Primera Casilla';
-    else if (level === 2) levelName = 'Centro - Inicio';
-    else if (level === 3) levelName = 'Centro - Básico';
-    else if (level === 4) levelName = 'Anillo Pequeño';
-    else if (level === 5) levelName = 'Anillo Ampliado';
-    else if (level === 6) levelName = 'Cuadrante Derecho';
-    else if (level === 7) levelName = 'Mitad Inferior';
-    else if (level === 8) levelName = 'Anillo Grande';
-    else if (level === 9) levelName = 'Anillo Extendido';
-    else if (level === 10) levelName = 'Tablero Completo';
-    else if (level >= 11) levelName = 'Infinito';
-
-    levelDisplay = `${level} ${levelName}`;
+  // HINTS - cantidad de hints usados
+  let hintsDisplay = '-';
+  if (score.metadata && typeof score.metadata.hints_used !== 'undefined') {
+    hintsDisplay = score.metadata.hints_used.toString();
   }
 
   // Time formateado (MM:SS)
@@ -688,14 +672,14 @@ function renderMasterSequenceScoreRow(score, highlightTop3 = true) {
     timeDisplay = `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 
-  // Construir la fila: RANK | PLAYER | SCORE | LENGTH | LEVEL | TIME
+  // Construir la fila: RANK | PLAYER | SCORE | LENGTH | HINTS | TIME
   return `
     <tr class="${rowClasses.join(' ')}" data-score-id="${score.id}">
       <td class="rank">${rankDisplay}</td>
       <td class="player-name">${playerNameHTML}</td>
       <td class="score">${scoreDisplay}</td>
       <td class="level">${lengthDisplay}</td>
-      <td class="level">${levelDisplay}</td>
+      <td class="hints">${hintsDisplay}</td>
       <td class="time">${timeDisplay}</td>
     </tr>
   `;
@@ -703,7 +687,7 @@ function renderMasterSequenceScoreRow(score, highlightTop3 = true) {
 
 /**
  * Renderiza una tabla completa de leaderboard ESPECÍFICA para Master Sequence
- * Headers personalizados: RANK | PLAYER | SCORE | LENGTH | LEVEL | TIME
+ * Headers personalizados: RANK | PLAYER | SCORE | LENGTH | HINTS | TIME
  * (sin columna COUNTRY separada, la bandera va al lado del nombre)
  *
  * VISTA DIVIDIDA: Si el jugador destacado está muy lejos del top (rank > 10),
@@ -728,7 +712,7 @@ function renderMasterSequenceLeaderboardTable(scores, highlightPlayer = null, hi
       <th class="player-name">Player</th>
       <th class="score">Score</th>
       <th class="level">Length</th>
-      <th class="level">Level</th>
+      <th class="hints">Hints</th>
       <th class="time">Time</th>
     </tr>
   `;

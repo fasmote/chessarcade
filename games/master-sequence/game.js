@@ -34,6 +34,7 @@ let gameState = {
     soundEnabled: true,
     coordinatesEnabled: true,   // Mostrar coordenadas por defecto (ayuda visual)
     hintActive: false,          // Si el jugador activó el HINT
+    totalHintsUsed: 0,          // Contador total de hints usados en la partida
     hasFirstCorrect: false,     // Si el jugador ya tuvo al menos un acierto (para habilitar Terminar)
 
     // Stats
@@ -72,7 +73,8 @@ let lastSessionStats = {
     score: 0,
     lives: 5,
     streak: 0,
-    sequenceLength: 1
+    sequenceLength: 1,
+    totalHintsUsed: 0
 };
 
 // ============================================
@@ -825,7 +827,8 @@ function gameOver() {
         lives: gameState.lives,
         streak: gameState.perfectStreak,
         sequenceLength: gameState.masterSequence.length,  // Usar masterSequence (secuencia acumulativa completa)
-        totalTimeMs: totalTimeMs  // Tiempo total de la partida
+        totalTimeMs: totalTimeMs,  // Tiempo total de la partida
+        totalHintsUsed: gameState.totalHintsUsed  // Total de hints usados en la partida
     };
 
     // ✅ CRÍTICO: Exponer en window para que leaderboard-integration.js pueda acceder
@@ -1465,6 +1468,7 @@ function backToMainScreen() {
     gameState.phase = 'idle';
     gameState.currentLevelAttempts = 0;
     gameState.perfectStreak = 0;
+    gameState.totalHintsUsed = 0;
 
     // Actualizar UI con valores reseteados
     updateUI();
@@ -2169,6 +2173,9 @@ function recordPlayerMove(squareId) {
  * Graba el uso de un hint
  */
 function recordHintUsed() {
+    // Incrementar contador global
+    gameState.totalHintsUsed++;
+
     if (currentRecording.levels.length === 0) return;
 
     const currentLevel = currentRecording.levels[currentRecording.levels.length - 1];

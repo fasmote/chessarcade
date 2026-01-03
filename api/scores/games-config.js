@@ -36,7 +36,7 @@ export const GAME_LIMITS = {
 
   'master-sequence': {
     name: 'Master Sequence',
-    max_score: 100000,      // Score acumulativo con base + bonos + multiplicadores
+    max_score: 250000,      // Score acumulativo con base + bonos + multiplicadores (nivel 100+ con streak x3)
     max_time_ms: 3600000,   // 1 hora máximo
     score_type: 'points',   // Puntos acumulativos, no sequence_length
     has_levels: true,       // Tiene niveles progresivos

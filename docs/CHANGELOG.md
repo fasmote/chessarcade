@@ -15,6 +15,55 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - **ChessInFive**: Depth-3 search con optimizaciones (Alpha-Beta, Threat Space)
 - **General**: Sistema de cuentas y rankings globales
 
+## [2.4.0] - 2026-01-03 🎯 Master Sequence Leaderboard Improvements
+
+### ✨ Added - Hints Tracking in Leaderboard
+
+**Objetivo**: Mostrar cantidad de hints usados en el leaderboard en lugar del nivel
+
+#### 🔄 Cambios en Leaderboard
+
+| Antes | Después |
+|-------|---------|
+| RANK \| PLAYER \| SCORE \| LENGTH \| **LEVEL** \| TIME | RANK \| PLAYER \| SCORE \| LENGTH \| **HINTS** \| TIME |
+
+- **Nueva columna HINTS**: Muestra la cantidad de hints usados durante la partida
+- **Removida columna LEVEL**: Era redundante con LENGTH (ambas mostraban el nivel alcanzado)
+- **Scores antiguos**: Mostrarán "-" en HINTS (dato no disponible)
+
+#### 🎮 Tracking de Hints en Game.js
+
+```javascript
+// Nuevo contador en gameState
+gameState.totalHintsUsed = 0;
+
+// Se incrementa cada vez que se usa un hint
+function recordHintUsed() {
+    gameState.totalHintsUsed++;
+    // ...
+}
+
+// Se envía en metadata al leaderboard
+metadata: {
+    hints_used: totalHintsUsed
+}
+```
+
+#### 📈 Aumento de Max Score
+
+- **Antes**: 100,000 puntos máximo
+- **Después**: 250,000 puntos máximo
+- **Razón**: Jugadores expertos pueden superar 100k con streak x3 en niveles altos
+
+### 📦 Files Modified
+
+- `games/master-sequence/game.js` - Tracking de totalHintsUsed
+- `games/master-sequence/leaderboard-integration.js` - Envío de hints_used en metadata
+- `js/leaderboard-ui.js` - Columna HINTS en lugar de LEVEL
+- `api/scores/games-config.js` - max_score aumentado a 250,000
+
+---
+
 ## [2.3.0] - 2026-01-02 🔊 Sound Confirmation on Enable
 
 ### ✨ Added - Sonido de Confirmación al Activar Audio
