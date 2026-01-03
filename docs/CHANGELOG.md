@@ -15,6 +15,68 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - **ChessInFive**: Depth-3 search con optimizaciones (Alpha-Beta, Threat Space)
 - **General**: Sistema de cuentas y rankings globales
 
+## [2.5.0] - 2026-01-03 💰 Master Sequence Exponential Hint Cost
+
+### ✨ Added - Sistema de Costo Exponencial de Hints
+
+**Objetivo**: Hacer que los hints sean más costosos con cada uso para desincentivar el abuso
+
+#### 💰 Nueva Fórmula de Costo
+
+```
+Costo = 100 × 2^(hints usados)
+```
+
+| Hint # | Costo |
+|--------|-------|
+| 1° | 100 pts |
+| 2° | 200 pts |
+| 3° | 400 pts |
+| 4° | 800 pts |
+| 5° | 1,600 pts |
+| 6° | 3,200 pts |
+
+#### 🔄 Actualización Dinámica del Botón
+
+- El botón HINT muestra el costo actual: "HINT (-100 pts)", "HINT (-200 pts)", etc.
+- Se actualiza automáticamente después de cada uso
+- Se resetea a -100 pts al empezar nuevo juego
+
+### 🐛 Fixed - Bugs de Persistencia de Hints
+
+#### Bug 1: Hints no se borraban al fallar nivel
+- **Problema**: Al usar hint y fallar, las marcas visuales persistían
+- **Causa**: `onLevelFailed()` no llamaba a `clearHints()`
+- **Solución**: Agregar `clearHints()` y `hintActive = false` en `onLevelFailed()`
+
+#### Bug 2: Hints persistían al empezar nuevo juego
+- **Problema**: Si el último juego terminó con hint activo, el nuevo juego mostraba las marcas
+- **Causa**: `startGame()` no limpiaba los hints
+- **Solución**: Agregar `clearHints()` y `updateUI()` en `startGame()`
+
+#### Bug 3: Contador de hints no se reseteaba
+- **Problema**: Al empezar nuevo juego, el botón mostraba "-1600 pts" del juego anterior
+- **Causa**: `totalHintsUsed` no se reseteaba en `startGame()`
+- **Solución**: Agregar `gameState.totalHintsUsed = 0` en `startGame()`
+
+#### Bug 4: Score no se reseteaba visualmente
+- **Problema**: El score en UI no se actualizaba al empezar nuevo juego
+- **Causa**: `updateUI()` no se llamaba inmediatamente después del reset
+- **Solución**: Agregar `updateUI()` al inicio de `startGame()`
+
+### 🎨 Changed - Display de Hints en Leaderboard
+
+- **0 hints** → Muestra "-" (resalta que no pidió ayuda)
+- **1+ hints** → Muestra el número
+
+### 📦 Files Modified
+
+- `games/master-sequence/game.js` - Costo exponencial, resets, clearHints
+- `games/master-sequence/index.html` - ID para texto del botón hint
+- `js/leaderboard-ui.js` - Display "-" para 0 hints
+
+---
+
 ## [2.4.0] - 2026-01-03 🎯 Master Sequence Leaderboard Improvements
 
 ### ✨ Added - Hints Tracking in Leaderboard

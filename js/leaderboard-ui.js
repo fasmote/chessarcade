@@ -657,9 +657,9 @@ function renderMasterSequenceScoreRow(score, highlightTop3 = true) {
 
   const lengthDisplay = (score.metadata && score.metadata.sequence_length) ? score.metadata.sequence_length : '-';
 
-  // HINTS - cantidad de hints usados
+  // HINTS - cantidad de hints usados (0 = "-" para resaltar que no pidió ayuda)
   let hintsDisplay = '-';
-  if (score.metadata && typeof score.metadata.hints_used !== 'undefined') {
+  if (score.metadata && typeof score.metadata.hints_used !== 'undefined' && score.metadata.hints_used > 0) {
     hintsDisplay = score.metadata.hints_used.toString();
   }
 

@@ -306,11 +306,20 @@ function startGame() {
     gameState.bestLevel = 1;
     gameState.totalAttempts = 0;
     gameState.perfectLevels = 0;
+    gameState.perfectStreak = 0; // Resetear racha perfecta
+    gameState.totalHintsUsed = 0; // Resetear contador de hints (costo vuelve a 100)
+    gameState.hintActive = false; // Desactivar hint
     gameState.masterSequence = []; // Resetear secuencia acumulativa
     gameState.sequenceColors = []; // Resetear colores
     gameState.squareUsageCount = {}; // Resetear contador de uso
     gameState.gameStartTime = Date.now(); // Iniciar cronómetro de partida completa
     gameState.hasFirstCorrect = false; // Resetear flag de primer acierto
+
+    // Limpiar marcas visuales del hint del juego anterior
+    clearHints();
+
+    // Actualizar UI inmediatamente (score=0, hint cost=100, etc.)
+    updateUI();
 
     // Deshabilitar botón Terminar hasta que haya al menos un acierto
     const btnEndGame = document.getElementById('btnEndGame');
@@ -797,7 +806,11 @@ function onLevelFailed() {
     gameState.lives--;
     gameState.currentLevelAttempts++;
     gameState.perfectStreak = 0; // Resetear racha perfecta
+    gameState.hintActive = false; // Desactivar hint
     disableBoard();
+
+    // Limpiar marcas visuales del hint
+    clearHints();
 
     updateUI();
 
@@ -871,6 +884,10 @@ function retryLevel() {
     // IMPORTANTE: Deshabilitar tablero inmediatamente para evitar clicks prematuros
     disableBoard();
 
+    // Limpiar marcas visuales del hint (por si quedaron)
+    clearHints();
+    gameState.hintActive = false;
+
     // Resetear estado del nivel (mantener lives)
     gameState.playerSequence = [];
     gameState.currentStep = 0;
@@ -935,7 +952,7 @@ function cancelEndGame() {
 
 /**
  * Muestra hint visual: marca toda la secuencia en gris + borde amarillo en siguiente casilla
- * Penalización: -100 puntos + rompe racha perfecta
+ * Penalización: costo exponencial (100, 200, 400, 800...) + rompe racha perfecta
  */
 function showHint() {
     // Solo funciona durante la fase de juego
@@ -945,11 +962,14 @@ function showHint() {
         return;
     }
 
+    // Calcular costo exponencial: 100 * 2^(hints usados)
+    // Primer hint: 100, segundo: 200, tercero: 400, cuarto: 800...
+    const hintCost = 100 * Math.pow(2, gameState.totalHintsUsed);
+
     // Verificar que tiene puntos suficientes
-    const HINT_COST = 100;
-    if (gameState.score < HINT_COST) {
-        console.log(`⚠️ Puntos insuficientes para hint (tienes ${gameState.score}, necesitas ${HINT_COST})`);
-        updateStatus(`Necesitas al menos ${HINT_COST} puntos para usar el hint. Tienes ${gameState.score} pts.`, 'error');
+    if (gameState.score < hintCost) {
+        console.log(`⚠️ Puntos insuficientes para hint (tienes ${gameState.score}, necesitas ${hintCost})`);
+        updateStatus(`Necesitas ${hintCost} pts para el hint. Tienes ${gameState.score} pts.`, 'error');
         return;
     }
 
@@ -960,20 +980,19 @@ function showHint() {
         return;
     }
 
-    console.log('💡 Mostrando hint...');
+    console.log(`💡 Mostrando hint... (costo: ${hintCost} pts, hint #${gameState.totalHintsUsed + 1})`);
 
-    // Grabar uso de hint
+    // Grabar uso de hint (incrementa totalHintsUsed)
     recordHintUsed();
 
-    // Aplicar penalización: -100 puntos
-    const penalty = 100;
-    gameState.score = Math.max(0, gameState.score - penalty);
+    // Aplicar penalización exponencial
+    gameState.score = Math.max(0, gameState.score - hintCost);
 
     // Romper racha perfecta
     const previousStreak = gameState.perfectStreak;
     gameState.perfectStreak = 0;
 
-    console.log(`💸 Penalización: -${penalty} puntos, racha rota (era ${previousStreak})`);
+    console.log(`💸 Penalización: -${hintCost} puntos, racha rota (era ${previousStreak})`);
 
     // Limpiar hints anteriores
     clearHints();
@@ -1031,9 +1050,9 @@ function showHint() {
         // Solo dejamos el borde amarillo para indicar "esta es la siguiente"
     }
 
-    // Actualizar UI
+    // Actualizar UI (incluye el nuevo costo del próximo hint)
     updateUI();
-    updateStatus(`💡 Hint activado (-${penalty} pts, racha perdida). Las flechas te guiarán...`, 'hint');
+    updateStatus(`💡 Hint activado (-${hintCost} pts, racha perdida). Las flechas te guiarán...`, 'hint');
 
     // NOTA: Los hints ahora persisten hasta que el jugador haga click
     // Se limpiarán progresivamente en onSquareClick()
@@ -1518,8 +1537,23 @@ function updateUI() {
     // Best Score
     document.getElementById('bestDisplay').textContent = gameState.highScores.topScore;
 
+    // Actualizar costo del hint en el botón
+    updateHintCostDisplay();
+
     // Actualizar visibilidad del botón REPLAY
     updateReplayButtonVisibility();
+}
+
+/**
+ * Actualiza el texto del botón HINT con el costo actual
+ * Costo exponencial: 100 * 2^(hints usados)
+ */
+function updateHintCostDisplay() {
+    const hintCostText = document.getElementById('hintCostText');
+    if (hintCostText) {
+        const currentCost = 100 * Math.pow(2, gameState.totalHintsUsed);
+        hintCostText.textContent = `HINT (-${currentCost} pts)`;
+    }
 }
 
 /**

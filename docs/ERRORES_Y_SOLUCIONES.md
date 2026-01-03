@@ -32,6 +32,7 @@
 20. [Animación CSS transform: translate() Causa Overflow Horizontal en Mobile](#20-animación-css-transform-translate-causa-overflow-horizontal-en-mobile-knight-quest)
 21. [Sonido de Confirmación No Suena al Activar - Knight Quest](#21-sonido-de-confirmación-no-suena-al-activar---knight-quest)
 22. [Sonido de Confirmación No Suena al Activar - Square Rush](#22-sonido-de-confirmación-no-suena-al-activar---square-rush)
+23. [Master Sequence: Hints Visuales Persisten Entre Niveles y Juegos](#23-master-sequence-hints-visuales-persisten-entre-niveles-y-juegos)
 
 ---
 
@@ -4615,6 +4616,115 @@ function toggleSound() {
 
     // 4. Persistir preferencia
     saveSoundPreference();
+}
+```
+
+---
+
+## 23. Master Sequence: Hints Visuales Persisten Entre Niveles y Juegos
+
+**Fecha:** Enero 2026
+**Juego:** Master Sequence
+**Severidad:** Media (UX confusa)
+
+### 🔴 Síntoma
+
+Múltiples problemas relacionados con la persistencia del estado de hints:
+
+1. **Al fallar después de usar hint**: Las marcas visuales (flechas, bordes amarillos) permanecían en el tablero al reintentar el nivel
+2. **Al empezar nuevo juego**: Si el juego anterior terminó con hint activo, las marcas aparecían en el nuevo juego
+3. **Costo de hint incorrecto**: El botón mostraba "-1600 pts" al empezar un nuevo juego (del juego anterior)
+4. **Score no se reseteaba visualmente**: El display mostraba el score anterior
+
+### 🔍 Causa Raíz
+
+Falta de limpieza de estado en las transiciones del juego:
+
+```javascript
+// onLevelFailed() - NO limpiaba hints
+function onLevelFailed() {
+    gameState.phase = 'fail';
+    gameState.lives--;
+    // ❌ Faltaba: clearHints() y hintActive = false
+    updateUI();
+}
+
+// startGame() - NO limpiaba hints ni reseteaba totalHintsUsed
+function startGame() {
+    gameState.score = 0;
+    // ❌ Faltaba: totalHintsUsed = 0
+    // ❌ Faltaba: clearHints()
+    // ❌ Faltaba: updateUI() inmediato
+    startLevel(1);
+}
+```
+
+### ✅ Solución
+
+Agregar limpieza completa en todas las transiciones:
+
+```javascript
+// onLevelFailed() - CORREGIDO
+function onLevelFailed() {
+    gameState.phase = 'fail';
+    gameState.lives--;
+    gameState.perfectStreak = 0;
+    gameState.hintActive = false; // ✅ Desactivar hint
+    disableBoard();
+    clearHints(); // ✅ Limpiar marcas visuales
+    updateUI();
+}
+
+// startGame() - CORREGIDO
+function startGame() {
+    gameState.score = 0;
+    gameState.totalHintsUsed = 0; // ✅ Resetear contador
+    gameState.hintActive = false; // ✅ Desactivar hint
+    clearHints(); // ✅ Limpiar marcas visuales
+    updateUI(); // ✅ Actualizar UI inmediatamente
+    // ... resto del código
+}
+
+// retryLevel() - CORREGIDO
+function retryLevel() {
+    clearHints(); // ✅ Limpiar marcas visuales
+    gameState.hintActive = false;
+    // ... resto del código
+}
+```
+
+### 📚 Lecciones Aprendidas
+
+1. **Estado visual vs estado lógico**: Cuando cambias estado lógico (`hintActive = false`), también debes limpiar el estado visual (`clearHints()`)
+2. **Transiciones completas**: Cada transición de estado (fail, retry, new game) debe resetear TODO el estado relacionado
+3. **updateUI() temprano**: Llamar `updateUI()` inmediatamente después de resetear valores para que el usuario vea el cambio
+4. **Testing de flujos completos**: Probar no solo el "happy path" sino también: fallar con hint → retry → nuevo juego
+
+### 🔧 Patrón Recomendado: Reset Completo de Feature
+
+```javascript
+// Cuando una feature tiene estado lógico + visual, crear función de reset completa
+function resetHintState() {
+    // Estado lógico
+    gameState.hintActive = false;
+    gameState.totalHintsUsed = 0;
+
+    // Estado visual
+    clearHints();
+
+    // UI
+    updateHintCostDisplay();
+}
+
+// Usar en todas las transiciones
+function startGame() {
+    resetHintState();
+    // ...
+}
+
+function onLevelFailed() {
+    resetHintState();
+    // ...
 }
 ```
 
