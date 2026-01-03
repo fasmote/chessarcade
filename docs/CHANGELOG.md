@@ -15,6 +15,72 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 - **ChessInFive**: Depth-3 search con optimizaciones (Alpha-Beta, Threat Space)
 - **General**: Sistema de cuentas y rankings globales
 
+## [2.3.0] - 2026-01-02 🔊 Sound Confirmation on Enable
+
+### ✨ Added - Sonido de Confirmación al Activar Audio
+
+**Objetivo**: Mejorar feedback UX reproduciendo un beep cuando el usuario activa el sonido
+
+#### 🔊 Implementación por Juego
+
+| Juego | Método | Frecuencia | Duración |
+|-------|--------|------------|----------|
+| Knight Quest | Web Audio API (inline) | 800 Hz | 0.1s |
+| Square Rush | Web Audio API | 800 Hz | 0.1s |
+| Memory Matrix | Ya existía | - | - |
+| Master Sequence | playBeep() | 660 Hz | 0.1s |
+| ChessInFive | SoundManager.play('select') | Howler.js | - |
+| CriptoCaballo | Web Audio API | 660 Hz | 0.1s |
+| CriptoSopa | Web Audio API | 660 Hz | 0.1s |
+
+### 🐛 Fixed - Bugs de Sonido de Confirmación
+
+#### Knight Quest
+- **Problema**: `ChessArcade.playSound()` no funcionaba porque `shared-utils.js` no está cargado
+- **Causa**: El juego tiene sistema de audio propio, no usa el global
+- **Solución**: Implementar Web Audio API directamente en `index.html`
+
+#### Square Rush
+- **Problema**: Sonido no se reproducía al activar
+- **Causa**: Código de sonido estaba dentro de `if (soundBtn)` donde `soundBtn` era `null`
+- **Solución**: Mover reproducción de sonido fuera del bloque condicional
+
+### 📦 Files Modified
+- `games/knight-quest/index.html` - Web Audio API para confirmación
+- `games/knight-quest/knight-quest.js` - Sincronización de variables (código no usado)
+- `games/square-rush/js/square-rush.js` - Reestructuración de toggleSound()
+- `docs/ERRORES_Y_SOLUCIONES.md` - Documentación de bugs #21 y #22
+- `docs/changelog.md` - Esta entrada
+
+### 📊 Technical Pattern - Web Audio API Beep
+
+```javascript
+// Patrón universal para beep de confirmación
+function playConfirmationBeep() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;  // Hz
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+    } catch (e) {
+        console.warn('Audio not available:', e);
+    }
+}
+```
+
+### 📚 Lecciones Aprendidas
+1. No todos los juegos comparten el mismo sistema de audio
+2. Verificar que las dependencias estén cargadas antes de usarlas
+3. Código dentro de bloques `if` puede no ejecutarse si la condición falla
+4. Web Audio API es más confiable que librerías externas para beeps simples
+
 ## [2.2.0] - 2025-01-21 🐛 Time Tracking Fix + UX Improvements
 
 ### 🐛 Fixed - Time Inconsistency in Leaderboards

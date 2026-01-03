@@ -30,6 +30,8 @@
 18. [Menú Dropdown Invisible Bloquea Clics en el Tablero](#18-menú-dropdown-invisible-bloquea-clics-en-el-tablero)
 19. [CriptoCaballo: 8 Bugs Críticos Resueltos en Una Sesión](#19-criptocaballo-8-bugs-críticos-resueltos-en-una-sesión)
 20. [Animación CSS transform: translate() Causa Overflow Horizontal en Mobile](#20-animación-css-transform-translate-causa-overflow-horizontal-en-mobile-knight-quest)
+21. [Sonido de Confirmación No Suena al Activar - Knight Quest](#21-sonido-de-confirmación-no-suena-al-activar---knight-quest)
+22. [Sonido de Confirmación No Suena al Activar - Square Rush](#22-sonido-de-confirmación-no-suena-al-activar---square-rush)
 
 ---
 
@@ -4446,6 +4448,174 @@ function detectOverflow() {
     });
 }
 setInterval(detectOverflow, 3000);
+```
+
+---
+
+## 21. Sonido de Confirmación No Suena al Activar - Knight Quest
+
+**Fecha:** Enero 2026
+**Juego:** Knight Quest
+**Severidad:** Baja (UX)
+
+### 🔴 Síntoma
+
+Al activar el sonido presionando el botón SONIDO en el menú de navegación, no se escuchaba ningún sonido de confirmación. Los demás juegos (CriptoCaballo, CriptoSopa, Memory Matrix, Master Sequence, ChessInFive) sí reproducían un beep al activar.
+
+### 🔍 Causa Raíz
+
+Knight Quest tiene **dos sistemas de audio separados**:
+
+1. **En `knight-quest.js`**: Variable local `soundEnabled` para el sistema de sonido del juego
+2. **En el HTML inline**: Sistema duplicado con `gameState.soundEnabled`
+
+El código llamaba a `ChessArcade.playSound('click')` pero:
+- `ChessArcade` se define en `shared-utils.js`
+- **Knight Quest NO carga `shared-utils.js`**
+- Por lo tanto, `ChessArcade` y `CHESSARCADE` son `undefined`
+
+```javascript
+// knight-quest.js - Código que NO funcionaba
+if (soundEnabled && ChessArcade && ChessArcade.playSound) {
+    ChessArcade.playSound('click'); // ChessArcade es undefined!
+}
+```
+
+### ✅ Solución
+
+Usar Web Audio API directamente en el HTML inline, sin depender de `shared-utils.js`:
+
+```javascript
+// En index.html - toggleSound()
+if (gameState.soundEnabled) {
+    // Reproducir sonido de confirmación con Web Audio API
+    initAudio();
+    if (audioContext) {
+        try {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 800;
+            oscillator.type = 'square';
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (e) {
+            console.warn('Audio confirmation failed:', e);
+        }
+    }
+}
+```
+
+### 📚 Lecciones Aprendidas
+
+1. **Verificar dependencias antes de llamar funciones externas** - No asumir que un script está cargado
+2. **Cada juego tiene su propio sistema de audio** - No todos usan `shared-utils.js`
+3. **Web Audio API es universal** - Funciona en todos los navegadores modernos sin dependencias
+4. **Siempre probar en el navegador real** - El error no era visible en consola porque el `if` simplemente no se ejecutaba
+
+---
+
+## 22. Sonido de Confirmación No Suena al Activar - Square Rush
+
+**Fecha:** Enero 2026
+**Juego:** Square Rush
+**Severidad:** Baja (UX)
+
+### 🔴 Síntoma
+
+El sonido de confirmación al activar el sonido no se reproducía en Square Rush, a pesar de que el código `playSound('correct')` existía en la función `toggleSound()`.
+
+### 🔍 Causa Raíz
+
+El código de reproducción de sonido estaba **dentro de un bloque `if (soundBtn)`** que verificaba la existencia de un botón antiguo:
+
+```javascript
+function toggleSound() {
+    gameState.soundEnabled = !gameState.soundEnabled;
+    const soundBtn = document.getElementById('soundToggle'); // ← Este elemento NO existe!
+
+    if (soundBtn) {  // ← Este bloque NUNCA se ejecuta
+        // ... actualizar iconos ...
+        if (gameState.soundEnabled) {
+            playSound('correct');  // ← Nunca se llega aquí!
+        }
+    }
+
+    // Save preference
+    localStorage.setItem('squareRushSound', ...);
+    updateSoundNavIcon();
+}
+```
+
+El botón `soundToggle` era del diseño antiguo. El menú nuevo usa `soundBtnNav`, por lo que `soundBtn` era `null` y todo el bloque se saltaba.
+
+### ✅ Solución
+
+Mover el código de reproducción de sonido **fuera** del bloque `if (soundBtn)`:
+
+```javascript
+function toggleSound() {
+    gameState.soundEnabled = !gameState.soundEnabled;
+
+    // Reproducir sonido de confirmación ANTES de verificar botones
+    if (gameState.soundEnabled) {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = 800;
+            oscillator.type = 'square';
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        } catch (e) {
+            console.warn('Audio confirmation failed:', e);
+        }
+    }
+
+    // Luego actualizar botones (si existen)
+    const soundBtn = document.getElementById('soundToggle');
+    if (soundBtn) {
+        // ... actualizar iconos del botón antiguo ...
+    }
+
+    localStorage.setItem('squareRushSound', ...);
+    updateSoundNavIcon();
+}
+```
+
+### 📚 Lecciones Aprendidas
+
+1. **Cuidado con código dentro de bloques condicionales** - Si la condición falla, todo el código interno se salta
+2. **Al agregar nuevos menús, verificar funciones dependientes** - El menú nuevo rompió la lógica del toggle
+3. **Separar lógica de UI de lógica de negocio** - El sonido de confirmación no debería depender de qué botón existe
+4. **Usar Web Audio API como respaldo** - Es más confiable que Howler.js para beeps simples
+5. **Probar siempre después de refactoring de UI** - Los cambios de menú pueden tener efectos secundarios
+
+### 🔧 Patrón Recomendado para Toggle Sound
+
+```javascript
+function toggleSound() {
+    // 1. Cambiar estado
+    state.soundEnabled = !state.soundEnabled;
+
+    // 2. Reproducir confirmación (si se activó)
+    if (state.soundEnabled) {
+        playConfirmationBeep(); // Función independiente
+    }
+
+    // 3. Actualizar UI (puede fallar sin afectar funcionalidad)
+    updateAllSoundButtons();
+
+    // 4. Persistir preferencia
+    saveSoundPreference();
+}
 ```
 
 ---

@@ -67,6 +67,27 @@ function playSound(soundName) {
 
 function toggleSound() {
     gameState.soundEnabled = !gameState.soundEnabled;
+
+    // Reproducir sonido de confirmación al activar usando Web Audio API
+    if (gameState.soundEnabled) {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = 800;
+            oscillator.type = 'square';
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        } catch (e) {
+            console.warn('Audio confirmation failed:', e);
+        }
+    }
+
+    // Update old button if exists
     const soundBtn = document.getElementById('soundToggle');
     if (soundBtn) {
         const iconOn = soundBtn.querySelector('.icon-sound-on');
@@ -77,8 +98,6 @@ function toggleSound() {
             if (iconOff) iconOff.style.display = 'none';
             soundBtn.classList.remove('muted');
             soundBtn.title = 'Mute Sound';
-            // Reproducir sonido de confirmación al activar
-            playSound('correct');
         } else {
             if (iconOn) iconOn.style.display = 'none';
             if (iconOff) iconOff.style.display = 'block';

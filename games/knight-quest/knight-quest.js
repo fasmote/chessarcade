@@ -965,8 +965,19 @@ function toggleSound() {
     updateSoundIcon();
     console.log(soundEnabled ? '🔊 Sonido activado' : '🔇 Sonido desactivado');
     // Reproducir sonido de confirmación al activar
-    if (soundEnabled && ChessArcade && ChessArcade.playSound) {
-        ChessArcade.playSound('click');
+    if (soundEnabled) {
+        // Sincronizar con CHESSARCADE global para que playSound funcione
+        if (typeof CHESSARCADE !== 'undefined') {
+            CHESSARCADE.soundEnabled = true;
+        }
+        if (ChessArcade && ChessArcade.playSound) {
+            ChessArcade.playSound('click');
+        }
+    } else {
+        // Sincronizar el estado desactivado también
+        if (typeof CHESSARCADE !== 'undefined') {
+            CHESSARCADE.soundEnabled = false;
+        }
     }
 }
 
