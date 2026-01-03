@@ -1844,8 +1844,27 @@
                     .order('sort_order', { ascending: true });
 
                 if (!error && data) {
-                    allTags = data;
-                    console.log(`🏷️ ${allTags.length} tags cargados para nube`);
+                    // Calcular conteo real de puzzles disponibles (no futuros)
+                    const today = new Date().toISOString().split('T')[0];
+
+                    // Para cada tag, obtener el conteo real de puzzles disponibles
+                    const tagsWithAvailableCount = await Promise.all(data.map(async (tag) => {
+                        const { data: relations, error: relError } = await supabaseClient
+                            .from('puzzle_tag_relations')
+                            .select('puzzle_id, puzzles!inner(puzzle_date)')
+                            .eq('tag_id', tag.id)
+                            .lte('puzzles.puzzle_date', today);
+
+                        // Usar available_count en vez de usage_count para mostrar
+                        const availableCount = relError ? 0 : (relations?.length || 0);
+                        return {
+                            ...tag,
+                            usage_count: availableCount  // Sobrescribir con conteo real
+                        };
+                    }));
+
+                    allTags = tagsWithAvailableCount;
+                    console.log(`🏷️ ${allTags.length} tags cargados (conteo filtrado por fecha)`);
                     renderTagCloud();
                 }
             } catch (err) {
