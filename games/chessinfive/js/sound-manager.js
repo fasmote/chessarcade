@@ -76,6 +76,11 @@ const SoundManager = {
 
         console.log('🔊 Sound', this.enabled ? 'enabled' : 'disabled');
 
+        // Reproducir sonido de confirmación al activar
+        if (this.enabled) {
+            this.play('select');
+        }
+
         return this.enabled;
     },
 
