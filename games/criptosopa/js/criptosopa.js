@@ -876,8 +876,39 @@ async function submitScore() {
     }
 }
 
-// Sound toggle function
+// Sound system with Web Audio API
 let soundEnabled = true;
+let audioContext = null;
+
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContext;
+}
+
+function playBeep(frequency = 660, duration = 0.1) {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + duration);
+    } catch (e) {
+        console.warn('Audio not available:', e);
+    }
+}
 
 function toggleSound() {
     soundEnabled = !soundEnabled;
@@ -891,6 +922,8 @@ function toggleSound() {
     if (btn) {
         if (soundEnabled) {
             btn.classList.remove('muted');
+            // Reproducir sonido de confirmación al activar
+            playBeep(660, 0.15);
         } else {
             btn.classList.add('muted');
         }
