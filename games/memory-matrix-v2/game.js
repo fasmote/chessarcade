@@ -1320,32 +1320,7 @@ function undo() {
     updateUndoClearButtons();
 }
 
-/**
- * Limpia todas las piezas del tablero (deshacer todo)
- */
-function clearBoard() {
-    if (moveHistory.length === 0) {
-        console.log('⚠️ No hay piezas para limpiar');
-        return;
-    }
 
-    if (gameState !== 'solving') {
-        console.log('⚠️ Solo puedes limpiar durante la fase de colocación');
-        return;
-    }
-
-    console.log(`🧹 Limpiando ${moveHistory.length} piezas del tablero...`);
-
-    // Guardar cantidad para mensaje
-    const totalPieces = moveHistory.length;
-
-    // Deshacer todos los movimientos
-    while (moveHistory.length > 0) {
-        undo();
-    }
-
-    updateStatus(`🧹 Tablero limpio - ${totalPieces} pieza${totalPieces > 1 ? 's' : ''} removida${totalPieces > 1 ? 's' : ''}`);
-}
 
 /**
  * Actualiza el estado de los botones Deshacer y Limpiar
@@ -1606,28 +1581,22 @@ function clearPiece(square) {
 }
 
 /**
- * Limpiar todas las piezas del tablero
+ * Limpiar todas las piezas del tablero.
+ * Esta función es crucial para reiniciar el estado visual del juego.
  */
 function clearBoard() {
-    // Buscar piezas en el tablero Y en el banco
-    const boardPieces = document.querySelectorAll('#chessBoard .piece');
-    const bankPieces = document.querySelectorAll('.piece-bank .piece');
+    // COMENTARIO EDUCATIVO (ESP):
+    // Se corrige el selector de '#chessBoard' a '#chessboard' para que coincida con el id en el HTML.
+    // Un error de mayúsculas/minúsculas estaba impidiendo que el tablero se limpiara correctamente.
+    const boardPieces = document.querySelectorAll('#chessboard .piece');
+    boardPieces.forEach(piece => piece.remove());
 
-    // Remover piezas del tablero
-    boardPieces.forEach(piece => {
-        piece.remove();
-    });
+    // Limpia también las piezas que puedan estar "en el aire" (siendo arrastradas)
+    // pero no las del banco de piezas.
+    const floatingPieces = document.querySelectorAll('body > .piece.dragging');
+    floatingPieces.forEach(piece => piece.remove());
 
-    // También limpiar piezas sueltas que puedan estar fuera del tablero
-    const allPieces = document.querySelectorAll('.piece');
-    allPieces.forEach(piece => {
-        // Solo remover si NO está en el banco (las del banco se manejan con clearBankPieces)
-        if (!piece.closest('.piece-bank')) {
-            piece.remove();
-        }
-    });
-
-    console.log('🗑️ Tablero limpiado');
+    console.log(`🗑️ Tablero limpiado, ${boardPieces.length} piezas eliminadas.`);
 }
 
 // ============================================
