@@ -688,6 +688,11 @@
             console.log('✅ Game state reset to idle');
         }
 
+        // Mostrar indicador "Click to Start"
+        if (window.updateClickableState) {
+            window.updateClickableState(true);
+        }
+
         // Clear board
         if (window.clearBoard) window.clearBoard();
         if (window.clearBankPieces) window.clearBankPieces();

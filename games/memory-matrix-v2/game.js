@@ -128,6 +128,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mostrar posición inicial del nivel 1 (sin tablero vacío)
     showInitialPosition();
 
+    // Actualizar estado visual para "Click to Start"
+    updateClickableState(true);
+
     console.log('✅ Inicialización completa');
 });
 
@@ -372,6 +375,9 @@ function getStyleDisplayName(style) {
  * Inicia el juego con el nivel actual
  */
 function startGame() {
+    // Ocultar indicador "Click to Start"
+    updateClickableState(false);
+
     // PREVENIR CLICKS MÚLTIPLES
     if (isAnimating || gameState === 'playing') {
         console.warn('⚠️ Ya hay un juego en curso');
@@ -891,6 +897,9 @@ function onGameOver() {
         updateHintButton();
         updateUndoClearButtons();
 
+        // Mostrar indicador de "Click to Start"
+        updateClickableState(true);
+
         gameState = 'idle';
         isPaused = false;
 
@@ -956,6 +965,9 @@ function onLevelComplete() {
 
         // Mostrar posición inicial del nuevo nivel (preview)
         showInitialPosition();
+
+        // Mostrar indicador de "Click to Start" para el siguiente nivel
+        updateClickableState(true);
 
         gameState = 'idle';
 
@@ -1041,6 +1053,36 @@ function updateStatus(message, type = 'normal') {
         }
     }
 }
+
+/**
+ * Actualiza la visibilidad del indicador "Click to Start" y el cursor del tablero.
+ * @param {boolean} isIdle - True si el juego está en estado de espera (idle).
+ */
+function updateClickableState(isIdle) {
+    const clickToStartOverlay = document.getElementById('clickToStart');
+    const chessboard = document.getElementById('chessboard');
+
+    // COMENTARIO EDUCATIVO (ESP):
+    // Esta función centraliza la lógica para mostrar u ocultar la ayuda visual de "Click to Start".
+    // Se activa cuando el juego está en 'idle' y se desactiva en cualquier otro estado.
+    // Usar una función específica para esto hace el código más limpio y fácil de mantener.
+
+    if (!clickToStartOverlay || !chessboard) {
+        console.warn('⚠️ Elementos para el indicador de inicio no encontrados (clickToStart o chessboard).');
+        return;
+    }
+
+    if (isIdle) {
+        console.log('✨ Mostrando indicador "Click to Start".');
+        clickToStartOverlay.classList.add('visible');
+        chessboard.classList.add('clickable');
+    } else {
+        console.log('✨ Ocultando indicador "Click to Start".');
+        clickToStartOverlay.classList.remove('visible');
+        chessboard.classList.remove('clickable');
+    }
+}
+window.updateClickableState = updateClickableState; // Exponer para leaderboard-integration.js
 
 // ============================================
 // SISTEMA DE HINTS
