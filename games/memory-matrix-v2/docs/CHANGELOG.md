@@ -4,6 +4,82 @@ Registro cronológico de cambios día a día.
 
 ---
 
+## [2026-01-10] - Botones Laterales Desktop + Sonido Timer Sincronizado
+
+### Added ✨
+- **Botones HINT y ATRAS laterales (solo desktop)**
+  - Nueva ubicación: a la izquierda del tablero, siempre visibles mientras juegas
+  - Botones apilados verticalmente con estilo neón
+  - HINT: color amarillo neón
+  - ATRAS: color magenta neón
+  - Efectos hover con glow y escala
+  - Los botones del header se ocultan en desktop (ahora están al lado)
+
+- **Sonido de advertencia en timer countdown**
+  - El sonido ahora suena con 3, 2 y 1 segundos restantes
+  - Antes solo había efecto visual, ahora hay feedback auditivo sincronizado
+  - Sonido se reproduce al inicio de cada segundo para mejor sincronización
+
+### Fixed 🐛
+- **Indicador "Click para Empezar" centrado correctamente**
+  - Agregado `position: relative` a `.board-wrapper`
+  - Agregado `white-space: nowrap` para mantener texto en una línea
+
+- **X del modal de error ahora es clickeable**
+  - Se puede cerrar el modal de Game Over haciendo click en la X
+  - Agregado efecto hover (escala + brillo)
+  - Mantiene también el cierre automático por tiempo
+
+- **Sonidos duplicados en timer corregidos**
+  - Problema: Con 2 y 1 segundos se escuchaban dos sonidos
+  - Causa: `applyGlitchEffect()` también reproducía sonido al activar efecto visual
+  - Solución: Centralizar sonido solo en el timer, quitar de `applyGlitchEffect()`
+
+### Technical Details ⚙️
+
+**Botones laterales (styles.css):**
+```css
+.side-buttons-container {
+    display: none; /* Oculto en mobile */
+}
+
+@media (min-width: 768px) {
+    .side-buttons-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-self: center;
+    }
+
+    /* Ocultar botones del header */
+    .header .btn-hint,
+    .header .btn-undo-desktop {
+        display: none !important;
+    }
+}
+```
+
+**Sonido timer (game.js):**
+```javascript
+// Al iniciar timer con <= 3 segundos
+if (remaining <= 3) {
+    circle?.classList.add('warning');
+    window.MemoryMatrixAudio.playGlitchSound('warning');
+}
+
+// Durante countdown, cuando cambia el segundo
+if (remainingSeconds <= 3 && remainingSeconds > 0) {
+    window.MemoryMatrixAudio.playGlitchSound('warning');
+}
+```
+
+### Files Modified 📝
+- `index.html` - Agregado contenedor `.side-buttons-container` con botones
+- `styles.css` - Estilos para botones laterales, ocultar header buttons en desktop
+- `game.js` - Event listeners para botones laterales, sonido en timer, sync de estados
+
+---
+
 ## [2025-10-15] - Sistema Tap-Tap Mejorado + UX Mobile Optimizada
 
 ### Fixed 🐛

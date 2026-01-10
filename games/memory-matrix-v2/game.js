@@ -174,6 +174,13 @@ function initButtons() {
         btnHintMobile.addEventListener('click', showHint);
     }
 
+    // Botón HINT (side - desktop)
+    const btnHintSide = document.getElementById('btnHintSide');
+    if (btnHintSide) {
+        btnHintSide.addEventListener('click', showHint);
+        console.log('✅ Botón HINT (side) inicializado');
+    }
+
     // Botón DESHACER (desktop)
     const btnUndo = document.getElementById('btnUndo');
     if (btnUndo) {
@@ -186,6 +193,13 @@ function initButtons() {
     if (btnUndoMobile) {
         btnUndoMobile.addEventListener('click', undo);
         console.log('✅ Botón DESHACER (mobile) inicializado');
+    }
+
+    // Botón DESHACER (side - desktop)
+    const btnUndoSide = document.getElementById('btnUndoSide');
+    if (btnUndoSide) {
+        btnUndoSide.addEventListener('click', undo);
+        console.log('✅ Botón DESHACER (side) inicializado');
     }
 
     // Botón LIMPIAR
@@ -1295,16 +1309,18 @@ function createDisintegrationEffect(squareEl, hintElement, hiddenHints) {
 
 /**
  * Actualiza los botones de hint (contador y estado disabled)
- * Sincroniza tanto el del header como el mobile
+ * Sincroniza tanto el del header como el mobile y side
  */
 function updateHintButton() {
+    const isDisabled = (hintsLeft <= 0 || gameState !== 'solving');
+
     // Botón hint header (desktop)
     const btnHint = document.getElementById('btnHint');
     const hintLabel = document.getElementById('hintLabel');
 
     if (btnHint && hintLabel) {
         hintLabel.textContent = `HINT (${hintsLeft})`;
-        btnHint.disabled = (hintsLeft <= 0 || gameState !== 'solving');
+        btnHint.disabled = isDisabled;
     }
 
     // Botón hint mobile
@@ -1313,7 +1329,16 @@ function updateHintButton() {
 
     if (btnHintMobile && hintCountMobile) {
         hintCountMobile.textContent = hintsLeft;
-        btnHintMobile.disabled = (hintsLeft <= 0 || gameState !== 'solving');
+        btnHintMobile.disabled = isDisabled;
+    }
+
+    // Botón hint side (desktop lateral)
+    const btnHintSide = document.getElementById('btnHintSide');
+    const hintLabelSide = document.getElementById('hintLabelSide');
+
+    if (btnHintSide && hintLabelSide) {
+        hintLabelSide.textContent = `HINT (${hintsLeft})`;
+        btnHintSide.disabled = isDisabled;
     }
 }
 
@@ -1373,12 +1398,12 @@ function undo() {
 
 /**
  * Actualiza el estado de los botones Deshacer y Limpiar
- * Sincroniza tanto las versiones desktop como mobile
+ * Sincroniza tanto las versiones desktop como mobile y side
  */
 function updateUndoClearButtons() {
     const disabled = (moveHistory.length === 0 || gameState !== 'solving');
 
-    // Botón Undo (desktop)
+    // Botón Undo (desktop header)
     const btnUndo = document.getElementById('btnUndo');
     if (btnUndo) {
         btnUndo.disabled = disabled;
@@ -1388,6 +1413,12 @@ function updateUndoClearButtons() {
     const btnUndoMobile = document.getElementById('btnUndoMobile');
     if (btnUndoMobile) {
         btnUndoMobile.disabled = disabled;
+    }
+
+    // Botón Undo (side - desktop lateral)
+    const btnUndoSide = document.getElementById('btnUndoSide');
+    if (btnUndoSide) {
+        btnUndoSide.disabled = disabled;
     }
 
     // Botón Clear (si existe)
@@ -2090,6 +2121,14 @@ function startTimer(durationMs) {
     progressEl.style.strokeDashoffset = '0';
     circle?.classList.remove('warning');
 
+    // Si el timer inicia con 3 segundos o menos, activar advertencia inmediatamente
+    if (remaining <= 3) {
+        circle?.classList.add('warning');
+        if (window.MemoryMatrixAudio) {
+            window.MemoryMatrixAudio.playGlitchSound('warning');
+        }
+    }
+
     console.log(`⏱️ Timer iniciado: ${durationSeconds}s`);
 
     // Limpiar timer anterior si existe
@@ -2110,11 +2149,18 @@ function startTimer(durationMs) {
 
         // Actualizar texto solo cuando cambia el segundo
         if (remainingSeconds !== remaining) {
+            // Reproducir sonido ANTES de actualizar el visual (para mejor sincronización)
+            if (remainingSeconds <= 3 && remainingSeconds > 0) {
+                if (window.MemoryMatrixAudio) {
+                    window.MemoryMatrixAudio.playGlitchSound('warning');
+                }
+            }
+
             remaining = remainingSeconds;
             textEl.textContent = remaining;
 
-            // Advertencia cuando quedan 2 segundos o menos
-            if (remaining <= 2 && remaining > 0) {
+            // Advertencia visual cuando quedan 3 segundos o menos
+            if (remaining <= 3 && remaining > 0) {
                 circle?.classList.add('warning');
             }
 
@@ -2423,12 +2469,8 @@ function applyGlitchEffect(squares, intensity = 'warning') {
         }
     });
 
-    // ==========================================
-    // REPRODUCIR SONIDO DE GLITCH
-    // ==========================================
-    if (window.MemoryMatrixAudio) {
-        window.MemoryMatrixAudio.playGlitchSound(intensity);
-    }
+    // NOTA: El sonido de advertencia ahora se reproduce desde el timer
+    // para mejor sincronización con el countdown visual
 }
 
 /**

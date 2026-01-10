@@ -778,6 +778,108 @@ body::before {
 }
 
 /* ============================================
+   BOTONES LATERALES (solo desktop)
+   HINT y ATRAS a la izquierda del tablero
+   ============================================ */
+
+/* Oculto en mobile */
+.side-buttons-container {
+    display: none;
+}
+
+/* Visible solo en desktop */
+@media (min-width: 768px) {
+    .side-buttons-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-self: center;
+    }
+}
+
+/* Estilo de los botones laterales */
+.btn-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 12px 16px;
+    min-width: 80px;
+
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 10px;
+
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.btn-side:hover:not(:disabled) {
+    background: rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+.btn-side:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: #555;
+    color: #555;
+    box-shadow: none;
+}
+
+.btn-side svg {
+    stroke: currentColor;
+}
+
+.btn-side-label {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+}
+
+/* Botón HINT lateral - color amarillo */
+.btn-hint-side {
+    border-color: var(--neon-yellow);
+    color: var(--neon-yellow);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.btn-hint-side:hover:not(:disabled) {
+    background: rgba(255, 215, 0, 0.1);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+/* Botón UNDO lateral - color magenta */
+.btn-undo-side {
+    border-color: var(--neon-magenta);
+    color: var(--neon-magenta);
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
+}
+
+.btn-undo-side:hover:not(:disabled) {
+    background: rgba(255, 0, 128, 0.1);
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.6);
+}
+
+/* Ocultar botones HINT y UNDO del header en desktop (ahora están al lado) */
+@media (min-width: 768px) {
+    .header .btn-hint,
+    .header .btn-undo-desktop {
+        display: none !important;
+    }
+}
+
+/* ============================================
    TABLERO DE AJEDREZ
    Grid 8x8 con coordenadas y borde neón
    ============================================ */

@@ -500,6 +500,31 @@
         <div class="game-area">
 
             <!-- ============================================
+                 BOTONES LATERALES (solo desktop)
+                 HINT y ATRAS a la izquierda del tablero
+                 ============================================ -->
+            <div class="side-buttons-container">
+                <!-- Botón HINT -->
+                <button class="btn-side btn-hint-side" id="btnHintSide" aria-label="Pedir pista" disabled>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span class="btn-side-label" id="hintLabelSide">HINT (6)</span>
+                </button>
+
+                <!-- Botón ATRAS -->
+                <button class="btn-side btn-undo-side" id="btnUndoSide" aria-label="Deshacer" disabled>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 7v6h6"></path>
+                        <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+                    </svg>
+                    <span class="btn-side-label">ATRAS</span>
+                </button>
+            </div>
+
+            <!-- ============================================
                  SECCIÓN DEL TABLERO
                  Contenedor del tablero con coordenadas
                  ============================================ -->

@@ -439,6 +439,78 @@ game.start();
 
 ---
 
+---
+
+## 🔧 PROBLEMA 7: Sonidos Duplicados en Timer Countdown
+
+### 🐛 Síntoma
+Durante los últimos 3 segundos del timer de memorización, el sonido de advertencia se reproducía correctamente con el número 3, pero con el 2 y el 1 se escuchaba el sonido duplicado (dos sonidos seguidos).
+
+### 🔍 Causa Raíz
+Había **dos sistemas independientes** que reproducían sonidos al mismo tiempo:
+
+1. **Timer countdown**: Reproducía `playGlitchSound('warning')` cuando `remaining <= 3`
+2. **Efecto glitch visual**: La función `applyGlitchEffect()` también reproducía el mismo sonido cuando se activaba el efecto visual en las piezas (al 40% y 80% del tiempo de memorización)
+
+```javascript
+// ❌ PROBLEMA: Dos lugares reproducían el mismo sonido
+
+// 1. En el timer (nuevo código)
+if (remaining <= 3 && remaining > 0) {
+    window.MemoryMatrixAudio.playGlitchSound('warning');
+}
+
+// 2. En applyGlitchEffect (código existente)
+function applyGlitchEffect(squares, intensity) {
+    // ... efectos visuales ...
+    window.MemoryMatrixAudio.playGlitchSound(intensity); // ← DUPLICADO
+}
+```
+
+El glitch "crítico" se activaba al 80% del tiempo (≈1-2 segundos restantes), coincidiendo con los sonidos del timer.
+
+### ✅ Solución
+Centralizar la reproducción del sonido en un solo lugar (el timer), y quitar el sonido de `applyGlitchEffect`:
+
+```javascript
+// ✅ BIEN: Solo el timer reproduce sonido
+function applyGlitchEffect(squares, intensity) {
+    // ... efectos visuales solamente ...
+    // NOTA: El sonido de advertencia ahora se reproduce desde el timer
+    // para mejor sincronización con el countdown visual
+}
+```
+
+### 📦 Para la Librería
+**Principio: Un sonido = Una fuente**
+
+```javascript
+ChessArcade.Audio.setPolicy({
+    // Evitar que múltiples sistemas reproduzcan el mismo sonido
+    preventDuplicates: true,
+
+    // Definir qué sistema "posee" cada sonido
+    soundOwnership: {
+        'warning': 'timer',      // Solo el timer puede reproducir warning
+        'success': 'validation', // Solo validación puede reproducir success
+        'error': 'validation'
+    },
+
+    // Tiempo mínimo entre reproducciones del mismo sonido
+    debounceMs: 100
+});
+```
+
+### 💡 Lección Aprendida
+Cuando agregas sonidos a un sistema existente, **buscar primero si ya hay sonidos similares** en otras partes del código. Es fácil crear duplicaciones accidentales cuando diferentes módulos manejan efectos relacionados (visuales + auditivos).
+
+**Checklist antes de agregar sonido:**
+- [ ] ¿Existe ya un sonido similar en el código?
+- [ ] ¿Hay otros sistemas que podrían activar este sonido?
+- [ ] ¿El timing del sonido conflicta con otros eventos?
+
+---
+
 **Este documento será la base de ChessArcade Game Library v1.0**
 
-Última actualización: 2025-01-03
+Última actualización: 2026-01-10
