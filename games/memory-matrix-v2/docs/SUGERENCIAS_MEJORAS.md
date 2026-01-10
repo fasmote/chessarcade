@@ -1084,6 +1084,246 @@ Total estimado: 11-15 horas de desarrollo
 
 ---
 
+## UI Mobile: Contador de Vidas e Indicadores de Progreso
+
+**Fecha agregado**: 10 Enero 2026
+**Estado**: Pendiente de implementación
+
+### Contexto
+El contador de vidas (corazones) ya está implementado para desktop a la izquierda del tablero. En mobile el espacio es limitado y se necesita una solución que no interfiera con otros elementos.
+
+### Opciones para Vidas en Mobile
+
+#### Opción 1: Junto al Timer Global (RECOMENDADA)
+Los corazones aparecen a la izquierda del timer, similar a cómo están UNDO y HINT.
+
+```
+Layout: ❤️❤️❤️ | ⏱️ 00:00
+```
+
+**Pros**:
+- Ya existe esa área y los usuarios ya miran ahí
+- No requiere espacio adicional
+- Consistente con el diseño actual
+
+**Cons**:
+- Puede verse apretado en pantallas muy pequeñas
+
+#### Opción 2: En el Header (reemplazando COMENZAR)
+Cuando el juego está en progreso, el botón COMENZAR se transforma en el contador de vidas. Al terminar el juego, vuelve a ser botón.
+
+**Pros**:
+- Usa espacio existente
+- Muy visible
+
+**Cons**:
+- Cambio de contexto puede confundir
+
+#### Opción 3: Overlay en Esquina del Tablero
+Corazones pequeños semitransparentes en una esquina del tablero (ej: arriba-derecha).
+
+```css
+.lives-overlay-mobile {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0,0,0,0.5);
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+```
+
+**Pros**:
+- No ocupa espacio extra
+- Siempre visible durante el juego
+
+**Cons**:
+- Puede tapar parte del tablero
+
+#### Opción 4: En la Barra de Estado (mensaje)
+Agregar los corazones al final del mensaje de estado.
+
+```
+"Coloca las piezas... ❤️❤️❤️"
+```
+
+**Pros**:
+- Integrado naturalmente
+- No requiere UI adicional
+
+**Cons**:
+- Menos visible
+- Se pierde cuando cambia el mensaje
+
+#### Opción 5: Mini-barra Fija Arriba
+Una barra delgada fija arriba con todos los indicadores.
+
+```
+| Nivel 1 | ❤️❤️❤️❤️❤️ | Score: 0 |
+```
+
+**Pros**:
+- Toda la info en un lugar
+- Siempre visible
+
+**Cons**:
+- Ocupa espacio vertical adicional
+
+---
+
+### Barra de Progreso de Nivel
+
+**Objetivo**: Mostrar visualmente cuánto falta para pasar al siguiente nivel.
+
+#### Diseño Propuesto
+
+```
+┌─────────────────────────────────────┐
+│  NIVEL 3                            │
+│  ████████████░░░░░░  7/10 intentos  │
+│  ──────────────────────────────────  │
+│  Próximo: Nivel 4 - "Caballos"      │
+└─────────────────────────────────────┘
+```
+
+#### Elementos a Mostrar
+
+1. **Número de nivel actual** - Grande y visible
+2. **Barra de progreso** - Intentos exitosos / requeridos
+3. **Contador numérico** - "7/10 intentos"
+4. **Preview del próximo nivel** - Nombre y cantidad de piezas
+
+#### Implementación CSS Sugerida
+
+```css
+.level-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.level-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.level-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--neon-cyan);
+    border-radius: 8px;
+}
+```
+
+#### Ubicación Sugerida
+
+**Desktop**: Arriba del tablero o en el panel lateral izquierdo (junto a vidas y botones)
+
+**Mobile**:
+- Opción A: Debajo del título, arriba del tablero (barra horizontal compacta)
+- Opción B: En el área del timer (reemplaza o complementa)
+- Opción C: En una mini-barra fija superior
+
+---
+
+### Score / Puntaje
+
+**Sistema de puntuación sugerido**:
+
+```javascript
+// Puntos base por intento correcto
+const BASE_POINTS = 100;
+
+// Multiplicadores
+const SPEED_BONUS = 1.5;    // Si completa en menos de X segundos
+const STREAK_BONUS = 0.1;   // +10% por cada intento consecutivo correcto
+const NO_HINT_BONUS = 1.2;  // +20% si no usó hints
+
+// Penalizaciones
+const ERROR_PENALTY = -25;  // Por cada error
+const HINT_PENALTY = -10;   // Por cada hint usado
+
+function calculateScore(attempt) {
+    let points = BASE_POINTS;
+
+    // Bonificaciones
+    if (attempt.time < levelConfig.fastTime) {
+        points *= SPEED_BONUS;
+    }
+    points *= (1 + (streak * STREAK_BONUS));
+    if (!attempt.usedHint) {
+        points *= NO_HINT_BONUS;
+    }
+
+    return Math.round(points);
+}
+```
+
+#### Visualización del Score
+
+**Desktop**: En el panel lateral o header
+**Mobile**: Junto al timer o en mini-barra superior
+
+```
+┌──────────────────┐
+│  SCORE: 1,250    │
+│  🔥 x3 streak    │
+└──────────────────┘
+```
+
+---
+
+### Propuesta de UI Unificada Mobile
+
+Una barra compacta que muestre todo:
+
+```
+┌─────────────────────────────────────────────┐
+│ LVL 3  │  ████░░░░ 7/10  │  ❤️❤️❤️  │  1250 │
+└─────────────────────────────────────────────┘
+```
+
+**Elementos**:
+- Nivel actual (compacto)
+- Barra de progreso mini con contador
+- Vidas (corazones)
+- Score
+
+**CSS**:
+```css
+.mobile-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid var(--neon-cyan);
+    border-radius: 8px;
+    font-size: 11px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+@media (max-width: 767px) {
+    .mobile-status-bar {
+        position: fixed;
+        top: 50px; /* Debajo del hamburger menu */
+        left: 10px;
+        right: 10px;
+        z-index: 100;
+    }
+}
+```
+
+---
+
 **Autor**: Claude Code
-**Fecha**: 10 Octubre 2025
-**Version**: 1.0
+**Fecha**: 10 Octubre 2025 (actualizado 10 Enero 2026)
+**Version**: 1.1

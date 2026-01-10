@@ -131,6 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Actualizar estado visual para "Click to Start"
     updateClickableState(true);
 
+    // Inicializar display de vidas
+    updateLivesDisplay();
+
     console.log('✅ Inicialización completa');
 });
 
@@ -735,6 +738,9 @@ function onAttemptFailed(incorrectPieces) {
     totalFailedAttemptsSession++; // ✅ INCREMENTAR contador acumulativo de toda la partida
     console.log(`❌ Error #${failedAttempts}/${MAX_FAILED_ATTEMPTS}`);
 
+    // Actualizar display de vidas
+    updateLivesDisplay();
+
     const levelConfig = window.MemoryMatrixLevels.getLevelConfig(currentLevel);
 
     // ==========================================
@@ -900,6 +906,9 @@ function onGameOver() {
         totalSuccessfulAttemptsSession = 0; // ✅ RESETEAR contador acumulativo
         totalFailedAttemptsSession = 0;     // ✅ RESETEAR contador acumulativo
 
+        // Actualizar display de vidas
+        updateLivesDisplay();
+
         // Resetear timer global
         resetGlobalTimer();
 
@@ -956,6 +965,7 @@ function onLevelComplete() {
         successfulAttempts = 0;
         failedAttempts = 0; // ← RESETEAR ERRORES al pasar de nivel
         hintsLeft = HINTS_PER_LEVEL; // ← RESETEAR HINTS al pasar de nivel
+        updateLivesDisplay(); // ← Actualizar display de vidas
 
         if (currentLevel > totalLevels) {
             // Juego completado
@@ -1340,6 +1350,40 @@ function updateHintButton() {
         hintLabelSide.textContent = `HINT (${hintsLeft})`;
         btnHintSide.disabled = isDisabled;
     }
+}
+
+/**
+ * Actualiza el display de vidas (corazones)
+ * Muestra corazones llenos para vidas restantes y vacíos para perdidas
+ */
+function updateLivesDisplay() {
+    const livesDisplay = document.getElementById('livesDisplay');
+    if (!livesDisplay) return;
+
+    const livesRemaining = MAX_FAILED_ATTEMPTS - failedAttempts;
+    let heartsHTML = '';
+
+    // Corazones llenos (vidas restantes)
+    for (let i = 0; i < livesRemaining; i++) {
+        heartsHTML += '❤️';
+    }
+
+    // Corazones vacíos (vidas perdidas)
+    for (let i = 0; i < failedAttempts; i++) {
+        heartsHTML += '🖤';
+    }
+
+    livesDisplay.textContent = heartsHTML;
+
+    // Animación de pulso cuando pierde una vida
+    if (failedAttempts > 0) {
+        livesDisplay.classList.add('pulse');
+        setTimeout(() => {
+            livesDisplay.classList.remove('pulse');
+        }, 500);
+    }
+
+    console.log(`❤️ Vidas: ${livesRemaining}/${MAX_FAILED_ATTEMPTS}`);
 }
 
 // ============================================
@@ -2649,6 +2693,7 @@ function resetGameCounters() {
     successfulAttempts = 0;
     failedAttempts = 0;
     hintsLeft = HINTS_PER_LEVEL;
+    updateLivesDisplay(); // Actualizar display de vidas
 
     // Resetear arrays
     placedPieces = [];
