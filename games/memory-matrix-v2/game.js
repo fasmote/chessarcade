@@ -2541,6 +2541,12 @@ window.setGameState = setGameState;
  * Resetea todos los contadores de sesión (usado cuando se reinicia el juego después de Game Over)
  */
 function resetGameCounters() {
+    // COMENTARIO EDUCATIVO (ESP):
+    // El error original ocurría porque 'currentPosition' no se reiniciaba.
+    // Al no estar vacío, la función startGame() reutilizaba la posición de la partida anterior.
+    // Añadir 'currentPosition = []' asegura que se genere una nueva posición para la nueva partida.
+    console.log("🔄 Reiniciando contadores y posición del juego...");
+
     // Resetear contadores acumulativos de sesión
     totalHintsUsedSession = 0;
     totalSuccessfulAttemptsSession = 0;
@@ -2556,8 +2562,9 @@ function resetGameCounters() {
     // Resetear arrays
     placedPieces = [];
     moveHistory = [];
+    currentPosition = []; // <-- !! LA CORRECCIÓN CLAVE !!
 
-    console.log('🔄 All game counters and variables reset');
+    console.log('✅ Todos los contadores y variables de sesión reiniciados.');
 }
 
 // Exponer función a window para uso externo
