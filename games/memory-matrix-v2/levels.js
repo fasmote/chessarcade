@@ -259,22 +259,36 @@ function generateRandomPosition(levelNumber) {
     const additionalPieces = level.pieceCount - 2;
 
     for (let i = 0; i < additionalPieces; i++) {
-        // Generar casilla aleatoria única
-        let square;
-        do {
-            square = getRandomSquare();
-        } while (usedSquares.has(square));
-
-        usedSquares.add(square);
-
-        // Seleccionar tipo de pieza aleatorio (EXCLUYENDO rey)
+        // 1. Seleccionar tipo de pieza y color PRIMERO
         const availableTypes = level.pieceTypes.filter(type => type !== 'K');
         const pieceType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-
-        // Seleccionar color aleatorio
         const color = level.allowedColors[Math.floor(Math.random() * level.allowedColors.length)];
-
         const pieceCode = color + pieceType;
+
+        // 2. Encontrar una casilla válida para esta pieza
+        let square;
+        let attempts = 0;
+        const maxAttempts = 200; // Prevenir loops infinitos
+
+        do {
+            square = getRandomSquare();
+            attempts++;
+            if (attempts > maxAttempts) {
+                console.warn(`⚠️ No se pudo encontrar casilla válida para ${pieceCode} tras ${maxAttempts} intentos.`);
+                break; // Salir del loop para no bloquear el juego
+            }
+        } while (
+            usedSquares.has(square) ||
+            // REGLA ANTI-PEONES: No colocar peones en filas 1 u 8
+            (pieceType === 'P' && (square.endsWith('1') || square.endsWith('8')))
+        );
+
+        // Si no se encontró casilla, saltar esta pieza
+        if (attempts > maxAttempts) {
+            continue;
+        }
+
+        usedSquares.add(square);
 
         position.push({
             square: square,
@@ -419,21 +433,39 @@ function generateClusteredPosition(levelNumber) {
     const quadrant = quadrants[Math.floor(Math.random() * quadrants.length)];
 
     for (let i = 0; i < level.pieceCount; i++) {
+        // Seleccionar pieza PRIMERO para aplicar reglas
+        const pieceType = level.pieceTypes[Math.floor(Math.random() * level.pieceTypes.length)];
+        const color = level.allowedColors[Math.floor(Math.random() * level.allowedColors.length)];
+        const pieceCode = color + pieceType;
+
         let square;
+        let attempts = 0;
+        const maxAttempts = 200;
+
         do {
             const file = quadrant.files[Math.floor(Math.random() * quadrant.files.length)];
             const rank = quadrant.ranks[Math.floor(Math.random() * quadrant.ranks.length)];
             square = file + rank;
-        } while (usedSquares.has(square));
+            attempts++;
+            if (attempts > maxAttempts) {
+                console.warn(`⚠️ No se pudo encontrar casilla válida para ${pieceCode} en cuadrante.`);
+                break;
+            }
+        } while (
+            usedSquares.has(square) ||
+            // REGLA ANTI-PEONES: No colocar peones en filas 1 u 8
+            (pieceType === 'P' && (square.endsWith('1') || square.endsWith('8')))
+        );
 
+        if (attempts > maxAttempts) {
+            continue;
+        }
+        
         usedSquares.add(square);
-
-        const pieceType = level.pieceTypes[Math.floor(Math.random() * level.pieceTypes.length)];
-        const color = level.allowedColors[Math.floor(Math.random() * level.allowedColors.length)];
 
         position.push({
             square: square,
-            piece: color + pieceType
+            piece: pieceCode
         });
     }
 
@@ -451,16 +483,30 @@ function generateSymmetricPosition(levelNumber) {
 
     // Generar piezas en un lado
     for (let i = 0; i < piecesPerSide; i++) {
-        const file = ['a', 'b', 'c', 'd'][Math.floor(Math.random() * 4)];
-        const rank = (Math.floor(Math.random() * 8) + 1).toString();
-        const square = file + rank;
-
         const pieceType = level.pieceTypes[Math.floor(Math.random() * level.pieceTypes.length)];
-        const color = 'w';
+        const color = 'w'; // Lado blanco
+        const pieceCode = color + pieceType;
 
-        position.push({ square, piece: color + pieceType });
+        let square, rank, file;
+        let attempts = 0;
+        const maxAttempts = 200;
 
-        // Pieza simétrica en el otro lado
+        do {
+            file = ['a', 'b', 'c', 'd'][Math.floor(Math.random() * 4)];
+            rank = (Math.floor(Math.random() * 8) + 1).toString();
+            square = file + rank;
+            attempts++;
+            if (attempts > maxAttempts) break;
+        } while (
+            // REGLA ANTI-PEONES: No colocar peones en filas 1 u 8
+            (pieceType === 'P' && (rank === '1' || rank === '8'))
+        );
+
+        if (attempts > maxAttempts) continue;
+
+        position.push({ square, piece: pieceCode });
+
+        // Pieza simétrica en el otro lado (mismo rank, archivo opuesto)
         const mirrorFile = String.fromCharCode('h'.charCodeAt(0) - (file.charCodeAt(0) - 'a'.charCodeAt(0)));
         const mirrorSquare = mirrorFile + rank;
         position.push({ square: mirrorSquare, piece: 'b' + pieceType });
@@ -468,15 +514,29 @@ function generateSymmetricPosition(levelNumber) {
 
     // Si quedan piezas impares, agregar una en el centro
     if (level.pieceCount % 2 !== 0) {
-        const centerFiles = ['d', 'e'];
-        const file = centerFiles[Math.floor(Math.random() * 2)];
-        const rank = (Math.floor(Math.random() * 8) + 1).toString();
         const pieceType = level.pieceTypes[Math.floor(Math.random() * level.pieceTypes.length)];
+        let rank, square;
+        let attempts = 0;
+        const maxAttempts = 200;
 
-        position.push({
-            square: file + rank,
-            piece: 'w' + pieceType
-        });
+        do {
+            const centerFiles = ['d', 'e'];
+            const file = centerFiles[Math.floor(Math.random() * 2)];
+            rank = (Math.floor(Math.random() * 8) + 1).toString();
+            square = file + rank;
+            attempts++;
+            if (attempts > maxAttempts) break;
+        } while (
+            // REGLA ANTI-PEONES aquí también
+            (pieceType === 'P' && (rank === '1' || rank === '8'))
+        );
+
+        if (attempts <= maxAttempts) {
+            position.push({
+                square: square,
+                piece: 'w' + pieceType
+            });
+        }
     }
 
     return position;

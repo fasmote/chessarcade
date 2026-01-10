@@ -26,8 +26,8 @@ export const GAME_LIMITS = {
 
   'memory-matrix': {
     name: 'Memory Matrix',
-    max_score: 50000,       // Formula: (level×2000) + (success×200) - (fails×300) - (hints×100) + timeBonus
-                            // Max teórico: 16,000 + 16,000 + 1,000 = 33,000
+    max_score: 200000,       // Formula: (level×2000) + (success×200) - (fails×300) - (hints×100) + timeBonus
+                            // Max teórico (ampliado): 16,000 (niveles) + 100,000 (éxitos) + 1,000 (bonus tiempo) = 117,000. Se usa 200,000 para holgura.
     max_time_ms: 3600000,   // 1 hora máximo
     score_type: 'points',   // Puntos basados en nivel + performance + tiempo
     has_levels: true,
