@@ -21,6 +21,12 @@ Registro cronológico de cambios día a día.
   - Sonido se reproduce al inicio de cada segundo para mejor sincronización
 
 ### Fixed 🐛
+- **Menú hamburguesa (mobile) ahora muestra estado correcto del sonido**
+  - Problema: Siempre mostraba "Sound: ON" aunque estuviera desactivado
+  - Causa: `isSoundEnabled()` no conocía `MemoryMatrixAudio`
+  - Solución: Agregar soporte para `MemoryMatrixAudio` en hamburger-menu.js
+  - Bonus: Ahora reproduce sonido de confirmación al activar (igual que desktop)
+
 - **Indicador "Click para Empezar" centrado correctamente**
   - Agregado `position: relative` a `.board-wrapper`
   - Agregado `white-space: nowrap` para mantener texto en una línea

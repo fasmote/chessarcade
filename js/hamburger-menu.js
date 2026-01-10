@@ -206,22 +206,46 @@
     // ========================================
 
     function toggleSound() {
+        let soundNowEnabled = false;
+
         // Intentar usar el SoundManager proporcionado
         if (config.soundManager && config.soundManager.toggleMute) {
             config.soundManager.toggleMute();
-            return;
+            soundNowEnabled = config.soundManager.isMuted ? !config.soundManager.isMuted() : true;
         }
-
         // Fallback: buscar SoundManager en window
-        if (window.SoundManager && window.SoundManager.toggleMute) {
+        else if (window.SoundManager && window.SoundManager.toggleMute) {
             window.SoundManager.toggleMute();
+            soundNowEnabled = window.SoundManager.isMuted ? !window.SoundManager.isMuted() : true;
+        }
+        // Fallback: buscar MemoryMatrixAudio (Memory Matrix usa su propio sistema)
+        else if (window.MemoryMatrixAudio && window.MemoryMatrixAudio.toggleMute) {
+            window.MemoryMatrixAudio.toggleMute();
+            soundNowEnabled = !window.MemoryMatrixAudio.isMuted();
+        }
+        // Fallback: buscar botón de sonido existente y simular click
+        else {
+            const soundBtn = document.getElementById('soundToggle') || document.getElementById('btnSound');
+            if (soundBtn) {
+                soundBtn.click();
+            }
             return;
         }
 
-        // Fallback: buscar botón de sonido existente y simuler click
-        const soundBtn = document.getElementById('soundToggle') || document.getElementById('btnSound');
-        if (soundBtn) {
-            soundBtn.click();
+        // Reproducir sonido de confirmación al activar el sonido
+        if (soundNowEnabled) {
+            playConfirmationSound();
+        }
+    }
+
+    function playConfirmationSound() {
+        // Intentar reproducir sonido de confirmación según el sistema disponible
+        if (config.soundManager && config.soundManager.playSuccess) {
+            config.soundManager.playSuccess();
+        } else if (window.SoundManager && window.SoundManager.playSuccess) {
+            window.SoundManager.playSuccess();
+        } else if (window.MemoryMatrixAudio && window.MemoryMatrixAudio.playSuccessSound) {
+            window.MemoryMatrixAudio.playSuccessSound();
         }
     }
 
@@ -234,6 +258,11 @@
         // Fallback: buscar SoundManager en window
         if (window.SoundManager && window.SoundManager.isMuted) {
             return !window.SoundManager.isMuted();
+        }
+
+        // Fallback: buscar MemoryMatrixAudio (Memory Matrix usa su propio sistema)
+        if (window.MemoryMatrixAudio && window.MemoryMatrixAudio.isMuted) {
+            return !window.MemoryMatrixAudio.isMuted();
         }
 
         // Fallback: buscar en localStorage
