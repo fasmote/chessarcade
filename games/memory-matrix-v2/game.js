@@ -131,8 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Actualizar estado visual para "Click to Start"
     updateClickableState(true);
 
-    // Inicializar display de vidas
+    // Inicializar display de vidas y progreso
     updateLivesDisplay();
+    updateProgressBar();
 
     console.log('✅ Inicialización completa');
 });
@@ -673,6 +674,9 @@ function onAttemptSuccess() {
     totalSuccessfulAttemptsSession++; // ✅ INCREMENTAR contador acumulativo de toda la partida
     gameState = 'completed';
 
+    // Actualizar barra de progreso
+    updateProgressBar();
+
     const levelConfig = window.MemoryMatrixLevels.getLevelConfig(currentLevel);
 
     // ==========================================
@@ -906,8 +910,9 @@ function onGameOver() {
         totalSuccessfulAttemptsSession = 0; // ✅ RESETEAR contador acumulativo
         totalFailedAttemptsSession = 0;     // ✅ RESETEAR contador acumulativo
 
-        // Actualizar display de vidas
+        // Actualizar display de vidas y progreso
         updateLivesDisplay();
+        updateProgressBar();
 
         // Resetear timer global
         resetGlobalTimer();
@@ -966,6 +971,7 @@ function onLevelComplete() {
         failedAttempts = 0; // ← RESETEAR ERRORES al pasar de nivel
         hintsLeft = HINTS_PER_LEVEL; // ← RESETEAR HINTS al pasar de nivel
         updateLivesDisplay(); // ← Actualizar display de vidas
+        updateProgressBar(); // ← Actualizar barra de progreso
 
         if (currentLevel > totalLevels) {
             // Juego completado
@@ -1350,6 +1356,41 @@ function updateHintButton() {
         hintLabelSide.textContent = `HINT (${hintsLeft})`;
         btnHintSide.disabled = isDisabled;
     }
+}
+
+/**
+ * Actualiza la barra de progreso del nivel
+ * Muestra intentos exitosos / requeridos
+ */
+function updateProgressBar() {
+    const levelNumber = document.getElementById('levelNumber');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    if (!levelNumber || !progressFill || !progressText) return;
+
+    // Obtener config del nivel actual
+    const levelConfig = window.MemoryMatrixLevels?.getLevelConfig(currentLevel);
+    const attemptsRequired = levelConfig?.attemptsRequired || 10;
+
+    // Actualizar número de nivel
+    levelNumber.textContent = `NIVEL ${currentLevel}`;
+
+    // Calcular porcentaje de progreso
+    const percentage = (successfulAttempts / attemptsRequired) * 100;
+    progressFill.style.width = `${percentage}%`;
+
+    // Actualizar texto
+    progressText.textContent = `${successfulAttempts}/${attemptsRequired}`;
+
+    // Animación de completado
+    if (successfulAttempts >= attemptsRequired) {
+        progressFill.classList.add('complete');
+    } else {
+        progressFill.classList.remove('complete');
+    }
+
+    console.log(`📊 Progreso: ${successfulAttempts}/${attemptsRequired} (${Math.round(percentage)}%)`);
 }
 
 /**
@@ -2694,6 +2735,7 @@ function resetGameCounters() {
     failedAttempts = 0;
     hintsLeft = HINTS_PER_LEVEL;
     updateLivesDisplay(); // Actualizar display de vidas
+    updateProgressBar(); // Actualizar barra de progreso
 
     // Resetear arrays
     placedPieces = [];

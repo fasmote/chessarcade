@@ -504,6 +504,17 @@
                  HINT y ATRAS a la izquierda del tablero
                  ============================================ -->
             <div class="side-buttons-container">
+                <!-- Indicador de Nivel y Progreso -->
+                <div class="level-progress-container" id="levelProgressContainer">
+                    <span class="level-number" id="levelNumber">NIVEL 1</span>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="progress-text" id="progressText">0/10</span>
+                    </div>
+                </div>
+
                 <!-- Contador de Vidas -->
                 <div class="lives-container" id="livesContainer">
                     <span class="lives-label">VIDAS</span>

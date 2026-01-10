@@ -7,6 +7,19 @@ Registro cronológico de cambios día a día.
 ## [2026-01-10] - Botones Laterales Desktop + Sonido Timer Sincronizado
 
 ### Added ✨
+- **Indicador de Nivel y Barra de Progreso (solo desktop)**
+  - Muestra nivel actual (NIVEL 1, NIVEL 2, etc.)
+  - Barra de progreso visual con gradiente cyan → verde
+  - Contador de intentos exitosos / requeridos (ej: 3/10)
+  - Animación de completado cuando se llena la barra
+  - Diseño compacto integrado con el panel lateral
+
+- **Contador de Vidas con corazones (solo desktop)**
+  - 5 corazones ❤️ = 5 vidas
+  - Corazones llenos para vidas restantes, negros 🖤 para perdidas
+  - Animación de pulso al perder una vida
+  - Se resetea al pasar de nivel o reiniciar
+
 - **Botones HINT y ATRAS laterales (solo desktop)**
   - Nueva ubicación: a la izquierda del tablero, siempre visibles mientras juegas
   - Botones apilados verticalmente con estilo neón
