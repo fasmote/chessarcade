@@ -194,6 +194,13 @@ function initButtons() {
         btnClear.addEventListener('click', clearBoard);
         console.log('✅ Botón LIMPIAR inicializado');
     }
+
+    // Botón CERRAR overlay de error (X)
+    const errorCloseBtn = document.getElementById('errorCloseBtn');
+    if (errorCloseBtn) {
+        errorCloseBtn.addEventListener('click', hideErrorOverlay);
+        console.log('✅ Botón cerrar error inicializado');
+    }
 }
 
 // ============================================

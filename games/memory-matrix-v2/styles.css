@@ -807,6 +807,12 @@ body::before {
         inset 0 0 20px rgba(0, 255, 255, 0.05);
 }
 
+/* Wrapper del tablero - para posicionar el indicador "Click para Empezar" */
+.board-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 /* El tablero 8x8 */
 .chessboard {
     /* Grid 8x8 */
@@ -1694,6 +1700,13 @@ body::before {
     font-size: 80px;
     margin-bottom: 20px;
     animation: shake 0.5s ease-in-out;
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.error-icon:hover {
+    transform: scale(1.1);
+    filter: brightness(1.3);
 }
 
 /* Título del error */
@@ -2715,9 +2728,10 @@ body::before {
     gap: 12px; /* Adjusted gap */
     
     font-family: 'Orbitron', sans-serif;
-    font-size: clamp(20px, 5vw, 32px);
+    font-size: clamp(16px, 4vw, 28px);
     font-weight: 900;
     color: var(--neon-cyan); /* Changed color to neon-cyan */
+    white-space: nowrap; /* Mantener texto en una sola línea */
     
     /* COMENTARIO EDUCATIVO (ESP):
        Se usa una sombra de texto múltiple para crear un 'contorno' oscuro y un 'brillo' neón.
