@@ -23,6 +23,7 @@ let failedAttempts = 0; // Intentos fallidos (contador de errores)
 let currentPosition = []; // Posición actual a memorizar
 let placedPieces = []; // Piezas que el jugador ha colocado
 let startTime = null; // Tiempo de inicio del intento
+let currentScore = 0; // Puntaje actual de la sesión
 
 // Exponer a window para que leaderboard-integration.js pueda acceder
 Object.defineProperty(window, 'currentLevel', {
@@ -59,6 +60,9 @@ Object.defineProperty(window, 'totalSuccessfulAttemptsSession', {
 });
 Object.defineProperty(window, 'totalFailedAttemptsSession', {
     get: () => totalFailedAttemptsSession
+});
+Object.defineProperty(window, 'currentScore', {
+    get: () => currentScore
 });
 
 // SISTEMA DE DESHACER/LIMPIAR
@@ -673,6 +677,11 @@ function onAttemptSuccess() {
     successfulAttempts++;
     totalSuccessfulAttemptsSession++; // ✅ INCREMENTAR contador acumulativo de toda la partida
     gameState = 'completed';
+
+    // Calcular y agregar puntos
+    const pointsEarned = calculatePoints();
+    currentScore += pointsEarned;
+    updateScoreDisplay();
 
     // Actualizar barra de progreso
     updateProgressBar();
@@ -1425,6 +1434,43 @@ function updateLivesDisplay() {
     }
 
     console.log(`❤️ Vidas: ${livesRemaining}/${MAX_FAILED_ATTEMPTS}`);
+}
+
+/**
+ * Actualiza el display de puntaje en el panel lateral
+ */
+function updateScoreDisplay() {
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    if (!scoreDisplay) return;
+
+    scoreDisplay.textContent = currentScore.toLocaleString();
+
+    // Animación de pulso cuando el score aumenta
+    scoreDisplay.classList.add('pulse');
+    setTimeout(() => {
+        scoreDisplay.classList.remove('pulse');
+    }, 300);
+
+    console.log(`🏆 Score: ${currentScore}`);
+}
+
+/**
+ * Calcula los puntos ganados por un intento exitoso
+ * Sistema de puntuación:
+ * - Base: nivel * 100 puntos
+ * - Bonus por nivel alto: +50 puntos extra por cada nivel sobre 3
+ * - Penalización por hints usados: -20 puntos por hint usado en el nivel
+ */
+function calculatePoints() {
+    const basePoints = currentLevel * 100;
+    const levelBonus = currentLevel > 3 ? (currentLevel - 3) * 50 : 0;
+    const hintsUsedThisLevel = HINTS_PER_LEVEL - hintsLeft;
+    const hintPenalty = hintsUsedThisLevel * 20;
+
+    const totalPoints = Math.max(0, basePoints + levelBonus - hintPenalty);
+
+    console.log(`📊 Puntos: base=${basePoints}, bonus=${levelBonus}, penalty=${hintPenalty}, total=${totalPoints}`);
+    return totalPoints;
 }
 
 // ============================================
@@ -2727,6 +2773,7 @@ function resetGameCounters() {
     totalHintsUsedSession = 0;
     totalSuccessfulAttemptsSession = 0;
     totalFailedAttemptsSession = 0;
+    currentScore = 0;
 
     // Resetear contadores del nivel actual
     currentLevel = 1;
@@ -2736,6 +2783,7 @@ function resetGameCounters() {
     hintsLeft = HINTS_PER_LEVEL;
     updateLivesDisplay(); // Actualizar display de vidas
     updateProgressBar(); // Actualizar barra de progreso
+    updateScoreDisplay(); // Actualizar display de puntaje
 
     // Resetear arrays
     placedPieces = [];
