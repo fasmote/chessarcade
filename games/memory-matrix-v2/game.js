@@ -1444,18 +1444,27 @@ function updateLivesDisplay() {
  * - successScore: éxitos totales × 200
  * - failuresPenalty: errores × 300
  * - hintsPenalty: progresivo (100 × (2^hints - 1))
- * - timeBonus: hasta 1000 puntos por velocidad
+ * - timeBonus: hasta 1000 puntos por velocidad (solo si el juego ha empezado)
  */
 function calculateCurrentScore() {
+    // Si no ha empezado el juego (sin intentos), mostrar 0
+    const totalAttempts = totalSuccessfulAttemptsSession + totalFailedAttemptsSession;
+    if (totalAttempts === 0 && globalStartTime === null) {
+        return 0;
+    }
+
     const levelScore = currentLevel * 2000;
     const successScore = totalSuccessfulAttemptsSession * 200;
     const failuresPenalty = totalFailedAttemptsSession * 300;
     const hintsPenalty = totalHintsUsedSession > 0 ? 100 * (Math.pow(2, totalHintsUsedSession) - 1) : 0;
 
-    // Time bonus: igual que leaderboard
-    const timeLimitMs = 5 * 60 * 1000; // 5 minutos
-    const totalTimeMs = globalElapsedTime || 0;
-    const timeBonus = Math.max(0, Math.min(1000, 1000 - Math.floor(Math.max(0, totalTimeMs - timeLimitMs) / 60000) * 100));
+    // Time bonus: solo si el juego ha empezado (globalStartTime existe)
+    let timeBonus = 0;
+    if (globalStartTime !== null) {
+        const timeLimitMs = 5 * 60 * 1000; // 5 minutos
+        const totalTimeMs = globalElapsedTime || 0;
+        timeBonus = Math.max(0, Math.min(1000, 1000 - Math.floor(Math.max(0, totalTimeMs - timeLimitMs) / 60000) * 100));
+    }
 
     const calculatedScore = levelScore + successScore - failuresPenalty - hintsPenalty + timeBonus;
     const finalScore = Math.max(0, calculatedScore);
