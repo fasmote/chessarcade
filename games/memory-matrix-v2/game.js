@@ -2789,6 +2789,9 @@ function resetGameCounters() {
     // Añadir 'currentPosition = []' asegura que se genere una nueva posición para la nueva partida.
     console.log("🔄 Reiniciando contadores y posición del juego...");
 
+    // Resetear timer global (importante para que el score empiece en 0)
+    resetGlobalTimer();
+
     // Resetear contadores acumulativos de sesión
     totalHintsUsedSession = 0;
     totalSuccessfulAttemptsSession = 0;
