@@ -49,6 +49,11 @@
             totalTimeMs += Date.now() - window.globalStartTime;
         }
 
+        // Si no hay aciertos todavía, score = 0 (consistente con panel)
+        if (totalSuccessful === 0) {
+            return 0;
+        }
+
         // Calcular score
         const levelScore = isVictory ? 8 * 2000 : levelReached * 2000;
         const successScore = totalSuccessful * 200;

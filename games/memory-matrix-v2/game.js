@@ -1151,6 +1151,15 @@ function showHint() {
         return;
     }
 
+    // Verificar si el score puede cubrir el costo del siguiente hint
+    const nextHintCost = 100 * Math.pow(2, totalHintsUsedSession);
+    const currentScoreValue = calculateCurrentScore();
+    if (currentScoreValue < nextHintCost) {
+        updateStatus(`❌ Score insuficiente. Necesitas ${nextHintCost} puntos para usar HINT`, 'error');
+        console.log(`❌ Score insuficiente: ${currentScoreValue} < ${nextHintCost}`);
+        return;
+    }
+
     // Obtener piezas que faltan colocar
     const piecesToValidate = window.MemoryMatrixLevels.getPiecesToHide(
         currentLevel,
@@ -1247,15 +1256,16 @@ function showHint() {
     }, 1500);
 
     // Consumir hint
+    const hintCostApplied = 100 * Math.pow(2, totalHintsUsedSession); // Costo ANTES de incrementar
     hintsLeft--;
     totalHintsUsedSession++; // ✅ INCREMENTAR contador global
     updateHintButton();
     updateScoreDisplay(); // Actualizar score (hints afectan el puntaje)
 
-    // Mensaje actualizado
+    // Mensaje actualizado con costo
     const pieceCount = missingPieces.length;
     const plural = pieceCount > 1 ? 's' : '';
-    updateStatus(`💡 Pista (${hintsLeft} restante${hintsLeft !== 1 ? 's' : ''}): ${pieceCount} pieza${plural} mostrada${plural}`);
+    updateStatus(`💡 HINT usado (-${hintCostApplied} pts). ${pieceCount} pieza${plural} mostrada${plural}. Quedan ${hintsLeft} hints.`);
     console.log(`💡 Hint shown: ${pieceCount} pieces displayed (${hintsLeft} hints left, total used: ${totalHintsUsedSession})`);
 }
 
@@ -1453,6 +1463,11 @@ function calculateCurrentScore() {
         return 0;
     }
 
+    // Si no hay aciertos todavía, score = 0 (los puntos arrancan con el primer acierto)
+    if (totalSuccessfulAttemptsSession === 0) {
+        return 0;
+    }
+
     const levelScore = currentLevel * 2000;
     const successScore = totalSuccessfulAttemptsSession * 200;
     const failuresPenalty = totalFailedAttemptsSession * 300;
@@ -1467,7 +1482,7 @@ function calculateCurrentScore() {
     }
 
     const calculatedScore = levelScore + successScore - failuresPenalty - hintsPenalty + timeBonus;
-    const finalScore = Math.max(0, calculatedScore);
+    const finalScore = Math.max(1, calculatedScore);
 
     return finalScore;
 }
