@@ -678,9 +678,7 @@ function onAttemptSuccess() {
     totalSuccessfulAttemptsSession++; // ✅ INCREMENTAR contador acumulativo de toda la partida
     gameState = 'completed';
 
-    // Calcular y agregar puntos
-    const pointsEarned = calculatePoints();
-    currentScore += pointsEarned;
+    // Actualizar score (recalcula usando fórmula del leaderboard)
     updateScoreDisplay();
 
     // Actualizar barra de progreso
@@ -751,8 +749,9 @@ function onAttemptFailed(incorrectPieces) {
     totalFailedAttemptsSession++; // ✅ INCREMENTAR contador acumulativo de toda la partida
     console.log(`❌ Error #${failedAttempts}/${MAX_FAILED_ATTEMPTS}`);
 
-    // Actualizar display de vidas
+    // Actualizar display de vidas y score
     updateLivesDisplay();
+    updateScoreDisplay();
 
     const levelConfig = window.MemoryMatrixLevels.getLevelConfig(currentLevel);
 
@@ -981,6 +980,7 @@ function onLevelComplete() {
         hintsLeft = HINTS_PER_LEVEL; // ← RESETEAR HINTS al pasar de nivel
         updateLivesDisplay(); // ← Actualizar display de vidas
         updateProgressBar(); // ← Actualizar barra de progreso
+        updateScoreDisplay(); // ← Actualizar score (nuevo nivel = más puntos)
 
         if (currentLevel > totalLevels) {
             // Juego completado
@@ -1250,6 +1250,7 @@ function showHint() {
     hintsLeft--;
     totalHintsUsedSession++; // ✅ INCREMENTAR contador global
     updateHintButton();
+    updateScoreDisplay(); // Actualizar score (hints afectan el puntaje)
 
     // Mensaje actualizado
     const pieceCount = missingPieces.length;
@@ -1437,40 +1438,50 @@ function updateLivesDisplay() {
 }
 
 /**
+ * Calcula el score actual usando la MISMA fórmula que el leaderboard
+ * Fórmula:
+ * - levelScore: nivel actual × 2000
+ * - successScore: éxitos totales × 200
+ * - failuresPenalty: errores × 300
+ * - hintsPenalty: progresivo (100 × (2^hints - 1))
+ * - timeBonus: hasta 1000 puntos por velocidad
+ */
+function calculateCurrentScore() {
+    const levelScore = currentLevel * 2000;
+    const successScore = totalSuccessfulAttemptsSession * 200;
+    const failuresPenalty = totalFailedAttemptsSession * 300;
+    const hintsPenalty = totalHintsUsedSession > 0 ? 100 * (Math.pow(2, totalHintsUsedSession) - 1) : 0;
+
+    // Time bonus: igual que leaderboard
+    const timeLimitMs = 5 * 60 * 1000; // 5 minutos
+    const totalTimeMs = globalElapsedTime || 0;
+    const timeBonus = Math.max(0, Math.min(1000, 1000 - Math.floor(Math.max(0, totalTimeMs - timeLimitMs) / 60000) * 100));
+
+    const calculatedScore = levelScore + successScore - failuresPenalty - hintsPenalty + timeBonus;
+    const finalScore = Math.max(0, calculatedScore);
+
+    return finalScore;
+}
+
+/**
  * Actualiza el display de puntaje en el panel lateral
+ * Usa la misma fórmula que el leaderboard para mantener consistencia
  */
 function updateScoreDisplay() {
     const scoreDisplay = document.getElementById('scoreDisplay');
     if (!scoreDisplay) return;
 
+    // Recalcular score usando fórmula del leaderboard
+    currentScore = calculateCurrentScore();
     scoreDisplay.textContent = currentScore.toLocaleString();
 
-    // Animación de pulso cuando el score aumenta
+    // Animación de pulso cuando el score cambia
     scoreDisplay.classList.add('pulse');
     setTimeout(() => {
         scoreDisplay.classList.remove('pulse');
     }, 300);
 
     console.log(`🏆 Score: ${currentScore}`);
-}
-
-/**
- * Calcula los puntos ganados por un intento exitoso
- * Sistema de puntuación:
- * - Base: nivel * 100 puntos
- * - Bonus por nivel alto: +50 puntos extra por cada nivel sobre 3
- * - Penalización por hints usados: -20 puntos por hint usado en el nivel
- */
-function calculatePoints() {
-    const basePoints = currentLevel * 100;
-    const levelBonus = currentLevel > 3 ? (currentLevel - 3) * 50 : 0;
-    const hintsUsedThisLevel = HINTS_PER_LEVEL - hintsLeft;
-    const hintPenalty = hintsUsedThisLevel * 20;
-
-    const totalPoints = Math.max(0, basePoints + levelBonus - hintPenalty);
-
-    console.log(`📊 Puntos: base=${basePoints}, bonus=${levelBonus}, penalty=${hintPenalty}, total=${totalPoints}`);
-    return totalPoints;
 }
 
 // ============================================
