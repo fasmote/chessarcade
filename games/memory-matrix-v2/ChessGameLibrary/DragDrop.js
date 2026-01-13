@@ -159,11 +159,13 @@ function handleDragStart(e) {
     const bankSlot = pieceElement.closest('.bank-piece-slot');
     if (!bankSlot) return;
 
-    // Obtener datos de la pieza (primero del img, si no del slot parent)
-    const piece = pieceElement.dataset.piece || bankSlot.dataset.piece;
+    // IMPORTANTE: Solo usar dataset.piece de la imagen, NUNCA del slot
+    // El slot tiene un dataset.piece predefinido que puede no coincidir
+    // con la pieza real que está en él (bug encontrado 13-Ene-2026)
+    const piece = pieceElement.dataset.piece;
 
     if (!piece) {
-        console.warn('⚠️ Pieza sin dataset.piece');
+        console.error('❌ Pieza sin dataset.piece - esto es un bug!', pieceElement);
         return;
     }
 
@@ -645,8 +647,12 @@ function initTapTap(options = {}) {
         const bankSlot = pieceElement.closest('.bank-piece-slot');
         if (!bankSlot) return;
 
-        const piece = pieceElement.dataset.piece || bankSlot.dataset.piece;
-        if (!piece) return;
+        // IMPORTANTE: Solo usar dataset.piece de la imagen (fix bug bN 13-Ene-2026)
+        const piece = pieceElement.dataset.piece;
+        if (!piece) {
+            console.error('❌ Tap-tap: Pieza sin dataset.piece!', pieceElement);
+            return;
+        }
 
         // Deseleccionar anterior si existe
         if (tapState.selectedPieceElement) {

@@ -850,23 +850,25 @@ function onAttemptFailed(incorrectPieces) {
                 console.log(`✨ Re-mostrando pieza oculta: ${piece} en ${square}`);
             });
 
-            updateStatus(`Nivel ${currentLevel} - ¡Memoriza de nuevo!`);
+            updateStatus(`Nivel ${currentLevel} - ¡REVISA la posición!`);
 
             // ==========================================
-            // EFECTO GLITCH en reintento (1 segundo)
-            // NO mostrar timer, solo glitch crítico
+            // CONTADOR DE CORRECCIÓN (3 segundos)
+            // Muestra "REVISA" + 3...2...1 en naranja
+            // Da tiempo para ver la posición correcta
             // ==========================================
             const squaresToGlitch = piecesToHide.map(pos => pos.square);
 
-            // Activar glitch crítico inmediatamente
-            applyGlitchEffect(squaresToGlitch, 'critical');
-            console.log('🚨 Glitch crítico activado en reintento');
+            // Aplicar efecto glitch sutil mientras se muestra el contador
+            applyGlitchEffect(squaresToGlitch, 'warning');
 
-            // Después de 1 segundo, ocultar las MISMAS piezas
-            setTimeout(() => {
+            // Mostrar contador de corrección con 3 segundos
+            showCorrectionCounter(3, () => {
+                // Callback cuando termina la cuenta regresiva
                 removeGlitchEffect(squaresToGlitch);
                 hidePiecesPhase(levelConfig);
-            }, 1000); // 1 segundo de glitch antes de ocultar
+            });
+            console.log('⏱️ Contador de corrección iniciado (3 segundos)');
 
         }, 500);
 
@@ -1129,6 +1131,81 @@ function updateClickableState(isIdle) {
     }
 }
 window.updateClickableState = updateClickableState; // Exponer para leaderboard-integration.js
+
+/**
+ * ============================================
+ * CONTADOR DE CORRECCIÓN (3... 2... 1...)
+ * Se muestra cuando el jugador falla para dar
+ * tiempo de revisar la posición correcta
+ * ============================================
+ */
+let correctionCounterInterval = null;
+
+/**
+ * Muestra el contador de corrección con cuenta regresiva
+ * @param {number} seconds - Segundos de cuenta regresiva (default 3)
+ * @param {Function} onComplete - Callback al terminar
+ */
+function showCorrectionCounter(seconds = 3, onComplete) {
+    const counter = document.getElementById('correctionCounter');
+    const numberEl = document.getElementById('correctionNumber');
+
+    if (!counter || !numberEl) {
+        console.warn('⚠️ Elementos del contador de corrección no encontrados');
+        if (onComplete) setTimeout(onComplete, seconds * 1000);
+        return;
+    }
+
+    let remaining = seconds;
+    numberEl.textContent = remaining;
+
+    // Mostrar el contador
+    counter.classList.add('visible');
+    console.log(`⏱️ Contador de corrección iniciado: ${seconds} segundos`);
+
+    // Limpiar intervalo anterior si existe
+    if (correctionCounterInterval) {
+        clearInterval(correctionCounterInterval);
+    }
+
+    correctionCounterInterval = setInterval(() => {
+        remaining--;
+
+        if (remaining > 0) {
+            // Actualizar número con animación (re-trigger)
+            numberEl.style.animation = 'none';
+            numberEl.offsetHeight; // Force reflow
+            numberEl.style.animation = 'numberPop 1s ease-out';
+            numberEl.textContent = remaining;
+            console.log(`⏱️ Contador: ${remaining}`);
+        } else {
+            // Terminar cuenta regresiva
+            clearInterval(correctionCounterInterval);
+            correctionCounterInterval = null;
+            hideCorrectionCounter();
+
+            if (onComplete) {
+                onComplete();
+            }
+        }
+    }, 1000);
+}
+
+/**
+ * Oculta el contador de corrección
+ */
+function hideCorrectionCounter() {
+    const counter = document.getElementById('correctionCounter');
+    if (counter) {
+        counter.classList.remove('visible');
+        console.log('⏱️ Contador de corrección ocultado');
+    }
+
+    if (correctionCounterInterval) {
+        clearInterval(correctionCounterInterval);
+        correctionCounterInterval = null;
+    }
+}
 
 // ============================================
 // SISTEMA DE HINTS

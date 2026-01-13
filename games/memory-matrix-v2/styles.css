@@ -3042,3 +3042,104 @@ body::before {
 .chessboard.clickable {
     cursor: pointer;
 }
+
+/* ============================================
+   CORRECTION COUNTER (cuando fallas)
+   Muestra 3... 2... 1... en naranja
+   ============================================ */
+
+.correction-counter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 25;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    pointer-events: none;
+    user-select: none;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.correction-counter.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.correction-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(14px, 3vw, 20px);
+    font-weight: 700;
+    color: #ff8c00;
+    letter-spacing: 0.2em;
+    text-shadow:
+        0 0 5px rgba(0,0,0,0.9),
+        0 0 10px #ff8c00,
+        0 0 20px #ff6600;
+    animation: correctionPulse 0.8s ease-in-out infinite;
+}
+
+.correction-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(60px, 15vw, 120px);
+    font-weight: 900;
+    color: #ff6600;
+    line-height: 1;
+    text-shadow:
+        0 0 10px rgba(0,0,0,0.9),
+        0 0 20px #ff8c00,
+        0 0 40px #ff6600,
+        0 0 60px #ff4500;
+    animation: numberPop 1s ease-out;
+}
+
+@keyframes correctionPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes numberPop {
+    0% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+    30% {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+    .correction-counter {
+        gap: 4px;
+    }
+
+    .correction-label {
+        font-size: 12px;
+        letter-spacing: 0.15em;
+    }
+
+    .correction-number {
+        font-size: clamp(50px, 12vw, 80px);
+    }
+}
