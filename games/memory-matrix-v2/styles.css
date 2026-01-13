@@ -3143,3 +3143,37 @@ body::before {
         font-size: clamp(50px, 12vw, 80px);
     }
 }
+
+/* ============================================
+   HINT BUTTON - NO POINTS STATE
+   Botón gris cuando no hay puntos suficientes
+   ============================================ */
+
+.btn-hint.no-points,
+.btn-hint-mobile.no-points,
+.btn-hint-side.no-points,
+button.no-points {
+    background: linear-gradient(180deg, #555 0%, #333 100%) !important;
+    border-color: #666 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.btn-hint.no-points:hover,
+.btn-hint-mobile.no-points:hover,
+.btn-hint-side.no-points:hover,
+button.no-points:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: linear-gradient(180deg, #555 0%, #333 100%) !important;
+}
+
+/* Icono del hint gris cuando no hay puntos */
+.btn-hint.no-points .hint-icon,
+.btn-hint-side.no-points .hint-icon {
+    filter: grayscale(100%) !important;
+    opacity: 0.5 !important;
+}

@@ -1423,9 +1423,16 @@ function createDisintegrationEffect(squareEl, hintElement, hiddenHints) {
 /**
  * Actualiza los botones de hint (contador y estado disabled)
  * Sincroniza tanto el del header como el mobile y side
+ * También verifica si hay puntos suficientes para usar hint
  */
 function updateHintButton() {
+    // Calcular costo del próximo hint (100, 200, 400, 800...)
+    const nextHintCost = 100 * Math.pow(2, totalHintsUsedSession);
+    const actualScore = calculateCurrentScore();
+    const hasEnoughPoints = actualScore >= nextHintCost;
+
     const isDisabled = (hintsLeft <= 0 || gameState !== 'solving');
+    const noPoints = !hasEnoughPoints && hintsLeft > 0 && gameState === 'solving';
 
     // Botón hint header (desktop)
     const btnHint = document.getElementById('btnHint');
@@ -1433,7 +1440,9 @@ function updateHintButton() {
 
     if (btnHint && hintLabel) {
         hintLabel.textContent = `HINT (${hintsLeft})`;
-        btnHint.disabled = isDisabled;
+        btnHint.disabled = isDisabled || noPoints;
+        btnHint.classList.toggle('no-points', noPoints);
+        btnHint.title = noPoints ? `Necesitas ${nextHintCost} pts (tienes ${actualScore})` : '';
     }
 
     // Botón hint mobile
@@ -1442,7 +1451,9 @@ function updateHintButton() {
 
     if (btnHintMobile && hintCountMobile) {
         hintCountMobile.textContent = hintsLeft;
-        btnHintMobile.disabled = isDisabled;
+        btnHintMobile.disabled = isDisabled || noPoints;
+        btnHintMobile.classList.toggle('no-points', noPoints);
+        btnHintMobile.title = noPoints ? `Necesitas ${nextHintCost} pts` : '';
     }
 
     // Botón hint side (desktop lateral)
@@ -1451,7 +1462,9 @@ function updateHintButton() {
 
     if (btnHintSide && hintLabelSide) {
         hintLabelSide.textContent = `HINT (${hintsLeft})`;
-        btnHintSide.disabled = isDisabled;
+        btnHintSide.disabled = isDisabled || noPoints;
+        btnHintSide.classList.toggle('no-points', noPoints);
+        btnHintSide.title = noPoints ? `Necesitas ${nextHintCost} pts (tienes ${actualScore})` : '';
     }
 }
 
