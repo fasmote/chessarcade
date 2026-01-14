@@ -3005,7 +3005,7 @@ window.resetGameCounters = resetGameCounters;
  * @param {number} level - Número de nivel (1-15)
  */
 function jumpToLevel(level) {
-    const totalLevels = window.MemoryMatrixLevels ? window.MemoryMatrixLevels.levels.length : 15;
+    const totalLevels = window.MemoryMatrixLevels ? window.MemoryMatrixLevels.getTotalLevels() : 15;
 
     if (level < 1 || level > totalLevels) {
         console.error(`❌ Nivel inválido. Usa un número entre 1 y ${totalLevels}`);
