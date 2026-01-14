@@ -853,22 +853,25 @@ function onAttemptFailed(incorrectPieces) {
             updateStatus(`Nivel ${currentLevel} - ¡REVISA la posición!`);
 
             // ==========================================
-            // CONTADOR DE CORRECCIÓN (3 segundos)
-            // Muestra "REVISA" + 3...2...1 en naranja
-            // Da tiempo para ver la posición correcta
+            // CONTADOR DE CORRECCIÓN (dinámico según nivel)
+            // Base 3s + 1s cada 3 niveles
+            // Nivel 1-3: 3s, Nivel 4-6: 4s, ... Nivel 19: 9s
             // ==========================================
             const squaresToGlitch = piecesToHide.map(pos => pos.square);
+
+            // Calcular tiempo de corrección según nivel
+            const correctionTime = 3 + Math.floor((currentLevel - 1) / 3);
 
             // Aplicar efecto glitch sutil mientras se muestra el contador
             applyGlitchEffect(squaresToGlitch, 'warning');
 
-            // Mostrar contador de corrección con 3 segundos
-            showCorrectionCounter(3, () => {
+            // Mostrar contador de corrección
+            showCorrectionCounter(correctionTime, () => {
                 // Callback cuando termina la cuenta regresiva
                 removeGlitchEffect(squaresToGlitch);
                 hidePiecesPhase(levelConfig);
             });
-            console.log('⏱️ Contador de corrección iniciado (3 segundos)');
+            console.log(`⏱️ Contador de corrección iniciado (${correctionTime} segundos para nivel ${currentLevel})`);
 
         }, 500);
 
@@ -1159,7 +1162,8 @@ function showCorrectionCounter(seconds = 3, onComplete) {
     let remaining = seconds;
     numberEl.textContent = remaining;
 
-    // Mostrar el contador
+    // Mostrar el contador (remover hidden, agregar visible)
+    counter.classList.remove('hidden');
     counter.classList.add('visible');
     console.log(`⏱️ Contador de corrección iniciado: ${seconds} segundos`);
 
@@ -1198,6 +1202,7 @@ function hideCorrectionCounter() {
     const counter = document.getElementById('correctionCounter');
     if (counter) {
         counter.classList.remove('visible');
+        counter.classList.add('hidden');
         console.log('⏱️ Contador de corrección ocultado');
     }
 
@@ -1213,26 +1218,21 @@ function hideCorrectionCounter() {
 
 /**
  * Muestra brevemente TODAS las piezas del banco como pista
+ * HINTS INFINITOS - solo limitados por score disponible
  */
 function showHint() {
-    // Validaciones
-    if (hintsLeft <= 0) {
-        updateStatus('❌ No quedan hints disponibles', 'error');
-        console.log('❌ No hints left');
-        return;
-    }
-
+    // Validación: solo durante fase de colocación
     if (gameState !== 'solving') {
         updateStatus('❌ Solo puedes usar hints durante la fase de colocación', 'error');
         console.log('❌ Can only use hints during solving phase');
         return;
     }
 
-    // Verificar si el score puede cubrir el costo del siguiente hint
+    // Validación: verificar si el score puede cubrir el costo
     const nextHintCost = 100 * Math.pow(2, totalHintsUsedSession);
     const currentScoreValue = calculateCurrentScore();
     if (currentScoreValue < nextHintCost) {
-        updateStatus(`❌ Score insuficiente. Necesitas ${nextHintCost} puntos para usar HINT`, 'error');
+        updateStatus(`❌ Score insuficiente. Necesitas ${nextHintCost} pts (tienes ${currentScoreValue})`, 'error');
         console.log(`❌ Score insuficiente: ${currentScoreValue} < ${nextHintCost}`);
         return;
     }
@@ -1325,25 +1325,31 @@ function showHint() {
         }, 450); // Delay para permitir que termine animación de vuelta al banco (400ms)
     });
 
-    // Efecto de desintegración COORDINADO para TODAS las piezas después de 1.5s
+    // Calcular tiempo de visualización del hint según nivel
+    // Base 2s + 1s cada 3 niveles (igual que corrección pero base menor)
+    // Nivel 1-3: 2s, Nivel 4-6: 3s, ... Nivel 19: 8s
+    const hintDisplayTime = 2000 + Math.floor((currentLevel - 1) / 3) * 1000;
+
+    // Efecto de desintegración COORDINADO para TODAS las piezas
     setTimeout(() => {
         hintElements.forEach(({ squareEl, pieceImg, hints }) => {
             createDisintegrationEffect(squareEl, pieceImg, hints);
         });
-    }, 1500);
+    }, hintDisplayTime);
+    console.log(`💡 Hint se mostrará por ${hintDisplayTime/1000}s (nivel ${currentLevel})`);
 
-    // Consumir hint
+    // Consumir hint (HINTS INFINITOS - solo afecta score)
     const hintCostApplied = 100 * Math.pow(2, totalHintsUsedSession); // Costo ANTES de incrementar
-    hintsLeft--;
-    totalHintsUsedSession++; // ✅ INCREMENTAR contador global
-    updateHintButton();
-    updateScoreDisplay(); // Actualizar score (hints afectan el puntaje)
+    totalHintsUsedSession++; // INCREMENTAR contador (para calcular próximo costo)
+    updateHintButton(); // Actualizar botón con nuevo costo
+    updateScoreDisplay(); // Actualizar score
 
     // Mensaje actualizado con costo
     const pieceCount = missingPieces.length;
     const plural = pieceCount > 1 ? 's' : '';
-    updateStatus(`💡 HINT usado (-${hintCostApplied} pts). ${pieceCount} pieza${plural} mostrada${plural}. Quedan ${hintsLeft} hints.`);
-    console.log(`💡 Hint shown: ${pieceCount} pieces displayed (${hintsLeft} hints left, total used: ${totalHintsUsedSession})`);
+    const nextCost = 100 * Math.pow(2, totalHintsUsedSession);
+    updateStatus(`💡 HINT usado (-${hintCostApplied} pts). ${pieceCount} pieza${plural}. Próximo: -${nextCost} pts`);
+    console.log(`💡 Hint: -${hintCostApplied} pts, ${pieceCount} piezas. Próximo costo: ${nextCost}`);
 }
 
 /**
@@ -1421,9 +1427,9 @@ function createDisintegrationEffect(squareEl, hintElement, hiddenHints) {
 }
 
 /**
- * Actualiza los botones de hint (contador y estado disabled)
+ * Actualiza los botones de hint (costo y estado disabled)
  * Sincroniza tanto el del header como el mobile y side
- * También verifica si hay puntos suficientes para usar hint
+ * HINTS INFINITOS - solo limitados por score
  */
 function updateHintButton() {
     // Calcular costo del próximo hint (100, 200, 400, 800...)
@@ -1431,18 +1437,22 @@ function updateHintButton() {
     const actualScore = calculateCurrentScore();
     const hasEnoughPoints = actualScore >= nextHintCost;
 
-    const isDisabled = (hintsLeft <= 0 || gameState !== 'solving');
-    const noPoints = !hasEnoughPoints && hintsLeft > 0 && gameState === 'solving';
+    // Solo verificar gameState (hints son infinitos, limitados por score)
+    const notSolving = gameState !== 'solving';
+    const noPoints = !hasEnoughPoints && gameState === 'solving';
+
+    // Texto a mostrar: costo del hint
+    const costText = `-${nextHintCost}`;
 
     // Botón hint header (desktop)
     const btnHint = document.getElementById('btnHint');
     const hintLabel = document.getElementById('hintLabel');
 
     if (btnHint && hintLabel) {
-        hintLabel.textContent = `HINT (${hintsLeft})`;
-        btnHint.disabled = isDisabled || noPoints;
+        hintLabel.textContent = `HINT (${costText})`;
+        btnHint.disabled = notSolving || noPoints;
         btnHint.classList.toggle('no-points', noPoints);
-        btnHint.title = noPoints ? `Necesitas ${nextHintCost} pts (tienes ${actualScore})` : '';
+        btnHint.title = noPoints ? `Necesitas ${nextHintCost} pts (tienes ${actualScore})` : `Costo: ${nextHintCost} pts`;
     }
 
     // Botón hint mobile
@@ -1450,8 +1460,8 @@ function updateHintButton() {
     const hintCountMobile = document.getElementById('hintCountMobile');
 
     if (btnHintMobile && hintCountMobile) {
-        hintCountMobile.textContent = hintsLeft;
-        btnHintMobile.disabled = isDisabled || noPoints;
+        hintCountMobile.textContent = costText;
+        btnHintMobile.disabled = notSolving || noPoints;
         btnHintMobile.classList.toggle('no-points', noPoints);
         btnHintMobile.title = noPoints ? `Necesitas ${nextHintCost} pts` : '';
     }
@@ -1461,10 +1471,10 @@ function updateHintButton() {
     const hintLabelSide = document.getElementById('hintLabelSide');
 
     if (btnHintSide && hintLabelSide) {
-        hintLabelSide.textContent = `HINT (${hintsLeft})`;
-        btnHintSide.disabled = isDisabled || noPoints;
+        hintLabelSide.textContent = `HINT (${costText})`;
+        btnHintSide.disabled = notSolving || noPoints;
         btnHintSide.classList.toggle('no-points', noPoints);
-        btnHintSide.title = noPoints ? `Necesitas ${nextHintCost} pts (tienes ${actualScore})` : '';
+        btnHintSide.title = noPoints ? `Necesitas ${nextHintCost} pts (tienes ${actualScore})` : `Costo: ${nextHintCost} pts`;
     }
 }
 
