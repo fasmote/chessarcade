@@ -178,11 +178,154 @@ const LEVELS = [
         allowedColors: ['w', 'b'],
         attemptsRequired: 5,
         hidePiecesConfig: {
-            // Intentos 1-3: Rey blanco (wK) siempre visible como referencia
-            // Intentos 4-5: Todas las piezas desaparecen
             progressiveHiding: [
-                { attempts: [1, 2, 3], hideCount: 9, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9] }, // Oculta bK + 8 más
-                { attempts: [4, 5], hideCount: 10, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] }  // Todas
+                { attempts: [1, 2, 3], hideCount: 9, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+                { attempts: [4, 5], hideCount: 10, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] }
+            ]
+        }
+    },
+
+    // ============================================
+    // NIVELES 9-15: DESAFÍO EXTREMO
+    // Agregados 14-Ene-2026
+    // ============================================
+
+    // NIVEL 9: Campeón
+    {
+        level: 9,
+        name: 'Campeón',
+        description: '¡Memoria de campeón!',
+        ageRange: 'Campeón',
+        pieceCount: 11,
+        memorizationTime: 7000, // 7 segundos
+        difficulty: 'expert',
+        pieceTypes: ['K', 'Q', 'R', 'B', 'N', 'P'],
+        allowedColors: ['w', 'b'],
+        attemptsRequired: 5,
+        hidePiecesConfig: {
+            progressiveHiding: [
+                { attempts: [1, 2, 3], hideCount: 10, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+                { attempts: [4, 5], hideCount: 11, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+            ]
+        }
+    },
+
+    // NIVEL 10: Virtuoso
+    {
+        level: 10,
+        name: 'Virtuoso',
+        description: '¡Talento excepcional!',
+        ageRange: 'Virtuoso',
+        pieceCount: 12,
+        memorizationTime: 8000, // 8 segundos
+        difficulty: 'master',
+        pieceTypes: ['K', 'Q', 'R', 'B', 'N', 'P'],
+        allowedColors: ['w', 'b'],
+        attemptsRequired: 5,
+        hidePiecesConfig: {
+            progressiveHiding: [
+                { attempts: [1, 2, 3], hideCount: 11, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+                { attempts: [4, 5], hideCount: 12, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] }
+            ]
+        }
+    },
+
+    // NIVEL 11: Genio
+    {
+        level: 11,
+        name: 'Genio',
+        description: '¡Mente brillante!',
+        ageRange: 'Genio',
+        pieceCount: 13,
+        memorizationTime: 8000, // 8 segundos
+        difficulty: 'master',
+        pieceTypes: ['K', 'Q', 'R', 'B', 'N', 'P'],
+        allowedColors: ['w', 'b'],
+        attemptsRequired: 5,
+        hidePiecesConfig: {
+            progressiveHiding: [
+                { attempts: [1, 2, 3], hideCount: 12, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+                { attempts: [4, 5], hideCount: 13, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }
+            ]
+        }
+    },
+
+    // NIVEL 12: Prodigio
+    {
+        level: 12,
+        name: 'Prodigio',
+        description: '¡Memoria prodigiosa!',
+        ageRange: 'Prodigio',
+        pieceCount: 14,
+        memorizationTime: 9000, // 9 segundos
+        difficulty: 'master',
+        pieceTypes: ['K', 'Q', 'R', 'B', 'N', 'P'],
+        allowedColors: ['w', 'b'],
+        attemptsRequired: 5,
+        hidePiecesConfig: {
+            progressiveHiding: [
+                { attempts: [1, 2, 3], hideCount: 13, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+                { attempts: [4, 5], hideCount: 14, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] }
+            ]
+        }
+    },
+
+    // NIVEL 13: Inmortal
+    {
+        level: 13,
+        name: 'Inmortal',
+        description: '¡Hazaña inmortal!',
+        ageRange: 'Inmortal',
+        pieceCount: 15,
+        memorizationTime: 9000, // 9 segundos
+        difficulty: 'legendary',
+        pieceTypes: ['K', 'Q', 'R', 'B', 'N', 'P'],
+        allowedColors: ['w', 'b'],
+        attemptsRequired: 5,
+        hidePiecesConfig: {
+            progressiveHiding: [
+                { attempts: [1, 2, 3], hideCount: 14, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+                { attempts: [4, 5], hideCount: 15, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] }
+            ]
+        }
+    },
+
+    // NIVEL 14: Titán
+    {
+        level: 14,
+        name: 'Titán',
+        description: '¡Fuerza titánica!',
+        ageRange: 'Titán',
+        pieceCount: 16,
+        memorizationTime: 10000, // 10 segundos
+        difficulty: 'legendary',
+        pieceTypes: ['K', 'Q', 'R', 'B', 'N', 'P'],
+        allowedColors: ['w', 'b'],
+        attemptsRequired: 5,
+        hidePiecesConfig: {
+            progressiveHiding: [
+                { attempts: [1, 2, 3], hideCount: 15, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] },
+                { attempts: [4, 5], hideCount: 16, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] }
+            ]
+        }
+    },
+
+    // NIVEL 15: Dios del Ajedrez
+    {
+        level: 15,
+        name: 'Dios del Ajedrez',
+        description: '¡Memoria divina!',
+        ageRange: 'Divino',
+        pieceCount: 18,
+        memorizationTime: 10000, // 10 segundos
+        difficulty: 'legendary',
+        pieceTypes: ['K', 'Q', 'R', 'B', 'N', 'P'],
+        allowedColors: ['w', 'b'],
+        attemptsRequired: 5,
+        hidePiecesConfig: {
+            progressiveHiding: [
+                { attempts: [1, 2, 3], hideCount: 17, hideIndices: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] },
+                { attempts: [4, 5], hideCount: 18, hideIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] }
             ]
         }
     }
