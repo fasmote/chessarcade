@@ -4,9 +4,24 @@ Registro cronológico de cambios día a día.
 
 ---
 
-## [2026-01-14] - Contador de Corrección + Hints Infinitos + Tiempos Dinámicos
+## [2026-01-14] - Niveles 9-15 + Contador de Corrección + Hints Infinitos
 
 ### Added ✨
+
+- **Nuevos Niveles 9-15 (Desafío Extremo)**
+  | Nivel | Nombre | Piezas | Tiempo | Dificultad |
+  |-------|--------|--------|--------|------------|
+  | 9 | Campeón | 11 | 7s | expert |
+  | 10 | Virtuoso | 12 | 8s | master |
+  | 11 | Genio | 13 | 8s | master |
+  | 12 | Prodigio | 14 | 9s | master |
+  | 13 | Inmortal | 15 | 9s | legendary |
+  | 14 | Titán | 16 | 10s | legendary |
+  | 15 | Dios del Ajedrez | 18 | 10s | legendary |
+
+  - El juego ahora tiene 15 niveles (antes 8)
+  - Nuevas dificultades: `master` y `legendary`
+  - Nivel máximo: 18 piezas en 10 segundos
 
 - **Contador de Corrección Visual ("numberPop")**
   - Cuando el jugador falla, aparece un contador naranja grande en el centro del tablero
