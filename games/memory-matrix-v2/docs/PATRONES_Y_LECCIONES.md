@@ -511,6 +511,127 @@ Cuando agregas sonidos a un sistema existente, **buscar primero si ya hay sonido
 
 ---
 
+## 🔧 PROBLEMA 8: Pieza Identificada Incorrectamente (Bug del Caballo Negro)
+
+### 🐛 Síntoma
+Al usar el sistema tap-tap en mobile, a veces una pieza se identificaba con un tipo incorrecto. Por ejemplo, un caballo blanco (`wN`) aparecía como caballo negro (`bN`), o cualquier pieza podía tomar la identidad de otra.
+
+El jugador colocaba una pieza correctamente en el tablero, pero el sistema la validaba como si fuera otra pieza diferente.
+
+### 🔍 Causa Raíz
+El código de `DragDrop.js` usaba un **fallback peligroso** al leer el tipo de pieza:
+
+```javascript
+// ❌ MAL - Fallback al slot del banco
+const piece = pieceElement.dataset.piece || bankSlot.dataset.piece;
+```
+
+**El problema:**
+1. El banco tiene 12 slots predefinidos, cada uno con su propio `dataset.piece` (wK, wQ, wR, wB, wN, wP, bK, bQ, bR, bB, **bN**, bP)
+2. Cuando las piezas vuelan del tablero al banco, se colocan en **cualquier slot vacío** (no necesariamente el que coincide con su tipo)
+3. Si por alguna razón `pieceElement.dataset.piece` estaba vacío o era falsy, el código usaba el `dataset.piece` del **slot** como fallback
+4. Esto causaba que una pieza `wN` en el slot `bN` fuera identificada como `bN`
+
+### ✅ Solución
+Nunca usar el `dataset.piece` del slot como fallback. Solo confiar en la imagen de la pieza:
+
+```javascript
+// ✅ BIEN - Solo usar dataset de la imagen
+const piece = pieceElement.dataset.piece;
+
+if (!piece) {
+    console.error('❌ Pieza sin dataset.piece - esto es un bug!', pieceElement);
+    return;
+}
+```
+
+### 📍 Archivos Afectados
+- `ChessGameLibrary/DragDrop.js` - línea ~163 (handleDragStart)
+- `ChessGameLibrary/DragDrop.js` - línea ~650 (initTapTap click handler)
+
+### 📦 Para la Librería
+**Principio: Datos de la entidad > Datos del contenedor**
+
+```javascript
+ChessArcade.DragDrop.setConfig({
+    // La pieza siempre tiene la autoridad sobre su identidad
+    pieceIdentitySource: 'element',  // 'element' | 'container' | 'both'
+
+    // Validar que las piezas siempre tengan dataset.piece
+    requirePieceDataset: true,
+
+    // En modo debug, advertir si hay inconsistencias
+    debugMode: true
+});
+```
+
+### 💡 Lección Aprendida
+**Los contenedores (slots) no deben tener información sobre su contenido futuro.** El `dataset.piece` del slot era un residuo de un diseño anterior donde los slots estaban "reservados" para tipos específicos de piezas.
+
+**Checklist para sistemas de drag & drop:**
+- [ ] ¿De dónde viene la identidad del elemento arrastrado?
+- [ ] ¿Hay fallbacks que podrían usar datos incorrectos?
+- [ ] ¿Los contenedores tienen datos que podrían confundirse con los del contenido?
+
+---
+
+## 🔧 PROBLEMA 9: Clase CSS `hidden` con `!important` Bloquea Visibilidad
+
+### 🐛 Síntoma
+Un elemento que debería aparecer con `.classList.add('visible')` no se mostraba en pantalla, aunque el JavaScript se ejecutaba correctamente y los logs confirmaban que la clase se agregaba.
+
+### 🔍 Causa Raíz
+El HTML tenía la clase `hidden` inicial:
+```html
+<div class="correction-counter hidden" id="correctionCounter">
+```
+
+Y el CSS definía:
+```css
+.hidden {
+    display: none !important;
+}
+```
+
+El `!important` en `display: none` tiene mayor especificidad que cualquier otra regla, incluyendo la clase `.visible` que usaba `opacity` y `visibility`.
+
+### ✅ Solución
+Al mostrar el elemento, **primero remover `hidden`**, luego agregar `visible`:
+
+```javascript
+// ✅ BIEN - Remover hidden antes de agregar visible
+function showElement(element) {
+    element.classList.remove('hidden');
+    element.classList.add('visible');
+}
+
+function hideElement(element) {
+    element.classList.remove('visible');
+    element.classList.add('hidden');
+}
+```
+
+### 📦 Para la Librería
+**Principio: Conocer la jerarquía de visibilidad CSS**
+
+```javascript
+ChessArcade.UI.setVisibilityClasses({
+    hidden: 'hidden',    // Clase que oculta completamente
+    visible: 'visible',  // Clase que muestra
+    // Al mostrar: primero remove hidden, luego add visible
+    // Al ocultar: primero remove visible, luego add hidden
+    autoManage: true
+});
+```
+
+### 💡 Lección Aprendida
+Cuando uses clases CSS para visibilidad:
+1. **`display: none`** es "más fuerte" que `opacity: 0` o `visibility: hidden`
+2. **`!important`** puede causar conflictos inesperados
+3. Siempre verificar qué clases tiene el elemento inicial en HTML
+
+---
+
 **Este documento será la base de ChessArcade Game Library v1.0**
 
-Última actualización: 2026-01-10
+Última actualización: 2026-01-14

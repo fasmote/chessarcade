@@ -4,6 +4,108 @@ Registro cronológico de cambios día a día.
 
 ---
 
+## [2026-01-14] - Contador de Corrección + Hints Infinitos + Tiempos Dinámicos
+
+### Added ✨
+
+- **Contador de Corrección Visual ("numberPop")**
+  - Cuando el jugador falla, aparece un contador naranja grande en el centro del tablero
+  - Muestra "REVISA" + cuenta regresiva (3... 2... 1...)
+  - Animación "numberPop": el número aparece grande, rebota y se estabiliza
+  - Color naranja neón para diferenciarlo del timer de memorización (cyan)
+  - Da tiempo para ver la posición correcta antes de reintentar
+
+- **Hints Infinitos**
+  - Ya no hay límite de cantidad de hints
+  - Solo limitados por el score disponible
+  - Costo exponencial: 100, 200, 400, 800, 1600... puntos
+  - Botón muestra el costo: `HINT (-100)`, `HINT (-200)`, etc.
+  - Botón gris cuando no hay puntos suficientes (clase `.no-points`)
+
+- **Tiempos Dinámicos según Nivel**
+  - Los tiempos de visualización aumentan en niveles avanzados
+  - Fórmula: `base + Math.floor((nivel - 1) / 3)` segundos extra
+  - **Corrección**: 3s base → Nivel 19: 9 segundos
+  - **Hint**: 2s base → Nivel 19: 8 segundos
+
+  | Nivel | Corrección | Hint |
+  |-------|------------|------|
+  | 1-3   | 3s         | 2s   |
+  | 4-6   | 4s         | 3s   |
+  | 7-9   | 5s         | 4s   |
+  | 10-12 | 6s         | 5s   |
+  | 13-15 | 7s         | 6s   |
+  | 16-18 | 8s         | 7s   |
+  | 19+   | 9s         | 8s   |
+
+### Fixed 🐛
+
+- **Bug del Caballo Negro (bN) - DragDrop.js**
+  - **Problema**: Al usar tap-tap, a veces una pieza se identificaba incorrectamente (ej: caballo blanco wN → caballo negro bN)
+  - **Causa**: El código usaba fallback al `dataset.piece` del **slot** del banco cuando la pieza no lo tenía
+    ```javascript
+    // ANTES (bug)
+    const piece = pieceElement.dataset.piece || bankSlot.dataset.piece;
+    ```
+  - **Por qué fallaba**: Los slots tienen `dataset.piece` predefinido (wK, wQ, ..., bN, bP), pero las piezas que vuelan al banco caen en cualquier slot vacío, no necesariamente el que coincide con su tipo
+  - **Solución**: Solo usar el `dataset.piece` de la imagen, nunca del slot
+    ```javascript
+    // AHORA (correcto)
+    const piece = pieceElement.dataset.piece;
+    ```
+  - Corregido en 2 lugares: `handleDragStart()` y `initTapTap()`
+
+- **Contador de Corrección no se mostraba**
+  - **Problema**: El contador existía pero no aparecía visualmente
+  - **Causa**: La clase `.hidden` tiene `display: none !important`, que ganaba sobre `.visible`
+  - **Solución**: Usar `classList.remove('hidden')` además de `classList.add('visible')`
+
+### Technical Details ⚙️
+
+**Animación numberPop (styles.css):**
+```css
+@keyframes numberPop {
+    0% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+    30% {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.correction-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(60px, 15vw, 120px);
+    color: #ff6600;
+    animation: numberPop 1s ease-out;
+}
+```
+
+**Cálculo de tiempo dinámico (game.js):**
+```javascript
+// Corrección: base 3s + 1s cada 3 niveles
+const correctionTime = 3 + Math.floor((currentLevel - 1) / 3);
+
+// Hint: base 2s + 1s cada 3 niveles
+const hintDisplayTime = 2000 + Math.floor((currentLevel - 1) / 3) * 1000;
+```
+
+**Costo exponencial de hints:**
+```javascript
+const nextHintCost = 100 * Math.pow(2, totalHintsUsedSession);
+// Hint 1: 100, Hint 2: 200, Hint 3: 400, Hint 4: 800...
+```
+
+---
+
 ## [2026-01-10] - Botones Laterales Desktop + Sonido Timer Sincronizado
 
 ### Added ✨
