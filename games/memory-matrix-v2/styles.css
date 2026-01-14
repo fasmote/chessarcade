@@ -1343,6 +1343,34 @@ body::before {
     /* Fondo más oscuro */
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
+
+    /* SCROLL para más de 12 piezas (niveles 9+) */
+    max-height: 180px;  /* ~2 filas en mobile */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Scrollbar estilizado */
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-orange) rgba(0, 0, 0, 0.3);
+}
+
+/* Scrollbar para webkit (Chrome, Safari, Edge) */
+.piece-bank::-webkit-scrollbar {
+    width: 8px;
+}
+
+.piece-bank::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.piece-bank::-webkit-scrollbar-thumb {
+    background: var(--neon-orange);
+    border-radius: 4px;
+}
+
+.piece-bank::-webkit-scrollbar-thumb:hover {
+    background: #ff9933;
 }
 
 /* Slot de pieza en el banco */
@@ -1441,18 +1469,17 @@ body::before {
     }
 
     .piece-bank {
-        /* 3 columnas × 4 filas en desktop */
+        /* 3 columnas en desktop */
         grid-template-columns: repeat(3, 1fr);
+        order: 0;
+        /* Más altura en desktop para scroll con más piezas */
+        max-height: 350px;
     }
 
     /* En desktop: Orden normal (título arriba, banco medio, timer abajo) */
     .bank-title {
         order: 0;
         text-align: center; /* Centrado en desktop */
-    }
-
-    .piece-bank {
-        order: 0;
     }
 
     .timer-hint-container {
