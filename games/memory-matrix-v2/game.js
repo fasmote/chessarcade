@@ -448,6 +448,7 @@ function startGame() {
 
     clearBoard();          // Limpiar piezas del intento anterior
     clearBankPieces();     // Limpiar banco
+    cleanExtraBankSlots(); // Limpiar slots extra del banco (niveles >12 piezas)
     clearAllSquareHints(); // Limpiar coordenadas anteriores
     placedPieces = [];     // Resetear array de piezas colocadas
     moveHistory = [];      // Resetear historial de movimientos
@@ -559,6 +560,12 @@ function hidePiecesPhase(levelConfig) {
     const hideCount = piecesToHide.length;
     const totalCount = currentPosition.length;
     const remainingPieces = totalCount - hideCount;
+
+    // ==========================================
+    // ASEGURAR SUFICIENTES SLOTS EN EL BANCO
+    // ==========================================
+    console.log(`📊 Piezas a ocultar: ${hideCount}, total en posición: ${totalCount}`);
+    ensureBankHasEnoughSlots(hideCount);
 
     if (remainingPieces > 0) {
         updateStatus(`¡${hideCount} pieza${hideCount > 1 ? 's' : ''} al banco! ${remainingPieces} pieza${remainingPieces > 1 ? 's quedan' : ' queda'} de referencia`);
@@ -2017,6 +2024,53 @@ function createPieceBank() {
 }
 
 /**
+ * Asegurar que el banco tenga suficientes slots para las piezas
+ * NUEVO: Crea slots adicionales dinámicamente si hay más de 12 piezas
+ * @param {number} numPieces - Cantidad de piezas que necesitan slots
+ */
+function ensureBankHasEnoughSlots(numPieces) {
+    const bankElement = document.getElementById('pieceBank');
+    if (!bankElement) {
+        console.error('❌ ensureBankHasEnoughSlots: #pieceBank no encontrado');
+        return;
+    }
+
+    const existingSlots = bankElement.querySelectorAll('.bank-piece-slot');
+    const currentSlotCount = existingSlots.length;
+
+    console.log(`🏦 ensureBankHasEnoughSlots: necesito ${numPieces} slots, tengo ${currentSlotCount}`);
+
+    if (numPieces <= currentSlotCount) {
+        console.log('✅ Suficientes slots disponibles');
+        return;
+    }
+
+    // Crear slots adicionales
+    const slotsToCreate = numPieces - currentSlotCount;
+    console.log(`➕ Creando ${slotsToCreate} slots adicionales...`);
+
+    for (let i = 0; i < slotsToCreate; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'bank-piece-slot extra-slot';
+        slot.dataset.extraSlot = 'true';
+        bankElement.appendChild(slot);
+        console.log(`  ➕ Slot extra ${i + 1} creado`);
+    }
+
+    console.log(`✅ Banco expandido: ahora tiene ${currentSlotCount + slotsToCreate} slots`);
+}
+
+/**
+ * Limpiar slots extra del banco (al reiniciar nivel)
+ * Remueve slots adicionales creados dinámicamente
+ */
+function cleanExtraBankSlots() {
+    const extraSlots = document.querySelectorAll('.bank-piece-slot.extra-slot');
+    console.log(`🧹 Limpiando ${extraSlots.length} slots extra del banco`);
+    extraSlots.forEach(slot => slot.remove());
+}
+
+/**
  * Actualizar piezas del banco al cambiar estilo
  * Similar a refreshAllPieces() pero para el banco
  */
@@ -2940,3 +2994,78 @@ function resetGameCounters() {
 
 // Exponer función a window para uso externo
 window.resetGameCounters = resetGameCounters;
+
+// ============================================
+// DEBUG: SALTAR A NIVEL ESPECÍFICO
+// ============================================
+
+/**
+ * DEBUG: Saltar directamente a un nivel específico
+ * Uso en consola: jumpToLevel(11)
+ * @param {number} level - Número de nivel (1-15)
+ */
+function jumpToLevel(level) {
+    const totalLevels = window.MemoryMatrixLevels ? window.MemoryMatrixLevels.levels.length : 15;
+
+    if (level < 1 || level > totalLevels) {
+        console.error(`❌ Nivel inválido. Usa un número entre 1 y ${totalLevels}`);
+        return;
+    }
+
+    console.log(`🚀 DEBUG: Saltando al nivel ${level}...`);
+
+    // Resetear juego
+    stopGlobalTimer();
+    gameState = 'idle';
+    isAnimating = false;
+
+    // Establecer nivel
+    currentLevel = level;
+    currentAttempt = 1;
+    successfulAttempts = 0;
+    failedAttempts = 0;
+
+    // Limpiar
+    clearBoard();
+    clearBankPieces();
+    cleanExtraBankSlots();
+    clearAllSquareHints();
+    placedPieces = [];
+    moveHistory = [];
+    currentPosition = [];
+
+    // Actualizar UI
+    updateLivesDisplay();
+    updateProgressBar();
+    updateScoreDisplay();
+    updateHintButton();
+
+    // Mostrar posición inicial del nuevo nivel
+    showInitialPosition();
+    updateClickableState(true);
+
+    const levelConfig = window.MemoryMatrixLevels.getLevelConfig(level);
+    console.log(`✅ Listo en nivel ${level}: ${levelConfig.name}`);
+    console.log(`   Piezas: ${levelConfig.pieceCount}, Tiempo: ${levelConfig.memorizationTime/1000}s`);
+    console.log('   Haz click en el tablero para comenzar');
+}
+
+// Exponer para uso en consola
+window.jumpToLevel = jumpToLevel;
+
+// Atajo de teclado: Ctrl+Shift+L para saltar a nivel
+document.addEventListener('keydown', (e) => {
+    // Ctrl+Shift+L = Jump to Level
+    if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+        const level = prompt('🎮 DEBUG: Saltar al nivel (1-15):');
+        if (level) {
+            const levelNum = parseInt(level, 10);
+            if (!isNaN(levelNum)) {
+                jumpToLevel(levelNum);
+            }
+        }
+    }
+});
+
+console.log('🔧 DEBUG: Usa jumpToLevel(11) en consola o Ctrl+Shift+L para saltar a un nivel');

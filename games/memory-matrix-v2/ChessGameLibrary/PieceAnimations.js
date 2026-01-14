@@ -289,9 +289,14 @@ function hidePiecesWithAnimation(squares, options = {}) {
     let completedCount = 0;
     const totalPieces = squares.length;
 
+    console.log(`🎯 hidePiecesWithAnimation: ${totalPieces} piezas a ocultar`);
+    console.log(`📍 Casillas: ${squares.join(', ')}`);
+
     // Pre-asignar slots para evitar colisiones
     const emptySlots = [];
     const allSlots = document.querySelectorAll('.bank-piece-slot');
+
+    console.log(`🏦 Slots totales en banco: ${allSlots.length}`);
 
     for (const slot of allSlots) {
         if (!slot.querySelector('.piece')) {
@@ -299,25 +304,44 @@ function hidePiecesWithAnimation(squares, options = {}) {
         }
     }
 
+    console.log(`✅ Slots VACÍOS disponibles: ${emptySlots.length}`);
+
+    if (emptySlots.length < totalPieces) {
+        console.error(`❌ ERROR: No hay suficientes slots! Necesito ${totalPieces}, tengo ${emptySlots.length}`);
+    }
+
     squares.forEach((square, index) => {
         setTimeout(() => {
             const squareElement = document.querySelector(`[data-square="${square}"]`);
             const pieceElement = squareElement?.querySelector('.piece');
 
-            if (pieceElement && emptySlots[index]) {
-                const piece = pieceElement.dataset.piece;
+            console.log(`🔄 [${index + 1}/${totalPieces}] Procesando pieza en ${square}`);
 
-                // Usar slot pre-asignado (cada pieza a un slot diferente)
-                animatePieceToBank(square, piece, emptySlots[index], {
-                    duration,
-                    onComplete: () => {
-                        completedCount++;
-                        if (completedCount === totalPieces) {
-                            onComplete();
-                        }
-                    }
-                });
+            if (!pieceElement) {
+                console.error(`❌ No hay pieza en casilla ${square}`);
+                return;
             }
+
+            if (!emptySlots[index]) {
+                console.error(`❌ No hay slot disponible para pieza ${index + 1} (${square})`);
+                return;
+            }
+
+            const piece = pieceElement.dataset.piece;
+            console.log(`  ✈️ Animando ${piece} desde ${square} al slot ${index}`);
+
+            // Usar slot pre-asignado (cada pieza a un slot diferente)
+            animatePieceToBank(square, piece, emptySlots[index], {
+                duration,
+                onComplete: () => {
+                    completedCount++;
+                    console.log(`  ✅ ${piece} llegó al banco (${completedCount}/${totalPieces})`);
+                    if (completedCount === totalPieces) {
+                        console.log('🎉 Todas las piezas en el banco!');
+                        onComplete();
+                    }
+                }
+            });
         }, index * stagger);
     });
 }

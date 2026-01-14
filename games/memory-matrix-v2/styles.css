@@ -1345,7 +1345,7 @@ body::before {
     border-radius: 8px;
 
     /* SCROLL para más de 12 piezas (niveles 9+) */
-    max-height: 180px;  /* ~2 filas en mobile */
+    max-height: 250px;  /* ~3+ filas en mobile para niveles altos */
     overflow-y: auto;
     overflow-x: hidden;
 
@@ -1413,6 +1413,16 @@ body::before {
     background: rgba(255, 128, 0, 0.15);
 }
 
+/* Slots extra (creados dinámicamente para niveles 9+) */
+.bank-piece-slot.extra-slot {
+    border-color: rgba(255, 200, 0, 0.4);
+}
+
+.bank-piece-slot.extra-slot:has(.piece) {
+    border-color: rgba(255, 200, 0, 0.7);
+    background: rgba(255, 200, 0, 0.15);
+}
+
 .bank-piece-slot:hover {
     background: rgba(255, 128, 0, 0.2);
     border-color: var(--neon-orange);
@@ -1472,8 +1482,8 @@ body::before {
         /* 3 columnas en desktop */
         grid-template-columns: repeat(3, 1fr);
         order: 0;
-        /* Más altura en desktop para scroll con más piezas */
-        max-height: 350px;
+        /* Más altura en desktop para scroll con más piezas (niveles 9-15) */
+        max-height: 450px;
     }
 
     /* En desktop: Orden normal (título arriba, banco medio, timer abajo) */

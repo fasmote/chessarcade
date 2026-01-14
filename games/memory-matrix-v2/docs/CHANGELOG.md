@@ -75,6 +75,34 @@ Registro cronológico de cambios día a día.
   - **Causa**: La clase `.hidden` tiene `display: none !important`, que ganaba sobre `.visible`
   - **Solución**: Usar `classList.remove('hidden')` además de `classList.add('visible')`
 
+- **Desbordamiento del Banco con 13+ Piezas**
+  - **Problema**: El juego se congelaba en nivel 11+ porque el banco solo tenía 12 slots fijos
+  - **Causa**: `createPieceBank()` creaba exactamente 12 slots (6 tipos × 2 colores), pero niveles 11+ pueden tener piezas duplicadas (ej: 2 damas blancas)
+  - **Solución**:
+    - Nueva función `ensureBankHasEnoughSlots(numPieces)` que crea slots extra dinámicamente
+    - Se llama antes de `hidePiecesWithAnimation()` con el número de piezas a ocultar
+    - Los slots extra tienen clase `.extra-slot` para styling diferenciado
+    - `cleanExtraBankSlots()` limpia los slots extra al reiniciar nivel
+  - **CSS ajustado**: `max-height: 250px` (mobile), `450px` (desktop) para permitir scroll
+
+- **Formato del Reloj Global (HH:MM:SS)**
+  - **Problema**: Después de 1 hora, mostraba "234:56" en vez de "03:54:56"
+  - **Solución**: Calcular horas y mostrar formato condicional HH:MM:SS cuando `hours > 0`
+
+### Added ✨ (Debug Tools)
+
+- **Shortcut para Saltar a Nivel Específico**
+  - `Ctrl+Shift+L`: Abre prompt para ingresar número de nivel (1-15)
+  - `jumpToLevel(11)`: Función disponible en consola para testing rápido
+  - Útil para probar niveles altos sin tener que jugar todos los anteriores
+
+- **Console.log Detallados en PieceAnimations.js**
+  - `hidePiecesWithAnimation()` ahora muestra:
+    - Total de piezas a ocultar
+    - Slots totales y vacíos disponibles
+    - Progreso pieza por pieza
+    - Errores detallados si falta algo
+
 ### Technical Details ⚙️
 
 **Animación numberPop (styles.css):**
