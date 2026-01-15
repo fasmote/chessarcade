@@ -103,6 +103,33 @@ Registro cronológico de cambios día a día.
     - Progreso pieza por pieza
     - Errores detallados si falta algo
 
+- **Parámetro URL para Saltar a Nivel (Mobile-friendly)**
+  - `?level=11` en la URL salta directamente al nivel indicado
+  - Funciona en cualquier dispositivo (ideal para testing en móvil)
+  - Ejemplo: `index.html?level=15` para probar el nivel final
+
+### Added ✨ (Victory Modal)
+
+- **Modal de Victoria Épica (Nivel 15 completado)**
+  - Aparece al completar todos los 15 niveles
+  - **Elementos visuales**:
+    - Trofeo 🏆 gigante con animación de rebote y brillo dorado
+    - Título "¡VICTORIA!" con efecto neón dorado pulsante
+    - Subtítulo "Has completado todos los niveles"
+    - Stats: Tiempo total y Puntuación final
+    - Texto motivacional "¡Eres un verdadero Dios del Ajedrez!"
+    - Botón "Ver Ranking" con efecto pulso dorado
+  - **Animaciones**:
+    - `trophyBounce`: Trofeo aparece girando y rebotando
+    - `trophyGlow`: Brillo dorado pulsante continuo
+    - `victoryTitlePop`: Título con efecto "pop"
+    - `fadeInUp`: Elementos aparecen secuencialmente
+    - Confeti triple (300 piezas en 3 oleadas)
+  - **Flujo**:
+    1. Completar nivel 15 → Modal de victoria
+    2. Click "Ver Ranking" → Cierra modal → Abre leaderboard
+    3. Juego se reinicia al nivel 1
+
 ### Technical Details ⚙️
 
 **Animación numberPop (styles.css):**
@@ -145,6 +172,38 @@ const hintDisplayTime = 2000 + Math.floor((currentLevel - 1) / 3) * 1000;
 ```javascript
 const nextHintCost = 100 * Math.pow(2, totalHintsUsedSession);
 // Hint 1: 100, Hint 2: 200, Hint 3: 400, Hint 4: 800...
+```
+
+**Animaciones del Victory Modal (styles.css):**
+```css
+@keyframes trophyBounce {
+    0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+    50% { transform: scale(1.3) rotate(10deg); }
+    70% { transform: scale(0.9) rotate(-5deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes trophyGlow {
+    0%, 100% { filter: drop-shadow(0 0 30px gold); }
+    50% { filter: drop-shadow(0 0 50px gold); }
+}
+
+@keyframes victoryTitlePop {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+```
+
+**showVictoryModal() (game.js):**
+```javascript
+function showVictoryModal(stats, onClose) {
+    // Formatear tiempo HH:MM:SS
+    // Actualizar displays con stats.time y stats.score
+    // Mostrar overlay con animación
+    // Lanzar confeti triple (100 + 100 + 100)
+    // Botón cierra modal y llama onClose → leaderboard
+}
 ```
 
 ---
