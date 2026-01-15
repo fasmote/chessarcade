@@ -702,6 +702,31 @@
     </div>
 
     <!-- ==================================================
+         VICTORY MODAL - Juego completado (nivel 15)
+         ================================================== -->
+    <div class="victory-overlay hidden" id="victoryOverlay">
+        <div class="victory-content">
+            <div class="victory-trophy">🏆</div>
+            <h1 class="victory-title">¡VICTORIA!</h1>
+            <p class="victory-subtitle">Has completado todos los niveles</p>
+            <div class="victory-stats">
+                <div class="victory-stat">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-label">Tiempo Total</span>
+                    <span class="stat-value" id="victoryTime">00:00:00</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-label">Puntuación Final</span>
+                    <span class="stat-value" id="victoryScore">0</span>
+                </div>
+            </div>
+            <p class="victory-rank-text">¡Eres un verdadero Dios del Ajedrez!</p>
+            <button class="victory-btn" id="victoryBtn">Ver Ranking</button>
+        </div>
+    </div>
+
+    <!-- ==================================================
          JAVASCRIPT
          ================================================== -->
 

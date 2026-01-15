@@ -995,12 +995,44 @@ function onLevelComplete() {
         updateScoreDisplay(); // ← Actualizar score (nuevo nivel = más puntos)
 
         if (currentLevel > totalLevels) {
-            // Juego completado
-            stopGlobalTimer(); // ✅ Detener el timer global al completar todos los niveles
-            updateStatus('🏆 ¡FELICIDADES! Completaste todos los niveles');
-            currentLevel = 1; // Volver al nivel 1
-            currentAttempt = 1;
-            successfulAttempts = 0;
+            // ==========================================
+            // ¡JUEGO COMPLETADO! - Mostrar modal de victoria
+            // ==========================================
+            console.log('🏆 ¡TODOS LOS NIVELES COMPLETADOS!');
+
+            // Capturar tiempo antes de detener el timer
+            const finalTime = globalStartTime
+                ? globalElapsedTime + (Date.now() - globalStartTime)
+                : globalElapsedTime;
+
+            stopGlobalTimer();
+
+            // Mostrar modal de victoria con estadísticas
+            showVictoryModal({
+                time: finalTime,
+                score: currentScore
+            }, () => {
+                // Callback cuando cierra el modal: mostrar leaderboard
+                console.log('🏆 Mostrando leaderboard después de victoria');
+
+                // Abrir leaderboard si está disponible
+                if (window.showLeaderboardModal) {
+                    window.showLeaderboardModal('memory-matrix');
+                }
+
+                // Resetear para nueva partida
+                currentLevel = 1;
+                currentAttempt = 1;
+                successfulAttempts = 0;
+                resetGameCounters();
+
+                // Mostrar posición inicial del nivel 1
+                showInitialPosition();
+                updateClickableState(true);
+                updateStatus('¡Victoria épica! Click para jugar de nuevo');
+            });
+
+            return; // No continuar con el flujo normal
         } else {
             const nextLevel = window.MemoryMatrixLevels.getLevelConfig(currentLevel);
             updateStatus(`Siguiente: Nivel ${currentLevel} - ${nextLevel.name}. Comenzando en 5s...`);
@@ -2695,6 +2727,92 @@ function launchConfetti(count = 50) {
 
     console.log(`🎉 ${count} confetis lanzados`);
 }
+
+// ==========================================
+// VICTORY MODAL - Juego completado (nivel 15)
+// ==========================================
+
+/**
+ * Muestra el modal de victoria cuando se completan todos los niveles
+ * @param {Object} stats - Estadísticas finales del juego
+ * @param {number} stats.time - Tiempo total en milisegundos
+ * @param {number} stats.score - Puntuación final
+ * @param {Function} onClose - Callback cuando se cierra el modal
+ */
+function showVictoryModal(stats, onClose = () => {}) {
+    console.log('🏆 Mostrando modal de victoria');
+
+    const overlay = document.getElementById('victoryOverlay');
+    const timeDisplay = document.getElementById('victoryTime');
+    const scoreDisplay = document.getElementById('victoryScore');
+    const btn = document.getElementById('victoryBtn');
+
+    if (!overlay) {
+        console.error('❌ Victory overlay not found');
+        onClose();
+        return;
+    }
+
+    // Formatear tiempo
+    const totalSeconds = Math.floor(stats.time / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const timeStr = hours > 0
+        ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    // Actualizar displays
+    if (timeDisplay) timeDisplay.textContent = timeStr;
+    if (scoreDisplay) scoreDisplay.textContent = stats.score.toLocaleString();
+
+    // Mostrar overlay
+    overlay.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        overlay.classList.add('visible');
+    });
+
+    // Lanzar confeti épico
+    launchConfetti(100);
+    setTimeout(() => launchConfetti(100), 500);
+    setTimeout(() => launchConfetti(100), 1000);
+
+    // Reproducir sonido de victoria
+    if (window.MemoryMatrixAudio) {
+        window.MemoryMatrixAudio.playConfettiSound();
+    }
+
+    // Handler del botón
+    const handleClick = () => {
+        hideVictoryModal();
+        btn.removeEventListener('click', handleClick);
+        onClose();
+    };
+
+    if (btn) {
+        btn.addEventListener('click', handleClick);
+    }
+}
+
+/**
+ * Oculta el modal de victoria
+ */
+function hideVictoryModal() {
+    const overlay = document.getElementById('victoryOverlay');
+    if (!overlay) return;
+
+    overlay.classList.remove('visible');
+    setTimeout(() => {
+        overlay.classList.add('hidden');
+    }, 500);
+
+    console.log('🏆 Modal de victoria cerrado');
+}
+
+// Exponer funciones
+window.showVictoryModal = showVictoryModal;
+window.hideVictoryModal = hideVictoryModal;
 
 // ==========================================
 // COORDENADAS EN CASILLAS (HINTS)
