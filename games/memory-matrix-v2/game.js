@@ -3068,4 +3068,24 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-console.log('🔧 DEBUG: Usa jumpToLevel(11) en consola o Ctrl+Shift+L para saltar a un nivel');
+// ============================================
+// DEBUG: Parámetro URL para saltar a nivel
+// Uso: index.html?level=11
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const levelParam = urlParams.get('level');
+
+    if (levelParam) {
+        const levelNum = parseInt(levelParam, 10);
+        if (!isNaN(levelNum) && levelNum >= 1 && levelNum <= 15) {
+            console.log(`🔧 DEBUG: Detectado parámetro URL level=${levelNum}`);
+            // Pequeño delay para asegurar que todo está inicializado
+            setTimeout(() => {
+                jumpToLevel(levelNum);
+            }, 500);
+        }
+    }
+});
+
+console.log('🔧 DEBUG: Usa jumpToLevel(11) en consola, Ctrl+Shift+L, o ?level=11 en la URL');
