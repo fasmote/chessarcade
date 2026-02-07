@@ -1774,6 +1774,50 @@
             return `${year}-${month}-${day}`;
         }
 
+        // Get the latest date with an available puzzle (for when today has no puzzle)
+        async function getLatestAvailableDate(boardSize) {
+            if (!supabaseClient) return null;
+
+            const today = getLocalDateString();
+            console.log(`🔍 Buscando último puzzle disponible hasta ${today} para tamaño ${boardSize}...`);
+
+            try {
+                // First check if today has a puzzle
+                const { data: todayPuzzle, error: todayError } = await supabaseClient
+                    .from('puzzles')
+                    .select('puzzle_date')
+                    .eq('puzzle_date', today)
+                    .eq('board_size', boardSize)
+                    .single();
+
+                if (!todayError && todayPuzzle) {
+                    console.log(`✅ Hay puzzle para hoy (${today})`);
+                    return today;
+                }
+
+                // No puzzle today, find the most recent one
+                const { data: latestPuzzle, error } = await supabaseClient
+                    .from('puzzles')
+                    .select('puzzle_date')
+                    .eq('board_size', boardSize)
+                    .lte('puzzle_date', today)
+                    .order('puzzle_date', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (error || !latestPuzzle) {
+                    console.log(`❌ No hay puzzles disponibles para ${boardSize}`);
+                    return null;
+                }
+
+                console.log(`📅 Último puzzle disponible: ${latestPuzzle.puzzle_date}`);
+                return latestPuzzle.puzzle_date;
+            } catch (err) {
+                console.error('Error buscando último puzzle:', err);
+                return null;
+            }
+        }
+
         // Sound system with Web Audio API
         let soundEnabled = true;
         let audioContext = null;
@@ -2315,9 +2359,20 @@
             // Setup sync observer for desktop/mobile
             setupSyncObserver();
 
-            // Auto-load today's puzzle on page load
-            setTimeout(() => {
-                loadDailyLevel();
+            // Auto-load today's puzzle on page load (or latest available if today has none)
+            setTimeout(async () => {
+                const boardSize = `${rows}x${cols}`;
+                const latestDate = await getLatestAvailableDate(boardSize);
+
+                if (latestDate && latestDate !== today) {
+                    console.log(`📅 Hoy (${today}) no tiene puzzle, cargando último disponible: ${latestDate}`);
+                    // Update date inputs to show the actual date being loaded
+                    document.querySelectorAll('.date-input').forEach(dateInput => {
+                        dateInput.value = latestDate;
+                    });
+                }
+
+                loadDailyLevel(latestDate || today);
             }, 500);
 
             // Load tag filters
