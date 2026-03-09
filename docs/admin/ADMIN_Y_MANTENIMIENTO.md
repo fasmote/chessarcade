@@ -674,11 +674,58 @@ Agregar sección de admin en `test-leaderboard.html` y probar:
 
 ---
 
+## 🔄 Mantener Supabase Activa (Anti-Pausa)
+
+### El Problema
+
+Supabase pausa automáticamente los proyectos del **plan gratuito** después de **7 días sin consultas a la base de datos**. Esto no tiene que ver con visitas al sitio web — si nadie abre el leaderboard ni guarda un score, la DB se pausa y devuelve errores 500.
+
+**Síntoma**: La API devuelve `Internal server error` y en los logs de Vercel aparece un error de conexión a Postgres.
+
+**Solución**: Restaurar el proyecto desde el dashboard de Supabase (tarda ~2-3 minutos).
+
+### Solución Permanente: Cron Job Diario
+
+Se implementó un endpoint `/api/ping` que hace una consulta mínima a la DB, y un **Vercel Cron Job** que lo ejecuta automáticamente todos los días a las 12:00 UTC.
+
+**Archivos involucrados:**
+- `api/ping.js` — endpoint que hace `SELECT COUNT(*) FROM scores`
+- `vercel.json` — configuración del cron: `"0 12 * * *"` (diario a las 12:00 UTC)
+
+**Verificar que el cron esté activo:**
+1. Ir a Vercel Dashboard → proyecto `chessarcade`
+2. Settings → Crons
+3. Debe aparecer `/api/ping` con schedule `0 12 * * *`
+
+**Probar el endpoint manualmente:**
+```
+GET https://chessarcade.vercel.app/api/ping
+```
+Respuesta esperada:
+```json
+{
+  "success": true,
+  "message": "pong",
+  "db": "active",
+  "total_scores": 123,
+  "timestamp": "2026-03-09T12:00:00.000Z"
+}
+```
+
+### Si Supabase se Pausa de Nuevo
+
+1. Ir a https://supabase.com/dashboard
+2. Seleccionar proyecto `chessarcade-scores`
+3. Click en **"Restore project"**
+4. Esperar ~2-3 minutos hasta que el estado sea `ACTIVE_HEALTHY`
+
+---
+
 ## 📋 Checklist de Mantenimiento
 
 ### Semanal
 - [ ] Revisar scores sospechosos (muy altos)
-- [ ] Verificar que la API responde correctamente
+- [ ] Verificar que la API responde correctamente (`GET /api/ping`)
 - [ ] Revisar logs de Vercel para errores
 
 ### Antes de Cambios Importantes
