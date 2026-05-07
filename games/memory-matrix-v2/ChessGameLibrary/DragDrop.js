@@ -190,7 +190,7 @@ function handleDragStart(e) {
 
     // Si viene del tablero, verificar que esté permitido arrastrarlo
     const fromSquare = boardSquare ? boardSquare.dataset.square : null;
-    if (fromSquare && canDragBoardPieceCallback && !canDragBoardPieceCallback()) return;
+    if (fromSquare && canDragBoardPieceCallback && !canDragBoardPieceCallback(fromSquare)) return;
 
     // IMPORTANTE: Solo usar dataset.piece de la imagen, NUNCA del slot
     // El slot tiene un dataset.piece predefinido que puede no coincidir
@@ -793,7 +793,7 @@ function initTapTap(options = {}) {
         // Se activa si: no hay selección, o hay una pieza del tablero seleccionada.
         // Si hay una pieza del BANCO seleccionada, el clic en pieza ocupada va a tap-2 (fallará por ocupada).
         if (clickedBoardPiece && clickedSquare && (!tapState.selectedPiece || tapState.selectedFromSquare !== null)) {
-            if (canDragBoardPieceCallback && !canDragBoardPieceCallback()) return;
+            if (canDragBoardPieceCallback && !canDragBoardPieceCallback(fromSquareCoord)) return;
 
             const fromSquareCoord = clickedSquare.dataset.square;
 

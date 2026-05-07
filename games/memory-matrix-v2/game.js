@@ -2322,7 +2322,7 @@ function initDragAndDrop() {
     const sharedCallbacks = {
         bankSelector: '.piece-bank',
         boardSelector: '#chessboard',
-        canDragBoardPiece: () => gameState === 'solving',
+        canDragBoardPiece: (fromSquare) => gameState === 'solving' && placedPieces.some(p => p.square === fromSquare),
 
         // Callback: cuando se coloca o mueve una pieza
         onPiecePlaced: (piece, square, fromSquare) => {
