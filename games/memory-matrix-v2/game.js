@@ -67,7 +67,9 @@ Object.defineProperty(window, 'currentScore', {
 
 // SISTEMA DE DESHACER/LIMPIAR
 // Stack de movimientos para poder deshacer
-let moveHistory = []; // Array de {square, piece, bankSlot}
+// Estructura: { toSquare, fromSquare, piece, fromBank }
+let moveHistory = [];
+let validationTimeout = null; // Timeout de auto-validación (cancelable con clearTimeout)
 
 // LÍMITE DE ERRORES
 const MAX_FAILED_ATTEMPTS = 5; // Game Over a los 5 errores
@@ -1665,37 +1667,47 @@ function undo() {
         return;
     }
 
-    // Obtener último movimiento
+    // Cancelar validación automática pendiente
+    if (validationTimeout) {
+        clearTimeout(validationTimeout);
+        validationTimeout = null;
+    }
+
     const lastMove = moveHistory.pop();
-    console.log(`↩️ Deshaciendo: ${lastMove.piece} en ${lastMove.square}`);
+    console.log(`↩️ Deshaciendo: ${lastMove.piece} en ${lastMove.toSquare} (desde ${lastMove.fromBank ? 'banco' : lastMove.fromSquare})`);
 
-    // Quitar pieza del tablero
-    const squareElement = document.querySelector(`[data-square="${lastMove.square}"]`);
-    const pieceElement = squareElement?.querySelector('.piece');
+    if (lastMove.fromBank) {
+        // Caso banco→tablero: animar pieza de vuelta al banco
+        const squareElement = document.querySelector(`[data-square="${lastMove.toSquare}"]`);
+        const pieceElement = squareElement?.querySelector('.piece');
 
-    if (pieceElement) {
-        // Animar pieza de vuelta al banco
-        animatePieceBackToBank(lastMove.square, lastMove.piece, () => {
-            // Después de la animación, quitar del array placedPieces
+        if (pieceElement) {
+            animatePieceBackToBank(lastMove.toSquare, lastMove.piece, () => {
+                const index = placedPieces.findIndex(p =>
+                    p.square === lastMove.toSquare && p.piece === lastMove.piece
+                );
+                if (index !== -1) placedPieces.splice(index, 1);
+
+                const piecesToPlace = window.MemoryMatrixLevels.getPiecesToHide(
+                    currentLevel, currentAttempt, currentPosition
+                );
+                const remaining = piecesToPlace.length - placedPieces.length;
+                updateStatus(`↩️ Deshecho - Faltan ${remaining} pieza${remaining > 1 ? 's' : ''}`);
+            });
+        }
+    } else {
+        // Caso tablero→tablero: animar pieza de vuelta a su casilla anterior
+        animatePieceBackToSquare(lastMove.toSquare, lastMove.fromSquare, lastMove.piece, () => {
             const index = placedPieces.findIndex(p =>
-                p.square === lastMove.square && p.piece === lastMove.piece
+                p.square === lastMove.toSquare && p.piece === lastMove.piece
             );
-            if (index !== -1) {
-                placedPieces.splice(index, 1);
-            }
+            if (index !== -1) placedPieces.splice(index, 1);
+            placedPieces.push({ square: lastMove.fromSquare, piece: lastMove.piece });
 
-            // Actualizar status
-            const piecesToPlace = window.MemoryMatrixLevels.getPiecesToHide(
-                currentLevel,
-                currentAttempt,
-                currentPosition
-            );
-            const remaining = piecesToPlace.length - placedPieces.length;
-            updateStatus(`↩️ Deshecho - Faltan ${remaining} pieza${remaining > 1 ? 's' : ''}`);
+            updateStatus(`↩️ Movimiento deshecho`);
         });
     }
 
-    // Actualizar botones
     updateUndoClearButtons();
 }
 
@@ -1776,6 +1788,57 @@ function animatePieceBackToBank(fromSquare, piece, onComplete) {
         }
         if (onComplete) onComplete();
     }
+}
+
+/**
+ * Anima una pieza de una casilla del tablero a otra (para undo de movimiento tablero→tablero)
+ * @param {string} fromSquare - Casilla donde está la pieza ahora
+ * @param {string} toSquare   - Casilla a la que debe regresar
+ * @param {string} piece      - Código de pieza (ej: 'wK')
+ * @param {Function} onComplete - Callback al terminar
+ */
+function animatePieceBackToSquare(fromSquare, toSquare, piece, onComplete) {
+    const fromElement = document.querySelector(`[data-square="${fromSquare}"]`);
+    const toElement   = document.querySelector(`[data-square="${toSquare}"]`);
+
+    if (!fromElement || !toElement) {
+        clearPiece(fromSquare);
+        showPiece(toSquare, piece);
+        if (onComplete) onComplete();
+        return;
+    }
+
+    const fromRect = fromElement.getBoundingClientRect();
+    const toRect   = toElement.getBoundingClientRect();
+
+    const flyingPiece = document.createElement('img');
+    flyingPiece.className = 'piece';
+    flyingPiece.src = `${LICHESS_CDN_BASE}${currentPieceStyle}/${piece}.svg`;
+    flyingPiece.style.position   = 'fixed';
+    flyingPiece.style.left       = `${fromRect.left + fromRect.width / 2}px`;
+    flyingPiece.style.top        = `${fromRect.top  + fromRect.height / 2}px`;
+    flyingPiece.style.transform  = 'translate(-50%, -50%)';
+    flyingPiece.style.width      = `${fromRect.width}px`;
+    flyingPiece.style.height     = `${fromRect.height}px`;
+    flyingPiece.style.zIndex     = '1000';
+    flyingPiece.style.transition = 'all 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+    flyingPiece.style.pointerEvents = 'none';
+
+    document.body.appendChild(flyingPiece);
+    clearPiece(fromSquare);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            flyingPiece.style.left = `${toRect.left + toRect.width / 2}px`;
+            flyingPiece.style.top  = `${toRect.top  + toRect.height / 2}px`;
+        });
+    });
+
+    setTimeout(() => {
+        flyingPiece.remove();
+        showPiece(toSquare, piece);
+        if (onComplete) onComplete();
+    }, 400);
 }
 
 // ============================================
@@ -2259,16 +2322,29 @@ function initDragAndDrop() {
     const sharedCallbacks = {
         bankSelector: '.piece-bank',
         boardSelector: '#chessboard',
+        canDragBoardPiece: () => gameState === 'solving',
 
-        // Callback: cuando se coloca una pieza
-        onPiecePlaced: (piece, square) => {
-            console.log(`✅ Pieza colocada: ${piece} en ${square}`);
+        // Callback: cuando se coloca o mueve una pieza
+        onPiecePlaced: (piece, square, fromSquare) => {
+            console.log(`✅ Pieza colocada: ${piece} en ${square}${fromSquare ? ` (movida desde ${fromSquare})` : ''}`);
 
-            // Registrar pieza colocada
-            placedPieces.push({ square, piece });
+            // Cancelar validación automática pendiente (puede haber una si ya estaban todas las piezas)
+            if (validationTimeout) {
+                clearTimeout(validationTimeout);
+                validationTimeout = null;
+            }
 
-            // Agregar al historial de movimientos para poder deshacer
-            moveHistory.push({ square, piece });
+            if (fromSquare) {
+                // Movimiento tablero→tablero: actualizar casilla en placedPieces
+                const idx = placedPieces.findIndex(p => p.square === fromSquare && p.piece === piece);
+                if (idx !== -1) placedPieces.splice(idx, 1);
+                placedPieces.push({ square, piece });
+                moveHistory.push({ toSquare: square, fromSquare, piece, fromBank: false });
+            } else {
+                // Colocación banco→tablero: registrar nueva pieza
+                placedPieces.push({ square, piece });
+                moveHistory.push({ toSquare: square, fromSquare: null, piece, fromBank: true });
+            }
             updateUndoClearButtons();
 
             // Calcular cuántas piezas faltan (solo las que fueron ocultadas)
@@ -2286,22 +2362,26 @@ function initDragAndDrop() {
             } else {
                 updateStatus(`✓ ${pieceName} en ${square.toUpperCase()} - ¡Validando...!`);
 
-                // Validar automáticamente cuando se colocan todas las piezas
-                setTimeout(() => {
+                // Validar automáticamente cuando todas las piezas están colocadas
+                validationTimeout = setTimeout(() => {
+                    validationTimeout = null;
                     validatePosition();
                 }, 500);
             }
         },
 
-        // Validación: verificar si se puede colocar la pieza
-        canPlacePiece: (piece, square) => {
+        // Validación: verificar si se puede colocar/mover la pieza
+        canPlacePiece: (piece, square, fromSquare) => {
             // Solo permitir durante la fase de resolución
             if (gameState !== 'solving') {
                 updateStatus('⚠️ Espera a que comience la fase de resolución');
                 return false;
             }
 
-            // Verificar que no haya pieza en la casilla (ignorar hints)
+            // Misma casilla de origen → cancelar silenciosamente (bounce back sin mensaje de error)
+            if (fromSquare && fromSquare === square) return false;
+
+            // Verificar que no haya pieza en la casilla destino (ignorar hints)
             const squareElement = document.querySelector(`[data-square="${square}"]`);
             const pieces = squareElement?.querySelectorAll('.piece');
 
