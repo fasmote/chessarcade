@@ -48,8 +48,12 @@ let dragState = {
     touchStartTime: 0,
     touchStartX: 0,
     touchStartY: 0,
-    isTap: false
+    isTap: false,
+    fromSquare: null    // null si viene del banco, coord algebraica si viene del tablero
 };
+
+// Callback para verificar si se puede arrastrar una pieza del tablero
+let canDragBoardPieceCallback = null;
 
 // ============================================
 // INICIALIZACIÓN
@@ -76,8 +80,12 @@ function initDragDrop(options = {}) {
         bankSelector = '.piece-bank',
         boardSelector = '#chessboard',
         onPiecePlaced = () => {},
-        canPlacePiece = () => true
+        canPlacePiece = () => true,
+        canDragBoardPiece = () => false
     } = options;
+
+    // Guardar callback a nivel de módulo para que tap-tap también lo use
+    canDragBoardPieceCallback = canDragBoardPiece;
 
     console.log('🎯 Inicializando Drag & Drop...');
 
@@ -89,18 +97,18 @@ function initDragDrop(options = {}) {
         return;
     }
 
-    // Función para agregar listeners a una pieza
+    // Función para agregar listeners a una pieza (banco o tablero)
     function addPieceListeners(pieceElement) {
         pieceElement.addEventListener('mousedown', handleDragStart);
         pieceElement.addEventListener('touchstart', handleDragStart, { passive: false });
         console.log('🎯 Listeners agregados a pieza:', pieceElement.dataset.piece);
     }
 
-    // Agregar listeners a piezas existentes
+    // Agregar listeners a piezas existentes en el banco
     const existingPieces = bankElement.querySelectorAll('.piece');
     existingPieces.forEach(addPieceListeners);
 
-    // Observar nuevas piezas con MutationObserver
+    // Observar nuevas piezas en el BANCO con MutationObserver
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
@@ -112,6 +120,22 @@ function initDragDrop(options = {}) {
     });
 
     observer.observe(bankElement, {
+        childList: true,
+        subtree: true
+    });
+
+    // Observar nuevas piezas en el TABLERO (no hints) para permitir drag desde tablero
+    const boardObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.matches('img.piece') && !node.classList.contains('hint-piece')) {
+                    addPieceListeners(node);
+                }
+            });
+        });
+    });
+
+    boardObserver.observe(boardElement, {
         childList: true,
         subtree: true
     });
@@ -155,9 +179,18 @@ function handleDragStart(e) {
 
     const pieceElement = e.target;
 
-    // Verificar que está dentro de un slot del banco
+    // Las hint-pieces no son arrastrables
+    if (pieceElement.classList.contains('hint-piece')) return;
+
+    // Detectar origen: banco o tablero
     const bankSlot = pieceElement.closest('.bank-piece-slot');
-    if (!bankSlot) return;
+    const boardSquare = pieceElement.closest('[data-square]');
+
+    if (!bankSlot && !boardSquare) return;
+
+    // Si viene del tablero, verificar que esté permitido arrastrarlo
+    const fromSquare = boardSquare ? boardSquare.dataset.square : null;
+    if (fromSquare && canDragBoardPieceCallback && !canDragBoardPieceCallback(fromSquare)) return;
 
     // IMPORTANTE: Solo usar dataset.piece de la imagen, NUNCA del slot
     // El slot tiene un dataset.piece predefinido que puede no coincidir
@@ -184,6 +217,7 @@ function handleDragStart(e) {
         dragState.draggedPiece = piece;
         dragState.draggedElement = pieceElement;
         dragState.sourceSlot = bankSlot;
+        dragState.fromSquare = fromSquare;
 
         return; // No iniciar drag todavía
     }
@@ -192,13 +226,14 @@ function handleDragStart(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    console.log(`🎯 Iniciando drag de pieza: ${piece}`);
+    console.log(`🎯 Iniciando drag de pieza: ${piece} desde ${fromSquare || 'banco'}`);
 
     // Guardar estado
     dragState.isDragging = true;
     dragState.draggedPiece = piece;
     dragState.draggedElement = pieceElement;
     dragState.sourceSlot = bankSlot;
+    dragState.fromSquare = fromSquare;
 
     // Crear elemento fantasma (ghost)
     const ghost = pieceElement.cloneNode(true);
@@ -342,6 +377,7 @@ function handleDragEnd(e, onPiecePlaced, canPlacePiece) {
         dragState.draggedPiece = null;
         dragState.draggedElement = null;
         dragState.sourceSlot = null;
+        dragState.fromSquare = null;
         dragState.isTap = false;
         // NO prevenir default - dejar que el evento click se dispare
         return;
@@ -390,35 +426,44 @@ function handleDragEnd(e, onPiecePlaced, canPlacePiece) {
     if (targetSquare) {
         const square = targetSquare.dataset.square;
         const piece = dragState.draggedPiece;
+        const fromSquare = dragState.fromSquare;
 
-        console.log(`🎯 Intentando colocar ${piece} en ${square}`);
+        console.log(`🎯 Intentando colocar ${piece} en ${square} (desde ${fromSquare || 'banco'})`);
 
-        // Validar con callback
-        if (canPlacePiece(piece, square)) {
+        // Validar con callback (pasando fromSquare)
+        if (canPlacePiece(piece, square, fromSquare)) {
             console.log('✅ Colocación válida');
 
-            // Remover pieza del banco (sin animación)
+            // Remover pieza del origen (banco o casilla del tablero)
             if (dragState.draggedElement) {
                 dragState.draggedElement.remove();
             }
 
-            // Colocar pieza directamente en el tablero usando showPiece
+            // Colocar pieza en el tablero usando showPiece
             if (typeof showPiece === 'function') {
                 showPiece(square, piece);
             }
 
-            // Callback: pieza colocada exitosamente
-            onPiecePlaced(piece, square);
+            // Callback: pieza colocada/movida exitosamente
+            onPiecePlaced(piece, square, fromSquare);
             console.log(`✅ Pieza ${piece} colocada en ${square}`);
         } else {
             console.log('❌ Colocación inválida');
-            // Animar de vuelta al banco (bounce back)
-            animateBounceBack();
+            // Bounce back: al banco o a la casilla de origen en el tablero
+            if (fromSquare) {
+                animateBounceBackToSquare(fromSquare);
+            } else {
+                animateBounceBack();
+            }
         }
     } else {
-        // No hay casilla válida - volver al banco
-        console.log('↩️ Sin casilla válida - volver al banco');
-        animateBounceBack();
+        // No hay casilla válida - volver al origen
+        console.log('↩️ Sin casilla válida - volver al origen');
+        if (dragState.fromSquare) {
+            animateBounceBackToSquare(dragState.fromSquare);
+        } else {
+            animateBounceBack();
+        }
     }
 
     // Limpiar estado
@@ -430,6 +475,7 @@ function handleDragEnd(e, onPiecePlaced, canPlacePiece) {
     dragState.draggedElement = null;
     dragState.sourceSlot = null;
     dragState.ghostElement = null;
+    dragState.fromSquare = null;
 
     document.body.style.cursor = '';
 }
@@ -540,7 +586,52 @@ function animatePieceFromBankToBoard(fromSlot, toSquare, piece, onComplete) {
 }
 
 /**
- * Anima pieza de vuelta al banco (bounce back)
+ * Anima pieza de vuelta a su casilla de origen en el tablero (bounce back tablero→tablero)
+ */
+function animateBounceBackToSquare(fromSquare) {
+    if (!dragState.draggedElement) return;
+
+    const targetSquareEl = document.querySelector(`[data-square="${fromSquare}"]`);
+    if (!targetSquareEl) {
+        if (dragState.draggedElement) dragState.draggedElement.style.opacity = '1';
+        return;
+    }
+
+    const rect = targetSquareEl.getBoundingClientRect();
+    const startLeft = dragState.ghostElement?.style.left || `${rect.left + rect.width / 2}px`;
+    const startTop  = dragState.ghostElement?.style.top  || `${rect.top  + rect.height / 2}px`;
+
+    const flyingPiece = dragState.draggedElement.cloneNode(true);
+    flyingPiece.style.position = 'fixed';
+    flyingPiece.style.left = startLeft;
+    flyingPiece.style.top  = startTop;
+    flyingPiece.style.transform = 'translate(-50%, -50%)';
+    flyingPiece.style.width  = `${dragState.draggedElement.offsetWidth}px`;
+    flyingPiece.style.height = `${dragState.draggedElement.offsetHeight}px`;
+    flyingPiece.style.zIndex = '1000';
+    flyingPiece.style.transition = 'all 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+    flyingPiece.style.pointerEvents = 'none';
+
+    document.body.appendChild(flyingPiece);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            flyingPiece.style.left = `${rect.left + rect.width / 2}px`;
+            flyingPiece.style.top  = `${rect.top  + rect.height / 2}px`;
+            flyingPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+    });
+
+    setTimeout(() => {
+        flyingPiece.remove();
+        if (dragState.draggedElement) {
+            dragState.draggedElement.style.opacity = '1';
+        }
+    }, 400);
+}
+
+/**
+ * Anima pieza de vuelta al banco (bounce back banco→banco)
  */
 function animateBounceBack() {
     if (!dragState.sourceSlot || !dragState.draggedElement) return;
@@ -614,7 +705,8 @@ document.head.appendChild(style);
 let tapState = {
     selectedPiece: null,
     selectedPieceElement: null,
-    selectedSlot: null
+    selectedSlot: null,
+    selectedFromSquare: null    // null si viene del banco, coord algebraica si viene del tablero
 };
 
 /**
@@ -654,17 +746,20 @@ function initTapTap(options = {}) {
             return;
         }
 
-        // Deseleccionar anterior si existe
+        // Deseleccionar anterior si existe (con null-guard por si era pieza del tablero)
         if (tapState.selectedPieceElement) {
             tapState.selectedPieceElement.style.filter = '';
-            tapState.selectedSlot.style.background = '';
-            tapState.selectedSlot.style.boxShadow = '';
+            if (tapState.selectedSlot) {
+                tapState.selectedSlot.style.background = '';
+                tapState.selectedSlot.style.boxShadow = '';
+            }
         }
 
-        // Seleccionar nueva pieza
+        // Seleccionar nueva pieza del banco
         tapState.selectedPiece = piece;
         tapState.selectedPieceElement = pieceElement;
         tapState.selectedSlot = bankSlot;
+        tapState.selectedFromSquare = null;
 
         // Feedback visual: brillo dorado
         pieceElement.style.filter = 'drop-shadow(0 0 20px gold)';
@@ -674,57 +769,96 @@ function initTapTap(options = {}) {
         console.log(`📱 Pieza seleccionada: ${piece} - Ahora toca una casilla del tablero`);
     });
 
-    // Listener para colocar en casilla (tap 2)
+    // Helper: limpiar selección actual
+    function clearTapSelection() {
+        if (tapState.selectedPieceElement) {
+            tapState.selectedPieceElement.style.filter = '';
+        }
+        if (tapState.selectedSlot) {
+            tapState.selectedSlot.style.background = '';
+            tapState.selectedSlot.style.boxShadow = '';
+        }
+        tapState.selectedPiece = null;
+        tapState.selectedPieceElement = null;
+        tapState.selectedSlot = null;
+        tapState.selectedFromSquare = null;
+    }
+
+    // Listener para tablero: tap-1 (seleccionar pieza del tablero) y tap-2 (colocar/mover)
     boardElement.addEventListener('click', (e) => {
+        const clickedBoardPiece = e.target.closest('img.piece:not(.hint-piece)');
+        const clickedSquare = e.target.closest('[data-square]');
+
+        // TAP 1: Clic en pieza del tablero
+        // Se activa si: no hay selección, o hay una pieza del tablero seleccionada.
+        // Si hay una pieza del BANCO seleccionada, el clic en pieza ocupada va a tap-2 (fallará por ocupada).
+        if (clickedBoardPiece && clickedSquare && (!tapState.selectedPiece || tapState.selectedFromSquare !== null)) {
+            if (canDragBoardPieceCallback && !canDragBoardPieceCallback(fromSquareCoord)) return;
+
+            const fromSquareCoord = clickedSquare.dataset.square;
+
+            // Misma pieza ya seleccionada → deseleccionar
+            if (tapState.selectedFromSquare === fromSquareCoord) {
+                clearTapSelection();
+                return;
+            }
+
+            // Seleccionar pieza del tablero (limpiando selección anterior)
+            clearTapSelection();
+            tapState.selectedPiece = clickedBoardPiece.dataset.piece;
+            tapState.selectedPieceElement = clickedBoardPiece;
+            tapState.selectedSlot = null;
+            tapState.selectedFromSquare = fromSquareCoord;
+            clickedBoardPiece.style.filter = 'drop-shadow(0 0 20px gold)';
+            console.log(`📱 Pieza del tablero seleccionada: ${tapState.selectedPiece} en ${fromSquareCoord}`);
+            return;
+        }
+
+        // TAP 2: Colocar o mover pieza seleccionada
         if (!tapState.selectedPiece) {
             console.log('⚠️ No hay pieza seleccionada');
             return;
         }
 
-        const square = e.target.closest('[data-square]');
-        if (!square) return;
+        if (!clickedSquare) return;
 
-        const squareCoord = square.dataset.square;
+        const squareCoord = clickedSquare.dataset.square;
 
-        // Validar si se puede colocar
-        if (!canPlacePiece(tapState.selectedPiece, squareCoord)) {
+        // Validar con fromSquare
+        if (!canPlacePiece(tapState.selectedPiece, squareCoord, tapState.selectedFromSquare)) {
             console.log(`❌ No se puede colocar ${tapState.selectedPiece} en ${squareCoord}`);
             return;
         }
 
-        console.log(`📱 Colocando ${tapState.selectedPiece} en ${squareCoord}`);
+        console.log(`📱 Moviendo ${tapState.selectedPiece} a ${squareCoord}`);
 
-        // Crear imagen de la pieza en el tablero
-        const pieceImg = document.createElement('img');
-        pieceImg.className = 'piece';
-        pieceImg.src = tapState.selectedPieceElement.src;
-        pieceImg.dataset.piece = tapState.selectedPiece;
-        pieceImg.alt = tapState.selectedPiece;
-
-        // Limpiar piezas existentes en esa casilla
-        const existingPieces = square.querySelectorAll('.piece');
-        existingPieces.forEach(p => p.remove());
-
-        // Agregar pieza al tablero
-        square.appendChild(pieceImg);
-
-        // Remover pieza del banco
-        tapState.selectedPieceElement.remove();
-
-        // Callback
-        onPiecePlaced(tapState.selectedPiece, squareCoord);
-
-        // Limpiar selección
-        if (tapState.selectedSlot) {
-            tapState.selectedSlot.style.background = '';
-            tapState.selectedSlot.style.boxShadow = '';
+        // Limpiar origen (banco o casilla del tablero)
+        if (tapState.selectedFromSquare) {
+            if (typeof clearPiece === 'function') clearPiece(tapState.selectedFromSquare);
+        } else {
+            tapState.selectedPieceElement.remove();
         }
 
-        tapState.selectedPiece = null;
-        tapState.selectedPieceElement = null;
-        tapState.selectedSlot = null;
+        // Colocar en destino usando showPiece (con fallback manual)
+        if (typeof showPiece === 'function') {
+            showPiece(squareCoord, tapState.selectedPiece);
+        } else {
+            const existingPieces = clickedSquare.querySelectorAll('.piece');
+            existingPieces.forEach(p => p.remove());
+            const pieceImg = document.createElement('img');
+            pieceImg.className = 'piece';
+            pieceImg.src = tapState.selectedPieceElement.src;
+            pieceImg.dataset.piece = tapState.selectedPiece;
+            pieceImg.alt = tapState.selectedPiece;
+            clickedSquare.appendChild(pieceImg);
+        }
 
-        console.log(`✅ Pieza colocada con tap-tap`);
+        // Callback con fromSquare
+        const fromSquareForCallback = tapState.selectedFromSquare;
+        onPiecePlaced(tapState.selectedPiece, squareCoord, fromSquareForCallback);
+
+        clearTapSelection();
+        console.log(`✅ Pieza colocada/movida con tap-tap`);
     });
 
     console.log('✅ Sistema Tap-Tap inicializado');
