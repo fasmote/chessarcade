@@ -981,6 +981,22 @@
         letter-spacing: 0.2em;
     }
 
+    /* Ocultar título ESTADÍSTICAS — se entiende solo con las etiquetas */
+    .info-panel > .info-card:first-child .info-title {
+        display: none;
+    }
+
+    /* Puntaje arriba de Palabras — flex reorder */
+    .info-panel > .info-card:first-child {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Puntos (segundo stat-item) sube al primer lugar */
+    .info-panel > .info-card:first-child .stat-item:last-child {
+        order: -1;
+    }
+
     /* Botones: NUEVO TABLERO fila entera, PISTA + AYUDA en fila */
     .controls-panel {
         display: grid;
