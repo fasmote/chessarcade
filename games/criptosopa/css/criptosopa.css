@@ -5,7 +5,7 @@
     --grid-gap: 4px;
     --neon-cyan: #00ffff;
     --neon-magenta: #ff0080;
-    --neon-yellow: #ffd700;
+    --neon-yellow: #ffff00;
 }
 
 /* Desktop Logo (top left) */
@@ -224,9 +224,31 @@
     padding: 1rem;
 }
 
+/* Tablet (768px+): activar 2 columnas con sidebar angosta */
+@media (min-width: 768px) {
+    :root { --cell-size: 44px; }
+
+    .game-wrapper {
+        grid-template-columns: 1fr 260px;
+        padding: 0.75rem;
+    }
+
+    .board-container {
+        padding: 0.75rem;
+    }
+}
+
+/* Desktop (1024px+): sidebar completa, celdas grandes */
 @media (min-width: 1024px) {
+    :root { --cell-size: clamp(44px, 5.5vw, 60px); }
+
     .game-wrapper {
         grid-template-columns: 1fr 320px;
+        padding: 1rem;
+    }
+
+    .board-container {
+        padding: 1rem;
     }
 }
 
@@ -829,11 +851,33 @@
     }
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablet pequeña (641px–767px): 1 columna optimizada */
+@media (min-width: 641px) and (max-width: 767px) {
     :root {
-        --cell-size: clamp(35px, 10vw, 45px);
+        --cell-size: clamp(40px, 7.5vw, 54px);
     }
+
+    .board-panel {
+        align-items: center;
+    }
+
+    .controls-panel {
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .timer-display span {
+        font-size: 1.75rem;
+    }
+}
+
+/* Mobile (≤640px) */
+@media (max-width: 640px) {
+    :root { --cell-size: clamp(34px, 10vw, 43px); }
 
     .game-board {
         gap: 2px;
@@ -851,13 +895,21 @@
         font-size: 1.2rem;
     }
 
+    /* Botones: NUEVO TABLERO ocupa fila entera, PISTA + AYUDA comparten fila */
     .controls-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
         width: 100%;
     }
 
-    .controls-panel button {
-        flex: 1;
-        min-width: 120px;
+    .controls-panel > button:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .controls-panel > button {
+        font-size: 0.68rem;
+        padding: 0.65rem 0.75rem;
     }
 }
 
