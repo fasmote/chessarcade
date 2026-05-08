@@ -360,3 +360,127 @@ if (DEBUG) {
 ### 8.3 Git Bisect
 - No utilizado (desarrollo lineal)
 - Útil para futuros bugs de regresión
+
+---
+
+## 9. Errores de Estética y Responsive — Sesión 2026-05-07/08
+
+### Error #101: Botones sin estilos neon
+**Fecha**: 2026-05-07
+**Severidad**: Alta
+**Descripción**: Los tres botones del juego (NUEVO TABLERO, PISTA, AYUDA) se veían con estilos por defecto del navegador — grises, sin colores neon.
+
+**Causa Raíz**:
+El HTML usaba clases `.neon-arcade-btn--primary`, `.neon-arcade-btn--secondary`, `.neon-arcade-btn--tertiary` pero ninguna de estas variantes existía en `neonchess-style.css` ni en `criptosopa.css`. Solo existían `.neon-arcade-btn.red` y `.neon-arcade-btn.blue` en el sistema compartido.
+
+**Solución**:
+Definir las tres variantes en `criptosopa.css`:
+- `--primary` → cyan (coherente con el tablero)
+- `--secondary` → magenta (para pista)
+- `--tertiary` → amarillo (para ayuda)
+- Agregado estado `disabled` con opacidad 0.4 para botón PISTA sin hints restantes.
+
+**Archivos**: `games/criptosopa/css/criptosopa.css`
+
+---
+
+### Error #102: Modales sin estilos (invisibles)
+**Fecha**: 2026-05-07
+**Severidad**: Alta
+**Descripción**: Los modales de ayuda y victoria no se mostraban visualmente (sin overlay, sin caja, sin nada).
+
+**Causa Raíz**:
+El HTML usaba `.neon-modal`, `.neon-modal-content`, `.modal-header`, `.modal-close-btn` pero ninguna de estas clases estaba definida en ningún CSS del proyecto.
+
+**Solución**:
+Definir en `criptosopa.css`:
+- `.neon-modal` → `display: none` por defecto, `display: flex` con clase `.active`
+- `.neon-modal-content` → caja centrada con borde cyan y animación de entrada
+- `.modal-header` → flex row con título y botón X
+- `.modal-close-btn` → botón X con glow cyan
+
+**Nota**: El JS ya usaba `.classList.add('active')` para mostrar modales — la clase `.active` ya estaba implementada correctamente en el JS, solo faltaba el CSS.
+
+**Archivos**: `games/criptosopa/css/criptosopa.css`
+
+---
+
+### Error #103: SVG joystick del logo gigante en pantalla
+**Fecha**: 2026-05-07
+**Severidad**: Alta
+**Descripción**: Los íconos SVG del logo (joysticks) se veían gigantes ocupando toda la pantalla.
+
+**Causa Raíz**:
+Los otros juegos (Memory Matrix, Master Sequence) definen `.joystick-icon { width: 40px; height: 40px; }` en un `<style>` tag inline en el HTML, que tiene mayor precedencia en la cascada CSS que un archivo externo. CriptoSopa solo lo tenía en `criptosopa.css` (archivo externo) y era vulnerable a ser sobreescrito por `neonchess-style.css`.
+
+**Solución**:
+Agregar `width="40" height="40"` directamente como atributos HTML en los elementos `<svg>`. Los atributos HTML de dimensión son inmunes a la sobreescritura por CSS.
+
+**Archivos**: `games/criptosopa/index.html` (líneas 37 y 63)
+
+---
+
+### Error #104: Canvas huérfano creaba 150px de espacio vacío en mobile
+**Fecha**: 2026-05-08
+**Severidad**: Alta
+**Descripción**: En mobile había un gran espacio vacío oscuro al inicio de la página (~150px) antes del título del juego.
+
+**Causa Raíz**:
+El HTML tiene `<canvas id="particlesCanvas" class="particles-canvas">` sin ningún CSS de posicionamiento. Un `<canvas>` sin CSS tiene tamaño por defecto de **300×150px** y vive en el flujo normal del documento, empujando todo el contenido hacia abajo.
+
+El elemento NO es usado por ningún script del juego: `neonchess-effects.js` crea su propio canvas programáticamente con `id="neon-particles"`. El `particlesCanvas` es un elemento huérfano heredado de una versión anterior.
+
+**Solución**:
+Agregar en `criptosopa.css`:
+```css
+.particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+}
+```
+Esto lo saca del flujo del documento y lo convierte en un fondo de pantalla (aunque esté vacío no molesta).
+
+**Nota**: NO eliminar el canvas del HTML hasta confirmar que no hay ningún script externo o futuro que lo use.
+
+**Archivos**: `games/criptosopa/css/criptosopa.css`
+
+---
+
+### Error #105: Responsive incompleto — breakpoint tablet faltante
+**Fecha**: 2026-05-08
+**Severidad**: Media
+**Descripción**: Entre 641px y 1023px no había breakpoint, la página usaba 1 columna sin ajustes específicos. El grid de 2 columnas solo activaba a 1024px.
+
+**Solución**:
+- Grid 2 columnas activado desde **768px** (sidebar 260px)
+- Desktop 1024px+ mantiene sidebar 320px con celdas más grandes
+- Tablet pequeña 641–767px: 1 columna con tamaño de celda optimizado
+- Mobile ≤640px: layout compacto completo (ver siguiente error)
+
+**Archivos**: `games/criptosopa/css/criptosopa.css`
+
+---
+
+### Error #106: Mobile — demasiado espacio y botones no visibles sin scroll
+**Fecha**: 2026-05-08
+**Severidad**: Alta
+**Descripción**: En mobile (iPhone 14), el título ocupaba demasiado espacio vertical y los botones quedaban fuera de la pantalla sin scrollear.
+
+**Causa**: `.neon-container { padding: 2rem }` + título 2.5rem + subtítulo + timer = demasiada altura antes del tablero.
+
+**Solución en mobile (≤640px)**:
+- `.neon-container` padding reducido a `0.25rem 0.5rem`
+- `.neon-back-btn` (← MENÚ) oculto — el emoji 🐴🔍 del título identifica el juego
+- `.neon-subtitle` ("KNIGHT WORD SEARCH") oculto — ahorra una línea completa
+- `.neon-title` reducido a `2rem !important`
+- `.selection-bar` de 48px → 40px (sigue mostrando letras seleccionadas al jugar)
+- Timer compacto (padding reducido, font 1.2rem)
+- `.game-wrapper` gap 0.5rem
+- Botones en grid 2+1: NUEVO TABLERO ocupa fila completa, PISTA + AYUDA comparten fila
+
+**Archivos**: `games/criptosopa/css/criptosopa.css`

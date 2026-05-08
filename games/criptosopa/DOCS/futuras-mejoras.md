@@ -537,6 +537,34 @@ gtag('event', 'level_complete', {
 
 ## 7. Roadmap Sugerido
 
+### Versión 1.0.x — Estética y Responsive (EN PROGRESO — 2026-05-07/08)
+
+#### ✅ COMPLETADO
+- [x] Botones neon: `.neon-arcade-btn--primary/secondary/tertiary` definidos en CSS
+- [x] Modales: `.neon-modal`, `.neon-modal-content`, `.modal-header`, `.modal-close-btn` definidos
+- [x] Fix SVG joystick gigante: `width="40" height="40"` en atributos HTML
+- [x] Fix canvas huérfano: `position: fixed` en `.particles-canvas`
+- [x] Responsive tablet: grid 2 columnas desde 768px (antes 1024px)
+- [x] Mobile compacto: padding reducido, subtítulo oculto, botones en grid 2+1
+- [x] `--neon-yellow` sincronizado a `#ffff00`
+
+#### 🔲 PENDIENTE — Fase 3 (Detalles estéticos)
+- [ ] Confeti en victoria: llamar `launchConfetti()` al completar todas las palabras
+- [ ] Mini logo en mobile: reemplazar ← MENÚ con algo más visual (actualmente oculto)
+- [ ] Flash más notorio al encontrar una palabra
+- [ ] Revisar visual del modal de victoria con el nuevo estilo
+- [ ] Subir a Hostinger via FTP (los archivos modificados son: `css/criptosopa.css` e `index.html`)
+- [ ] Testear en dispositivos reales: iPhone, Android, tablet
+- [ ] Remover console.logs de debug en `criptosopa.js`
+
+#### 🔲 ARCHIVOS MODIFICADOS EN ESTA SESIÓN
+- `games/criptosopa/css/criptosopa.css` — todos los cambios de estética
+- `games/criptosopa/index.html` — fix width/height en SVG joystick
+- `games/criptosopa/DOCS/futuras-mejoras.md` — este archivo
+- `games/criptosopa/DOCS/errores-y-soluciones.md` — errores #101 al #106
+
+---
+
 ### Versión 1.1 (Próxima release)
 - [ ] Tutorial interactivo
 - [ ] Sistema de niveles progresivos
