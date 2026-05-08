@@ -632,6 +632,154 @@ Cuando uses clases CSS para visibilidad:
 
 ---
 
+---
+
+## 🔧 PROBLEMA 10: MutationObserver sin Distinción de Contexto
+
+### 🐛 Síntoma
+Al agregar drag listeners a piezas del tablero via MutationObserver, las piezas **fijas de referencia** (las que aparecen al inicio del nivel como ayuda visual) también se volvían arrastrables. Al moverlas, el sistema las perdía de `placedPieces`, la validación fallaba, se perdía una vida y la pieza no volvía al tablero.
+
+### 🔍 Causa Raíz
+El MutationObserver agregaba listeners a **cualquier** `img.piece` agregada al tablero, sin importar su origen:
+
+```javascript
+// ❌ MAL - Observa TODAS las piezas del tablero
+boardObserver.observe(boardElement, { childList: true, subtree: true });
+// → Las piezas fijas (showPiece durante memorización) también reciben listeners
+```
+
+Las piezas fijas son colocadas por `showPiece()` al inicio del juego y NO están en `placedPieces`. El sistema de drag las trataba como piezas del jugador.
+
+### ✅ Solución
+El callback `canDragBoardPiece` recibe la casilla de origen y verifica que esté en `placedPieces`:
+
+```javascript
+// ✅ BIEN - Solo permite arrastrar piezas que el jugador colocó
+canDragBoardPiece: (fromSquare) =>
+    gameState === 'solving' &&
+    placedPieces.some(p => p.square === fromSquare)
+```
+
+El MutationObserver puede seguir observando todo — el control está en el momento del drag, no en el registro del listener.
+
+### 💡 Lección Aprendida
+**Los listeners de drag son baratos; la validación de contexto es lo importante.**
+No intentes filtrar qué elementos reciben listeners — es difícil y propenso a errores. En cambio, filtrá en el handler usando el estado del juego.
+
+**Checklist para drag desde tablero:**
+- [ ] ¿Todas las piezas del tablero tienen listeners? (OK)
+- [ ] ¿El handler valida si la pieza pertenece al jugador? (OBLIGATORIO)
+- [ ] ¿La validación usa el estado del juego, no el DOM? (OBLIGATORIO)
+
+### 📦 Para la Librería
+```javascript
+ChessArcade.DragDrop.init({
+    canDragFromBoard: (square, piece, gameContext) => {
+        // Siempre recibir contexto para decidir
+        return gameContext.playerPieces.includes(square);
+    }
+});
+```
+
+---
+
+## 🔧 PROBLEMA 11: Estructura de Historial Incompatible con Nuevas Acciones
+
+### 🐛 Síntoma
+El botón "deshacer" funcionaba correctamente para piezas colocadas desde el banco, pero si se extendía el sistema para soportar movimientos tablero→tablero, el undo enviaba la pieza al banco en lugar de devolverla a su casilla anterior.
+
+### 🔍 Causa Raíz
+El historial `moveHistory` solo guardaba `{ square, piece }` — suficiente para un flujo de una dirección (banco→tablero), pero insuficiente cuando el origen puede ser otra casilla del tablero:
+
+```javascript
+// ❌ MAL - Sin información de origen
+moveHistory.push({ square: 'd5', piece: 'wK' });
+// → El undo no sabe de dónde vino la pieza
+```
+
+### ✅ Solución
+Extender la estructura con toda la información de origen:
+
+```javascript
+// ✅ BIEN - Con información completa de origen
+moveHistory.push({
+    toSquare: 'd5',
+    fromSquare: 'e4',   // null si viene del banco
+    piece: 'wK',
+    fromBank: false     // true si viene del banco
+});
+
+// El undo bifurca según fromBank:
+if (lastMove.fromBank) {
+    animatePieceBackToBank(lastMove.toSquare, lastMove.piece, callback);
+} else {
+    animatePieceBackToSquare(lastMove.toSquare, lastMove.fromSquare, lastMove.piece, callback);
+}
+```
+
+### 💡 Lección Aprendida
+**Diseñar el historial pensando en el undo desde el día 1.** El undo necesita saber exactamente de dónde vino cada cosa, no solo a dónde fue. Guardar `{ to, from, what }` siempre es mejor que solo `{ to, what }`.
+
+**Antes de agregar nuevas acciones al historial:**
+- [ ] ¿La nueva acción tiene un origen diferente a las anteriores?
+- [ ] ¿El undo de la nueva acción funciona con la estructura actual?
+- [ ] ¿La estructura es retrocompatible? (el campo `fromBank` permite detectar el caso anterior)
+
+### 📦 Para la Librería
+```javascript
+ChessArcade.History.push({
+    type: 'move',       // 'place' | 'move' | 'remove'
+    piece: 'wK',
+    from: { type: 'square', coord: 'e4' },   // o { type: 'bank' }
+    to:   { type: 'square', coord: 'd5' }
+});
+```
+
+---
+
+## 🔧 PROBLEMA 12: Timeout de Auto-validación sin Control
+
+### 🐛 Síntoma
+Si el jugador colocaba la última pieza y dentro de los 500ms de gracia movía esa pieza a otra casilla, la validación corría con el `placedPieces` actualizado pero podía haber un desajuste entre el estado interno y el DOM durante la transición.
+
+### 🔍 Causa Raíz
+```javascript
+// ❌ MAL - Timeout sin referencia, no cancelable
+setTimeout(() => {
+    validatePosition();
+}, 500);
+```
+
+Si se disparaba un nuevo `onPiecePlaced` antes de los 500ms, se tenía una segunda validación pendiente, y el estado podía ser inconsistente.
+
+### ✅ Solución
+Guardar la referencia del timeout y cancelarla al inicio de cada `onPiecePlaced`:
+
+```javascript
+// ✅ BIEN - Timeout cancelable
+let validationTimeout = null;
+
+// Al colocar pieza:
+if (validationTimeout) {
+    clearTimeout(validationTimeout);
+    validationTimeout = null;
+}
+
+if (remaining === 0) {
+    validationTimeout = setTimeout(() => {
+        validationTimeout = null;
+        validatePosition();
+    }, 500);
+}
+```
+
+### 💡 Lección Aprendida
+**Todo `setTimeout` que puede ser interrumpido por una acción del usuario debe ser cancelable.** Guardar la referencia en una variable es gratis y evita estados inconsistentes.
+
+**Regla general:** Si el usuario puede hacer algo antes de que termine un timeout, ese timeout debe poder cancelarse.
+
+---
+
 **Este documento será la base de ChessArcade Game Library v1.0**
 
-Última actualización: 2026-01-14
+Última actualización: 2026-05-07

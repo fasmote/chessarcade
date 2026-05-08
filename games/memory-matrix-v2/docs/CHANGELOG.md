@@ -4,6 +4,41 @@ Registro cronológico de cambios día a día.
 
 ---
 
+## [2026-05-07] - Reubicar piezas ya colocadas en el tablero
+
+### Added ✨
+
+- **Drag tablero→tablero**: cualquier pieza colocada por el jugador puede arrastrarse a otra casilla vacía sin necesidad de usar el botón deshacer
+- **Tap-tap desde tablero (mobile)**: tocar una pieza ya colocada la selecciona con brillo dorado; un segundo tap en casilla vacía la mueve
+- **Undo mejorado (bifurcado)**:
+  - Movimiento banco→tablero: devuelve la pieza al banco (comportamiento anterior)
+  - Movimiento tablero→tablero: devuelve la pieza a su casilla anterior con animación
+- **Animación tablero→tablero**: nueva función `animatePieceBackToSquare()` con efecto bounce suave
+- **Validación cancelable**: el timeout de auto-validación (500ms) se cancela si el jugador mueve una pieza antes de que dispare, evitando validar una posición intermedia
+- **`canDragBoardPiece` con contexto**: el callback recibe la casilla de origen para distinguir piezas colocadas por el jugador vs piezas fijas de referencia
+- **MutationObserver en el tablero**: las piezas colocadas por el jugador reciben listeners de drag automáticamente al ser agregadas al DOM
+
+### Fixed 🐛
+
+- **Piezas fijas no arrastrables**: las piezas que aparecen de entrada en el tablero como referencia (ej: Rey Blanco en nivel 1) no se podían arrastrar. Si se movían, el sistema las perdía de `placedPieces` y marcaba todo como incorrecto.
+  - **Causa**: el MutationObserver agregaba listeners a TODAS las piezas del tablero, sin distinguir si las colocó el jugador o son piezas fijas
+  - **Fix**: `canDragBoardPiece(fromSquare)` verifica que `fromSquare` esté en `placedPieces` antes de permitir el drag
+
+### Changed ⚙️
+
+- Estructura de `moveHistory` extendida: `{ toSquare, fromSquare, piece, fromBank }` (antes: `{ square, piece }`)
+- `onPiecePlaced` y `canPlacePiece` reciben `fromSquare` como tercer parámetro opcional (retrocompatible)
+- `sharedCallbacks` incluye `canDragBoardPiece: (fromSquare) => ...`
+
+### Not changed 🔒
+
+- CSS, layouts, responsive: sin ningún cambio
+- Sistema de puntuación, niveles, timer global: sin cambios
+- Animaciones existentes (shake, flash, confeti): sin cambios
+- Otros juegos del proyecto: no afectados (DragDrop.js es copia local de Memory Matrix)
+
+---
+
 ## [2026-01-14] - Niveles 9-15 + Contador de Corrección + Hints Infinitos
 
 ### Added ✨
