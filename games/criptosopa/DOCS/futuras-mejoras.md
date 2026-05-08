@@ -698,3 +698,64 @@ Cambiar `#ffd700` → `#ffff00` en `:root` de `criptosopa.css`.
 - Integration tests para flujo de juego completo
 - Accessibility testing (WAVE, axe)
 - Cross-browser testing (Chrome, Firefox, Safari, Edge)
+
+---
+
+## 10. Roadmap Revisado — Sesión 2026-05-08
+
+> Prioridades acordadas. Foco en mobile primero, PC se revisa después.
+> Decisión: NO guardar récord en localStorage — irá directo al leaderboard de Supabase cuando esté integrado, para evitar duplicar datos y luego tener que migrarlos.
+
+---
+
+### SPRINT 1 — En curso
+
+| # | Mejora | Dificultad | Estado |
+|---|--------|-----------|--------|
+| 1 | Confeti al ganar todas las palabras | Fácil | 🔲 |
+| 2 | Flash más notorio al encontrar palabra (scale + glow) | Fácil | 🔲 |
+| 3 | Remover console.logs de debug | Fácil | 🔲 |
+| 4 | Vibración al encontrar palabra (mobile) — `navigator.vibrate(150)` | Fácil | 🔲 |
+| 5 | Sonido al encontrar palabra y al ganar | Fácil | 🔲 |
+| ~~6~~ | ~~Guardar récord local (localStorage)~~ | — | ❌ Descartado — irá al leaderboard |
+
+---
+
+### SPRINT 2 — Tutorial + Animación (prioridad después del Sprint 1)
+
+| # | Mejora | Dificultad | Notas |
+|---|--------|-----------|-------|
+| 11 | Tutorial interactivo | Medio | Primera partida guiada paso a paso: "tocá esta celda → ahora esta → ¡encontraste la primera letra!" Solo se muestra la primera vez. |
+| 12 | Animación de caballo saltando | Medio | Un pequeño ♞ que salta visualmente entre las celdas seleccionadas siguiendo el path. Refuerza el concepto del movimiento en L. |
+
+---
+
+### SPRINT 3 — Gameplay
+
+| # | Mejora | Dificultad | Notas |
+|---|--------|-----------|-------|
+| 5 | Niveles de dificultad | Medio | Fácil (4 palabras, casillas válidas muy iluminadas) / Normal (actual) / Difícil (8 palabras, sin iluminación de casillas válidas) |
+| 7 | Compartir resultado | Medio | Botón en modal victoria → `navigator.share()` o copiar: "Encontré 6 palabras en 01:45 🐴🔍" |
+| 8 | Estadísticas históricas | Medio | Cuando esté el leaderboard, las stats vienen de Supabase |
+
+---
+
+### SPRINT 4 — Features avanzados
+
+| # | Mejora | Dificultad | Notas |
+|---|--------|-----------|-------|
+| 9 | Daily Puzzle | Complejo | Misma semilla por fecha → mismo tablero para todos. Comparar tiempos. Requiere coordinación con Supabase. |
+| 10 | Modo zen (sin tiempo) | Fácil | Toggle que pausa el timer. Para jugadores casuales o niños. |
+| 13 | Categorías de palabras | Medio | Ajedrez (actual) + Animales + Países + Deportes. Selector antes de empezar. |
+| 14 | Palabras temáticas rotativas | Medio | Set diferente cada semana. Fecha de rotación visible. |
+| 15 | Estrellitas según tiempo | Fácil | 1-3 ⭐ en el modal de victoria según rapidez. Incentiva rejugar. |
+
+---
+
+### IDEAS ADICIONALES (sin prioridad aún)
+
+- **Swipe para seleccionar** — arrastrar dedo entre celdas siguiendo movimiento de caballo, más fluido que tap-tap
+- **Iluminar camino de palabra encontrada** — al tocar una palabra de la lista ya encontrada, su camino se ilumina en el tablero brevemente
+- **Confeti del color de la última palabra** — en lugar de confeti genérico, usa el color asignado a esa palabra
+- **Resaltar primer celda de pista** — la pista actual muestra la primera celda de la próxima palabra (sin revelar el camino)
+- **Modo daltonismo** — paleta alternativa accesible

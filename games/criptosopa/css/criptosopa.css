@@ -1015,6 +1015,25 @@
     }
 }
 
+/* Flash al encontrar una palabra */
+@keyframes cellFoundFlash {
+    0%   { transform: scale(1);    filter: brightness(1); }
+    35%  { transform: scale(1.28); filter: brightness(2.2); }
+    100% { transform: scale(1);    filter: brightness(1); }
+}
+
+.cell-found-flash {
+    animation: cellFoundFlash 0.7s ease-out;
+    z-index: 30;
+}
+
+/* Confeti de victoria */
+@keyframes confettiFall {
+    0%   { transform: translateY(0)      rotate(0deg);   opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(100vh)  rotate(720deg); opacity: 0; }
+}
+
 /* Hint Flash Animation */
 @keyframes hintFlash {
     0%, 100% {

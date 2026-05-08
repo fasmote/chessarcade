@@ -308,17 +308,21 @@ function handleCellClick(r, c) {
         if (!gameState.foundPaths.some(fp => fp.word === currentWord)) {
             const color = CONFIG.NEON_COLORS[gameState.foundPaths.length % CONFIG.NEON_COLORS.length];
 
+            const foundPath = [...newPath]; // capturar antes de que cambie
+
             gameState.foundPaths.push({
                 word: currentWord,
                 path: newPath,
                 color: color
             });
 
-            console.log(`[WORD FOUND] "${currentWord}" with path:`,
-                newPath.map(p => `(${p.r},${p.c})=${gameState.board[p.r][p.c]}`).join(' -> '));
-
             gameState.selectedPath = [];
             gameState.score += CONFIG.POINTS_PER_WORD;
+
+            // Sprint 1: feedback al encontrar palabra
+            if (navigator.vibrate) navigator.vibrate(100);
+            playWordFoundSound();
+            setTimeout(() => flashFoundWordCells(foundPath, color), 50);
 
             // Check win condition
             if (gameState.foundPaths.length === gameState.targetWords.length) {
@@ -354,12 +358,7 @@ function showHint() {
         !gameState.foundPaths.some(fp => fp.word === w)
     );
 
-    console.log('[HINT] Missing words:', missingWords);
-    console.log('[HINT] Target words:', gameState.targetWords);
-    console.log('[HINT] Found paths:', gameState.foundPaths);
-
     if (missingWords.length === 0) {
-        console.log('[HINT] No missing words!');
         return;
     }
 
@@ -827,6 +826,11 @@ function winGame() {
     gameState.gameStatus = 'won';
     clearInterval(gameState.timerInterval);
 
+    // Sprint 1: feedback de victoria
+    if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
+    playVictorySound();
+    launchConfetti();
+
     setTimeout(() => {
         showVictoryModal();
     }, 1000);
@@ -927,6 +931,68 @@ function playBeep(frequency = 660, duration = 0.1) {
         oscillator.stop(ctx.currentTime + duration);
     } catch (e) {
         console.warn('Audio not available:', e);
+    }
+}
+
+// Sonido de palabra encontrada — acorde ascendente
+function playWordFoundSound() {
+    playBeep(523, 0.09);
+    setTimeout(() => playBeep(659, 0.09), 80);
+    setTimeout(() => playBeep(784, 0.14), 160);
+}
+
+// Sonido de victoria — fanfarria corta
+function playVictorySound() {
+    playBeep(523, 0.12);
+    setTimeout(() => playBeep(659, 0.12), 110);
+    setTimeout(() => playBeep(784, 0.12), 220);
+    setTimeout(() => playBeep(1047, 0.28), 330);
+}
+
+// Flash en las celdas de una palabra recién encontrada
+function flashFoundWordCells(path, color) {
+    path.forEach((pos, index) => {
+        setTimeout(() => {
+            const cell = elements.gameBoard.querySelector(
+                `[data-row="${pos.r}"][data-col="${pos.c}"]`
+            );
+            if (cell) {
+                cell.classList.add('cell-found-flash');
+                setTimeout(() => cell.classList.remove('cell-found-flash'), 700);
+            }
+        }, index * 40);
+    });
+}
+
+// Confeti de victoria
+function launchConfetti() {
+    let container = document.getElementById('confettiContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'confettiContainer';
+        container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:8000;overflow:hidden;';
+        document.body.appendChild(container);
+    }
+
+    const colors = ['#00ffff', '#ff0080', '#ffff00', '#00ff80', '#ff8000', '#8000ff'];
+    for (let i = 0; i < 70; i++) {
+        setTimeout(() => {
+            const piece = document.createElement('div');
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const size = 6 + Math.random() * 8;
+            piece.style.cssText = `
+                position:absolute;
+                width:${size}px;height:${size}px;
+                background:${color};
+                left:${Math.random() * 100}%;
+                top:-20px;
+                border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+                animation:confettiFall ${1.5 + Math.random() * 1.5}s ease-in forwards;
+                box-shadow:0 0 6px ${color};
+            `;
+            container.appendChild(piece);
+            setTimeout(() => piece.remove(), 3200);
+        }, i * 35);
     }
 }
 
