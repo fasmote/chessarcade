@@ -857,13 +857,7 @@
 
 /* Tablet pequeña (641px–767px): 1 columna optimizada */
 @media (min-width: 641px) and (max-width: 767px) {
-    :root {
-        --cell-size: clamp(40px, 7.5vw, 54px);
-    }
-
-    .board-panel {
-        align-items: center;
-    }
+    :root { --cell-size: clamp(40px, 7.5vw, 54px); }
 
     .controls-panel {
         gap: 0.75rem;
@@ -875,9 +869,83 @@
     }
 }
 
-/* Mobile (≤640px) */
+/* ============================================
+   MOBILE (≤640px) — Layout compacto completo
+   ============================================ */
 @media (max-width: 640px) {
-    :root { --cell-size: clamp(34px, 10vw, 43px); }
+    :root { --cell-size: clamp(36px, 10.5vw, 43px); }
+
+    /* Reducir padding del contenedor global */
+    .neon-container {
+        padding: 0.25rem 0.5rem 0.5rem;
+    }
+
+    /* Mini logo: mostrar los joysticks en lugar del botón MENÚ */
+    .desktop-logo {
+        display: flex;
+        position: static;
+        padding: 0.3rem 0 0 0;
+        gap: 0.3rem;
+        align-items: center;
+        justify-content: flex-start;
+        z-index: auto;
+    }
+
+    .desktop-logo .logo-text {
+        display: none;
+    }
+
+    .desktop-logo .joystick-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    /* Ocultar el botón "← MENÚ" — reemplazado por el mini logo */
+    .neon-back-btn {
+        display: none;
+    }
+
+    /* Header compacto */
+    .neon-header {
+        padding: 0;
+        margin-bottom: 0;
+    }
+
+    /* Título más pequeño */
+    .neon-title {
+        font-size: 2rem !important;
+        letter-spacing: 0.08em !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Ocultar subtítulo en mobile — ahorra una línea entera */
+    .neon-subtitle {
+        display: none !important;
+    }
+
+    /* Timer compacto */
+    .timer-container {
+        margin-bottom: 0.5rem;
+    }
+
+    .timer-display {
+        padding: 0.4rem 1.5rem;
+    }
+
+    .timer-display span {
+        font-size: 1.2rem;
+    }
+
+    /* Game wrapper sin gap excesivo */
+    .game-wrapper {
+        gap: 0.5rem;
+        padding: 0;
+    }
+
+    /* Board panel más junto */
+    .board-panel {
+        gap: 0.5rem;
+    }
 
     .game-board {
         gap: 2px;
@@ -887,15 +955,18 @@
         padding: 0.5rem;
     }
 
+    /* Selection bar compacta (muestra letras seleccionadas al jugar) */
     .selection-bar {
-        height: 3rem;
+        height: 2.5rem;
+        max-width: 100%;
     }
 
     .selection-bar span {
-        font-size: 1.2rem;
+        font-size: 1rem;
+        letter-spacing: 0.2em;
     }
 
-    /* Botones: NUEVO TABLERO ocupa fila entera, PISTA + AYUDA comparten fila */
+    /* Botones: NUEVO TABLERO fila entera, PISTA + AYUDA en fila */
     .controls-panel {
         display: grid;
         grid-template-columns: 1fr 1fr;
