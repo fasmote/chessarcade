@@ -423,6 +423,166 @@
     justify-content: center;
 }
 
+/* ============================================
+   BOTONES NEON — variantes de criptosopa
+   ============================================ */
+
+.neon-arcade-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 8px;
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+}
+
+.neon-arcade-btn:active {
+    transform: scale(0.96);
+}
+
+/* Primary — cyan (Nuevo Tablero) */
+.neon-arcade-btn--primary {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.35),
+                inset 0 0 10px rgba(0, 255, 255, 0.05);
+}
+
+.neon-arcade-btn--primary:hover {
+    background: rgba(0, 255, 255, 0.12);
+    box-shadow: 0 0 22px rgba(0, 255, 255, 0.65),
+                inset 0 0 15px rgba(0, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Secondary — magenta (Pista) */
+.neon-arcade-btn--secondary {
+    border-color: var(--neon-magenta);
+    color: var(--neon-magenta);
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.35),
+                inset 0 0 10px rgba(255, 0, 128, 0.05);
+}
+
+.neon-arcade-btn--secondary:hover {
+    background: rgba(255, 0, 128, 0.12);
+    box-shadow: 0 0 22px rgba(255, 0, 128, 0.65),
+                inset 0 0 15px rgba(255, 0, 128, 0.1);
+    transform: translateY(-2px);
+}
+
+.neon-arcade-btn--secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Tertiary — amarillo (Ayuda) */
+.neon-arcade-btn--tertiary {
+    border-color: var(--neon-yellow);
+    color: var(--neon-yellow);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.35),
+                inset 0 0 10px rgba(255, 215, 0, 0.05);
+}
+
+.neon-arcade-btn--tertiary:hover {
+    background: rgba(255, 215, 0, 0.12);
+    box-shadow: 0 0 22px rgba(255, 215, 0, 0.65),
+                inset 0 0 15px rgba(255, 215, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   MODALES NEON
+   ============================================ */
+
+.neon-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(6px);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.neon-modal.active {
+    display: flex;
+}
+
+.neon-modal-content {
+    background: rgba(10, 10, 26, 0.97);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.25),
+                0 0 80px rgba(0, 255, 255, 0.1);
+    animation: modalIn 0.25s ease-out;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.92) translateY(-10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.modal-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+.modal-close-btn {
+    background: none;
+    border: 1px solid rgba(0, 255, 255, 0.4);
+    border-radius: 6px;
+    color: var(--neon-cyan);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+    background: rgba(0, 255, 255, 0.15);
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+}
+
 /* Info Panel */
 .info-panel {
     display: flex;

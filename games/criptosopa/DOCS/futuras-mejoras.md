@@ -563,7 +563,96 @@ gtag('event', 'level_complete', {
 
 ---
 
-## 8. Notas de Desarrollo
+## 8. Estética y Responsive — Análisis 2026-05-07
+
+> Análisis realizado comparando CriptoSopa con Memory Matrix y Master Sequence.
+> Regla: no alterar lógica del juego. Solo CSS y estructura visual.
+
+### Estado actual
+
+| Elemento | Estado | Notas |
+|---|---|---|
+| Header (título/subtítulo) | ✅ Correcto | Usa `.neon-title`, `.neon-subtitle` del sistema compartido |
+| Logo + nav desktop | ✅ Correcto | Borde, colores y hover funcionan |
+| Hamburger menu mobile | ✅ Correcto | Ya integrado |
+| Tablero con borde cyan | ✅ Correcto | Buena estética arcade |
+| Timer naranja neon | ✅ Correcto | Usa `var(--neon-orange)` correctamente |
+| Info-cards panel derecho | ✅ Correcto | Look ChessArcade |
+| Estados de celda | ✅ Correcto | selected/found/hint con neon |
+| **Botones NUEVO/PISTA/AYUDA** | ❌ Sin estilos | Clases `--primary/secondary/tertiary` no definidas en ningún CSS |
+| **Modales help y victory** | ❌ Sin estilos | `.neon-modal`, `.neon-modal-content`, `.modal-header`, `.modal-close-btn` no definidas |
+| **Responsive tablet** | ❌ Falta | Sin breakpoint 641–1023px |
+| `--neon-yellow` | ⚠️ Desincronizada | `#ffd700` en criptosopa.css vs `#ffff00` en neonchess-style.css |
+| Confeti en victoria | ❌ Falta | Función `launchConfetti` existe en el proyecto, no está llamada |
+
+---
+
+### Fase 1 — Bloqueos visuales (prioridad alta)
+
+#### 1A. Botones sin estilos neon
+
+**Problema:** El HTML usa `.neon-arcade-btn--primary`, `--secondary`, `--tertiary` pero estas variantes no existen. Los botones se ven como default del navegador.
+
+**Solución:** Definir en `criptosopa.css`:
+- `--primary` → cyan (coherente con tablero y cards)
+- `--secondary` → magenta (acción especial — pista)
+- `--tertiary` → amarillo (informativo — ayuda)
+
+Seguir el mismo patrón de sombra neon que usa `.neon-arcade-btn.red` en `neonchess-style.css`.
+
+#### 1B. Modales sin definición
+
+**Problema:** `.neon-modal`, `.neon-modal-content`, `.modal-header`, `.modal-close-btn` no tienen CSS. Los modales no se muestran correctamente.
+
+**Solución:** Agregar en `criptosopa.css`:
+```
+.neon-modal         → overlay position:fixed, fondo rgba oscuro, display:none por defecto
+.neon-modal.active  → display:flex para mostrar
+.neon-modal-content → caja centrada, borde neon cyan, fondo oscuro, border-radius
+.modal-header       → flex row, justify-content:space-between, título + botón X
+.modal-close-btn    → botón X con color neon, hover con glow
+```
+
+---
+
+### Fase 2 — Responsive completo (prioridad media)
+
+#### 2A. Breakpoint tablet faltante
+
+Hoy el grid de 2 columnas activa en 1024px. En 768px–1023px el tablero ocupa todo el ancho en 1 columna (desperdicia espacio). Cambiar a 768px.
+
+#### 2B. Botones en mobile
+
+En 375px, 3 botones en fila con flex-wrap quedan muy chicos. Propuesta:
+- Botones en 2 filas: [NUEVO TABLERO] ancho completo, [PISTA] + [AYUDA] en fila
+- O los 3 en columna en mobile
+
+#### 2C. Sincronizar `--neon-yellow`
+
+Cambiar `#ffd700` → `#ffff00` en `:root` de `criptosopa.css`.
+
+---
+
+### Fase 3 — Detalles estéticos (prioridad baja)
+
+- **Confeti en victoria:** llamar `launchConfetti()` al completar todas las palabras (ya existe en el proyecto como función global)
+- **Flash más notorio al encontrar palabra:** el color de la palabra ya cambia, pero un breve scale + glow mejoraría el feedback
+- **Glow en modal de victoria:** el `.victory-value` podría tener animación de pulso neon
+
+---
+
+### Lo que NO entra en cambios estéticos (es lógica)
+
+- Sistema de niveles progresivos
+- Bonus por velocidad
+- Modo contra reloj
+- Daily Challenge
+- Tutorial interactivo
+- Hints inteligentes
+
+---
+
+## 9. Notas de Desarrollo
 
 ### Compatibilidad
 - Mantener soporte para navegadores sin Web Workers (fallback)
