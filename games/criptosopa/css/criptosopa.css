@@ -8,6 +8,17 @@
     --neon-yellow: #ffff00;
 }
 
+/* Canvas de fondo — sacar del flujo del documento */
+.particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+}
+
 /* Desktop Logo (top left) */
 .desktop-logo {
     display: none;
@@ -880,27 +891,7 @@
         padding: 0.25rem 0.5rem 0.5rem;
     }
 
-    /* Mini logo: mostrar los joysticks en lugar del botón MENÚ */
-    .desktop-logo {
-        display: flex;
-        position: static;
-        padding: 0.3rem 0 0 0;
-        gap: 0.3rem;
-        align-items: center;
-        justify-content: flex-start;
-        z-index: auto;
-    }
-
-    .desktop-logo .logo-text {
-        display: none;
-    }
-
-    .desktop-logo .joystick-icon {
-        width: 26px;
-        height: 26px;
-    }
-
-    /* Ocultar el botón "← MENÚ" — reemplazado por el mini logo */
+    /* Ocultar el botón "← MENÚ" — el emoji del título identifica el juego */
     .neon-back-btn {
         display: none;
     }
