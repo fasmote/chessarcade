@@ -140,6 +140,7 @@ function startNewGame() {
     renderBoard();
     renderWordList();
     updateDisplay();
+    updateSelectionText();
 }
 
 // Next level
@@ -753,10 +754,29 @@ function renderWordList() {
 }
 
 // Update selection text
+// Si hay selección activa: muestra las letras seleccionadas.
+// Si no hay selección: muestra la próxima palabra a buscar como guía.
 function updateSelectionText() {
     if (!elements.currentSelection) return;
-    const text = gameState.selectedPath.map(p => gameState.board[p.r][p.c]).join('');
-    elements.currentSelection.textContent = text;
+
+    if (gameState.selectedPath.length > 0) {
+        // Letras que el jugador va seleccionando
+        const text = gameState.selectedPath.map(p => gameState.board[p.r][p.c]).join('');
+        elements.currentSelection.textContent = text;
+        elements.currentSelection.removeAttribute('data-hint');
+    } else {
+        // Próxima palabra sin encontrar
+        const nextWord = gameState.targetWords.find(
+            w => !gameState.foundPaths.some(fp => fp.word === w)
+        );
+        if (nextWord) {
+            elements.currentSelection.textContent = nextWord;
+            elements.currentSelection.setAttribute('data-hint', 'true');
+        } else {
+            elements.currentSelection.textContent = '';
+            elements.currentSelection.removeAttribute('data-hint');
+        }
+    }
 }
 
 // Timer

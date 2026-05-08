@@ -438,6 +438,13 @@
     z-index: 10;
 }
 
+/* Modo hint: muestra la próxima palabra a buscar (color diferente para no confundir) */
+#currentSelection[data-hint="true"] {
+    color: rgba(0, 255, 255, 0.5);
+    letter-spacing: 0.4em;
+    font-size: 1.1rem;
+}
+
 .cursor-blink {
     animation: blink 1s infinite;
     color: var(--neon-cyan);
@@ -891,9 +898,26 @@
         padding: 0.25rem 0.5rem 0.5rem;
     }
 
-    /* Ocultar el botón "← MENÚ" — el emoji del título identifica el juego */
+    /* Ocultar el botón "← MENÚ" */
     .neon-back-btn {
         display: none;
+    }
+
+    /* Ocultar emoji 🐴🔍 del título en mobile */
+    .neon-icon {
+        display: none;
+    }
+
+    /* Score más prominente en mobile */
+    #scoreDisplay {
+        font-size: 1.8rem;
+        text-shadow: 0 0 15px var(--neon-magenta), 0 0 30px var(--neon-magenta);
+    }
+
+    /* Palabra sugerida más pequeña en mobile (las palabras son largas) */
+    #currentSelection[data-hint="true"] {
+        font-size: 0.9rem;
+        letter-spacing: 0.35em;
     }
 
     /* Header compacto */
