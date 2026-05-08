@@ -141,6 +141,24 @@
     box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
 }
 
+/* Ícono de mute: parlante siempre visible, X aparece a la derecha cuando está muted */
+.sound-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    line-height: 1;
+}
+
+.sound-muted-x {
+    display: none;
+    font-size: 0.6em;
+    vertical-align: super;
+}
+
+.nav-btn.btn-sound.muted .sound-muted-x {
+    display: inline;
+}
+
 .nav-btn.btn-leaderboard {
     border-color: #a855f7;
     color: #a855f7;

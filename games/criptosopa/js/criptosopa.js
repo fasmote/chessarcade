@@ -1019,17 +1019,10 @@ function launchConfetti() {
 
 function toggleSound() {
     soundEnabled = !soundEnabled;
-    const icon = document.getElementById('soundIcon');
     const btn = document.getElementById('soundBtn');
-    if (icon) {
-        icon.className = soundEnabled
-            ? 'fa-solid fa-volume-high'
-            : 'fa-solid fa-volume-slash';
-    }
     if (btn) {
         if (soundEnabled) {
             btn.classList.remove('muted');
-            // Reproducir sonido de confirmación al activar
             playBeep(660, 0.15);
         } else {
             btn.classList.add('muted');
@@ -1037,6 +1030,12 @@ function toggleSound() {
     }
     console.log(`🔊 Sonido: ${soundEnabled ? 'ON' : 'OFF'}`);
 }
+
+// Interfaz para hamburger-menu.js — sin esto, isSoundEnabled() siempre retorna true
+window.SoundManager = {
+    isMuted: () => !soundEnabled,
+    toggleMute: toggleSound
+};
 
 // Make toggleSound available globally for onclick handler
 window.toggleSound = toggleSound;
