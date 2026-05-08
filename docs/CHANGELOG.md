@@ -5,6 +5,33 @@ Todas las actualizaciones y cambios notables del proyecto serán documentados en
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-es/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-05-07/08] - CriptoSopa: Estética, Responsive y Activación
+
+### ✨ Added
+
+- **CriptoSopa — card habilitada en página principal**: quitado el estado "PRÓXIMAMENTE", ahora clickeable con redirect a `games/criptosopa/index.html`
+- **CriptoSopa — botones neon**: definidas las clases `.neon-arcade-btn--primary` (cyan), `--secondary` (magenta), `--tertiary` (amarillo)
+- **CriptoSopa — modales**: definidos `.neon-modal`, `.neon-modal-content`, `.modal-header`, `.modal-close-btn` con overlay oscuro y animación de entrada
+- **CriptoSopa — barra de sugerencia** (mobile): la barra debajo del tablero muestra la próxima palabra a buscar en cyan cuando no hay selección activa; muestra las letras seleccionadas durante el juego; avanza automáticamente al encontrar cada palabra
+- **CriptoSopa — responsive completo**: grid 2 columnas desde 768px (antes 1024px), breakpoint tablet 641–767px, mobile compacto con todos los elementos visibles sin scroll
+- **CriptoSopa — score prominente** (mobile): puntaje en 1.8rem con glow magenta
+- **CriptoSopa — orden del panel** (mobile): puntaje aparece arriba de "Palabras:", título "ESTADÍSTICAS" oculto
+
+### 🐛 Fixed
+
+- **CriptoSopa — canvas huérfano**: `<canvas id="particlesCanvas">` sin CSS de posición ocupaba 150px de espacio vacío en mobile. Fix: `position: fixed` saca el canvas del flujo del documento
+- **CriptoSopa — SVG joystick gigante**: los íconos SVG del logo no tenían atributos `width`/`height` en HTML y eran sobreescritos por el CSS compartido. Fix: `width="40" height="40"` en el elemento SVG
+- **CriptoSopa — emoji 🐴🔍 oculto** (mobile): el emoji del título se oculta en mobile para ahorrar espacio horizontal
+- **CriptoSopa — botón ← MENÚ oculto** (mobile): reemplazado implícitamente por el título del juego
+
+### 📁 Archivos modificados
+- `games/criptosopa/css/criptosopa.css`
+- `games/criptosopa/js/criptosopa.js`
+- `games/criptosopa/index.html`
+- `index.html`
+
+---
+
 ## [Unreleased]
 
 ### 🔮 Future Enhancements
