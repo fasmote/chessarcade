@@ -57,6 +57,7 @@ const elements = {
     helpBtn: null,
     closeHelpBtn: null,
     closeHelpBtn2: null,
+    closeVictoryBtn: null,
     victoryModal: null,
     helpModal: null,
     nextLevelBtn: null,
@@ -86,6 +87,7 @@ function initializeDOM() {
     elements.helpBtn = document.getElementById('helpBtn');
     elements.closeHelpBtn = document.getElementById('closeHelpBtn');
     elements.closeHelpBtn2 = document.getElementById('closeHelpBtn2');
+    elements.closeVictoryBtn = document.getElementById('closeVictoryBtn');
     elements.victoryModal = document.getElementById('victoryModal');
     elements.helpModal = document.getElementById('helpModal');
     elements.nextLevelBtn = document.getElementById('nextLevelBtn');
@@ -101,6 +103,7 @@ function setupEventListeners() {
     elements.helpBtn?.addEventListener('click', () => showHelpModal(true));
     elements.closeHelpBtn?.addEventListener('click', () => showHelpModal(false));
     elements.closeHelpBtn2?.addEventListener('click', () => showHelpModal(false));
+    elements.closeVictoryBtn?.addEventListener('click', () => closeVictoryModal());
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
 
@@ -316,6 +319,9 @@ function handleCellClick(r, c) {
                 color: color
             });
 
+            console.log(`[WORD FOUND] "${currentWord}" with path:`,
+                newPath.map(p => `(${p.r},${p.c})=${gameState.board[p.r][p.c]}`).join(' -> '));
+
             gameState.selectedPath = [];
             gameState.score += CONFIG.POINTS_PER_WORD;
 
@@ -358,7 +364,11 @@ function showHint() {
         !gameState.foundPaths.some(fp => fp.word === w)
     );
 
+    console.log('[HINT] Missing words:', missingWords);
+    console.log('[HINT] Found paths:', gameState.foundPaths);
+
     if (missingWords.length === 0) {
+        console.log('[HINT] No missing words!');
         return;
     }
 
@@ -826,14 +836,15 @@ function winGame() {
     gameState.gameStatus = 'won';
     clearInterval(gameState.timerInterval);
 
-    // Sprint 1: feedback de victoria
+    // Feedback de victoria
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
     playVictorySound();
     launchConfetti();
 
+    // Esperar más tiempo para que el jugador vea el tablero completo
     setTimeout(() => {
         showVictoryModal();
-    }, 1000);
+    }, 3000);
 }
 
 // Show victory modal
@@ -915,20 +926,30 @@ function playBeep(frequency = 660, duration = 0.1) {
     if (!soundEnabled) return;
     try {
         const ctx = initAudio();
-        const oscillator = ctx.createOscillator();
-        const gainNode = ctx.createGain();
 
-        oscillator.connect(gainNode);
-        gainNode.connect(ctx.destination);
+        // iOS Safari arranca el AudioContext suspendido — necesita resume() en interacción del usuario
+        const play = () => {
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
 
-        oscillator.frequency.value = frequency;
-        oscillator.type = 'sine';
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
 
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
 
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + duration);
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + duration);
+        };
+
+        if (ctx.state === 'suspended') {
+            ctx.resume().then(play);
+        } else {
+            play();
+        }
     } catch (e) {
         console.warn('Audio not available:', e);
     }
@@ -1003,7 +1024,7 @@ function toggleSound() {
     if (icon) {
         icon.className = soundEnabled
             ? 'fa-solid fa-volume-high'
-            : 'fa-solid fa-volume-xmark';
+            : 'fa-solid fa-volume-slash';
     }
     if (btn) {
         if (soundEnabled) {
