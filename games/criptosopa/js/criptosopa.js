@@ -116,7 +116,49 @@ function setupEventListeners() {
     document.addEventListener('mouseleave', () => {
         gameState.isDragging = false;
     });
+
+    // Touch drag: arrastrar el dedo para seleccionar letras (equivalente al mousemove desktop)
+    initTouchDrag();
 }
+
+function initTouchDrag() {
+    const board = elements.gameBoard;
+    if (!board) return;
+
+    let lastTouchCell = null;
+
+    // touchmove en el tablero: buscar celda bajo el dedo con elementFromPoint
+    board.addEventListener('touchmove', (e) => {
+        if (!gameState.isDragging) return;
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!el) return;
+
+        const cellEl = el.closest('[data-row]');
+        if (!cellEl) return;
+
+        const r = parseInt(cellEl.dataset.row);
+        const c = parseInt(cellEl.dataset.col);
+        if (isNaN(r) || isNaN(c)) return;
+
+        // Evitar procesar la misma celda dos veces seguidas (previene des-selección por temblor)
+        if (lastTouchCell && lastTouchCell.r === r && lastTouchCell.c === c) return;
+        lastTouchCell = { r, c };
+
+        // En drag solo se agregan celdas, no se des-selecciona al volver atrás
+        if (gameState.selectedPath.some(p => p.r === r && p.c === c)) return;
+
+        handleCellClick(r, c);
+    }, { passive: false });
+
+    const stopDrag = () => {
+        gameState.isDragging = false;
+        lastTouchCell = null;
+    };
+    board.addEventListener('touchend', stopDrag, { passive: true });
+    board.addEventListener('touchcancel', stopDrag, { passive: true });
 
 // Start new game
 function startNewGame() {
@@ -708,7 +750,7 @@ function renderBoard() {
             if (shouldRecreate) {
                 // Drag events (handles both click and drag)
                 cell.addEventListener('mousedown', (e) => {
-                    e.preventDefault(); // Prevent text selection
+                    e.preventDefault();
                     gameState.isDragging = true;
                     handleCellClick(r, c);
                 });
@@ -718,6 +760,13 @@ function renderBoard() {
                         handleCellClick(r, c);
                     }
                 });
+
+                // Touch: inicio del arrastre en esta celda
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    gameState.isDragging = true;
+                    handleCellClick(r, c);
+                }, { passive: false });
 
                 elements.gameBoard.appendChild(cell);
             }
