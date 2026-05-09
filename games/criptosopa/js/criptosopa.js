@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDOM();
     setupEventListeners();
     startNewGame();
+    setTimeout(showTutorial, 600);
 });
 
 // Initialize DOM references
@@ -327,6 +328,7 @@ function handleCellClick(r, c) {
         playCellClickSound();
         renderBoard();
         updateSelectionText();
+        updateKnightPosition();
         return;
     }
 
@@ -338,6 +340,7 @@ function handleCellClick(r, c) {
         playCellDeselectSound();
         renderBoard();
         updateSelectionText();
+        updateKnightPosition();
         return;
     }
 
@@ -395,6 +398,7 @@ function handleCellClick(r, c) {
     renderWordList();
     updateSelectionText();
     updateDisplay();
+    updateKnightPosition();
 }
 
 // Show hint
@@ -1136,6 +1140,144 @@ function toggleSound() {
         }
     }
     console.log(`🔊 Sonido: ${soundEnabled ? 'ON' : 'OFF'}`);
+}
+
+// ============================================
+// CABALLO ANIMADO (#12)
+// ============================================
+
+const knightAnimator = (() => {
+    let el = null;
+
+    function ensureEl() {
+        if (el) return;
+        el = document.createElement('div');
+        el.className = 'knight-jumper';
+        el.textContent = '♞';
+        document.body.appendChild(el);
+    }
+
+    return {
+        moveTo(cellEl) {
+            ensureEl();
+            const rect = cellEl.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top  + rect.height / 2;
+
+            if (!el.classList.contains('visible')) {
+                // Primera celda: aparecer sin animación de movimiento
+                el.style.transition = 'none';
+                el.style.left = x + 'px';
+                el.style.top  = y + 'px';
+                el.classList.add('visible');
+                void el.offsetWidth; // forzar reflow antes de activar transición
+                el.style.transition = '';
+            } else {
+                // Celda siguiente: salto animado
+                el.classList.remove('jumping');
+                void el.offsetWidth;
+                el.classList.add('jumping');
+                el.style.left = x + 'px';
+                el.style.top  = y + 'px';
+            }
+        },
+
+        hide() {
+            if (!el) return;
+            el.classList.remove('visible', 'jumping');
+        }
+    };
+})();
+
+function updateKnightPosition() {
+    if (gameState.selectedPath.length === 0) {
+        knightAnimator.hide();
+        return;
+    }
+    const last = gameState.selectedPath[gameState.selectedPath.length - 1];
+    const cellEl = elements.gameBoard?.querySelector(
+        `[data-row="${last.r}"][data-col="${last.c}"]`
+    );
+    if (cellEl) knightAnimator.moveTo(cellEl);
+}
+
+// ============================================
+// TUTORIAL PRIMERA VEZ (#11)
+// ============================================
+
+const TUTORIAL_KEY = 'criptosopa_tutorial_v1';
+
+const TUTORIAL_STEPS = [
+    {
+        icon: '♞',
+        title: '¡BIENVENIDO!',
+        text: 'Buscá <strong>palabras de ajedrez</strong> ocultas en la sopa de letras moviéndote como un Caballo.'
+    },
+    {
+        icon: '🔠',
+        title: '¿CÓMO MOVERTE?',
+        text: 'El caballo salta en <strong>L</strong>: 2 casillas en una dirección + 1 en perpendicular.<br><br>Las casillas válidas se <strong>iluminan solas</strong> cuando tocás una letra.'
+    },
+    {
+        icon: '💡',
+        title: '¡ASÍ SE JUEGA!',
+        text: '• La <strong>barra</strong> bajo el tablero dice qué palabra buscar<br>• <strong>Tocá</strong> o <strong>arrastrá</strong> para seleccionar letras<br>• Al completar cada palabra, la barra avanza a la siguiente<br>• ¡Encontrá todas para ganar!'
+    }
+];
+
+function showTutorial() {
+    if (localStorage.getItem(TUTORIAL_KEY)) return;
+
+    let step = 0;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'tutorial-overlay';
+
+    function render() {
+        const s = TUTORIAL_STEPS[step];
+        const isLast = step === TUTORIAL_STEPS.length - 1;
+
+        overlay.innerHTML = `
+            <div class="tutorial-card">
+                <div class="tutorial-icon">${s.icon}</div>
+                <h2 class="tutorial-title">${s.title}</h2>
+                <p class="tutorial-text">${s.text}</p>
+                <div class="tutorial-dots">
+                    ${TUTORIAL_STEPS.map((_, i) =>
+                        `<span class="tutorial-dot${i === step ? ' active' : ''}"></span>`
+                    ).join('')}
+                </div>
+                <div class="tutorial-actions">
+                    <button class="tutorial-skip">Saltar</button>
+                    <button class="tutorial-next neon-arcade-btn neon-arcade-btn--primary">
+                        ${isLast ? '▶ ¡JUGAR!' : 'SIGUIENTE →'}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        overlay.querySelector('.tutorial-next').addEventListener('click', () => {
+            if (isLast) {
+                dismissTutorial(overlay);
+            } else {
+                step++;
+                render();
+            }
+        });
+
+        overlay.querySelector('.tutorial-skip').addEventListener('click', () => {
+            dismissTutorial(overlay);
+        });
+    }
+
+    render();
+    document.body.appendChild(overlay);
+}
+
+function dismissTutorial(overlay) {
+    localStorage.setItem(TUTORIAL_KEY, 'done');
+    overlay.classList.add('tutorial-fade-out');
+    setTimeout(() => overlay.remove(), 400);
 }
 
 // Interfaz para hamburger-menu.js — sin esto, isSoundEnabled() siempre retorna true
