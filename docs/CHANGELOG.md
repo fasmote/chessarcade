@@ -5,6 +5,35 @@ Todas las actualizaciones y cambios notables del proyecto serán documentados en
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-es/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-05-08b] - CriptoSopa: Sprint 1 + Sonido + Touch Drag
+
+### ✨ Added
+
+- **CriptoSopa — drag touch**: arrastrar el dedo selecciona letras igual que en desktop con mouse. Usa `touchmove` + `elementFromPoint` para detectar celdas bajo el dedo
+- **CriptoSopa — tick al seleccionar celda**: sonido sutil 780Hz/35ms al tocar cada celda válida
+- **CriptoSopa — sonido de des-selección**: sweep descendente 450→280Hz/45ms, más suave que el tick de selección
+- **CriptoSopa — whump al encontrar palabra**: sweep grave 160→40Hz/300ms que da sensación de impacto físico. Reemplaza el acorde ascendente anterior
+- **CriptoSopa — vibración mobile**: 100ms al encontrar palabra, patrón al ganar
+- **CriptoSopa — confeti**: 70 piezas en 6 colores neon al completar el juego
+- **CriptoSopa — flash en celdas**: animación scale+brightness en cada celda al encontrar una palabra, escalonada por celda
+- **CriptoSopa — fanfarria de victoria**: C5-E5-G5-C6 al ganar (diferenciada del whump de palabra)
+- **CriptoSopa — X en ícono mute**: el parlante queda visible y aparece una X pequeña a la derecha cuando está muted. Igual estilo que los otros juegos
+- **CriptoSopa — botón X en modal victoria**: cerrar el modal y volver a ver el tablero completo
+- **CriptoSopa — delay modal victoria**: 3000ms antes de mostrar el modal (antes 1000ms), para ver el tablero y el confeti
+- **CriptoSopa — barra de sugerencia**: muestra la próxima palabra a buscar en cyan cuando no hay selección activa
+- **CriptoSopa — score prominente** (mobile): 1.8rem con glow magenta
+- **CriptoSopa — orden panel** (mobile): Puntos arriba de Palabras, título ESTADÍSTICAS oculto
+
+### 🐛 Fixed
+
+- **CriptoSopa — AudioContext suspendido en iOS**: `playBeep()` llama `ctx.resume()` antes de crear el oscilador
+- **CriptoSopa — hamburger menu siempre ON**: `window.SoundManager` expuesto para que `isSoundEnabled()` lea el estado real
+- **CriptoSopa — tablero negro** (bug crítico): llave `}` faltante en `initTouchDrag()` rompía todo el archivo JS
+- **CriptoSopa — canvas huérfano**: `position:fixed` en `.particles-canvas`
+- **CriptoSopa — SVG joystick gigante**: atributos `width="40" height="40"` en HTML
+
+---
+
 ## [2026-05-07/08] - CriptoSopa: Estética, Responsive y Activación
 
 ### ✨ Added

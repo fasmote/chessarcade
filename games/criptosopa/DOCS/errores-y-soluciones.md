@@ -484,3 +484,118 @@ Esto lo saca del flujo del documento y lo convierte en un fondo de pantalla (aun
 - Botones en grid 2+1: NUEVO TABLERO ocupa fila completa, PISTA + AYUDA comparten fila
 
 **Archivos**: `games/criptosopa/css/criptosopa.css`
+
+---
+
+## 10. Errores de Audio y Touch — Sesión 2026-05-08
+
+### Error #107: AudioContext suspendido en iOS — sin sonido en mobile
+**Fecha**: 2026-05-08
+**Severidad**: Alta
+**Descripción**: Los sonidos no funcionaban en mobile (iOS Safari). El ícono mostraba "ON" pero no se escuchaba nada.
+
+**Causa Raíz**:
+iOS Safari requiere que el `AudioContext` sea "reanudado" (`resume()`) tras una interacción del usuario. La Web Audio API crea el contexto en estado `suspended` por defecto en iOS. El código llamaba directamente a `oscillator.start()` sin verificar ni reanudar el contexto.
+
+**Solución**:
+```javascript
+function playBeep(frequency, duration) {
+    const ctx = initAudio();
+    if (ctx.state === 'suspended') {
+        ctx.resume().then(() => play()); // reanudar antes de tocar
+    } else {
+        play();
+    }
+}
+```
+
+**Archivos**: `games/criptosopa/js/criptosopa.js` — función `playBeep()`
+
+---
+
+### Error #108: Ícono de mute no cambiaba visualmente
+**Fecha**: 2026-05-08
+**Severidad**: Media
+**Descripción**: El ícono del botón de sonido siempre mostraba el parlante ON. Al mutear, el ícono no cambiaba.
+
+**Causa Raíz**:
+El código cambiaba `icon.className` correctamente, pero el diseño esperado era diferente al implementado. El usuario esperaba que el **parlante se mantuviera visible** y apareciera una **X a la derecha** (como en los otros juegos), no que se reemplazara el ícono por `fa-volume-slash`.
+
+**Solución**:
+Agregar un segundo `<i>` elemento para la X, controlado por la clase `.muted` en el botón vía CSS:
+```html
+<span class="sound-icon-wrap">
+    <i class="fa-solid fa-volume-high"></i>
+    <i class="fa-solid fa-xmark sound-muted-x"></i>  ← solo visible cuando .muted
+</span>
+```
+```css
+.sound-muted-x { display: none; }
+.nav-btn.btn-sound.muted .sound-muted-x { display: inline; }
+```
+
+**Archivos**: `games/criptosopa/index.html`, `games/criptosopa/css/criptosopa.css`
+
+---
+
+### Error #109: Hamburger menu siempre mostraba "Sound: ON"
+**Fecha**: 2026-05-08
+**Severidad**: Media
+**Descripción**: En mobile, el hamburger menu siempre mostraba "Sound: ON" sin importar el estado real del sonido.
+
+**Causa Raíz**:
+`hamburger-menu.js` usa `isSoundEnabled()` para leer el estado del sonido. Sin `window.SoundManager` ni `window.SoundManager.isMuted`, cae en el fallback de `localStorage`, que CriptoSopa nunca escribe → siempre retorna `true`.
+
+**Solución**:
+Exponer una interfaz compatible desde `criptosopa.js`:
+```javascript
+window.SoundManager = {
+    isMuted: () => !soundEnabled,
+    toggleMute: toggleSound
+};
+```
+
+**Archivos**: `games/criptosopa/js/criptosopa.js`
+
+---
+
+### Error #110: Drag touch rompió todo el tablero — llave de cierre faltante
+**Fecha**: 2026-05-08
+**Severidad**: Crítica
+**Descripción**: Tras implementar el drag touch, el tablero quedó completamente negro sin letras ni casillas. El juego no funcionaba en absoluto.
+
+**Causa Raíz**:
+La función `initTouchDrag()` fue escrita sin la llave de cierre `}`. En JavaScript, esto hace que todo el código siguiente quede **anidado dentro de esa función**. Las funciones `startNewGame()`, `renderBoard()`, etc. dejaron de ser accesibles globalmente, rompiendo toda la lógica del juego.
+
+```javascript
+function initTouchDrag() {
+    // ...
+    board.addEventListener('touchcancel', stopDrag);
+    // ← FALTABA } AQUÍ
+
+// Start new game  ← esto quedó DENTRO de initTouchDrag()
+function startNewGame() { ... }
+```
+
+**Síntoma visual**: tablero negro, sin letras, sin interacción posible.
+**Diagnóstico**: revisar la consola del browser al ver un tablero vacío — mostraba `startNewGame is not defined` u error similar.
+
+**Solución**: agregar el `}` faltante.
+
+**Lección**: Al agregar funciones nuevas mediante edición de texto, siempre verificar que el conteo de llaves de apertura y cierre sea correcto. Ante un bug tan total (todo el juego roto), la causa casi siempre es un error de sintaxis JS.
+
+**Archivos**: `games/criptosopa/js/criptosopa.js`
+
+---
+
+### Error #111: Drag touch — deselección accidental al arrastrar
+**Fecha**: 2026-05-08
+**Severidad**: Media (diseño previsto)
+**Descripción**: En la implementación de touch drag, al deslizar el dedo de vuelta sobre la última celda seleccionada, se activaba la lógica de "click en misma celda → des-seleccionar", causando comportamiento inesperado.
+
+**Solución**:
+Dos medidas preventivas en `initTouchDrag()`:
+1. `lastTouchCell`: no procesar la misma celda dos veces consecutivas (evita deselección por temblor del dedo)
+2. Skip si la celda ya está en el path: el drag solo puede AGREGAR celdas, nunca retroceder (comportamiento igual que en desktop con mouse)
+
+**Archivos**: `games/criptosopa/js/criptosopa.js`
