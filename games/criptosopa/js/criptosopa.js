@@ -292,6 +292,7 @@ function handleCellClick(r, c) {
     // Click on same cell (deselect last)
     if (lastPos.r === r && lastPos.c === c) {
         gameState.selectedPath.pop();
+        playCellDeselectSound();
         renderBoard();
         updateSelectionText();
         return;
@@ -973,6 +974,27 @@ function playCellClickSound() {
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.035);
+    } catch (e) {}
+}
+
+// Sonido suave al des-seleccionar una celda — micro bajada de frecuencia
+function playCellDeselectSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        // Baja de 450Hz a 280Hz — sensación de "retroceder"
+        osc.frequency.setValueAtTime(450, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.045);
     } catch (e) {}
 }
 
