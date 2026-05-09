@@ -281,6 +281,7 @@ function handleCellClick(r, c) {
     // First click
     if (gameState.selectedPath.length === 0) {
         gameState.selectedPath.push({ r, c });
+        playCellClickSound();
         renderBoard();
         updateSelectionText();
         return;
@@ -342,6 +343,7 @@ function handleCellClick(r, c) {
             gameState.selectedPath = [{ r, c }];
         } else {
             gameState.selectedPath = newPath;
+            playCellClickSound(); // tick al agregar celda válida al camino
         }
     }
 
@@ -955,11 +957,44 @@ function playBeep(frequency = 660, duration = 0.1) {
     }
 }
 
-// Sonido de palabra encontrada — acorde ascendente
+// Tick sutil al seleccionar cada celda
+function playCellClickSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = 780;
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.035);
+    } catch (e) {}
+}
+
+// Sonido de palabra encontrada — sweep grave ("whump"), como un impacto físico
 function playWordFoundSound() {
-    playBeep(523, 0.09);
-    setTimeout(() => playBeep(659, 0.09), 80);
-    setTimeout(() => playBeep(784, 0.14), 160);
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        // Baja de 160Hz a 40Hz en 250ms — efecto "thud" / "whump"
+        osc.frequency.setValueAtTime(160, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.7, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+    } catch (e) {}
 }
 
 // Sonido de victoria — fanfarria corta
