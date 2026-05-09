@@ -5,59 +5,8 @@ Todas las actualizaciones y cambios notables del proyecto serán documentados en
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-es/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2026-05-08b] - CriptoSopa: Sprint 1 + Sonido + Touch Drag
-
-### ✨ Added
-
-- **CriptoSopa — drag touch**: arrastrar el dedo selecciona letras igual que en desktop con mouse. Usa `touchmove` + `elementFromPoint` para detectar celdas bajo el dedo
-- **CriptoSopa — tick al seleccionar celda**: sonido sutil 780Hz/35ms al tocar cada celda válida
-- **CriptoSopa — sonido de des-selección**: sweep descendente 450→280Hz/45ms, más suave que el tick de selección
-- **CriptoSopa — whump al encontrar palabra**: sweep grave 160→40Hz/300ms que da sensación de impacto físico. Reemplaza el acorde ascendente anterior
-- **CriptoSopa — vibración mobile**: 100ms al encontrar palabra, patrón al ganar
-- **CriptoSopa — confeti**: 70 piezas en 6 colores neon al completar el juego
-- **CriptoSopa — flash en celdas**: animación scale+brightness en cada celda al encontrar una palabra, escalonada por celda
-- **CriptoSopa — fanfarria de victoria**: C5-E5-G5-C6 al ganar (diferenciada del whump de palabra)
-- **CriptoSopa — X en ícono mute**: el parlante queda visible y aparece una X pequeña a la derecha cuando está muted. Igual estilo que los otros juegos
-- **CriptoSopa — botón X en modal victoria**: cerrar el modal y volver a ver el tablero completo
-- **CriptoSopa — delay modal victoria**: 3000ms antes de mostrar el modal (antes 1000ms), para ver el tablero y el confeti
-- **CriptoSopa — barra de sugerencia**: muestra la próxima palabra a buscar en cyan cuando no hay selección activa
-- **CriptoSopa — score prominente** (mobile): 1.8rem con glow magenta
-- **CriptoSopa — orden panel** (mobile): Puntos arriba de Palabras, título ESTADÍSTICAS oculto
-
-### 🐛 Fixed
-
-- **CriptoSopa — AudioContext suspendido en iOS**: `playBeep()` llama `ctx.resume()` antes de crear el oscilador
-- **CriptoSopa — hamburger menu siempre ON**: `window.SoundManager` expuesto para que `isSoundEnabled()` lea el estado real
-- **CriptoSopa — tablero negro** (bug crítico): llave `}` faltante en `initTouchDrag()` rompía todo el archivo JS
-- **CriptoSopa — canvas huérfano**: `position:fixed` en `.particles-canvas`
-- **CriptoSopa — SVG joystick gigante**: atributos `width="40" height="40"` en HTML
-
----
-
-## [2026-05-07/08] - CriptoSopa: Estética, Responsive y Activación
-
-### ✨ Added
-
-- **CriptoSopa — card habilitada en página principal**: quitado el estado "PRÓXIMAMENTE", ahora clickeable con redirect a `games/criptosopa/index.html`
-- **CriptoSopa — botones neon**: definidas las clases `.neon-arcade-btn--primary` (cyan), `--secondary` (magenta), `--tertiary` (amarillo)
-- **CriptoSopa — modales**: definidos `.neon-modal`, `.neon-modal-content`, `.modal-header`, `.modal-close-btn` con overlay oscuro y animación de entrada
-- **CriptoSopa — barra de sugerencia** (mobile): la barra debajo del tablero muestra la próxima palabra a buscar en cyan cuando no hay selección activa; muestra las letras seleccionadas durante el juego; avanza automáticamente al encontrar cada palabra
-- **CriptoSopa — responsive completo**: grid 2 columnas desde 768px (antes 1024px), breakpoint tablet 641–767px, mobile compacto con todos los elementos visibles sin scroll
-- **CriptoSopa — score prominente** (mobile): puntaje en 1.8rem con glow magenta
-- **CriptoSopa — orden del panel** (mobile): puntaje aparece arriba de "Palabras:", título "ESTADÍSTICAS" oculto
-
-### 🐛 Fixed
-
-- **CriptoSopa — canvas huérfano**: `<canvas id="particlesCanvas">` sin CSS de posición ocupaba 150px de espacio vacío en mobile. Fix: `position: fixed` saca el canvas del flujo del documento
-- **CriptoSopa — SVG joystick gigante**: los íconos SVG del logo no tenían atributos `width`/`height` en HTML y eran sobreescritos por el CSS compartido. Fix: `width="40" height="40"` en el elemento SVG
-- **CriptoSopa — emoji 🐴🔍 oculto** (mobile): el emoji del título se oculta en mobile para ahorrar espacio horizontal
-- **CriptoSopa — botón ← MENÚ oculto** (mobile): reemplazado implícitamente por el título del juego
-
-### 📁 Archivos modificados
-- `games/criptosopa/css/criptosopa.css`
-- `games/criptosopa/js/criptosopa.js`
-- `games/criptosopa/index.html`
-- `index.html`
+## [2026-05-07 al 2026-05-09] — CriptoSopa: estética, sonido, animaciones, marquee, responsive
+> Changelog detallado en `games/criptosopa/DOCS/CHANGELOG.md`
 
 ---
 

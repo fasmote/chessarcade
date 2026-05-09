@@ -158,3 +158,62 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 - Optimizaciones de rendimiento
 - Responsive avanzado
 - Efectos visuales adicionales
+
+---
+
+## 8. Requerimientos Implementados — Sesión 2026-05-07/09
+*(Documentación retroactiva: se implementaron primero, se documentan después)*
+
+> Nota metodológica: estos requerimientos se descubrieron durante el desarrollo, no se especificaron antes. El ejercicio de documentarlos retroactivamente sirve para entender cómo habrían sido escritos si se hubiera planificado.
+
+### 8.1 Feedback de Audio y Vibración
+- **RF-050**: Sonido sutil al seleccionar cada celda válida (tick 780Hz, 35ms)
+- **RF-051**: Sonido de des-selección audiblemente distinto del de selección (sweep descendente 450→280Hz)
+- **RF-052**: Sonido de impacto grave al encontrar una palabra (sweep 160→40Hz, "whump")
+- **RF-053**: Fanfarria melódica diferente al completar el juego (C5-E5-G5-C6)
+- **RF-054**: Vibración haptica en mobile: 100ms al encontrar palabra, patrón rítmico al ganar
+- **RF-055**: El timer debe comenzar cuando el jugador toca la primera celda, no al cargar la página
+
+### 8.2 Feedback Visual
+- **RF-056**: Confeti neon (70 piezas, 6 colores) al completar el juego
+- **RF-057**: Flash en cada celda de la palabra encontrada, escalonado 40ms entre celdas
+- **RF-058**: Animación de caballo ♞ que vuela entre celdas durante la selección: arco bounce al volar, impact scale+fade al aterrizar, flash ♞ en la celda destino
+- **RF-059**: La letra de la celda siempre visible — el ♞ no la tapa permanentemente
+- **RF-060**: El modal de victoria debe esperar 4 segundos para que el jugador vea el tablero completo
+
+### 8.3 Barra de Sugerencia (Selection Bar)
+- **RF-061**: La barra bajo el tablero muestra la próxima palabra a buscar cuando no hay selección activa
+- **RF-062**: La palabra sugerida debe mostrar el color neon que tendrá cuando sea encontrada
+- **RF-063**: Las palabras sin encontrar desfilan horizontalmente (marquee ping-pong)
+- **RF-064**: Al tocar una palabra en el marquee, el cartel se detiene en esa palabra
+- **RF-065**: `· · · · · ·` en ambos extremos del marquee para marcar el fin del ciclo
+- **RF-066**: El marquee rebota al llegar a cada extremo (no hace loop circular)
+- **RF-067**: El marquee se suspende al seleccionar letras y se reanuda al terminar
+
+### 8.4 Interacción Mobile
+- **RF-068**: Arrastrar el dedo sobre el tablero selecciona letras (sin levantar el dedo)
+- **RF-069**: El sistema touch debe ignorar el temblor de dedo para no revertir des-selecciones
+- **RF-070**: No existe límite de longitud de selección — el jugador puede explorar hasta 64 celdas
+
+### 8.5 Tutorial Primera Vez
+- **RF-071**: Al entrar por primera vez, mostrar tutorial de 3 slides explicando la mecánica
+- **RF-072**: El tutorial solo aparece una vez (guardado en localStorage)
+- **RF-073**: Botón Saltar para usuarios que no necesitan el tutorial
+
+### 8.6 Diseño Mobile Específico
+- **RF-074**: Letras del tablero 54% más grandes en mobile (sin cambiar el tamaño de las celdas)
+- **RF-075**: Emoji 🐴🔍 oculto en mobile para ahorrar espacio horizontal
+- **RF-076**: Subtítulo "KNIGHT WORD SEARCH" oculto en mobile
+- **RF-077**: Puntaje prominente (1.8rem, glow magenta) en mobile
+- **RF-078**: "ESTADÍSTICAS" título oculto en mobile — se entiende sin él
+- **RF-079**: Panel de palabras con puntaje arriba de contador de palabras en mobile
+
+### 8.7 Sistema de Sonido (Estilo Consistente)
+- **RF-080**: Ícono de sonido: parlante siempre visible + X a la derecha cuando está muted
+- **RF-081**: El hamburger menu mobile debe reflejar el estado real del sonido (ON/OFF)
+- **RF-082**: El sonido en iOS requiere `AudioContext.resume()` en interacción del usuario
+
+### 8.8 Estética y CSS
+- **RF-083**: Botones del juego con colores neon distintivos (primary=cyan, secondary=magenta, tertiary=amarillo)
+- **RF-084**: Modales con overlay oscuro, blur y animación de entrada
+- **RF-085**: Canvas background debe ser `position: fixed` para no ocupar espacio en el flujo del documento

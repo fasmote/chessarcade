@@ -599,3 +599,83 @@ Dos medidas preventivas en `initTouchDrag()`:
 2. Skip si la celda ya está en el path: el drag solo puede AGREGAR celdas, nunca retroceder (comportamiento igual que en desktop con mouse)
 
 **Archivos**: `games/criptosopa/js/criptosopa.js`
+
+---
+
+## 11. Errores de Marquee y Timer — Sesión 2026-05-09
+
+### Error #112: Marquee loop sin separación visual entre ciclos
+**Fecha**: 2026-05-09
+**Severidad**: UX / Baja
+**Descripción**: El marquee de palabras candidatas hacía un loop continuo sin indicación visual de que el ciclo había terminado. El jugador tenía "sensación de infinito" — no sabía cuántas palabras había.
+
+**Causa Raíz**:
+El contenido era duplicado para hacer el loop seamless, pero el separador `♞` entre el final del primer set y el inicio del segundo era idéntico al separador entre palabras. No había forma de distinguir el fin del ciclo.
+
+**Solución**:
+Cambio de arquitectura del marquee: en lugar de loop con contenido duplicado, implementar **ping-pong (bounce)**:
+- Contenido UNA sola vez
+- `· · · · · ·` en ambos extremos
+- Dirección `±1` que se invierte al llegar a `scrollX = 0` o `scrollX = maxScroll`
+
+**Lección**: El efecto bounce es más natural para el usuario que el loop seamless para listas cortas (6 palabras). El loop es mejor para contenido muy largo (noticias, tickers de bolsa). Para pocas palabras, el bounce comunica mejor los límites de la lista.
+
+---
+
+### Error #113: Marquee mostraba palabra ya encontrada durante 200ms
+**Fecha**: 2026-05-09
+**Severidad**: Media
+**Descripción**: Al encontrar una palabra, el marquee seguía mostrando esa palabra durante 200ms antes de reconstruirse. El jugador debía des-seleccionar y re-seleccionar la última letra para que el sistema lo reconociera.
+
+**Causa Raíz**:
+Al encontrar una palabra:
+1. `gameState.selectedPath = []` (limpia selección)
+2. `setTimeout(() => wordMarquee.start(), 200)` (rebuild en 200ms)
+3. `updateSelectionText()` corre **síncronamente** y llama `wordMarquee.unsuspend()`
+4. `unsuspend()` reactiva el marquee VIEJO (que aún tenía la palabra encontrada)
+5. Durante 200ms el marquee viejo se veía, confundiendo al jugador
+
+**Solución**:
+Llamar `wordMarquee.stop()` de inmediato al encontrar una palabra (antes del `setTimeout` del rebuild):
+```javascript
+wordMarquee.stop(); // detiene y elimina el marquee viejo YA
+setTimeout(() => wordMarquee.start(), 200); // reconstruye con palabras restantes
+```
+En esos 200ms, `updateSelectionText()` muestra el display estático fallback.
+
+**Lección**: Cuando hay un `setTimeout` de "rebuild", siempre destruir el estado anterior de inmediato, no esperar al rebuild para hacerlo. El estado viejo visible durante la espera confunde al usuario.
+
+---
+
+### Error #114: Timer arrancaba al cargar la página, no cuando el jugador comenzaba a jugar
+**Fecha**: 2026-05-09
+**Severidad**: UX / Media
+**Descripción**: El timer comenzaba a correr apenas se cargaba la página, antes de que el jugador tocara ninguna celda. El jugador podía estar leyendo las instrucciones, distraído, o esperando — y el tiempo ya corría.
+
+**Causa Raíz**:
+`startTimer()` se llamaba en `startNewGame()`, que se ejecuta automáticamente en `DOMContentLoaded`.
+
+**Solución**:
+Flag `gameState.timerStarted = false` en `startNewGame()`. En `handleCellClick()`, al procesar el primer click:
+```javascript
+if (!gameState.timerStarted) {
+    gameState.timerStarted = true;
+    startTimer();
+}
+```
+
+**Lección**: Los timers de juego deben empezar cuando el jugador decide comenzar a jugar, no cuando la página carga. El tiempo de carga, lectura del tutorial, o inactividad no debería penalizar al jugador.
+
+---
+
+### Lecciones Generales de la Sesión 2026-05-08/09
+
+1. **RAF vs CSS animation para scroll**: `requestAnimationFrame` da control total (pausar, reanudar, cambiar dirección, snap a posición). CSS `animation` es más simple pero dificulta la interacción en tiempo real.
+
+2. **Event delegation para detectar click en elemento scrolling**: `e.target.closest('.mq-word')` identifica exactamente qué elemento fue tocado sin calcular posiciones. Siempre preferir esta técnica sobre cálculos de coordenadas.
+
+3. **`document.elementFromPoint(x, y)` para touch drag**: esta es LA función para implementar drag en touch. El `touchmove` dispara en el elemento donde empezó el toque, no donde está el dedo. `elementFromPoint` encuentra el elemento real bajo el dedo.
+
+4. **Guard de tiempo para touch**: un `_touchStartTime` + ventana de 220ms previene que el temblor natural del dedo revierta acciones recién hechas. 220ms es el tiempo mínimo perceptible entre dos intenciones distintas.
+
+5. **Singleton de AudioContext**: crear UN solo `AudioContext` y reutilizarlo. Crear múltiples contextos causa errores en algunos browsers. El patrón lazy-init (`if (!audioContext) { audioContext = new AudioContext(); }`) es el correcto.

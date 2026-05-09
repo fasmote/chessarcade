@@ -8,6 +8,11 @@
 - [Funciones de Validación](#funciones-de-validación)
 - [Funciones Utilitarias](#funciones-utilitarias)
 - [Funciones de UI](#funciones-de-ui)
+- [Módulos de Audio](#módulos-de-audio) *(agregado 2026-05-08)*
+- [Módulos de Animación Visual](#módulos-de-animación-visual) *(agregado 2026-05-08)*
+- [Módulo Marquee](#módulo-marquee) *(agregado 2026-05-09)*
+- [Tutorial Primera Vez](#tutorial-primera-vez) *(agregado 2026-05-09)*
+- [Touch Drag Mobile](#touch-drag-mobile) *(agregado 2026-05-08)*
 
 ---
 
@@ -1077,6 +1082,108 @@ A: Sí, solo edita `CONFIG.DEFAULT_WORDS` con palabras en mayúsculas.
 
 ---
 
-**Última actualización**: 2025-12-30
-**Versión del juego**: 1.0
+---
+
+## Módulos de Audio
+*(Agregado 2026-05-08)*
+
+### `playBeep(frequency, duration)`
+Genera un sonido con la Web Audio API. Base de todos los sonidos del juego.
+- **frequency**: Hz de la nota (ej: 523 = C5)
+- **duration**: segundos que dura
+- Maneja `AudioContext` suspendido en iOS con `ctx.resume()`.
+
+### `playCellClickSound()`
+Tick sutil 780Hz/35ms al agregar una celda válida al path. Feedback táctil de selección.
+
+### `playCellDeselectSound()`
+Sweep descendente 450→280Hz/45ms al des-seleccionar la última celda. Suena "hacia atrás" para reforzar la acción de retroceder.
+
+### `playWordFoundSound()`
+Sweep grave 160→40Hz en 300ms. Efecto "whump" — sensación de impacto físico al completar una palabra. Usa `frequency.exponentialRampToValueAtTime` para el sweep.
+
+### `playVictorySound()`
+Fanfarria C5-E5-G5-C6 con `setTimeout` escalonado. Se distingue del whump de palabra para marcar el evento de victoria.
+
+### `initAudio()`
+Crea el `AudioContext` singleton. Se llama la primera vez que se necesita reproducir sonido. Patrón lazy initialization para cumplir requisitos de iOS (el contexto debe crearse en respuesta a interacción del usuario).
+
+### `toggleSound()`
+Alterna `soundEnabled` entre true/false. Actualiza la clase `.muted` en el botón de sonido (que CSS usa para mostrar/ocultar la X). Reproduce beep de confirmación al activar.
+
+---
+
+## Módulos de Animación Visual
+*(Agregado 2026-05-08/09)*
+
+### `launchConfetti()`
+Crea 70 elementos `div` con animación CSS `confettiFall` en 6 colores neon. Se adjuntan a `body` y se auto-eliminan después de 3200ms. Crea el contenedor `#confettiContainer` si no existe.
+
+### `flashFoundWordCells(path, color)`
+Al encontrar una palabra, anima cada celda del path con `cell-found-flash` (scale + brightness) con 40ms de delay entre celdas para un efecto en ola.
+
+### `knightAnimator` *(módulo IIFE)*
+Gestiona el ícono ♞ que sigue la selección del jugador:
+- `moveTo(cellEl)`: mueve el ♞ desde la posición anterior a la nueva celda. Si es la primera celda, aparece sin vuelo. Las siguientes: vuela con CSS `knightBounce` (arc), aterriza con `knightLanding` (scale 1→2.8 + fade), luego llama a `flashCellKnight`.
+- `hide()`: oculta el ♞ y cancela timers pendientes (`clearTimeout` de `landingTimer` y `hideTimer`).
+- Usa `rafId`, `posX/Y`, `landingTimer`, `hideTimer` internamente.
+
+### `flashCellKnight(cellEl)`
+Agrega un `<span class="knight-cell-flash">♞</span>` dentro de la celda destino. El span anima `knightCellFlash` (aparece grande, se desvanece en 480ms) y se elimina solo. La letra de la celda siempre queda visible debajo del flash.
+
+### `updateKnightPosition()`
+Lee `gameState.selectedPath` y actualiza la posición del `knightAnimator`. Si el path está vacío → `hide()`. Si tiene celdas → `moveTo()` en la última celda.
+
+---
+
+## Módulo Marquee
+*(Agregado 2026-05-09)*
+
+### `wordMarquee` *(módulo IIFE)*
+Cartel LED de palabras candidatas en la barra debajo del tablero:
+
+- `start()`: construye el DOM del marquee (palabras sin encontrar × 1, con `· · · · · ·` en ambos extremos), inicia `requestAnimationFrame` loop. Velocidad 48px/s. Rebota al llegar a `scrollX=0` o `scrollX=maxScroll`.
+- `stop()`: cancela RAF, elimina el wrapper DOM, resetea estado.
+- `suspend()`: oculta el wrapper (visibilidad hidden) mientras el jugador selecciona letras.
+- `unsuspend()`: vuelve a mostrar el wrapper si no está frozen.
+- `isRunning` (getter): true si hay wrapper activo, no frozen, no suspended.
+
+**Cómo se detecta qué palabra tocó el usuario**: el evento `click` en `.mq-word` usa `e.target.closest('.mq-word')` — el DOM sabe exactamente qué elemento fue tocado, sin necesitar cálculos de posición. Al frozen, el wrapper se oculta y `#currentSelection` muestra la palabra estática con cursor.
+
+---
+
+## Tutorial Primera Vez
+*(Agregado 2026-05-09)*
+
+### `showTutorial()`
+Muestra el tutorial solo si `localStorage.getItem('criptosopa_tutorial_v1')` no existe. Crea un overlay `.tutorial-overlay` con una tarjeta de 3 slides:
+1. Bienvenida
+2. Cómo moverse en L
+3. Cómo jugar
+
+Cada slide tiene botones Saltar y Siguiente/¡Jugar!. Al avanzar o saltar → `dismissTutorial()`.
+
+### `dismissTutorial(overlay)`
+Guarda `localStorage.setItem('criptosopa_tutorial_v1', 'done')` y anima el overlay con `tutorial-fade-out` antes de eliminarlo.
+
+---
+
+## Touch Drag Mobile
+*(Agregado 2026-05-08)*
+
+### `initTouchDrag()`
+Configura el sistema de arrastre táctil (equivalente al mousemove de desktop):
+- `touchmove` en el tablero: usa `document.elementFromPoint(touch.clientX, touch.clientY)` para detectar qué celda está bajo el dedo.
+- Guard `_touchStartCell` + `_touchStartTime`: ignora la celda del último `touchstart` durante 220ms para evitar que el temblor deshaga un deselect.
+- Guard `lastTouchCell`: no procesa la misma celda dos veces consecutivas.
+- Solo agrega celdas al path (no des-selecciona durante drag).
+
+Variables module-level compartidas:
+- `_touchStartCell`: celda del último touchstart (accesible por los listeners de celda)
+- `_touchStartTime`: timestamp del último touchstart
+
+---
+
+**Última actualización**: 2026-05-09
+**Versión del juego**: 1.3
 **Autor**: Claude Code con comentarios educativos
