@@ -840,17 +840,24 @@ function updateSelectionText() {
         const text = gameState.selectedPath.map(p => gameState.board[p.r][p.c]).join('');
         elements.currentSelection.textContent = text;
         elements.currentSelection.removeAttribute('data-hint');
+        elements.currentSelection.style.color = '';
+        elements.currentSelection.style.textShadow = '';
     } else {
-        // Próxima palabra sin encontrar
+        // Próxima palabra sin encontrar — con el color neon que tendrá al encontrarse
         const nextWord = gameState.targetWords.find(
             w => !gameState.foundPaths.some(fp => fp.word === w)
         );
         if (nextWord) {
+            const nextColor = CONFIG.NEON_COLORS[gameState.foundPaths.length % CONFIG.NEON_COLORS.length];
             elements.currentSelection.textContent = nextWord;
             elements.currentSelection.setAttribute('data-hint', 'true');
+            elements.currentSelection.style.color = nextColor.hex;
+            elements.currentSelection.style.textShadow = nextColor.glow;
         } else {
             elements.currentSelection.textContent = '';
             elements.currentSelection.removeAttribute('data-hint');
+            elements.currentSelection.style.color = '';
+            elements.currentSelection.style.textShadow = '';
         }
     }
 }

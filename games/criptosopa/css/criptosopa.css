@@ -458,9 +458,10 @@
 
 /* Modo hint: muestra la próxima palabra a buscar (color diferente para no confundir) */
 #currentSelection[data-hint="true"] {
-    color: rgba(0, 255, 255, 0.5);
-    letter-spacing: 0.4em;
-    font-size: 1.1rem;
+    /* color y textShadow se aplican inline desde JS con el color real de la palabra */
+    letter-spacing: 0.3em;
+    font-size: 1.4rem;
+    font-weight: 700;
 }
 
 .cursor-blink {
@@ -937,10 +938,10 @@
         text-shadow: 0 0 15px var(--neon-magenta), 0 0 30px var(--neon-magenta);
     }
 
-    /* Palabra sugerida más pequeña en mobile (las palabras son largas) */
+    /* Palabra sugerida en mobile — más grande, con el color de la palabra */
     #currentSelection[data-hint="true"] {
-        font-size: 0.9rem;
-        letter-spacing: 0.35em;
+        font-size: 1.15rem;
+        letter-spacing: 0.25em;
     }
 
     /* Header compacto */
