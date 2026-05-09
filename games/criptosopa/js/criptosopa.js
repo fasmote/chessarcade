@@ -1364,7 +1364,8 @@ const wordMarquee = (() => {
     let innerEl   = null;
     let rafId     = null;
     let scrollX   = 0;
-    let halfWidth = 0;
+    let maxScroll = 0;
+    let direction = 1;  // 1 = derecha→izquierda, -1 = izquierda→derecha
     let lastTs    = null;
     let frozen    = false;
     let suspended = false;
@@ -1382,7 +1383,16 @@ const wordMarquee = (() => {
         const el = document.createElement('div');
         el.className = 'mq-inner';
 
-        function addSet() {
+        // Marcador de extremo (doble)
+        function addBreak() {
+            const brk = document.createElement('span');
+            brk.className = 'mq-break';
+            brk.textContent = '· · · · · ·';
+            el.appendChild(brk);
+        }
+
+        // Palabras con separadores
+        function addWords() {
             unfound.forEach(({ word, origIdx }) => {
                 const color = CONFIG.NEON_COLORS[origIdx % CONFIG.NEON_COLORS.length];
                 const span = document.createElement('span');
@@ -1401,25 +1411,26 @@ const wordMarquee = (() => {
             });
         }
 
-        function addBreak() {
-            const brk = document.createElement('span');
-            brk.className = 'mq-break';
-            brk.textContent = '· · ·';
-            el.appendChild(brk);
-        }
-
-        addSet();   // primer set
-        addBreak(); // marca el fin del ciclo
-        addSet();   // segundo set (loop sin corte)
-        addBreak(); // marca el fin del segundo ciclo
+        addBreak(); // extremo izquierdo
+        addWords();
+        addBreak(); // extremo derecho
         return el;
     }
 
     function tick(ts) {
         if (!frozen && !suspended && lastTs !== null) {
             const dt = (ts - lastTs) / 1000;
-            scrollX += SPEED * dt;
-            if (halfWidth > 0 && scrollX >= halfWidth) scrollX -= halfWidth;
+            scrollX += direction * SPEED * dt;
+
+            // Rebotar en los extremos
+            if (scrollX >= maxScroll) {
+                scrollX    = maxScroll;
+                direction  = -1;
+            } else if (scrollX <= 0) {
+                scrollX    = 0;
+                direction  = 1;
+            }
+
             if (innerEl) innerEl.style.transform = `translateX(${-scrollX}px)`;
         }
         lastTs = ts;
@@ -1431,11 +1442,10 @@ const wordMarquee = (() => {
         if (!wordEl) return;
 
         frozen = true;
-        const word     = wordEl.dataset.word;
-        const origIdx  = parseInt(wordEl.dataset.origIdx);
-        const color    = CONFIG.NEON_COLORS[origIdx % CONFIG.NEON_COLORS.length];
+        const word    = wordEl.dataset.word;
+        const origIdx = parseInt(wordEl.dataset.origIdx);
+        const color   = CONFIG.NEON_COLORS[origIdx % CONFIG.NEON_COLORS.length];
 
-        // Ocultar marquee y mostrar la palabra en el display estático con cursor
         if (wrapperEl) wrapperEl.style.display = 'none';
         getBar()?.classList.replace('mq-running', 'mq-frozen');
 
@@ -1455,11 +1465,12 @@ const wordMarquee = (() => {
             if (!bar) return;
 
             const unfound = getUnfound();
-            if (unfound.length < 2) return; // 0 ó 1 palabras: usar display estático
+            if (unfound.length < 2) return;
 
             frozen    = false;
             suspended = false;
             scrollX   = 0;
+            direction = 1;
             lastTs    = null;
 
             wrapperEl = document.createElement('div');
@@ -1471,12 +1482,8 @@ const wordMarquee = (() => {
             bar.appendChild(wrapperEl);
             bar.classList.add('mq-running');
 
-            // Medir después de dos frames para que el DOM esté pintado
             requestAnimationFrame(() => requestAnimationFrame(() => {
-                const wordEls = innerEl.querySelectorAll('.mq-word');
-                if (wordEls.length >= unfound.length + 1) {
-                    halfWidth = wordEls[unfound.length].offsetLeft;
-                }
+                maxScroll = Math.max(0, innerEl.scrollWidth - wrapperEl.offsetWidth);
                 rafId = requestAnimationFrame(tick);
             }));
         },
@@ -1492,7 +1499,6 @@ const wordMarquee = (() => {
             innerEl = null;
         },
 
-        // Ocultar temporalmente mientras el jugador selecciona letras
         suspend() {
             if (!wrapperEl) return;
             suspended = true;
@@ -1500,7 +1506,6 @@ const wordMarquee = (() => {
             getBar()?.classList.remove('mq-running', 'mq-frozen');
         },
 
-        // Volver a mostrar cuando se limpia la selección
         unsuspend() {
             if (!wrapperEl || frozen) return;
             suspended = false;
