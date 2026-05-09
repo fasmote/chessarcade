@@ -384,18 +384,10 @@ function handleCellClick(r, c) {
             }
         }
     } else {
-        // Check if word is too long
-        const maxLen = Math.max(...gameState.targetWords.map(w => w.length));
-        if (currentWord.length > maxLen) {
-            // Límite alcanzado: no resetear, solo vibrar y shakevar el tablero
-            if (navigator.vibrate) navigator.vibrate(80);
-            elements.gameBoard?.classList.add('board-shake');
-            setTimeout(() => elements.gameBoard?.classList.remove('board-shake'), 500);
-            return;
-        } else {
-            gameState.selectedPath = newPath;
-            playCellClickSound(); // tick al agregar celda válida al camino
-        }
+        // Sin límite de longitud — el jugador puede explorar hasta las 64 celdas
+        // (cada celda solo puede estar una vez en el path, el check ya está arriba)
+        gameState.selectedPath = newPath;
+        playCellClickSound();
     }
 
     renderBoard();
