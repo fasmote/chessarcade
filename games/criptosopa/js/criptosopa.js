@@ -183,15 +183,13 @@ function startNewGame() {
 
     clearInterval(gameState.timerInterval);
     gameState.timer = 0;
+    gameState.timerStarted = false; // el timer arranca con el primer click
 
     // Create board and place words
     gameState.board = createEmptyBoard();
     gameState.currentWordList = [...CONFIG.DEFAULT_WORDS];
     placeWords();
     fillRandomLetters();
-
-    // Start timer
-    startTimer();
 
     // Render
     renderBoard();
@@ -334,6 +332,12 @@ function fillRandomLetters() {
 // Handle cell click
 function handleCellClick(r, c) {
     if (gameState.gameStatus !== 'playing') return;
+
+    // Arrancar el timer con el primer click
+    if (!gameState.timerStarted) {
+        gameState.timerStarted = true;
+        startTimer();
+    }
 
     // First click
     if (gameState.selectedPath.length === 0) {
@@ -929,10 +933,10 @@ function winGame() {
     playVictorySound();
     launchConfetti();
 
-    // Esperar más tiempo para que el jugador vea el tablero completo
+    // Esperar para que el jugador vea el tablero completo
     setTimeout(() => {
         showVictoryModal();
-    }, 3000);
+    }, 4000);
 }
 
 // Show victory modal
