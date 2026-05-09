@@ -1069,10 +1069,7 @@
     filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.9));
 }
 
-.knight-jumper.visible {
-    opacity: 1;
-}
-
+/* Arco durante el vuelo */
 @keyframes knightBounce {
     0%   { transform: translate(-50%, -50%) scale(1);    }
     28%  { transform: translate(-50%, calc(-50% - 18px)) scale(1.25); }
@@ -1082,6 +1079,35 @@
 
 .knight-jumper.jumping {
     animation: knightBounce 220ms ease-out;
+}
+
+/* Aterrizaje: se agranda y se desvanece */
+@keyframes knightLanding {
+    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+}
+
+.knight-jumper.landing {
+    animation: knightLanding 260ms ease-out forwards;
+}
+
+/* Flash del ♞ en la celda al aterrizar — letra siempre visible debajo */
+@keyframes knightCellFlash {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+    35%  { opacity: 1; transform: translate(-50%, -50%) scale(1.6); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+.knight-cell-flash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    pointer-events: none;
+    z-index: 50;
+    color: var(--neon-cyan);
+    font-size: 1.5em;
+    text-shadow: 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+    animation: knightCellFlash 480ms ease-out forwards;
 }
 
 /* ============================================

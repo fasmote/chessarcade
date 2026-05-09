@@ -1148,6 +1148,10 @@ function toggleSound() {
 
 const knightAnimator = (() => {
     let el = null;
+    let posX = null;
+    let posY = null;
+    let landingTimer = null;
+    let hideTimer = null;
 
     function ensureEl() {
         if (el) return;
@@ -1157,34 +1161,73 @@ const knightAnimator = (() => {
         document.body.appendChild(el);
     }
 
+    // Flash del ♞ en la celda: aparece grande y se desvanece (letra siempre visible)
+    function flashCellKnight(cellEl) {
+        const flash = document.createElement('span');
+        flash.className = 'knight-cell-flash';
+        flash.textContent = '♞';
+        cellEl.appendChild(flash);
+        setTimeout(() => flash.remove(), 480);
+    }
+
+    // Posicionar el elemento sin transición (teleport)
+    function teleport(x, y, opacity) {
+        el.style.transition = 'none';
+        el.style.opacity = String(opacity);
+        el.style.left = x + 'px';
+        el.style.top  = y + 'px';
+        void el.offsetWidth; // forzar reflow
+        el.style.transition = '';
+    }
+
     return {
         moveTo(cellEl) {
             ensureEl();
+            clearTimeout(landingTimer);
+            clearTimeout(hideTimer);
+            el.classList.remove('landing', 'jumping');
+
             const rect = cellEl.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
             const y = rect.top  + rect.height / 2;
 
-            if (!el.classList.contains('visible')) {
-                // Primera celda: aparecer sin animación de movimiento
-                el.style.transition = 'none';
-                el.style.left = x + 'px';
-                el.style.top  = y + 'px';
-                el.classList.add('visible');
-                void el.offsetWidth; // forzar reflow antes de activar transición
-                el.style.transition = '';
+            const isFirst = posX === null;
+
+            if (isFirst) {
+                // Primera celda: aparece directo en destino
+                teleport(x, y, 1);
             } else {
-                // Celda siguiente: salto animado
-                el.classList.remove('jumping');
-                void el.offsetWidth;
+                // Siguiente: reaparece en posición anterior y vuela al destino
+                teleport(posX, posY, 1);
                 el.classList.add('jumping');
                 el.style.left = x + 'px';
                 el.style.top  = y + 'px';
             }
+
+            // Al llegar: aterriza (scale grande + fade) y flash en la celda
+            const flightTime = isFirst ? 0 : 160;
+            landingTimer = setTimeout(() => {
+                el.classList.remove('jumping');
+                el.classList.add('landing');
+                flashCellKnight(cellEl);
+                hideTimer = setTimeout(() => {
+                    el.classList.remove('landing');
+                    el.style.opacity = '0'; // invisible pero posicionado
+                }, 260);
+            }, flightTime);
+
+            posX = x;
+            posY = y;
         },
 
         hide() {
             if (!el) return;
-            el.classList.remove('visible', 'jumping');
+            clearTimeout(landingTimer);
+            clearTimeout(hideTimer);
+            el.classList.remove('landing', 'jumping');
+            el.style.opacity = '0';
+            posX = null;
+            posY = null;
         }
     };
 })();
