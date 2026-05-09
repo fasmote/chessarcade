@@ -1039,6 +1039,74 @@
     }
 }
 
+/* ============================================
+   MARQUEE DE PALABRAS CANDIDATAS
+   ============================================ */
+
+/* Contenedor que cubre toda la selection-bar */
+.mq-wrapper {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    z-index: 5;
+}
+
+/* Fila interna de palabras que se desplaza */
+.mq-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+    white-space: nowrap;
+    will-change: transform;
+}
+
+/* Cada palabra en el marquee */
+.mq-word {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: filter 0.15s;
+    flex-shrink: 0;
+}
+
+.mq-word:hover {
+    filter: brightness(1.4);
+}
+
+/* Separador ♞ entre palabras */
+.mq-sep {
+    color: rgba(255, 255, 255, 0.18);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+/* Mientras el marquee corre: ocultar el display estático */
+.selection-bar.mq-running #currentSelection,
+.selection-bar.mq-running .cursor-blink {
+    display: none !important;
+}
+
+/* Cuando está congelado: mostrar el display estático (marquee oculto por JS) */
+.selection-bar.mq-frozen #currentSelection,
+.selection-bar.mq-frozen .cursor-blink {
+    display: inline !important;
+}
+
+@media (max-width: 640px) {
+    .mq-word {
+        font-size: 1.1rem;
+        letter-spacing: 0.08em;
+    }
+    .mq-inner {
+        gap: 1.2rem;
+    }
+}
+
 /* Flash al encontrar una palabra */
 @keyframes cellFoundFlash {
     0%   { transform: scale(1);    filter: brightness(1); }

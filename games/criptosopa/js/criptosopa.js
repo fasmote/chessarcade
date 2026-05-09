@@ -198,6 +198,9 @@ function startNewGame() {
     renderWordList();
     updateDisplay();
     updateSelectionText();
+
+    // Iniciar marquee de palabras candidatas
+    setTimeout(() => wordMarquee.start(), 150);
 }
 
 // Next level
@@ -391,7 +394,11 @@ function handleCellClick(r, c) {
 
             // Check win condition
             if (gameState.foundPaths.length === gameState.targetWords.length) {
+                wordMarquee.stop();
                 winGame();
+            } else {
+                // Reiniciar marquee con las palabras restantes
+                setTimeout(() => wordMarquee.start(), 200);
             }
         }
     } else {
@@ -836,28 +843,34 @@ function updateSelectionText() {
     if (!elements.currentSelection) return;
 
     if (gameState.selectedPath.length > 0) {
-        // Letras que el jugador va seleccionando
+        // Letras que el jugador va seleccionando — suspender marquee
+        wordMarquee.suspend();
         const text = gameState.selectedPath.map(p => gameState.board[p.r][p.c]).join('');
         elements.currentSelection.textContent = text;
         elements.currentSelection.removeAttribute('data-hint');
         elements.currentSelection.style.color = '';
         elements.currentSelection.style.textShadow = '';
     } else {
-        // Próxima palabra sin encontrar — con el color neon que tendrá al encontrarse
-        const nextWord = gameState.targetWords.find(
-            w => !gameState.foundPaths.some(fp => fp.word === w)
-        );
-        if (nextWord) {
-            const nextColor = CONFIG.NEON_COLORS[gameState.foundPaths.length % CONFIG.NEON_COLORS.length];
-            elements.currentSelection.textContent = nextWord;
-            elements.currentSelection.setAttribute('data-hint', 'true');
-            elements.currentSelection.style.color = nextColor.hex;
-            elements.currentSelection.style.textShadow = nextColor.glow;
-        } else {
-            elements.currentSelection.textContent = '';
-            elements.currentSelection.removeAttribute('data-hint');
-            elements.currentSelection.style.color = '';
-            elements.currentSelection.style.textShadow = '';
+        // Sin selección activa — reanudar marquee si no está congelado
+        wordMarquee.unsuspend();
+
+        // Fallback estático: cuando marquee está congelado o hay una sola palabra
+        if (!wordMarquee.isRunning) {
+            const nextWord = gameState.targetWords.find(
+                w => !gameState.foundPaths.some(fp => fp.word === w)
+            );
+            if (nextWord) {
+                const nextColor = CONFIG.NEON_COLORS[gameState.foundPaths.length % CONFIG.NEON_COLORS.length];
+                elements.currentSelection.textContent = nextWord;
+                elements.currentSelection.setAttribute('data-hint', 'true');
+                elements.currentSelection.style.color = nextColor.hex;
+                elements.currentSelection.style.textShadow = nextColor.glow;
+            } else {
+                elements.currentSelection.textContent = '';
+                elements.currentSelection.removeAttribute('data-hint');
+                elements.currentSelection.style.color = '';
+                elements.currentSelection.style.textShadow = '';
+            }
         }
     }
 }
@@ -1339,6 +1352,156 @@ function dismissTutorial(overlay) {
     overlay.classList.add('tutorial-fade-out');
     setTimeout(() => overlay.remove(), 400);
 }
+
+// ============================================
+// MARQUEE DE PALABRAS CANDIDATAS
+// ============================================
+
+const wordMarquee = (() => {
+    const SPEED = 48; // px/segundo
+    let wrapperEl = null;
+    let innerEl   = null;
+    let rafId     = null;
+    let scrollX   = 0;
+    let halfWidth = 0;
+    let lastTs    = null;
+    let frozen    = false;
+    let suspended = false;
+
+    const getBar = () => document.querySelector('.selection-bar');
+    const getSel = () => elements.currentSelection;
+
+    function getUnfound() {
+        return gameState.targetWords
+            .map((w, i) => ({ word: w, origIdx: i }))
+            .filter(({ word }) => !gameState.foundPaths.some(fp => fp.word === word));
+    }
+
+    function buildInner(unfound) {
+        const el = document.createElement('div');
+        el.className = 'mq-inner';
+
+        function addSet() {
+            unfound.forEach(({ word, origIdx }) => {
+                const color = CONFIG.NEON_COLORS[origIdx % CONFIG.NEON_COLORS.length];
+                const span = document.createElement('span');
+                span.className = 'mq-word';
+                span.textContent = word;
+                span.style.color = color.hex;
+                span.style.textShadow = color.glow;
+                span.dataset.word = word;
+                span.dataset.origIdx = String(origIdx);
+                el.appendChild(span);
+
+                const sep = document.createElement('span');
+                sep.className = 'mq-sep';
+                sep.textContent = '♞';
+                el.appendChild(sep);
+            });
+        }
+
+        addSet(); // primer set
+        addSet(); // segundo set (loop sin corte)
+        return el;
+    }
+
+    function tick(ts) {
+        if (!frozen && !suspended && lastTs !== null) {
+            const dt = (ts - lastTs) / 1000;
+            scrollX += SPEED * dt;
+            if (halfWidth > 0 && scrollX >= halfWidth) scrollX -= halfWidth;
+            if (innerEl) innerEl.style.transform = `translateX(${-scrollX}px)`;
+        }
+        lastTs = ts;
+        rafId = requestAnimationFrame(tick);
+    }
+
+    function onWordClick(e) {
+        const wordEl = e.target.closest('.mq-word');
+        if (!wordEl) return;
+
+        frozen = true;
+        const word     = wordEl.dataset.word;
+        const origIdx  = parseInt(wordEl.dataset.origIdx);
+        const color    = CONFIG.NEON_COLORS[origIdx % CONFIG.NEON_COLORS.length];
+
+        // Ocultar marquee y mostrar la palabra en el display estático con cursor
+        if (wrapperEl) wrapperEl.style.display = 'none';
+        getBar()?.classList.replace('mq-running', 'mq-frozen');
+
+        const sel = getSel();
+        if (sel) {
+            sel.textContent = word;
+            sel.setAttribute('data-hint', 'true');
+            sel.style.color = color.hex;
+            sel.style.textShadow = color.glow;
+        }
+    }
+
+    return {
+        start() {
+            this.stop();
+            const bar = getBar();
+            if (!bar) return;
+
+            const unfound = getUnfound();
+            if (unfound.length < 2) return; // 0 ó 1 palabras: usar display estático
+
+            frozen    = false;
+            suspended = false;
+            scrollX   = 0;
+            lastTs    = null;
+
+            wrapperEl = document.createElement('div');
+            wrapperEl.className = 'mq-wrapper';
+            wrapperEl.addEventListener('click', onWordClick);
+
+            innerEl = buildInner(unfound);
+            wrapperEl.appendChild(innerEl);
+            bar.appendChild(wrapperEl);
+            bar.classList.add('mq-running');
+
+            // Medir después de dos frames para que el DOM esté pintado
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const wordEls = innerEl.querySelectorAll('.mq-word');
+                if (wordEls.length >= unfound.length + 1) {
+                    halfWidth = wordEls[unfound.length].offsetLeft;
+                }
+                rafId = requestAnimationFrame(tick);
+            }));
+        },
+
+        stop() {
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            frozen    = false;
+            suspended = false;
+            lastTs    = null;
+            const bar = getBar();
+            bar?.classList.remove('mq-running', 'mq-frozen');
+            if (wrapperEl) { wrapperEl.remove(); wrapperEl = null; }
+            innerEl = null;
+        },
+
+        // Ocultar temporalmente mientras el jugador selecciona letras
+        suspend() {
+            if (!wrapperEl) return;
+            suspended = true;
+            wrapperEl.style.visibility = 'hidden';
+            getBar()?.classList.remove('mq-running', 'mq-frozen');
+        },
+
+        // Volver a mostrar cuando se limpia la selección
+        unsuspend() {
+            if (!wrapperEl || frozen) return;
+            suspended = false;
+            lastTs    = null;
+            wrapperEl.style.visibility = '';
+            getBar()?.classList.add('mq-running');
+        },
+
+        get isRunning() { return !!wrapperEl && !frozen && !suspended; }
+    };
+})();
 
 // Interfaz para hamburger-menu.js — sin esto, isSoundEnabled() siempre retorna true
 window.SoundManager = {
