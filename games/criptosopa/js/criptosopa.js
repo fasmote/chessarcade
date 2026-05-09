@@ -159,6 +159,7 @@ function initTouchDrag() {
     };
     board.addEventListener('touchend', stopDrag, { passive: true });
     board.addEventListener('touchcancel', stopDrag, { passive: true });
+}
 
 // Start new game
 function startNewGame() {
