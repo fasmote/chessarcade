@@ -913,7 +913,7 @@
 
     /* Letras 40% más grandes en mobile (celda y tablero sin cambios) */
     .board-cell {
-        font-size: clamp(1.68rem, 5.6vw, 2.52rem);
+        font-size: clamp(1.85rem, 6.16vw, 2.77rem);
     }
 
     /* Reducir padding del contenedor global */
