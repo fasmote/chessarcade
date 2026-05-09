@@ -911,6 +911,11 @@
 @media (max-width: 640px) {
     :root { --cell-size: clamp(36px, 10.5vw, 43px); }
 
+    /* Letras 40% más grandes en mobile (celda y tablero sin cambios) */
+    .board-cell {
+        font-size: clamp(1.68rem, 5.6vw, 2.52rem);
+    }
+
     /* Reducir padding del contenedor global */
     .neon-container {
         padding: 0.25rem 0.5rem 0.5rem;
