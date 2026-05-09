@@ -122,13 +122,17 @@ function setupEventListeners() {
     initTouchDrag();
 }
 
+// Celda procesada por touchstart — el touchmove la ignora brevemente
+// (previene que el temblor del dedo deshaga el deselect o re-agregue la celda)
+let _touchStartCell = null;
+let _touchStartTime  = 0;
+
 function initTouchDrag() {
     const board = elements.gameBoard;
     if (!board) return;
 
     let lastTouchCell = null;
 
-    // touchmove en el tablero: buscar celda bajo el dedo con elementFromPoint
     board.addEventListener('touchmove', (e) => {
         if (!gameState.isDragging) return;
         e.preventDefault();
@@ -144,11 +148,17 @@ function initTouchDrag() {
         const c = parseInt(cellEl.dataset.col);
         if (isNaN(r) || isNaN(c)) return;
 
-        // Evitar procesar la misma celda dos veces seguidas (previene des-selección por temblor)
+        // Ignorar la celda que acaba de procesar touchstart durante 220ms
+        // (evita que el temblor del dedo deshaga un deselect recién hecho)
+        if (_touchStartCell &&
+            _touchStartCell.r === r &&
+            _touchStartCell.c === c &&
+            Date.now() - _touchStartTime < 220) return;
+
+        // No procesar la misma celda dos veces seguidas
         if (lastTouchCell && lastTouchCell.r === r && lastTouchCell.c === c) return;
         lastTouchCell = { r, c };
 
-        // En drag solo se agregan celdas, no se des-selecciona al volver atrás
         if (gameState.selectedPath.some(p => p.r === r && p.c === c)) return;
 
         handleCellClick(r, c);
@@ -158,7 +168,7 @@ function initTouchDrag() {
         gameState.isDragging = false;
         lastTouchCell = null;
     };
-    board.addEventListener('touchend', stopDrag, { passive: true });
+    board.addEventListener('touchend',   stopDrag, { passive: true });
     board.addEventListener('touchcancel', stopDrag, { passive: true });
 }
 
@@ -371,6 +381,7 @@ function handleCellClick(r, c) {
                 newPath.map(p => `(${p.r},${p.c})=${gameState.board[p.r][p.c]}`).join(' -> '));
 
             gameState.selectedPath = [];
+            gameState.isDragging = false; // evitar que touchmove re-seleccione la última celda
             gameState.score += CONFIG.POINTS_PER_WORD;
 
             // Sprint 1: feedback al encontrar palabra
@@ -766,6 +777,9 @@ function renderBoard() {
                 cell.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     gameState.isDragging = true;
+                    // Registrar qué celda tocó touchstart para que touchmove la ignore brevemente
+                    _touchStartCell = { r, c };
+                    _touchStartTime  = Date.now();
                     handleCellClick(r, c);
                 }, { passive: false });
 
