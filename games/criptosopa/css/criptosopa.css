@@ -1085,6 +1085,15 @@
     flex-shrink: 0;
 }
 
+/* Marcador de fin de ciclo — más largo y visible que el sep normal */
+.mq-break {
+    color: rgba(255, 255, 255, 0.12);
+    font-size: 0.65rem;
+    letter-spacing: 0.5em;
+    padding: 0 1.5rem;
+    flex-shrink: 0;
+}
+
 /* Mientras el marquee corre: ocultar el display estático */
 .selection-bar.mq-running #currentSelection,
 .selection-bar.mq-running .cursor-blink {

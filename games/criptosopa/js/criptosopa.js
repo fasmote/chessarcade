@@ -397,7 +397,8 @@ function handleCellClick(r, c) {
                 wordMarquee.stop();
                 winGame();
             } else {
-                // Reiniciar marquee con las palabras restantes
+                // Detener marquee viejo de inmediato y reconstruir con palabras restantes
+                wordMarquee.stop();
                 setTimeout(() => wordMarquee.start(), 200);
             }
         }
@@ -1400,8 +1401,17 @@ const wordMarquee = (() => {
             });
         }
 
-        addSet(); // primer set
-        addSet(); // segundo set (loop sin corte)
+        function addBreak() {
+            const brk = document.createElement('span');
+            brk.className = 'mq-break';
+            brk.textContent = '· · ·';
+            el.appendChild(brk);
+        }
+
+        addSet();   // primer set
+        addBreak(); // marca el fin del ciclo
+        addSet();   // segundo set (loop sin corte)
+        addBreak(); // marca el fin del segundo ciclo
         return el;
     }
 
