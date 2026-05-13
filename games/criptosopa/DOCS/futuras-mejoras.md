@@ -759,3 +759,192 @@ Cambiar `#ffd700` → `#ffff00` en `:root` de `criptosopa.css`.
 - **Confeti del color de la última palabra** — en lugar de confeti genérico, usa el color asignado a esa palabra
 - **Resaltar primer celda de pista** — la pista actual muestra la primera celda de la próxima palabra (sin revelar el camino)
 - **Modo daltonismo** — paleta alternativa accesible
+
+---
+
+## 11. Sistema de Niveles Progresivos — Diseño 2026-05-09
+
+> Decisiones de diseño acordadas antes de implementar.
+
+### Reglas generales
+
+| Parámetro | Decisión |
+|---|---|
+| "NUEVO TABLERO" | Mantiene el nivel actual, genera nuevas palabras del mismo pool |
+| Persistencia entre sesiones | localStorage guarda el nivel alcanzado |
+| Reset de nivel | **Botón futuro** "Volver al nivel 1" (aún no implementado) |
+| Pistas | Infinitas, costo exponencial: 50 → 100 → 200 → 400... (igual a Master Sequence) |
+| Botón pista | Muestra el costo: `💡 PISTA (-50)`. Gris si no hay puntos suficientes |
+
+---
+
+### Tabla de niveles
+
+| Nivel | Categoría | Palabras por partida | Iluminación casillas válidas |
+|---|---|---|---|
+| 1 | Ajedrez básico | 4 | Completa (actual) |
+| 2 | Conceptos de ajedrez | 5 | Completa |
+| 3 | Jaques mate famosos | 6 | Completa |
+| 4 | Campeones del mundo | 6 | Solo borde (sin relleno) |
+| 5 | Tácticas | 7 | Solo borde |
+| 6 | Animales | 7 | Solo borde |
+| 7 | Países | 8 | Sin iluminación |
+| 8 | Deportes | 8 | Sin iluminación |
+
+---
+
+### Pools de palabras por nivel
+
+> Sin guiones, sin tildes, todo mayúsculas. Se incluyen todas las palabras sin importar largo — el algoritmo de colocación maneja paths largos. Las palabras de 10+ letras son difíciles de encontrar (mayor desafío).
+
+#### Nivel 1 — Ajedrez básico
+```
+CABALLO, ALFIL, TORRE, REINA, REY, PEON, JAQUE, MATE, TABLERO, ENROQUE,
+CAPTURA, GAMBITO, ELO, FIDE, RELOJ, BLANCAS, NEGRAS, PIEZA, ESCAQUE,
+BANDO, TURNO, COLUMNA, DIAGONAL, FLANCOS
+```
+*(24 palabras)*
+
+#### Nivel 2 — Conceptos de ajedrez
+```
+ESTRATEGIA, TACTICA, APERTURA, MEDIOJUEGO, DEFENSA, ATAQUE, POSICION,
+VENTAJA, SACRIFICIO, VARIANTE, BLITZ, RAPID, FIANCHETO, MOVILIDAD,
+ESTRUCTURA, ESPACIO, TIEMPO, PROFILAXIS, ACTIVIDAD, DINAMICO,
+DEBILIDAD, INICIATIVA
+```
+*(22 palabras)*
+
+#### Nivel 3 — Jaques mate famosos
+```
+PASTOR, LEGAL, ANASTASIA, LOCO, BODEN, MORPHY, PASILLO, OPERA, GRECO,
+DAMIANO, PHILIDOR, PILLSBURY, LOLLI, ARABIAN, EPAULETTE, ESPEJO,
+AHOGADO, BESO, BLACKBURNE, CORRIDOR, INDIAN, COZIO
+```
+*(22 palabras)*
+
+#### Nivel 4 — Campeones del mundo (FIDE, PCA, Rápido, Blitz, Femenino)
+
+**Clásico / Unificado (hombres):**
+```
+STEINITZ, LASKER, CAPABLANCA, ALEKHINE, EUWE, BOTVINNIK, SMYSLOV,
+TAL, PETROSIAN, SPASSKY, FISCHER, KARPOV, KASPAROV, KRAMNIK,
+ANAND, CARLSEN, DING, GUKESH
+```
+*(18 nombres — incluye a Gukesh D., campeón 2024, el más joven de la historia)*
+
+**Período FIDE de división (1993–2006):**
+```
+KHALIFMAN, PONOMARIOV, KASIMDZHANOV, TOPALOV
+```
+*(La PCA fue la Professional Chess Association, fundada por Kasparov en 1993 al romper con FIDE. KASPAROV ya figura arriba como campeón PCA. SHORT fue el rival de Kasparov en 1993 pero no ganó.)*
+
+**Rápido y Blitz (campeones únicos no ya listados):**
+```
+GRISCHUK, ABDUSATTOROV, NEPOMNIACHTCHI
+```
+*(Nota: NEPOMNIACHTCHI tiene 14 letras, ABDUSATTOROV 12, KASIMDZHANOV 12 — palabras largas, alta dificultad para encontrar)*
+
+**Femenino (campeonas mundiales FIDE):**
+```
+MENCHIK, RUDENKO, BYKOVA, RUBTSOVA, GAPRINDASHVILI, CHIBURDANIDZE,
+XIEJUN, POLGAR, ZHUCHEN, STEFANOVA, YUHUA, KOSTENIUK,
+YIFAN, USHENINA, MUZYCHUK, ZHONGYI, WENJUN
+```
+*(Nota: nombres chinos compuestos escritos en una sola cadena: XIEJUN=Xie Jun, ZHUCHEN=Zhu Chen, YUHUA=Xu Yuhua, YIFAN=Hou Yifan, ZHONGYI=Tan Zhongyi, WENJUN=Ju Wenjun)*
+
+**Total nivel 4: ~42 nombres** — el pool más grande del juego.
+
+#### Nivel 5 — Tácticas de ajedrez
+```
+HORQUILLA, CLAVADA, ENFILADA, ZUGZWANG, BLOQUEO, DEFLEXION, ATRACCION,
+SOBRECARGA, BATERIA, TRAMPA, CELADA, RUPTURA, DOMINACION, TEMPO, CLAVO,
+AMENAZA, INVASION, PALANCA, APOYO, RAYOS
+```
+*(20 palabras)*
+
+#### Nivel 6 — Animales
+```
+TIGRE, AGUILA, JIRAFA, ELEFANTE, DELFIN, PINGUINO, COCODRILO, SERPIENTE,
+MARIPOSA, CANGURO, CAMELLO, HIPOPOTAMO, GORILA, LEON, PANDA, GUEPARDO,
+LOBO, ZORRO, PULPO, BALLENA, TIBURON, ORCA, CONDOR, TORTUGA, JAGUAR,
+LEOPARDO
+```
+*(26 palabras)*
+
+#### Nivel 7 — Países
+```
+ARGENTINA, RUSIA, NORUEGA, ALEMANIA, ESPANA, FRANCIA, ITALIA, BRASIL,
+CHINA, INDIA, JAPON, HOLANDA, AUSTRALIA, CANADA, HUNGRIA, GEORGIA,
+ARMENIA, UCRANIA, POLONIA, CUBA, IRAN, TURQUIA, SUECIA, DINAMARCA,
+ISLANDIA
+```
+*(25 palabras)*
+
+#### Nivel 8 — Deportes
+```
+TENIS, NATACION, ATLETISMO, FUTBOL, CICLISMO, VOLEIBOL, BALONCESTO,
+GIMNASIA, BOXEO, SURF, GOLF, RUGBY, BEISBOL, HOCKEY, REMO, ESGRIMA,
+JUDO, KARATE, ARQUERIA, LUCHA, TRIATLON, VELA, ESCALADA
+```
+*(23 palabras)*
+
+---
+
+### Implementación técnica necesaria
+
+**JS — `criptosopa.js`:**
+```javascript
+CONFIG.LEVELS = [
+  { pool: [...], wordsPerGame: 4, illumination: 'full',   hintBaseCost: 50  },
+  { pool: [...], wordsPerGame: 5, illumination: 'full',   hintBaseCost: 50  },
+  { pool: [...], wordsPerGame: 6, illumination: 'full',   hintBaseCost: 50  },
+  { pool: [...], wordsPerGame: 6, illumination: 'border', hintBaseCost: 100 },
+  { pool: [...], wordsPerGame: 7, illumination: 'border', hintBaseCost: 100 },
+  { pool: [...], wordsPerGame: 7, illumination: 'border', hintBaseCost: 100 },
+  { pool: [...], wordsPerGame: 8, illumination: 'none',   hintBaseCost: 150 },
+  { pool: [...], wordsPerGame: 8, illumination: 'none',   hintBaseCost: 150 },
+];
+
+// gameState.currentLevelIndex  (0-based, persistido en localStorage)
+// gameState.hintsUsedThisGame  (para calcular costo: baseCost * 2^hintsUsed)
+// Eliminar: gameState.hintsRemaining (ya no hay límite de pistas)
+```
+
+**CSS — `criptosopa.css`:**
+```css
+/* Nivel 4-6: solo borde, sin relleno */
+.cell-hint.hint-border-only {
+  background-color: transparent !important;
+  border-color: rgba(255,255,255,0.5) !important;
+}
+
+/* Nivel 7-8: sin ninguna iluminación */
+.cell-hint.hint-none {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+  border-color: #1e293b !important;
+  cursor: default;
+}
+```
+
+---
+
+### Pendientes relacionados (a documentar como issues futuros)
+
+- [ ] **Botón "Reset nivel"**: volver al nivel 1 manteniendo historial. Ubicación: modal de victoria o menú de configuración.
+- [ ] **Indicador de nivel en UI**: "Nivel 4 — Campeones del mundo" visible en pantalla.
+- [ ] **Leaderboard por nivel**: el score del nivel 7 no compite contra el del nivel 1.
+- [ ] **Validar palabras largas**: verificar que el algoritmo de colocación no se cuelgue con palabras de 12-14 letras (NEPOMNIACHTCHI, GAPRINDASHVILI, CHIBURDANIDZE). Agregar timeout de fallback.
+
+---
+
+### Idea futura: Nivel por imágenes
+
+**Concepto**: en lugar de mostrar la palabra en el marquee, mostrar una **imagen** relacionada. El jugador debe encontrar la palabra en el tablero sin texto de referencia.
+
+- 🐴 → buscar CABALLO
+- Foto de Magnus Carlsen → buscar CARLSEN
+- 🏆 de ajedrez → buscar CAMPEONA / CAMPEON
+
+**Por qué es el nivel más difícil**: sin texto de referencia, el jugador debe reconocer la imagen, deducir la palabra, y luego encontrarla en el tablero.
+
+**Implementación futura**: agregar campo `hint` (emoji o imageUrl) al pool de palabras. El marquee muestra la imagen/emoji en lugar del texto. El display estático al hacer click muestra la imagen + el texto (para los que no recuerdan).
