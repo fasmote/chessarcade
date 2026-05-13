@@ -6,22 +6,109 @@
 // Game Configuration
 const CONFIG = {
     BOARD_SIZE: 8,
-    DEFAULT_WORDS: [
-        "CABALLO", "ALFIL", "TORRE", "REINA", "REY",
-        "PEON", "JAQUE", "MATE", "TABLERO", "ENROQUE",
-        "CAPTURA", "GAMBITO", "ELO", "FIDE", "RELOJ"
-    ],
     NEON_COLORS: [
-        { hex: '#ff00ff', glow: '0 0 15px #ff00ff' }, // Pink
-        { hex: '#00ffff', glow: '0 0 15px #00ffff' }, // Cyan
-        { hex: '#ffff00', glow: '0 0 15px #ffff00' }, // Yellow
-        { hex: '#ff9900', glow: '0 0 15px #ff9900' }, // Orange
-        { hex: '#39ff14', glow: '0 0 15px #39ff14' }, // Green
-        { hex: '#b026ff', glow: '0 0 15px #b026ff' }, // Purple
+        { hex: '#ff00ff', glow: '0 0 15px #ff00ff' },
+        { hex: '#00ffff', glow: '0 0 15px #00ffff' },
+        { hex: '#ffff00', glow: '0 0 15px #ffff00' },
+        { hex: '#ff9900', glow: '0 0 15px #ff9900' },
+        { hex: '#39ff14', glow: '0 0 15px #39ff14' },
+        { hex: '#b026ff', glow: '0 0 15px #b026ff' },
     ],
-    WORDS_PER_LEVEL: 6,
     POINTS_PER_WORD: 100,
-    HINTS_PER_LEVEL: 3
+    HINT_BASE_MULTIPLIER: 2, // el costo se duplica en cada pista usada
+
+    LEVELS: [
+        {
+            name: 'Ajedrez básico',
+            wordsPerGame: 4,
+            illumination: 'full',   // casillas válidas bien iluminadas
+            hintBaseCost: 50,
+            pool: ['CABALLO','ALFIL','TORRE','REINA','REY','PEON','JAQUE','MATE',
+                   'TABLERO','ENROQUE','CAPTURA','GAMBITO','ELO','FIDE','RELOJ',
+                   'BLANCAS','NEGRAS','PIEZA','ESCAQUE','BANDO','TURNO',
+                   'COLUMNA','DIAGONAL','FLANCOS']
+        },
+        {
+            name: 'Conceptos',
+            wordsPerGame: 5,
+            illumination: 'full',
+            hintBaseCost: 50,
+            pool: ['ESTRATEGIA','TACTICA','APERTURA','MEDIOJUEGO','DEFENSA',
+                   'ATAQUE','POSICION','VENTAJA','SACRIFICIO','VARIANTE',
+                   'BLITZ','RAPID','FIANCHETO','MOVILIDAD','ESTRUCTURA',
+                   'ESPACIO','TIEMPO','PROFILAXIS','ACTIVIDAD','DINAMICO',
+                   'DEBILIDAD','INICIATIVA']
+        },
+        {
+            name: 'Jaques mate',
+            wordsPerGame: 6,
+            illumination: 'full',
+            hintBaseCost: 50,
+            pool: ['PASTOR','LEGAL','ANASTASIA','LOCO','BODEN','MORPHY',
+                   'PASILLO','OPERA','GRECO','DAMIANO','PHILIDOR','PILLSBURY',
+                   'LOLLI','ARABIAN','EPAULETTE','ESPEJO','AHOGADO','BESO',
+                   'BLACKBURNE','CORRIDOR','INDIAN','COZIO']
+        },
+        {
+            name: 'Campeones del mundo',
+            wordsPerGame: 6,
+            illumination: 'border', // solo borde, sin relleno
+            hintBaseCost: 100,
+            pool: [
+                'STEINITZ','LASKER','CAPABLANCA','ALEKHINE','EUWE','BOTVINNIK',
+                'SMYSLOV','TAL','PETROSIAN','SPASSKY','FISCHER','KARPOV',
+                'KASPAROV','KRAMNIK','ANAND','CARLSEN','DING','GUKESH',
+                'KHALIFMAN','PONOMARIOV','KASIMDZHANOV','TOPALOV',
+                'GRISCHUK','ABDUSATTOROV','NEPOMNIACHTCHI',
+                'MENCHIK','RUDENKO','BYKOVA','RUBTSOVA',
+                'GAPRINDASHVILI','CHIBURDANIDZE',
+                'XIEJUN','POLGAR','ZHUCHEN','STEFANOVA','YUHUA',
+                'KOSTENIUK','YIFAN','USHENINA','MUZYCHUK','ZHONGYI','WENJUN'
+            ]
+        },
+        {
+            name: 'Tácticas',
+            wordsPerGame: 7,
+            illumination: 'border',
+            hintBaseCost: 100,
+            pool: ['HORQUILLA','CLAVADA','ENFILADA','ZUGZWANG','BLOQUEO',
+                   'DEFLEXION','ATRACCION','SOBRECARGA','BATERIA','TRAMPA',
+                   'CELADA','RUPTURA','DOMINACION','TEMPO','CLAVO',
+                   'AMENAZA','INVASION','PALANCA','APOYO','RAYOS']
+        },
+        {
+            name: 'Animales',
+            wordsPerGame: 7,
+            illumination: 'border',
+            hintBaseCost: 100,
+            pool: ['TIGRE','AGUILA','JIRAFA','ELEFANTE','DELFIN','PINGUINO',
+                   'COCODRILO','SERPIENTE','MARIPOSA','CANGURO','CAMELLO',
+                   'HIPOPOTAMO','GORILA','LEON','PANDA','GUEPARDO','LOBO',
+                   'ZORRO','PULPO','BALLENA','TIBURON','ORCA','CONDOR',
+                   'TORTUGA','JAGUAR','LEOPARDO']
+        },
+        {
+            name: 'Países',
+            wordsPerGame: 8,
+            illumination: 'none',   // sin iluminación de casillas válidas
+            hintBaseCost: 150,
+            pool: ['ARGENTINA','RUSIA','NORUEGA','ALEMANIA','ESPANA','FRANCIA',
+                   'ITALIA','BRASIL','CHINA','INDIA','JAPON','HOLANDA',
+                   'AUSTRALIA','CANADA','HUNGRIA','GEORGIA','ARMENIA',
+                   'UCRANIA','POLONIA','CUBA','IRAN','TURQUIA','SUECIA',
+                   'DINAMARCA','ISLANDIA']
+        },
+        {
+            name: 'Deportes',
+            wordsPerGame: 8,
+            illumination: 'none',
+            hintBaseCost: 150,
+            pool: ['TENIS','NATACION','ATLETISMO','FUTBOL','CICLISMO','VOLEIBOL',
+                   'BALONCESTO','GIMNASIA','BOXEO','SURF','GOLF','RUGBY',
+                   'BEISBOL','HOCKEY','REMO','ESGRIMA','JUDO','KARATE',
+                   'ARQUERIA','LUCHA','TRIATLON','VELA','ESCALADA']
+        }
+    ]
 };
 
 // Game State
@@ -29,18 +116,19 @@ let gameState = {
     board: [],
     currentWordList: [],
     targetWords: [],
-    wordPaths: {}, // Store paths for each placed word {word: path}
+    wordPaths: {},
     foundPaths: [],
     selectedPath: [],
     score: 0,
-    level: 1,
-    hintsRemaining: CONFIG.HINTS_PER_LEVEL,
+    currentLevelIndex: 0,   // índice 0-based en CONFIG.LEVELS
+    hintsUsedThisGame: 0,   // para calcular costo exponencial
     timer: 0,
     timerInterval: null,
+    timerStarted: false,
     hoveredWord: null,
-    gameStatus: 'playing', // 'playing', 'won'
-    isDragging: false, // Track if mouse is being held down
-    hintCell: null // {r, c, endTime} - Currently hinted cell
+    gameStatus: 'playing',
+    isDragging: false,
+    hintCell: null
 };
 
 // DOM Elements
@@ -51,7 +139,8 @@ const elements = {
     timerDisplay: null,
     wordsFound: null,
     currentSelection: null,
-    hintsLeft: null,
+    hintCost: null,
+    levelDisplay: null,
     resetBtn: null,
     hintBtn: null,
     helpBtn: null,
@@ -68,6 +157,10 @@ const elements = {
 
 // Initialize game
 document.addEventListener('DOMContentLoaded', () => {
+    // Recuperar nivel guardado
+    const saved = parseInt(localStorage.getItem('criptosopa_level') || '0');
+    gameState.currentLevelIndex = Math.min(Math.max(saved, 0), CONFIG.LEVELS.length - 1);
+
     initializeDOM();
     setupEventListeners();
     startNewGame();
@@ -82,7 +175,8 @@ function initializeDOM() {
     elements.timerDisplay = document.getElementById('timerDisplay');
     elements.wordsFound = document.getElementById('wordsFound');
     elements.currentSelection = document.getElementById('currentSelection');
-    elements.hintsLeft = document.getElementById('hintsLeft');
+    elements.hintCost    = document.getElementById('hintCost');
+    elements.levelDisplay = document.getElementById('levelDisplay');
     elements.resetBtn = document.getElementById('resetBtn');
     elements.hintBtn = document.getElementById('hintBtn');
     elements.helpBtn = document.getElementById('helpBtn');
@@ -176,35 +270,38 @@ function initTouchDrag() {
 function startNewGame() {
     gameState.foundPaths = [];
     gameState.selectedPath = [];
-    gameState.wordPaths = {}; // Clear word paths
+    gameState.wordPaths = {};
     gameState.gameStatus = 'playing';
     gameState.hoveredWord = null;
-    gameState.hintsRemaining = CONFIG.HINTS_PER_LEVEL;
+    gameState.hintsUsedThisGame = 0;
 
     clearInterval(gameState.timerInterval);
     gameState.timer = 0;
-    gameState.timerStarted = false; // el timer arranca con el primer click
+    gameState.timerStarted = false;
 
-    // Create board and place words
+    const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
+
     gameState.board = createEmptyBoard();
-    gameState.currentWordList = [...CONFIG.DEFAULT_WORDS];
-    placeWords();
+    gameState.currentWordList = [...levelConfig.pool];
+    placeWords(levelConfig.wordsPerGame);
     fillRandomLetters();
 
-    // Render
     renderBoard();
     renderWordList();
     updateDisplay();
+    updateHintButton();
     updateSelectionText();
 
-    // Iniciar marquee de palabras candidatas
     setTimeout(() => wordMarquee.start(), 150);
 }
 
 // Next level
 function nextLevel() {
-    gameState.level++;
-    gameState.hintsRemaining = CONFIG.HINTS_PER_LEVEL;
+    const maxIdx = CONFIG.LEVELS.length - 1;
+    if (gameState.currentLevelIndex < maxIdx) {
+        gameState.currentLevelIndex++;
+        localStorage.setItem('criptosopa_level', gameState.currentLevelIndex);
+    }
     closeVictoryModal();
     startNewGame();
 }
@@ -224,12 +321,12 @@ function isKnightMove(r1, c1, r2, c2) {
 }
 
 // Place words on board
-function placeWords() {
+function placeWords(wordsPerGame) {
     const selectedWords = [];
     const shuffled = [...gameState.currentWordList].sort(() => 0.5 - Math.random());
 
     for (const word of shuffled) {
-        if (selectedWords.length >= CONFIG.WORDS_PER_LEVEL) break;
+        if (selectedWords.length >= wordsPerGame) break;
         if (placeWord(word)) {
             selectedWords.push(word);
         }
@@ -420,12 +517,16 @@ function handleCellClick(r, c) {
     updateKnightPosition();
 }
 
-// Show hint
+// Show hint — costo exponencial: baseCost * 2^hintsUsed
 function showHint() {
     console.log('[HINT] Button clicked');
 
-    if (gameState.hintsRemaining <= 0) {
-        alert('¡No te quedan pistas!');
+    const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
+    const cost = levelConfig.hintBaseCost * Math.pow(CONFIG.HINT_BASE_MULTIPLIER, gameState.hintsUsedThisGame);
+
+    if (gameState.score < cost) {
+        elements.hintBtn?.classList.add('board-shake');
+        setTimeout(() => elements.hintBtn?.classList.remove('board-shake'), 500);
         return;
     }
 
@@ -465,10 +566,11 @@ function showHint() {
         console.log(`[HINT] Showing first letter of "${wordToHint}" at (${startPos.r},${startPos.c}) = ${gameState.board[startPos.r][startPos.c]}`);
         console.log('[HINT] hintCell stored:', gameState.hintCell);
 
-        gameState.hintsRemaining--;
-        gameState.score = Math.max(0, gameState.score - 50);
+        gameState.hintsUsedThisGame++;
+        gameState.score = Math.max(0, gameState.score - cost);
         updateDisplay();
-        renderBoard(); // Re-render to apply hint styling
+        updateHintButton();
+        renderBoard();
 
         // Auto-clear hint after 3 seconds
         setTimeout(() => {
@@ -743,11 +845,13 @@ function renderBoard() {
             }
 
             // Check if hint cell (available next move)
-            if (!isSelected && !isFound && !isHintCell && gameState.selectedPath.length > 0) {
+            const illumination = CONFIG.LEVELS[gameState.currentLevelIndex].illumination;
+            if (!isSelected && !isFound && !isHintCell && gameState.selectedPath.length > 0 && illumination !== 'none') {
                 const last = gameState.selectedPath[gameState.selectedPath.length - 1];
                 if (isKnightMove(last.r, last.c, r, c) &&
                     !gameState.selectedPath.some(p => p.r === r && p.c === c)) {
                     cell.classList.add('cell-hint');
+                    if (illumination === 'border') cell.classList.add('cell-hint-border');
                 }
             }
 
@@ -918,9 +1022,21 @@ function updateDisplay() {
         elements.wordsFound.textContent =
             `${gameState.foundPaths.length}/${gameState.targetWords.length}`;
     }
-    if (elements.hintsLeft) {
-        elements.hintsLeft.textContent = gameState.hintsRemaining;
+    if (elements.levelDisplay) {
+        const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
+        elements.levelDisplay.textContent = `${gameState.currentLevelIndex + 1} — ${lvl.name}`;
     }
+}
+
+// Actualiza el botón de pista con el costo actual y lo habilita/deshabilita
+function updateHintButton() {
+    if (!elements.hintBtn) return;
+    const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
+    const cost = levelConfig.hintBaseCost * Math.pow(CONFIG.HINT_BASE_MULTIPLIER, gameState.hintsUsedThisGame);
+    const canAfford = gameState.score >= cost;
+
+    if (elements.hintCost) elements.hintCost.textContent = cost;
+    elements.hintBtn.disabled = !canAfford;
 }
 
 // Win game
