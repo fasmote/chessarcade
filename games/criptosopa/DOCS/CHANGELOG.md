@@ -5,6 +5,32 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-14] — Sistema de 8 niveles + tiempo/puntaje acumulado
+
+### ✨ Added
+- **Sistema de 8 niveles**: cada nivel tiene su pool de palabras, cantidad de palabras por partida (`wordsPerGame`), modo de iluminación (`full`/`border`/`none`) y costo base de pistas (`hintBaseCost`). Nivel guardado en `localStorage` (`criptosopa_level`).
+- **Pools por nivel**:
+  1. Ajedrez básico (4 palabras, full, 50 pts)
+  2. Conceptos (5 palabras, full, 50 pts)
+  3. Jaques mate (6 palabras, full, 50 pts)
+  4. Campeones del mundo (6 palabras, border, 100 pts) — incluye campeones clásicos, FIDE y femeninas
+  5. Tácticas (7 palabras, border, 100 pts)
+  6. Animales (7 palabras, border, 100 pts)
+  7. Países (8 palabras, none, 150 pts)
+  8. Deportes (8 palabras, none, 150 pts)
+- **Iluminación adaptativa**: `full` muestra celdas posibles con fondo semitransparente; `border` solo muestra el borde de la celda (CSS `cell-hint-border`); `none` sin ayuda visual.
+- **Pistas con costo exponencial**: `hintBaseCost × 2^hintsUsados`. El puntaje se descuenta al usarlas. El botón se deshabilita si no alcanza el costo.
+- **Tiempo acumulado entre niveles**: `gameState.totalTime` suma el tiempo de cada nivel completado. Se muestra en el modal de victoria.
+- **Puntaje acumulado entre niveles**: `gameState.totalScore` suma los puntos de cada nivel completado. Se muestra en el modal de victoria.
+- **Modal de victoria rediseñado**: sección **ESTE NIVEL** (cyan) con tiempo y puntos del nivel; separador punteado; sección **ACUMULADO** (magenta, oculta en nivel 1) con totales sumados.
+- **Timer con horas**: `formatTime()` muestra `H:MM:SS` cuando el tiempo supera 60 minutos.
+- **NUEVO TABLERO conserva el timer**: si el jugador ya empezó a jugar (timer corriendo) y presiona NUEVO TABLERO, el tiempo sigue sin interrupciones.
+
+### 🐛 Fixed
+- **Score reseteaba entre niveles**: `startNewGame()` ahora resetea `score` por nivel. `totalScore` persiste hasta "Nuevo Tablero".
+
+---
+
 ## [2026-05-09] — Timer diferido + delay modal victoria
 
 ### ✨ Added
