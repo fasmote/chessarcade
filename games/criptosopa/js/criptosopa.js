@@ -120,6 +120,7 @@ let gameState = {
     foundPaths: [],
     selectedPath: [],
     score: 0,
+    totalScore: 0,          // acumulado entre niveles
     currentLevelIndex: 0,   // índice 0-based en CONFIG.LEVELS
     hintsUsedThisGame: 0,   // para calcular costo exponencial
     timer: 0,
@@ -269,7 +270,8 @@ function initTouchDrag() {
 
 // Start new game. resetTotal=true when starting from scratch (resets totalTime).
 function startNewGame(resetTotal = true) {
-    if (resetTotal) gameState.totalTime = 0;
+    if (resetTotal) { gameState.totalTime = 0; gameState.totalScore = 0; }
+    gameState.score = 0;
     gameState.foundPaths = [];
     gameState.selectedPath = [];
     gameState.wordPaths = {};
@@ -300,6 +302,7 @@ function startNewGame(resetTotal = true) {
 // Next level
 function nextLevel() {
     gameState.totalTime += gameState.timer;
+    gameState.totalScore += gameState.score;
     const maxIdx = CONFIG.LEVELS.length - 1;
     if (gameState.currentLevelIndex < maxIdx) {
         gameState.currentLevelIndex++;
@@ -1011,9 +1014,14 @@ function updateTimerDisplay() {
 
 function formatTime(centiseconds) {
     const totalSeconds = Math.floor(centiseconds / 100);
-    const minutes = Math.floor(totalSeconds / 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(seconds).padStart(2, '0');
+    return hours > 0
+        ? `${hours}:${mm}:${ss}`
+        : `${mm}:${ss}`;
 }
 
 // Update display
@@ -1062,18 +1070,20 @@ function winGame() {
 function showVictoryModal() {
     if (!elements.victoryModal) return;
 
-    if (elements.modalTime) {
-        elements.modalTime.textContent = formatTime(gameState.timer);
-    }
-    const totalEl = document.getElementById('modalTotalTime');
-    if (totalEl) {
-        const accumulated = gameState.totalTime + gameState.timer;
-        totalEl.textContent = formatTime(accumulated);
-        const totalRow = document.getElementById('modalTotalRow');
-        if (totalRow) totalRow.style.display = accumulated > gameState.timer ? '' : 'none';
-    }
-    if (elements.modalScore) {
-        elements.modalScore.textContent = gameState.score.toLocaleString();
+    const isMultiLevel = gameState.totalTime > 0 || gameState.totalScore > 0;
+
+    const modalTime = document.getElementById('modalTime');
+    if (modalTime) modalTime.textContent = formatTime(gameState.timer);
+
+    if (elements.modalScore) elements.modalScore.textContent = gameState.score.toLocaleString();
+
+    const totalSection = document.getElementById('modalTotalSection');
+    if (totalSection) {
+        totalSection.style.display = isMultiLevel ? '' : 'none';
+        const totalTime = document.getElementById('modalTotalTime');
+        const totalScore = document.getElementById('modalTotalScore');
+        if (totalTime) totalTime.textContent = formatTime(gameState.totalTime + gameState.timer);
+        if (totalScore) totalScore.textContent = (gameState.totalScore + gameState.score).toLocaleString();
     }
 
     elements.victoryModal.classList.add('active');
