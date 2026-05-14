@@ -120,9 +120,11 @@ let gameState = {
     foundPaths: [],
     selectedPath: [],
     score: 0,
+    totalScore: 0,          // acumulado entre niveles
     currentLevelIndex: 0,   // índice 0-based en CONFIG.LEVELS
     hintsUsedThisGame: 0,   // para calcular costo exponencial
     timer: 0,
+    totalTime: 0,           // acumulado entre niveles (no resetea al pasar de nivel)
     timerInterval: null,
     timerStarted: false,
     hoveredWord: null,
@@ -266,8 +268,10 @@ function initTouchDrag() {
     board.addEventListener('touchcancel', stopDrag, { passive: true });
 }
 
-// Start new game
-function startNewGame() {
+// Start new game. resetTotal=true when starting from scratch (resets totalTime).
+function startNewGame(resetTotal = true) {
+    if (resetTotal) { gameState.totalTime = 0; gameState.totalScore = 0; }
+    gameState.score = 0;
     gameState.foundPaths = [];
     gameState.selectedPath = [];
     gameState.wordPaths = {};
@@ -275,9 +279,14 @@ function startNewGame() {
     gameState.hoveredWord = null;
     gameState.hintsUsedThisGame = 0;
 
+    const keepTimer = gameState.timerStarted;
     clearInterval(gameState.timerInterval);
-    gameState.timer = 0;
-    gameState.timerStarted = false;
+    if (keepTimer) {
+        gameState.timerInterval = setInterval(updateTimer, 100);
+    } else {
+        gameState.timer = 0;
+        gameState.timerStarted = false;
+    }
 
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
 
@@ -297,13 +306,15 @@ function startNewGame() {
 
 // Next level
 function nextLevel() {
+    gameState.totalTime += gameState.timer;
+    gameState.totalScore += gameState.score;
     const maxIdx = CONFIG.LEVELS.length - 1;
     if (gameState.currentLevelIndex < maxIdx) {
         gameState.currentLevelIndex++;
         localStorage.setItem('criptosopa_level', gameState.currentLevelIndex);
     }
     closeVictoryModal();
-    startNewGame();
+    startNewGame(false);
 }
 
 // Create empty board
@@ -1008,9 +1019,14 @@ function updateTimerDisplay() {
 
 function formatTime(centiseconds) {
     const totalSeconds = Math.floor(centiseconds / 100);
-    const minutes = Math.floor(totalSeconds / 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(seconds).padStart(2, '0');
+    return hours > 0
+        ? `${hours}:${mm}:${ss}`
+        : `${mm}:${ss}`;
 }
 
 // Update display
@@ -1059,11 +1075,20 @@ function winGame() {
 function showVictoryModal() {
     if (!elements.victoryModal) return;
 
-    if (elements.modalTime) {
-        elements.modalTime.textContent = formatTime(gameState.timer);
-    }
-    if (elements.modalScore) {
-        elements.modalScore.textContent = gameState.score.toLocaleString();
+    const isMultiLevel = gameState.totalTime > 0 || gameState.totalScore > 0;
+
+    const modalTime = document.getElementById('modalTime');
+    if (modalTime) modalTime.textContent = formatTime(gameState.timer);
+
+    if (elements.modalScore) elements.modalScore.textContent = gameState.score.toLocaleString();
+
+    const totalSection = document.getElementById('modalTotalSection');
+    if (totalSection) {
+        totalSection.style.display = isMultiLevel ? '' : 'none';
+        const totalTime = document.getElementById('modalTotalTime');
+        const totalScore = document.getElementById('modalTotalScore');
+        if (totalTime) totalTime.textContent = formatTime(gameState.totalTime + gameState.timer);
+        if (totalScore) totalScore.textContent = (gameState.totalScore + gameState.score).toLocaleString();
     }
 
     elements.victoryModal.classList.add('active');

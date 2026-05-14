@@ -217,3 +217,34 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 - **RF-083**: Botones del juego con colores neon distintivos (primary=cyan, secondary=magenta, tertiary=amarillo)
 - **RF-084**: Modales con overlay oscuro, blur y animación de entrada
 - **RF-085**: Canvas background debe ser `position: fixed` para no ocupar espacio en el flujo del documento
+
+---
+
+## 9. Requerimientos Implementados — Sesión 2026-05-14
+
+### 9.1 Sistema de Progresión por Niveles
+- **RF-086**: 8 niveles con pool de palabras propio, cantidad de palabras por partida, modo de iluminación y costo base de pistas
+- **RF-087**: El nivel actual se guarda en `localStorage` y se restaura al recargar
+- **RF-088**: Botón "SIGUIENTE NIVEL" avanza al siguiente nivel (o repite el último si ya es el 8)
+- **RF-089**: El panel de estadísticas muestra el número y nombre del nivel actual
+- **RF-090**: Botón "PISTA" muestra el costo dinámico actual (`-50`, `-100`, etc.)
+
+### 9.2 Iluminación Adaptativa
+- **RF-091**: Niveles 1–3 (`illumination: full`): celdas válidas se iluminan con fondo semitransparente (comportamiento original)
+- **RF-092**: Niveles 4–6 (`illumination: border`): celdas válidas muestran solo el borde, sin fondo (más difícil)
+- **RF-093**: Niveles 7–8 (`illumination: none`): sin ayuda visual de movimientos válidos
+
+### 9.3 Pistas con Costo Exponencial
+- **RF-094**: El costo de cada pista se duplica con cada pista usada: `hintBaseCost × 2^n`
+- **RF-095**: El costo se descuenta del puntaje al usar la pista
+- **RF-096**: El botón PISTA se deshabilita si el puntaje no alcanza el costo actual
+- **RF-097**: `hintsUsedThisGame` se resetea al empezar cada nivel
+
+### 9.4 Tiempo y Puntaje Acumulado
+- **RF-098**: `gameState.totalTime` acumula el tiempo de todos los niveles completados en la sesión
+- **RF-099**: `gameState.totalScore` acumula los puntos de todos los niveles completados en la sesión
+- **RF-100**: El modal de victoria muestra sección "ESTE NIVEL" (cyan) con tiempo y puntos del nivel
+- **RF-101**: El modal de victoria muestra sección "ACUMULADO" (magenta) con totales — oculta en el nivel 1
+- **RF-102**: Ambas secciones separadas visualmente por un divider punteado
+- **RF-103**: `formatTime()` muestra `H:MM:SS` cuando el tiempo supera 60 minutos
+- **RF-104**: Presionar "NUEVO TABLERO" con el timer ya corriendo no resetea el tiempo — el reloj sigue
