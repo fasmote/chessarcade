@@ -279,9 +279,14 @@ function startNewGame(resetTotal = true) {
     gameState.hoveredWord = null;
     gameState.hintsUsedThisGame = 0;
 
+    const keepTimer = gameState.timerStarted;
     clearInterval(gameState.timerInterval);
-    gameState.timer = 0;
-    gameState.timerStarted = false;
+    if (keepTimer) {
+        gameState.timerInterval = setInterval(updateTimer, 100);
+    } else {
+        gameState.timer = 0;
+        gameState.timerStarted = false;
+    }
 
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
 
