@@ -123,6 +123,7 @@ let gameState = {
     currentLevelIndex: 0,   // índice 0-based en CONFIG.LEVELS
     hintsUsedThisGame: 0,   // para calcular costo exponencial
     timer: 0,
+    totalTime: 0,           // acumulado entre niveles (no resetea al pasar de nivel)
     timerInterval: null,
     timerStarted: false,
     hoveredWord: null,
@@ -266,8 +267,9 @@ function initTouchDrag() {
     board.addEventListener('touchcancel', stopDrag, { passive: true });
 }
 
-// Start new game
-function startNewGame() {
+// Start new game. resetTotal=true when starting from scratch (resets totalTime).
+function startNewGame(resetTotal = true) {
+    if (resetTotal) gameState.totalTime = 0;
     gameState.foundPaths = [];
     gameState.selectedPath = [];
     gameState.wordPaths = {};
@@ -297,13 +299,14 @@ function startNewGame() {
 
 // Next level
 function nextLevel() {
+    gameState.totalTime += gameState.timer;
     const maxIdx = CONFIG.LEVELS.length - 1;
     if (gameState.currentLevelIndex < maxIdx) {
         gameState.currentLevelIndex++;
         localStorage.setItem('criptosopa_level', gameState.currentLevelIndex);
     }
     closeVictoryModal();
-    startNewGame();
+    startNewGame(false);
 }
 
 // Create empty board
@@ -1061,6 +1064,13 @@ function showVictoryModal() {
 
     if (elements.modalTime) {
         elements.modalTime.textContent = formatTime(gameState.timer);
+    }
+    const totalEl = document.getElementById('modalTotalTime');
+    if (totalEl) {
+        const accumulated = gameState.totalTime + gameState.timer;
+        totalEl.textContent = formatTime(accumulated);
+        const totalRow = document.getElementById('modalTotalRow');
+        if (totalRow) totalRow.style.display = accumulated > gameState.timer ? '' : 'none';
     }
     if (elements.modalScore) {
         elements.modalScore.textContent = gameState.score.toLocaleString();
