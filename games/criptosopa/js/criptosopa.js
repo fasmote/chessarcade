@@ -291,6 +291,7 @@ function startNewGame(resetTotal = true) {
     gameState.hintsUsedThisGame = 0;
 
     const keepTimer = gameState.timerStarted;
+    console.log(`[TIMER] startNewGame resetTotal=${resetTotal} keepTimer=${keepTimer} timer=${gameState.timer}`);
     clearInterval(gameState.timerInterval);
     if (keepTimer) {
         gameState.timerInterval = setInterval(() => {
@@ -300,7 +301,9 @@ function startNewGame(resetTotal = true) {
     } else {
         gameState.timer = 0;
         gameState.timerStarted = false;
+        updateTimerDisplay(); // ← bug: sin esto el DOM mostraba el tiempo anterior
     }
+    console.log(`[TIMER] after reset: timer=${gameState.timer} timerStarted=${gameState.timerStarted}`);
 
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
     gameState.livesActive = levelConfig.illumination === 'none';
@@ -1175,6 +1178,7 @@ function showGameOverModal() {
 }
 
 function gameOverRestart() {
+    console.log(`[GAME OVER RESTART] timer=${gameState.timer} timerStarted=${gameState.timerStarted} antes de reset`);
     elements.gameOverModal?.classList.remove('active');
     gameState.currentLevelIndex = 0;
     gameState.timerStarted = false;
