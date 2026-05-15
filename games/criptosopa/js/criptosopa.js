@@ -127,7 +127,7 @@ let gameState = {
     totalTime: 0,           // acumulado entre niveles (no resetea al pasar de nivel)
     timerInterval: null,
     timerStarted: false,
-    lives: 3,
+    lives: 5,
     livesActive: false,
     hoveredWord: null,
     gameStatus: 'playing',
@@ -281,7 +281,7 @@ function initTouchDrag() {
 
 // Start new game. resetTotal=true when starting from scratch (resets totalTime).
 function startNewGame(resetTotal = true) {
-    if (resetTotal) { gameState.totalTime = 0; gameState.totalScore = 0; }
+    if (resetTotal) { gameState.totalTime = 0; gameState.totalScore = 0; gameState.lives = 5; }
     gameState.score = 0;
     gameState.foundPaths = [];
     gameState.selectedPath = [];
@@ -304,7 +304,6 @@ function startNewGame(resetTotal = true) {
 
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
     gameState.livesActive = levelConfig.illumination === 'none';
-    gameState.lives = 3;
 
     gameState.board = createEmptyBoard();
     gameState.currentWordList = [...levelConfig.pool];
@@ -329,6 +328,7 @@ function startNewGame(resetTotal = true) {
 function nextLevel() {
     gameState.totalTime += gameState.timer;
     gameState.totalScore += gameState.score;
+    gameState.timerStarted = false; // timer del nuevo nivel empieza en 0 al primer click
     const maxIdx = CONFIG.LEVELS.length - 1;
     if (gameState.currentLevelIndex < maxIdx) {
         gameState.currentLevelIndex++;
@@ -1104,7 +1104,7 @@ function renderLives() {
     if (!gameState.livesActive) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     el.innerHTML = '';
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
         const heart = document.createElement('span');
         heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
         heart.textContent = '❤️';
@@ -1116,7 +1116,7 @@ function showLevelWarning() {
     const el = elements.levelWarning;
     if (!el) return;
     const heartsEl = document.getElementById('levelWarningHearts');
-    if (heartsEl) heartsEl.textContent = '❤️ ❤️ ❤️';
+    if (heartsEl) heartsEl.textContent = Array(gameState.lives).fill('❤️').join(' ');
     el.style.display = 'flex';
     // Bloquear el tablero mientras se muestra el aviso
     gameState.gameStatus = 'warning';

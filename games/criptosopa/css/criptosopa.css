@@ -928,7 +928,7 @@
     letter-spacing: 0.5rem;
 }
 
-.gameover-hearts::before { content: '❤️ ❤️ ❤️'; }
+.gameover-hearts::before { content: '❤️ ❤️ ❤️ ❤️ ❤️'; }
 
 .gameover-message {
     font-family: 'Orbitron', sans-serif;
