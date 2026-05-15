@@ -127,6 +127,8 @@ let gameState = {
     totalTime: 0,           // acumulado entre niveles (no resetea al pasar de nivel)
     timerInterval: null,
     timerStarted: false,
+    lives: 5,
+    livesActive: false,
     hoveredWord: null,
     gameStatus: 'playing',
     isDragging: false,
@@ -154,7 +156,11 @@ const elements = {
     nextLevelBtn: null,
     submitScoreBtn: null,
     modalTime: null,
-    modalScore: null
+    modalScore: null,
+    livesDisplay: null,
+    levelWarning: null,
+    gameOverModal: null,
+    gameOverRestartBtn: null
 };
 
 // Initialize game
@@ -191,6 +197,10 @@ function initializeDOM() {
     elements.submitScoreBtn = document.getElementById('submitScoreBtn');
     elements.modalTime = document.getElementById('modalTime');
     elements.modalScore = document.getElementById('modalScore');
+    elements.livesDisplay = document.getElementById('livesDisplay');
+    elements.levelWarning = document.getElementById('levelWarning');
+    elements.gameOverModal = document.getElementById('gameOverModal');
+    elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
 }
 
 // Setup event listeners
@@ -203,6 +213,7 @@ function setupEventListeners() {
     elements.closeVictoryBtn?.addEventListener('click', () => closeVictoryModal());
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
+    elements.gameOverRestartBtn?.addEventListener('click', gameOverRestart);
 
     // Global mouseup to stop dragging
     document.addEventListener('mouseup', () => {
@@ -270,7 +281,7 @@ function initTouchDrag() {
 
 // Start new game. resetTotal=true when starting from scratch (resets totalTime).
 function startNewGame(resetTotal = true) {
-    if (resetTotal) { gameState.totalTime = 0; gameState.totalScore = 0; }
+    if (resetTotal) { gameState.totalTime = 0; gameState.totalScore = 0; gameState.lives = 5; }
     gameState.score = 0;
     gameState.foundPaths = [];
     gameState.selectedPath = [];
@@ -282,13 +293,17 @@ function startNewGame(resetTotal = true) {
     const keepTimer = gameState.timerStarted;
     clearInterval(gameState.timerInterval);
     if (keepTimer) {
-        gameState.timerInterval = setInterval(updateTimer, 100);
+        gameState.timerInterval = setInterval(() => {
+            gameState.timer++;
+            updateTimerDisplay();
+        }, 10);
     } else {
         gameState.timer = 0;
         gameState.timerStarted = false;
     }
 
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
+    gameState.livesActive = levelConfig.illumination === 'none';
 
     gameState.board = createEmptyBoard();
     gameState.currentWordList = [...levelConfig.pool];
@@ -300,6 +315,11 @@ function startNewGame(resetTotal = true) {
     updateDisplay();
     updateHintButton();
     updateSelectionText();
+    renderLives();
+
+    if (gameState.livesActive) {
+        setTimeout(() => showLevelWarning(), 150);
+    }
 
     setTimeout(() => wordMarquee.start(), 150);
 }
@@ -308,6 +328,7 @@ function startNewGame(resetTotal = true) {
 function nextLevel() {
     gameState.totalTime += gameState.timer;
     gameState.totalScore += gameState.score;
+    gameState.timerStarted = false; // timer del nuevo nivel empieza en 0 al primer click
     const maxIdx = CONFIG.LEVELS.length - 1;
     if (gameState.currentLevelIndex < maxIdx) {
         gameState.currentLevelIndex++;
@@ -461,6 +482,10 @@ function handleCellClick(r, c) {
 
     // Click on same cell (deselect last)
     if (lastPos.r === r && lastPos.c === c) {
+        if (gameState.selectedPath.length === 1 && gameState.livesActive) {
+            loseLife();
+            return;
+        }
         gameState.selectedPath.pop();
         playCellDeselectSound();
         renderBoard();
@@ -1071,6 +1096,94 @@ function winGame() {
     }, 4000);
 }
 
+// ── Lives system ──────────────────────────────────────────────
+
+function renderLives() {
+    const el = elements.livesDisplay;
+    if (!el) return;
+    if (!gameState.livesActive) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+        const heart = document.createElement('span');
+        heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
+        heart.textContent = '❤️';
+        el.appendChild(heart);
+    }
+}
+
+function showLevelWarning() {
+    const el = elements.levelWarning;
+    if (!el) return;
+    const heartsEl = document.getElementById('levelWarningHearts');
+    if (heartsEl) heartsEl.textContent = Array(gameState.lives).fill('❤️').join(' ');
+    el.style.display = 'flex';
+    // Bloquear el tablero mientras se muestra el aviso
+    gameState.gameStatus = 'warning';
+    const dismiss = () => {
+        el.style.display = 'none';
+        gameState.gameStatus = 'playing';
+    };
+    el.onclick = dismiss;
+    setTimeout(dismiss, 3500);
+}
+
+function loseLife() {
+    gameState.lives--;
+    gameState.selectedPath = [];
+
+    playLoseLifeSound();
+    if (navigator.vibrate) navigator.vibrate([80, 40, 180]);
+
+    // Flash rojo sobre el tablero
+    const board = elements.gameBoard;
+    if (board) {
+        board.classList.add('board-life-lost');
+        setTimeout(() => board.classList.remove('board-life-lost'), 600);
+    }
+
+    // Animar el corazón que se pierde (escala arriba antes de desaparecer)
+    const hearts = elements.livesDisplay?.querySelectorAll('.life-heart');
+    const dyingHeart = hearts?.[gameState.lives]; // índice = nuevas vidas (ya decrementado)
+    if (dyingHeart) {
+        dyingHeart.classList.add('life-heart--dying');
+        setTimeout(() => {
+            renderLives(); // ahora renderiza con el corazón ya perdido
+        }, 400);
+    } else {
+        renderLives();
+    }
+
+    // Shake del display de vidas
+    if (elements.livesDisplay) {
+        elements.livesDisplay.classList.add('lives-shake');
+        setTimeout(() => elements.livesDisplay?.classList.remove('lives-shake'), 500);
+    }
+
+    renderBoard();
+    updateSelectionText();
+    updateKnightPosition();
+
+    if (gameState.lives <= 0) {
+        setTimeout(() => showGameOverModal(), 700);
+    }
+}
+
+function showGameOverModal() {
+    gameState.gameStatus = 'gameover';
+    elements.gameOverModal?.classList.add('active');
+}
+
+function gameOverRestart() {
+    elements.gameOverModal?.classList.remove('active');
+    gameState.currentLevelIndex = 0;
+    gameState.timerStarted = false;
+    localStorage.setItem('criptosopa_level', '0');
+    startNewGame(true);
+}
+
+// ── Victory modal ──────────────────────────────────────────────
+
 // Show victory modal
 function showVictoryModal() {
     if (!elements.victoryModal) return;
@@ -1204,6 +1317,28 @@ function playCellClickSound() {
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.035);
+    } catch (e) {}
+}
+
+// Sonido de vida perdida — crunch dramático descendente
+function playLoseLifeSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        // Dos osciladores: grave + ruido para crunch
+        [220, 110].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.05);
+            osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.18, ctx.currentTime + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+            osc.start(ctx.currentTime + i * 0.05);
+            osc.stop(ctx.currentTime + 0.5);
+        });
     } catch (e) {}
 }
 

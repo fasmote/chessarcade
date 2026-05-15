@@ -5,6 +5,31 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-14] — Sistema de vidas + efectos + fixes de timer
+
+### ✨ Added
+- **Sistema de vidas (5 vidas globales)**: activo solo en niveles con `illumination: 'none'` (niveles 7 y 8). Las vidas son un recurso compartido a lo largo de toda la partida — no se reinician al pasar de nivel. Solo se restauran al iniciar una nueva partida desde cero.
+- **Pérdida de vida**: ocurre cuando el jugador intenta deseleccionar la única celda seleccionada (cambiar la letra de inicio). Puede retroceder libremente en el path mientras no sea la primera celda.
+- **Banner de aviso**: overlay sobre el tablero al iniciar un nivel sin iluminación. Muestra las vidas restantes actuales y se auto-descarta en 3.5s o con un toque. El tablero queda bloqueado durante el aviso (`gameStatus = 'warning'`).
+- **Efecto espectacular al perder vida**:
+  - Corazón perdido anima: escala 2.2× con glow rojo, luego se vuelve gris (`heartDying` 400ms)
+  - Flash rojo sobre el tablero entero (`boardLifeLost`, box-shadow inset 600ms)
+  - Sonido crunch dramático: 2 osciladores sawtooth (220Hz y 110Hz) descendiendo a 40Hz
+  - Vibración haptica `[80, 40, 180]` en mobile
+- **Modal de Game Over**: aparece al llegar a 0 vidas. Opción "VOLVER A EMPEZAR" reinicia desde el nivel 1 con timer y puntaje en cero.
+
+### 🐛 Fixed
+- **`updateTimer is not defined`** (ReferenceError crítico): al pasar de nivel, `startNewGame(false)` con `keepTimer=true` llamaba `setInterval(updateTimer, 100)`. `updateTimer` no existe — la función es anónima dentro de `startTimer()`. Además el intervalo era 100ms en lugar de 10ms (centisegundos). Fix: inlinar la misma función anónima de `startTimer()` con intervalo 10ms.
+- **Timer acumula entre niveles**: `nextLevel()` guardaba `totalTime += timer` pero `keepTimer=true` en `startNewGame(false)` no reseteaba `timer`. El nivel 2 arrancaba con el tiempo del nivel 1 sumado. Fix: `nextLevel()` pone `timerStarted = false` antes de llamar `startNewGame(false)`.
+- **Timer muestra tiempo anterior tras Game Over**: `gameOverRestart()` llamaba `startNewGame(true)` pero `timerStarted` seguía en `true` → `keepTimer=true` → timer no reseteaba. Fix: `gameState.timerStarted = false` antes de llamar `startNewGame(true)`.
+- **Vidas se reiniciaban en cada nivel**: `startNewGame()` hacía `gameState.lives = 3` siempre. Fix: las vidas solo se inicializan en `startNewGame(resetTotal=true)` — el paso de nivel usa `resetTotal=false`.
+
+### 📚 Aprendizajes
+- **`keepTimer` como estado implícito es frágil**: leer `gameState.timerStarted` dentro de `startNewGame()` para decidir si mantener el timer funcionó para NUEVO TABLERO, pero rompió en `nextLevel()` y `gameOverRestart()` que también llegan ahí con `timerStarted=true`. La solución correcta fue que cada llamador resetee `timerStarted` explícitamente *antes* de llamar `startNewGame()` cuando necesita timer limpio. Alternativa más robusta a futuro: pasar `keepTimer` como parámetro explícito.
+- **Verificar que los nombres de función existen antes de pasarlos a `setInterval`**: `setInterval(nombreFuncion, ms)` falla silenciosamente o lanza ReferenceError si la función no existe en el scope — en este caso `updateTimer` nunca existió.
+
+---
+
 ## [2026-05-14] — Sistema de 8 niveles + tiempo/puntaje acumulado
 
 ### ✨ Added

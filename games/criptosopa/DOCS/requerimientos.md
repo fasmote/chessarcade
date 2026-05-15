@@ -248,3 +248,31 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 - **RF-102**: Ambas secciones separadas visualmente por un divider punteado
 - **RF-103**: `formatTime()` muestra `H:MM:SS` cuando el tiempo supera 60 minutos
 - **RF-104**: Presionar "NUEVO TABLERO" con el timer ya corriendo no resetea el tiempo — el reloj sigue
+
+---
+
+## 10. Requerimientos Implementados — Sesión 2026-05-14 (parte 2)
+
+### 10.1 Sistema de Vidas
+- **RF-105**: 5 vidas globales activas solo en niveles con `illumination: 'none'` (niveles 7 y 8)
+- **RF-106**: Las vidas son un recurso compartido entre niveles — no se reinician al pasar de nivel
+- **RF-107**: Las vidas solo se restauran a 5 al iniciar una partida nueva desde cero (NUEVO TABLERO)
+- **RF-108**: Se pierde una vida cuando el jugador intenta deseleccionar la primera y única celda seleccionada (cambiar la letra de inicio del path)
+- **RF-109**: El jugador puede retroceder libremente en el path sin costo, mientras no llegue a deseleccionar la primera celda
+- **RF-110**: Display de corazones visible sobre el tablero en niveles con vidas activas (corazones perdidos se muestran grises)
+
+### 10.2 Feedback al Perder una Vida
+- **RF-111**: Corazón perdido anima con escala 2.2× y glow rojo antes de volverse gris (`heartDying`, 400ms)
+- **RF-112**: Flash rojo sobre el tablero entero al perder una vida (`boardLifeLost`, box-shadow inset, 600ms)
+- **RF-113**: Sonido crunch dramático: 2 osciladores sawtooth (220Hz + 110Hz) descendiendo a 40Hz
+- **RF-114**: Vibración haptica `[80, 40, 180]` en mobile al perder una vida
+
+### 10.3 Game Over
+- **RF-115**: Al llegar a 0 vidas aparece modal de Game Over con los 5 corazones grises
+- **RF-116**: Opción "VOLVER A EMPEZAR" reinicia desde el nivel 1 con timer, puntaje y vidas en cero
+- **RF-117**: El timer muestra 00:00 al reiniciar tras Game Over (no el tiempo del nivel anterior)
+
+### 10.4 Banner de Aviso
+- **RF-118**: Al iniciar un nivel sin iluminación, aparece un overlay sobre el tablero con las vidas restantes y la regla de pérdida
+- **RF-119**: El banner bloquea el tablero durante su visualización (`gameStatus = 'warning'`)
+- **RF-120**: El banner se auto-descarta en 3.5 segundos o con un toque del jugador
