@@ -276,3 +276,11 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 - **RF-118**: Al iniciar un nivel sin iluminación, aparece un overlay sobre el tablero con las vidas restantes y la regla de pérdida
 - **RF-119**: El banner bloquea el tablero durante su visualización (`gameStatus = 'warning'`)
 - **RF-120**: El banner se auto-descarta en 3.5 segundos o con un toque del jugador
+
+---
+
+## 11. Requerimientos Implementados — Sesión 2026-05-14 (parte 3)
+
+### 11.1 Corrección de Timer Visual
+- **RF-121**: Al reiniciar la partida (game over o nuevo tablero), el display del timer debe mostrar 00:00 de inmediato, sin esperar al primer tick del intervalo
+- **RF-122**: Logs de diagnóstico permanentes en consola para detectar regresiones del timer: `[TIMER]` en cada llamada a `startNewGame()` y `[GAME OVER RESTART]` al reiniciar
