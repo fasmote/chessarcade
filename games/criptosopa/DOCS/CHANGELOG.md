@@ -5,6 +5,21 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-14] — Fix timer DOM no reseteaba visualmente
+
+### 🐛 Fixed
+- **Timer muestra tiempo anterior al reiniciar (tercera vez, bug raíz encontrado)**: `startNewGame()` hacía `gameState.timer = 0` pero nunca llamaba `updateTimerDisplay()`. El DOM solo se actualiza cuando el `setInterval` dispara — si el timer no está corriendo (caso de reinicio), el display queda congelado en el valor anterior. Fix: agregar `updateTimerDisplay()` en el bloque `else` (cuando `keepTimer = false`).
+
+### 🔍 Diagnóstico agregado
+- Logs `[TIMER]` en `startNewGame()`: muestra `resetTotal`, `keepTimer` y valor del timer antes y después del reset.
+- Log `[GAME OVER RESTART]` antes de resetear: muestra el estado exacto del timer al momento de reiniciar. Quedan en producción para detectar regresiones futuras.
+
+### 📚 Aprendizajes
+- **Resetear estado y actualizar DOM son dos operaciones separadas**: asignar `gameState.timer = 0` no actualiza ningún elemento visual. Siempre llamar la función de render correspondiente inmediatamente después de resetear un valor que tiene representación en el DOM.
+- **El `setInterval` no es una fuente confiable de render inicial**: depender de que el interval "eventualmente" actualice el display es una trampa — si el interval no arranca (timer diferido al primer click), el DOM queda desactualizado indefinidamente.
+
+---
+
 ## [2026-05-14] — Sistema de vidas + efectos + fixes de timer
 
 ### ✨ Added
