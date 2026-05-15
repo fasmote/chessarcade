@@ -169,6 +169,16 @@
             <!-- Left Panel: Board -->
             <div class="board-panel">
                 <div class="board-container">
+                    <!-- Level warning banner (appears before no-illumination levels) -->
+                    <div id="levelWarning" class="level-warning" style="display:none;">
+                        <div class="level-warning-content">
+                            <div class="level-warning-title">⚠️ MODO OSCURO</div>
+                            <div id="levelWarningHearts" class="level-warning-hearts"></div>
+                            <div class="level-warning-text">Cambiar la primera letra cuesta una vida</div>
+                        </div>
+                    </div>
+                    <!-- Lives display -->
+                    <div id="livesDisplay" class="lives-display" style="display:none;"></div>
                     <div id="gameBoard" class="game-board">
                         <!-- Populated by JavaScript -->
                     </div>
@@ -302,6 +312,25 @@
                 </button>
                 <button id="submitScoreBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
                     📊 ENVIAR PUNTUACIÓN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="neon-modal">
+        <div class="neon-modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title gameover-title">💀 GAME OVER</h2>
+            </div>
+            <div class="modal-body">
+                <div class="gameover-hearts"></div>
+                <p class="gameover-message">Se te acabaron las vidas</p>
+                <p class="gameover-sub">Volvés al nivel 1</p>
+            </div>
+            <div class="modal-footer">
+                <button id="gameOverRestartBtn" class="neon-arcade-btn neon-arcade-btn--primary">
+                    🔄 VOLVER A EMPEZAR
                 </button>
             </div>
         </div>

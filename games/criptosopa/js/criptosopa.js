@@ -127,6 +127,8 @@ let gameState = {
     totalTime: 0,           // acumulado entre niveles (no resetea al pasar de nivel)
     timerInterval: null,
     timerStarted: false,
+    lives: 3,
+    livesActive: false,
     hoveredWord: null,
     gameStatus: 'playing',
     isDragging: false,
@@ -154,7 +156,11 @@ const elements = {
     nextLevelBtn: null,
     submitScoreBtn: null,
     modalTime: null,
-    modalScore: null
+    modalScore: null,
+    livesDisplay: null,
+    levelWarning: null,
+    gameOverModal: null,
+    gameOverRestartBtn: null
 };
 
 // Initialize game
@@ -191,6 +197,10 @@ function initializeDOM() {
     elements.submitScoreBtn = document.getElementById('submitScoreBtn');
     elements.modalTime = document.getElementById('modalTime');
     elements.modalScore = document.getElementById('modalScore');
+    elements.livesDisplay = document.getElementById('livesDisplay');
+    elements.levelWarning = document.getElementById('levelWarning');
+    elements.gameOverModal = document.getElementById('gameOverModal');
+    elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
 }
 
 // Setup event listeners
@@ -203,6 +213,7 @@ function setupEventListeners() {
     elements.closeVictoryBtn?.addEventListener('click', () => closeVictoryModal());
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
+    elements.gameOverRestartBtn?.addEventListener('click', gameOverRestart);
 
     // Global mouseup to stop dragging
     document.addEventListener('mouseup', () => {
@@ -289,6 +300,8 @@ function startNewGame(resetTotal = true) {
     }
 
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
+    gameState.livesActive = levelConfig.illumination === 'none';
+    gameState.lives = 3;
 
     gameState.board = createEmptyBoard();
     gameState.currentWordList = [...levelConfig.pool];
@@ -300,6 +313,11 @@ function startNewGame(resetTotal = true) {
     updateDisplay();
     updateHintButton();
     updateSelectionText();
+    renderLives();
+
+    if (gameState.livesActive) {
+        setTimeout(() => showLevelWarning(), 150);
+    }
 
     setTimeout(() => wordMarquee.start(), 150);
 }
@@ -461,6 +479,10 @@ function handleCellClick(r, c) {
 
     // Click on same cell (deselect last)
     if (lastPos.r === r && lastPos.c === c) {
+        if (gameState.selectedPath.length === 1 && gameState.livesActive) {
+            loseLife();
+            return;
+        }
         gameState.selectedPath.pop();
         playCellDeselectSound();
         renderBoard();
@@ -1070,6 +1092,72 @@ function winGame() {
         showVictoryModal();
     }, 4000);
 }
+
+// ── Lives system ──────────────────────────────────────────────
+
+function renderLives() {
+    const el = elements.livesDisplay;
+    if (!el) return;
+    if (!gameState.livesActive) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+        const heart = document.createElement('span');
+        heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
+        heart.textContent = '❤️';
+        el.appendChild(heart);
+    }
+}
+
+function showLevelWarning() {
+    const el = elements.levelWarning;
+    if (!el) return;
+    const heartsEl = document.getElementById('levelWarningHearts');
+    if (heartsEl) heartsEl.textContent = '❤️ ❤️ ❤️';
+    el.style.display = 'flex';
+    // Bloquear el tablero mientras se muestra el aviso
+    gameState.gameStatus = 'warning';
+    const dismiss = () => {
+        el.style.display = 'none';
+        gameState.gameStatus = 'playing';
+    };
+    el.onclick = dismiss;
+    setTimeout(dismiss, 3500);
+}
+
+function loseLife() {
+    gameState.lives--;
+    gameState.selectedPath = [];
+    playCellDeselectSound();
+    renderLives();
+    renderBoard();
+    updateSelectionText();
+    updateKnightPosition();
+
+    // Shake the lives display
+    if (elements.livesDisplay) {
+        elements.livesDisplay.classList.add('lives-shake');
+        setTimeout(() => elements.livesDisplay?.classList.remove('lives-shake'), 500);
+    }
+
+    if (gameState.lives <= 0) {
+        setTimeout(() => showGameOverModal(), 600);
+    }
+}
+
+function showGameOverModal() {
+    gameState.gameStatus = 'gameover';
+    elements.gameOverModal?.classList.add('active');
+}
+
+function gameOverRestart() {
+    elements.gameOverModal?.classList.remove('active');
+    gameState.currentLevelIndex = 0;
+    localStorage.setItem('criptosopa_level', '0');
+    startNewGame(true);
+}
+
+// ── Victory modal ──────────────────────────────────────────────
 
 // Show victory modal
 function showVictoryModal() {
