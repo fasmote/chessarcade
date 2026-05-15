@@ -1131,20 +1131,41 @@ function showLevelWarning() {
 function loseLife() {
     gameState.lives--;
     gameState.selectedPath = [];
-    playCellDeselectSound();
-    renderLives();
-    renderBoard();
-    updateSelectionText();
-    updateKnightPosition();
 
-    // Shake the lives display
+    playLoseLifeSound();
+    if (navigator.vibrate) navigator.vibrate([80, 40, 180]);
+
+    // Flash rojo sobre el tablero
+    const board = elements.gameBoard;
+    if (board) {
+        board.classList.add('board-life-lost');
+        setTimeout(() => board.classList.remove('board-life-lost'), 600);
+    }
+
+    // Animar el corazón que se pierde (escala arriba antes de desaparecer)
+    const hearts = elements.livesDisplay?.querySelectorAll('.life-heart');
+    const dyingHeart = hearts?.[gameState.lives]; // índice = nuevas vidas (ya decrementado)
+    if (dyingHeart) {
+        dyingHeart.classList.add('life-heart--dying');
+        setTimeout(() => {
+            renderLives(); // ahora renderiza con el corazón ya perdido
+        }, 400);
+    } else {
+        renderLives();
+    }
+
+    // Shake del display de vidas
     if (elements.livesDisplay) {
         elements.livesDisplay.classList.add('lives-shake');
         setTimeout(() => elements.livesDisplay?.classList.remove('lives-shake'), 500);
     }
 
+    renderBoard();
+    updateSelectionText();
+    updateKnightPosition();
+
     if (gameState.lives <= 0) {
-        setTimeout(() => showGameOverModal(), 600);
+        setTimeout(() => showGameOverModal(), 700);
     }
 }
 
@@ -1156,6 +1177,7 @@ function showGameOverModal() {
 function gameOverRestart() {
     elements.gameOverModal?.classList.remove('active');
     gameState.currentLevelIndex = 0;
+    gameState.timerStarted = false;
     localStorage.setItem('criptosopa_level', '0');
     startNewGame(true);
 }
@@ -1295,6 +1317,28 @@ function playCellClickSound() {
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.035);
+    } catch (e) {}
+}
+
+// Sonido de vida perdida — crunch dramático descendente
+function playLoseLifeSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        // Dos osciladores: grave + ruido para crunch
+        [220, 110].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.05);
+            osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.18, ctx.currentTime + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+            osc.start(ctx.currentTime + i * 0.05);
+            osc.stop(ctx.currentTime + 0.5);
+        });
     } catch (e) {}
 }
 
