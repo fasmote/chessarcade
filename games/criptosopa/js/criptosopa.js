@@ -293,7 +293,10 @@ function startNewGame(resetTotal = true) {
     const keepTimer = gameState.timerStarted;
     clearInterval(gameState.timerInterval);
     if (keepTimer) {
-        gameState.timerInterval = setInterval(updateTimer, 100);
+        gameState.timerInterval = setInterval(() => {
+            gameState.timer++;
+            updateTimerDisplay();
+        }, 10);
     } else {
         gameState.timer = 0;
         gameState.timerStarted = false;
