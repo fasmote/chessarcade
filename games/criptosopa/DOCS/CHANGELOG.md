@@ -5,6 +5,44 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-14 — 16] — Sesión en progreso: progresión de vidas, modal, UX desktop
+
+### ✨ Added
+- **Sistema de vidas con progresión 15→10→5**: activo desde nivel 1. Tier 1 (niveles 1-3) = 15 vidas, Tier 2 (4-6) = 10 vidas, Tier 3 (7-8) = 5 vidas. Las vidas persisten dentro del tier y se resetean al cambiar de tier.
+- **Corazones mobile**: fila única horizontal de corazones mini (10px) debajo del tablero, siempre visible.
+- **Panel lateral desktop**: orden NUEVO JUEGO → corazones → RENOVAR → PISTA → ATRÁS. PISTA en amarillo, AYUDA eliminado de desktop.
+- **Botón NUEVO JUEGO** (verde): vuelve al nivel 1 con todo reseteado.
+- **Renombrado NUEVO → RENOVAR**: más claro que genera otro tablero del mismo nivel sin perder vidas.
+- **Mobile colores**: NUEVO TABLERO=verde, PISTA=amarillo, AYUDA=celeste.
+- **Mobile post-victoria**: botón cambia a "NUEVA PARTIDA" al ganar.
+- **Banner de aviso por tier**: "♞ ¡EMPIEZA EL JUEGO!" (tier 1), "⚠️ NIVEL INTERMEDIO" (tier 2), "🔥 MODO EXPERTO" (tier 3). Solo aparece al inicio de cada tier.
+- **NUEVO TABLERO no resetea vidas ni acumulado**: el bug histórico era que addEventListener pasaba el MouseEvent como resetTotal (truthy), haciendo siempre reset total.
+- **Modal de victoria muestra nivel completado**: "Nivel 3 — Jaques mate" centrado en el body.
+- **Doble click en casilla 1**: con vidas activas deja solo la celda 1 (requiere click adicional para perderla). Sin vidas limpia todo. Evita exploit de cambiar inicio sin costo.
+- **Countdown al cerrar modal con X**: banner fijo "Siguiente nivel en 3..." con auto-avance. Tocar el banner avanza de inmediato.
+- **Auto-dismiss game over en 2 segundos**: transiciona solo al modal de resumen.
+- **X en game over abre resumen**: modal de victoria con título "📊 RESUMEN" y sin botón SIGUIENTE NIVEL.
+- **Palabras válidas en ambas direcciones**: el path inverso de una palabra también cuenta.
+- **Instrucciones desktop al pie**: 6 bloques en grilla de 3 columnas.
+- **Descripción CriptoSopa en home, about.html y README.md**.
+- **Logo "abc♞" en desktop**: emoji 🔤♞ a 3rem posicionado absolute en el header. La causa raíz de múltiples fallos: el span estaba dentro del h1 que tiene `-webkit-text-fill-color: transparent`, lo que hacía al emoji invisible. Solución: mover el span FUERA del h1.
+
+### 🐛 Fixed
+- **Timer DOM no reseteaba al reiniciar**: `gameState.timer = 0` pero el DOM no se actualizaba hasta el primer tick. Fix: `updateTimerDisplay()` en el bloque else de startNewGame.
+- **Timer se acumulaba entre niveles**: nextLevel no seteaba timerStarted=false antes de startNewGame.
+- **Menú resaltado (class="current")**: quitada la clase current del item CriptoSopa en el dropdown.
+- **← MENÚ en desktop**: oculto con `.neon-back-btn { display: none }` en media query desktop.
+
+### ⚠️ PENDIENTE — No resuelto al cierre de la sesión
+- **Título "CRIPTOSOPA" no centrado en desktop**: el `neon-container` tiene `align-items: center` que encoge el header. Se intentaron: `justify-content:center`, `width:100%!important`, `display:inline-block`, `margin:0 auto + fit-content`, `align-self:stretch`. Ninguno funcionó. **Primera prioridad de la próxima sesión**. Estrategia sugerida para la próxima sesión: inspeccionar con DevTools el computed CSS del `.neon-header` en tiempo real para entender exactamente qué regla está ganando la cascada.
+
+### 📚 Aprendizajes
+- **`-webkit-text-fill-color: transparent` se propaga a hijos**: cualquier span dentro de un elemento con esta propiedad queda invisible. Nunca poner logos/iconos dentro de un h1 con gradient text.
+- **`align-items: center` en flex column encoge hijos**: los flex items con `align-items: center` se achican a su contenido. `align-self: stretch` o `width: 100%` deberían sobrescribirlo pero el cascade con `!important` externo puede interferir.
+- **Siempre mirar cómo lo hacen los otros juegos antes de inventar**: Square Rush centra su título con un simple `text-align: center` en un div que NO está dentro de un flex container con `align-items: center`. CriptoSopa tiene una estructura de layout diferente que complica el centrado.
+
+---
+
 ## [2026-05-16] — Desktop UX: panel lateral, instrucciones, mecánicas de selección
 
 ### ✨ Added

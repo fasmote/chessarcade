@@ -23,6 +23,7 @@ const CONFIG = {
             wordsPerGame: 4,
             illumination: 'full',   // casillas válidas bien iluminadas
             hintBaseCost: 50,
+            lives: 15,              // tier fácil: 15 vidas (3 filas de 5)
             pool: ['CABALLO','ALFIL','TORRE','REINA','REY','PEON','JAQUE','MATE',
                    'TABLERO','ENROQUE','CAPTURA','GAMBITO','ELO','FIDE','RELOJ',
                    'BLANCAS','NEGRAS','PIEZA','ESCAQUE','BANDO','TURNO',
@@ -33,6 +34,7 @@ const CONFIG = {
             wordsPerGame: 5,
             illumination: 'full',
             hintBaseCost: 50,
+            lives: 15,              // mismo tier que nivel 1
             pool: ['ESTRATEGIA','TACTICA','APERTURA','MEDIOJUEGO','DEFENSA',
                    'ATAQUE','POSICION','VENTAJA','SACRIFICIO','VARIANTE',
                    'BLITZ','RAPID','FIANCHETO','MOVILIDAD','ESTRUCTURA',
@@ -44,6 +46,7 @@ const CONFIG = {
             wordsPerGame: 6,
             illumination: 'full',
             hintBaseCost: 50,
+            lives: 15,              // último nivel del tier fácil
             pool: ['PASTOR','LEGAL','ANASTASIA','LOCO','BODEN','MORPHY',
                    'PASILLO','OPERA','GRECO','DAMIANO','PHILIDOR','PILLSBURY',
                    'LOLLI','ARABIAN','EPAULETTE','ESPEJO','AHOGADO','BESO',
@@ -54,6 +57,7 @@ const CONFIG = {
             wordsPerGame: 6,
             illumination: 'border', // solo borde, sin relleno
             hintBaseCost: 100,
+            lives: 10,              // tier medio: 10 vidas (2 filas de 5)
             pool: [
                 'STEINITZ','LASKER','CAPABLANCA','ALEKHINE','EUWE','BOTVINNIK',
                 'SMYSLOV','TAL','PETROSIAN','SPASSKY','FISCHER','KARPOV',
@@ -71,6 +75,7 @@ const CONFIG = {
             wordsPerGame: 7,
             illumination: 'border',
             hintBaseCost: 100,
+            lives: 10,              // mismo tier que nivel 4
             pool: ['HORQUILLA','CLAVADA','ENFILADA','ZUGZWANG','BLOQUEO',
                    'DEFLEXION','ATRACCION','SOBRECARGA','BATERIA','TRAMPA',
                    'CELADA','RUPTURA','DOMINACION','TEMPO','CLAVO',
@@ -81,6 +86,7 @@ const CONFIG = {
             wordsPerGame: 7,
             illumination: 'border',
             hintBaseCost: 100,
+            lives: 10,              // último nivel del tier medio
             pool: ['TIGRE','AGUILA','JIRAFA','ELEFANTE','DELFIN','PINGUINO',
                    'COCODRILO','SERPIENTE','MARIPOSA','CANGURO','CAMELLO',
                    'HIPOPOTAMO','GORILA','LEON','PANDA','GUEPARDO','LOBO',
@@ -92,6 +98,7 @@ const CONFIG = {
             wordsPerGame: 8,
             illumination: 'none',   // sin iluminación de casillas válidas
             hintBaseCost: 150,
+            lives: 5,               // tier difícil: solo 5 vidas (1 fila de 5)
             pool: ['ARGENTINA','RUSIA','NORUEGA','ALEMANIA','ESPANA','FRANCIA',
                    'ITALIA','BRASIL','CHINA','INDIA','JAPON','HOLANDA',
                    'AUSTRALIA','CANADA','HUNGRIA','GEORGIA','ARMENIA',
@@ -103,6 +110,7 @@ const CONFIG = {
             wordsPerGame: 8,
             illumination: 'none',
             hintBaseCost: 150,
+            lives: 5,               // mismo tier que nivel 7
             pool: ['TENIS','NATACION','ATLETISMO','FUTBOL','CICLISMO','VOLEIBOL',
                    'BALONCESTO','GIMNASIA','BOXEO','SURF','GOLF','RUGBY',
                    'BEISBOL','HOCKEY','REMO','ESGRIMA','JUDO','KARATE',
@@ -127,8 +135,8 @@ let gameState = {
     totalTime: 0,           // acumulado entre niveles (no resetea al pasar de nivel)
     timerInterval: null,
     timerStarted: false,
-    lives: 5,
-    livesActive: false,
+    lives: 15,          // se actualiza al inicio de cada nivel según CONFIG.LEVELS[n].lives
+    livesActive: true,  // siempre activo desde nivel 1
     hoveredWord: null,
     gameStatus: 'playing',
     isDragging: false,
@@ -163,7 +171,9 @@ const elements = {
     undoBtnDesktop: null,
     levelWarning: null,
     gameOverModal: null,
-    gameOverRestartBtn: null
+    gameOverRestartBtn: null,
+    closeGameOverBtn: null,
+    modalRestartBtn: null
 };
 
 // Initialize game
@@ -207,19 +217,31 @@ function initializeDOM() {
     elements.levelWarning = document.getElementById('levelWarning');
     elements.gameOverModal = document.getElementById('gameOverModal');
     elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
+    elements.closeGameOverBtn  = document.getElementById('closeGameOverBtn');
+    elements.modalRestartBtn   = document.getElementById('modalRestartBtn');
 }
 
 // Setup event listeners
 function setupEventListeners() {
-    elements.resetBtn?.addEventListener('click', startNewGame);
+    // false = no resetear vidas ni acumulado al generar nuevo tablero del mismo nivel
+    elements.resetBtn?.addEventListener('click', () => startNewGame(false));
     elements.hintBtn?.addEventListener('click', showHint);
     elements.helpBtn?.addEventListener('click', () => showHelpModal(true));
     elements.closeHelpBtn?.addEventListener('click', () => showHelpModal(false));
     elements.closeHelpBtn2?.addEventListener('click', () => showHelpModal(false));
-    elements.closeVictoryBtn?.addEventListener('click', () => closeVictoryModal());
+    elements.closeVictoryBtn?.addEventListener('click', () => {
+        closeVictoryModal();
+        // Si el jugador ganó el nivel (no es resumen post-game-over), mostrar countdown
+        if (gameState.gameStatus === 'won') {
+            startNextLevelCountdown();
+        }
+    });
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
     elements.gameOverRestartBtn?.addEventListener('click', gameOverRestart);
+    elements.closeGameOverBtn?.addEventListener('click', gameOverShowStats);
+    // Botón "VOLVER A EMPEZAR" en el modal de resumen (visible solo en contexto game over)
+    elements.modalRestartBtn?.addEventListener('click', () => { closeVictoryModal(); gameOverRestart(); });
 
     // Global mouseup to stop dragging
     document.addEventListener('mouseup', () => {
@@ -293,7 +315,12 @@ function initTouchDrag() {
 
 // Start new game. resetTotal=true when starting from scratch (resets totalTime).
 function startNewGame(resetTotal = true) {
-    if (resetTotal) { gameState.totalTime = 0; gameState.totalScore = 0; gameState.lives = 5; }
+    if (resetTotal) {
+        // Nuevo juego completo: resetear todo incluyendo vidas según el nivel inicial
+        gameState.totalTime = 0;
+        gameState.totalScore = 0;
+        gameState.lives = CONFIG.LEVELS[gameState.currentLevelIndex].lives;
+    }
     gameState.score = 0;
     gameState.foundPaths = [];
     gameState.selectedPath = [];
@@ -301,6 +328,7 @@ function startNewGame(resetTotal = true) {
     gameState.gameStatus = 'playing';
     gameState.hoveredWord = null;
     gameState.hintsUsedThisGame = 0;
+    updateResetBtnLabel(false); // restaurar texto del botón mobile
 
     const keepTimer = gameState.timerStarted;
     console.log(`[TIMER] startNewGame resetTotal=${resetTotal} keepTimer=${keepTimer} timer=${gameState.timer}`);
@@ -318,7 +346,7 @@ function startNewGame(resetTotal = true) {
     console.log(`[TIMER] after reset: timer=${gameState.timer} timerStarted=${gameState.timerStarted}`);
 
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
-    gameState.livesActive = levelConfig.illumination === 'none';
+    gameState.livesActive = true; // las vidas siempre están activas desde nivel 1
 
     gameState.board = createEmptyBoard();
     gameState.currentWordList = [...levelConfig.pool];
@@ -333,23 +361,36 @@ function startNewGame(resetTotal = true) {
     updateUndoButton();
     renderLives();
 
-    if (gameState.livesActive) {
+    // Mostrar banner solo en el primer nivel de cada tier (1, 4, 7)
+    // para no interrumpir al jugador en cada nivel con la misma info
+    const tierStartLevels = [0, 3, 6]; // índices 0-based
+    if (tierStartLevels.includes(gameState.currentLevelIndex)) {
         setTimeout(() => showLevelWarning(), 150);
     }
 
     setTimeout(() => wordMarquee.start(), 150);
 }
 
-// Next level
+// Next level: avanza al siguiente nivel preservando vidas si el tier no cambió
 function nextLevel() {
     gameState.totalTime += gameState.timer;
     gameState.totalScore += gameState.score;
     gameState.timerStarted = false; // timer del nuevo nivel empieza en 0 al primer click
+
+    const prevLives = CONFIG.LEVELS[gameState.currentLevelIndex].lives; // vidas del tier actual
     const maxIdx = CONFIG.LEVELS.length - 1;
     if (gameState.currentLevelIndex < maxIdx) {
         gameState.currentLevelIndex++;
         localStorage.setItem('criptosopa_level', gameState.currentLevelIndex);
     }
+
+    const newLives = CONFIG.LEVELS[gameState.currentLevelIndex].lives; // vidas del nuevo tier
+    if (newLives !== prevLives) {
+        // Cambio de tier (ej: nivel 3→4 o 6→7): resetear vidas al nuevo máximo
+        gameState.lives = newLives;
+    }
+    // Si el tier no cambió (ej: nivel 1→2), las vidas restantes se preservan
+
     closeVictoryModal();
     startNewGame(false);
 }
@@ -1150,10 +1191,17 @@ function updateHintButton() {
     if (elements.hintBtnDesktop) elements.hintBtnDesktop.disabled = !canAfford;
 }
 
+// Cambia el texto del botón NUEVO TABLERO en mobile según el estado del juego
+function updateResetBtnLabel(won) {
+    const label = document.getElementById('resetBtnLabel');
+    if (label) label.textContent = won ? 'NUEVA PARTIDA' : 'NUEVO TABLERO';
+}
+
 // Win game
 function winGame() {
     gameState.gameStatus = 'won';
     clearInterval(gameState.timerInterval);
+    updateResetBtnLabel(true); // en mobile el botón pasa a "NUEVA PARTIDA"
 
     // Feedback de victoria
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
@@ -1168,50 +1216,67 @@ function winGame() {
 
 // ── Lives system ──────────────────────────────────────────────
 
-function renderLives() {
-    // Mobile: oculto si lives no están activas
-    const el = elements.livesDisplay;
-    if (el) {
-        if (!gameState.livesActive) { el.style.display = 'none'; }
-        else {
-            el.style.display = 'flex';
-            el.innerHTML = '';
-            for (let i = 0; i < 5; i++) {
-                const heart = document.createElement('span');
-                heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
-                heart.textContent = '❤️';
-                el.appendChild(heart);
-            }
+// Construye HTML de corazones en filas de 5.
+// maxLives: total del tier (15, 10 o 5). lives: vidas restantes actuales.
+// Los corazones perdidos se muestran con clase --lost (grises).
+function buildHeartsHTML(maxLives, lives) {
+    const rows = maxLives / 5; // 15→3 filas, 10→2 filas, 5→1 fila
+    let html = '';
+    for (let row = 0; row < rows; row++) {
+        html += '<div class="cs-hearts-row">';
+        for (let col = 0; col < 5; col++) {
+            const idx = row * 5 + col;
+            html += `<span class="cs-heart${idx < lives ? '' : ' cs-heart--lost'}">❤️</span>`;
         }
+        html += '</div>';
     }
+    return html;
+}
 
-    // Desktop: siempre visible, activo o inactivo
+// Actualiza el display de vidas en mobile y desktop.
+// Usa buildHeartsHTML para generar filas de 5 corazones según el tier actual.
+function renderLives() {
+    const maxLives = CONFIG.LEVELS[gameState.currentLevelIndex].lives;
+    const lives    = gameState.lives;
+    const heartsHTML = buildHeartsHTML(maxLives, lives);
+
+    // Mobile: fila(s) compacta(s) de corazones mini sobre la selection bar
+    const mobileEl = document.getElementById('livesDisplayMobile');
+    if (mobileEl) mobileEl.innerHTML = heartsHTML;
+
+    // Desktop: panel lateral izquierdo, siempre activo
     const desktopEl = elements.livesDisplayDesktop;
     if (desktopEl) {
-        const heartsSpan = desktopEl.querySelector('.cs-side-hearts');
-        if (heartsSpan) {
-            if (!gameState.livesActive) {
-                heartsSpan.innerHTML = '❤️❤️❤️❤️❤️';
-                desktopEl.classList.add('cs-side-lives--inactive');
-                desktopEl.classList.remove('cs-side-lives--active');
-            } else {
-                let html = '';
-                for (let i = 0; i < 5; i++) {
-                    html += i < gameState.lives
-                        ? '<span class="cs-dh-heart">❤️</span>'
-                        : '<span class="cs-dh-heart cs-dh-heart--lost">❤️</span>';
-                }
-                heartsSpan.innerHTML = html;
-                desktopEl.classList.add('cs-side-lives--active');
-                desktopEl.classList.remove('cs-side-lives--inactive');
-            }
-        }
+        const heartsContainer = desktopEl.querySelector('.cs-side-hearts');
+        if (heartsContainer) heartsContainer.innerHTML = heartsHTML;
+        desktopEl.classList.remove('cs-side-lives--inactive');
+        desktopEl.classList.add('cs-side-lives--active');
     }
 }
 
+// Muestra el banner de aviso al inicio de cada tier con mensaje adaptado al nivel
 function showLevelWarning() {
     const el = elements.levelWarning;
     if (!el) return;
+
+    // Mensaje distinto según el tier (definido por el índice del nivel actual)
+    const idx = gameState.currentLevelIndex;
+    const titleEl = el.querySelector('.level-warning-title');
+    const textEl  = el.querySelector('.level-warning-text');
+    if (idx === 0) {
+        // Tier 1 (niveles 1-3): introducción al sistema de vidas
+        if (titleEl) titleEl.textContent = '♞ ¡EMPIEZA EL JUEGO!';
+        if (textEl)  textEl.textContent  = 'Cambiar la primera letra seleccionada cuesta una vida';
+    } else if (idx === 3) {
+        // Tier 2 (niveles 4-6): iluminación reducida a solo borde
+        if (titleEl) titleEl.textContent = '⚠️ NIVEL INTERMEDIO';
+        if (textEl)  textEl.textContent  = 'Las casillas válidas muestran solo el borde. Cuidado con las vidas';
+    } else {
+        // Tier 3 (niveles 7-8): sin iluminación
+        if (titleEl) titleEl.textContent = '🔥 MODO EXPERTO';
+        if (textEl)  textEl.textContent  = 'Sin iluminación — las casillas válidas no se muestran';
+    }
+
     const heartsEl = document.getElementById('levelWarningHearts');
     if (heartsEl) heartsEl.textContent = Array(gameState.lives).fill('❤️').join(' ');
     el.style.display = 'flex';
@@ -1232,30 +1297,39 @@ function loseLife() {
     playLoseLifeSound();
     if (navigator.vibrate) navigator.vibrate([80, 40, 180]);
 
-    // Flash rojo sobre el tablero
+    // Flash rojo sobre el tablero para feedback visual inmediato
     const board = elements.gameBoard;
     if (board) {
         board.classList.add('board-life-lost');
         setTimeout(() => board.classList.remove('board-life-lost'), 600);
     }
 
-    // Animar el corazón que se pierde (escala arriba antes de desaparecer)
-    const hearts = elements.livesDisplay?.querySelectorAll('.life-heart');
-    const dyingHeart = hearts?.[gameState.lives]; // índice = nuevas vidas (ya decrementado)
-    if (dyingHeart) {
-        dyingHeart.classList.add('life-heart--dying');
-        setTimeout(() => {
-            renderLives(); // ahora renderiza con el corazón ya perdido
-        }, 400);
-    } else {
-        renderLives();
+    // Función helper: anima el último corazón activo de un contenedor y lo vuelve gris
+    function animateDyingHeart(container, shakeTarget) {
+        if (!container) return false;
+        const allHearts = container.querySelectorAll('.cs-heart:not(.cs-heart--lost)');
+        const dyingHeart = allHearts[allHearts.length - 1]; // último corazón activo
+        if (dyingHeart) {
+            dyingHeart.classList.add('life-heart--dying');
+            setTimeout(() => renderLives(), 400);
+        } else {
+            renderLives();
+        }
+        if (shakeTarget) {
+            shakeTarget.classList.add('lives-shake');
+            setTimeout(() => shakeTarget.classList.remove('lives-shake'), 500);
+        }
+        return !!dyingHeart;
     }
 
-    // Shake del display de vidas
-    if (elements.livesDisplay) {
-        elements.livesDisplay.classList.add('lives-shake');
-        setTimeout(() => elements.livesDisplay?.classList.remove('lives-shake'), 500);
-    }
+    // Animar en desktop y mobile simultáneamente
+    const desktopEl = elements.livesDisplayDesktop;
+    const mobileEl  = document.getElementById('livesDisplayMobile');
+    const animatedDesktop = animateDyingHeart(desktopEl, desktopEl);
+    const animatedMobile  = animateDyingHeart(mobileEl, mobileEl);
+
+    // Si ninguno tuvo corazón activo para animar, renderizar directo
+    if (!animatedDesktop && !animatedMobile) renderLives();
 
     renderBoard();
     updateSelectionText();
@@ -1268,7 +1342,31 @@ function loseLife() {
 
 function showGameOverModal() {
     gameState.gameStatus = 'gameover';
+    clearInterval(gameState.timerInterval); // detener el reloj al perder
     elements.gameOverModal?.classList.add('active');
+    // Auto-transición al resumen de puntos después de 2 segundos si el jugador no interactúa
+    setTimeout(() => {
+        if (elements.gameOverModal?.classList.contains('active')) {
+            gameOverShowStats();
+        }
+    }, 2000);
+}
+
+// Cierra el game over y muestra el resumen de puntos y tiempo acumulados.
+// Oculta el botón "Siguiente nivel" porque el jugador perdió — no puede continuar.
+function gameOverShowStats() {
+    elements.gameOverModal?.classList.remove('active');
+    showVictoryModal({ isGameOver: true });
+}
+
+// Botón "JUEGO" del panel desktop: reinicia desde nivel 1 con vidas completas.
+// Equivale a un game over voluntario — permite al jugador empezar de cero sin perder todas las vidas.
+function newGameFull() {
+    gameState.currentLevelIndex = 0;
+    gameState.timerStarted = false;
+    localStorage.setItem('criptosopa_level', '0');
+    closeVictoryModal();
+    startNewGame(true);
 }
 
 function gameOverRestart() {
@@ -1282,10 +1380,34 @@ function gameOverRestart() {
 
 // ── Victory modal ──────────────────────────────────────────────
 
-// Show victory modal
-function showVictoryModal() {
+// Muestra el modal de victoria (o resumen tras game over) con estadísticas.
+// options.isGameOver = true cambia el título y mensaje para el contexto de derrota.
+function showVictoryModal(options = {}) {
     if (!elements.victoryModal) return;
 
+    // Cambiar título y mensaje según si es victoria o resumen de game over
+    const titleEl = elements.victoryModal.querySelector('.modal-title');
+    const messageEl = elements.victoryModal.querySelector('.victory-message');
+    if (options.isGameOver) {
+        if (titleEl) titleEl.textContent = '📊 RESUMEN';
+        if (messageEl) messageEl.textContent = 'Tu progreso hasta perder todas las vidas.';
+    } else {
+        if (titleEl) titleEl.textContent = '🎉 ¡COMPLETADO!';
+        if (messageEl) messageEl.textContent = '¡Has encontrado todas las palabras!';
+    }
+
+    // En game over: ocultar "Siguiente nivel", mostrar "Volver a empezar"
+    if (elements.nextLevelBtn)   elements.nextLevelBtn.style.display   = options.isGameOver ? 'none' : '';
+    if (elements.modalRestartBtn) elements.modalRestartBtn.style.display = options.isGameOver ? ''     : 'none';
+
+    // Mostrar el nombre del nivel completado en el encabezado del modal
+    const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
+    const levelNameEl = document.getElementById('victoryLevelName');
+    if (levelNameEl) {
+        levelNameEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
+    }
+
+    // Estadísticas de este nivel y acumulado
     const modalTime       = document.getElementById('modalTime');
     const modalScore      = document.getElementById('modalScore');
     const modalTotalTime  = document.getElementById('modalTotalTime');
@@ -1301,6 +1423,36 @@ function showVictoryModal() {
 
 function closeVictoryModal() {
     elements.victoryModal?.classList.remove('active');
+}
+
+// Muestra un countdown de 3 segundos y luego pasa al siguiente nivel.
+// Se activa cuando el jugador cierra el modal de victoria con la X (en vez de SIGUIENTE NIVEL).
+function startNextLevelCountdown() {
+    const el = document.getElementById('nextLevelCountdown');
+    const textEl = document.getElementById('countdownText');
+    if (!el || !textEl) return;
+
+    let seconds = 3;
+    textEl.innerHTML = `Siguiente nivel en <strong>${seconds}</strong>...`;
+    el.style.display = 'block';
+
+    const interval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+            textEl.innerHTML = `Siguiente nivel en <strong>${seconds}</strong>...`;
+        } else {
+            clearInterval(interval);
+            el.style.display = 'none';
+            nextLevel(); // avanzar al siguiente nivel
+        }
+    }, 1000);
+
+    // Si el jugador toca el countdown, avanza de inmediato
+    el.onclick = () => {
+        clearInterval(interval);
+        el.style.display = 'none';
+        nextLevel();
+    };
 }
 
 // Show help modal

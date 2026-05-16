@@ -135,8 +135,8 @@
                     <span class="game-icon">🔐</span>
                     <span>CriptoCaballo</span>
                 </a>
-                <a href="index.html" class="game-menu-item current">
-                    <span class="game-icon">🐴🔍</span>
+                <a href="index.html" class="game-menu-item">
+                    <span class="game-icon">🔤♞</span>
                     <span>CriptoSopa</span>
                 </a>
             </div>
@@ -150,34 +150,33 @@
             <a href="../../index.html" class="neon-back-btn" aria-label="Volver al menú">
                 ← MENÚ
             </a>
+            <!-- Logo fuera del h1 para evitar -webkit-text-fill-color:transparent del neon-title -->
+            <span class="cs-logo-desktop">🔤♞</span>
             <h1 class="neon-title">
-                <span class="neon-icon">🐴🔍</span>
                 CriptoSopa
                 <span class="neon-subtitle">Knight Word Search</span>
             </h1>
         </header>
 
-        <!-- Timer -->
-        <div class="timer-container">
-            <div class="timer-display">
-                <span id="timerDisplay">00:00</span>
-            </div>
-        </div>
-
-        <!-- Game Container -->
+        <!-- Game Container (grid 2 filas: fila 1=timer centrado, fila 2=tablero+info) -->
         <div class="game-wrapper">
 
             <!-- Desktop Side Controls (hidden on mobile) -->
             <div class="cs-side-left" id="csDesktopControls">
+                <!-- Nuevo Juego arriba: vuelve al nivel 1 con vidas completas -->
+                <button class="cs-btn-side cs-btn-newgame" onclick="newGameFull()">
+                    <span class="cs-btn-icon">🆕</span>
+                    <span class="cs-btn-label">NUEVO JUEGO</span>
+                </button>
                 <!-- Vidas (desktop) -->
                 <div class="cs-side-lives" id="livesDisplayDesktop">
                     <span class="cs-side-lives-label">VIDAS</span>
                     <span class="cs-side-hearts">❤️❤️❤️❤️❤️</span>
                 </div>
-                <!-- Nuevo Tablero -->
-                <button class="cs-btn-side cs-btn-reset" onclick="startNewGame()">
+                <!-- Renovar tablero: mismo nivel, preserva vidas y acumulado -->
+                <button class="cs-btn-side cs-btn-reset" onclick="startNewGame(false)">
                     <span class="cs-btn-icon">🔄</span>
-                    <span class="cs-btn-label">NUEVO</span>
+                    <span class="cs-btn-label">RENOVAR</span>
                 </button>
                 <!-- Pista -->
                 <button class="cs-btn-side cs-btn-hint" id="hintBtnDesktop" onclick="showHint()">
@@ -185,14 +184,21 @@
                     <span class="cs-btn-label">PISTA</span>
                     <span class="cs-btn-cost">-<span id="hintCostDesktop">50</span></span>
                 </button>
-                <!-- Atrás -->
+                <!-- Atrás: deshace la última celda seleccionada -->
                 <button class="cs-btn-side cs-btn-undo" id="undoBtnDesktop" onclick="undoLastMove()" disabled>
                     <span class="cs-btn-icon">↩️</span>
                     <span class="cs-btn-label">ATRÁS</span>
                 </button>
             </div>
 
-            <!-- Left Panel: Board -->
+            <!-- Timer: fila 1, columna 2 del grid — centrado sobre el tablero -->
+            <div class="timer-container">
+                <div class="timer-display">
+                    <span id="timerDisplay">00:00</span>
+                </div>
+            </div>
+
+            <!-- Left Panel: Board (fila 2, columna 2) -->
             <div class="board-panel">
                 <div class="board-container">
                     <!-- Level warning banner (appears before no-illumination levels) -->
@@ -203,12 +209,13 @@
                             <div class="level-warning-text">Cambiar la primera letra cuesta una vida</div>
                         </div>
                     </div>
-                    <!-- Lives display -->
-                    <div id="livesDisplay" class="lives-display" style="display:none;"></div>
                     <div id="gameBoard" class="game-board">
                         <!-- Populated by JavaScript -->
                     </div>
                 </div>
+
+                <!-- Vidas mobile: filas de corazones mini, visible solo en mobile -->
+                <div id="livesDisplayMobile" class="cs-lives-mobile"></div>
 
                 <!-- Current Selection Bar -->
                 <div class="selection-bar">
@@ -216,15 +223,18 @@
                     <span class="cursor-blink">_</span>
                 </div>
 
-                <!-- Controls -->
+                <!-- Controls (mobile) -->
                 <div class="controls-panel">
-                    <button id="resetBtn" class="neon-arcade-btn neon-arcade-btn--primary">
-                        🔄 NUEVO TABLERO
+                    <!-- Verde: generar nuevo tablero del mismo nivel -->
+                    <button id="resetBtn" class="neon-arcade-btn neon-arcade-btn--green">
+                        🔄 <span id="resetBtnLabel">NUEVO TABLERO</span>
                     </button>
-                    <button id="hintBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
+                    <!-- Amarillo: pista con costo en puntos -->
+                    <button id="hintBtn" class="neon-arcade-btn neon-arcade-btn--tertiary">
                         💡 PISTA (-<span id="hintCost">50</span>)
                     </button>
-                    <button id="helpBtn" class="neon-arcade-btn neon-arcade-btn--tertiary">
+                    <!-- Celeste: abrir modal de ayuda -->
+                    <button id="helpBtn" class="neon-arcade-btn neon-arcade-btn--primary">
                         ❓ AYUDA
                     </button>
                 </div>
@@ -342,6 +352,8 @@
                 <button id="closeVictoryBtn" class="modal-close-btn" aria-label="Cerrar">✕</button>
             </div>
             <div class="modal-body">
+                <!-- Nombre del nivel centrado, visible en el cuerpo del modal -->
+                <p id="victoryLevelName" class="victory-level-name"></p>
                 <div class="victory-stats">
                     <div class="victory-section-label">ESTE NIVEL</div>
                     <div class="victory-row">
@@ -373,6 +385,10 @@
                 <button id="nextLevelBtn" class="neon-arcade-btn neon-arcade-btn--primary">
                     ▶️ SIGUIENTE NIVEL
                 </button>
+                <!-- Solo visible en contexto de game over, oculto en victoria normal -->
+                <button id="modalRestartBtn" class="neon-arcade-btn neon-arcade-btn--primary" style="display:none;">
+                    🔄 VOLVER A EMPEZAR
+                </button>
                 <button id="submitScoreBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
                     📊 ENVIAR PUNTUACIÓN
                 </button>
@@ -380,11 +396,18 @@
         </div>
     </div>
 
+    <!-- Countdown overlay: aparece al cerrar el modal de victoria con X -->
+    <div id="nextLevelCountdown" class="next-level-countdown" style="display:none;">
+        <span id="countdownText">Siguiente nivel en <strong>3</strong>...</span>
+    </div>
+
     <!-- Game Over Modal -->
     <div id="gameOverModal" class="neon-modal">
         <div class="neon-modal-content">
             <div class="modal-header">
                 <h2 class="modal-title gameover-title">💀 GAME OVER</h2>
+                <!-- X para cerrar y ver el resumen de puntos acumulados -->
+                <button id="closeGameOverBtn" class="modal-close-btn" aria-label="Ver resumen">✕</button>
             </div>
             <div class="modal-body">
                 <div class="gameover-hearts"></div>

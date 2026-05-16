@@ -253,15 +253,30 @@
     padding: 1rem;
 }
 
-/* Tablet (768px+): activar 3 columnas — side | board | info */
+/* Tablet (768px+): grid 3 col × 2 filas
+   Fila 1: [side (span 2 filas)] [timer]           [vacío]
+   Fila 2:                        [board-panel]     [info-panel]
+   Así el timer queda centrado sobre el tablero y el info-panel
+   se alinea con el tablero, no con el timer. */
 @media (min-width: 768px) {
     :root { --cell-size: 44px; }
 
     .game-wrapper {
         grid-template-columns: auto 1fr 260px;
-        padding: 0.75rem;
+        grid-template-rows: auto 1fr;
         align-items: start;
+        padding: 0.75rem;
     }
+
+    /* Columna 1: panel lateral abarca ambas filas */
+    .cs-side-left    { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+
+    /* Columna 2: timer en fila 1, tablero en fila 2 */
+    .timer-container { grid-column: 2; grid-row: 1; }
+    .board-panel     { grid-column: 2; grid-row: 2; }
+
+    /* Columna 3: info solo en fila 2 (se alinea con el tablero) */
+    .info-panel      { grid-column: 3; grid-row: 2; padding-top: 0; }
 
     .board-container {
         padding: 0.75rem;
@@ -280,12 +295,16 @@
     .board-container {
         padding: 1rem;
     }
+
+    /* El grid de 2 filas se hereda de 768px, solo actualizar columnas */
 }
 
-/* Timer */
+/* Timer — centrado en toda la página (desktop y mobile) */
 .timer-container {
     display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
     margin-bottom: 1.5rem;
 }
 
@@ -505,6 +524,24 @@
         align-self: center;
     }
     .controls-panel { display: none; }
+    .neon-back-btn  { display: none; }
+    /* align-self:stretch sobreescribe el align-items:center del neon-container
+       que encogía el header. Así el header ocupa el 100% del ancho disponible. */
+    .neon-header {
+        align-self: stretch !important;
+        text-align: center;
+        position: relative;
+    }
+    /* Logo absolutamente posicionado a la izquierda, fuera del flujo */
+    .cs-logo-desktop {
+        display: block !important;
+        position: absolute !important;
+        left: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3rem;
+        line-height: 1;
+    }
 }
 
 /* Corazones — igual que .lives-container en MemoryMatrix */
@@ -550,9 +587,53 @@
     box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
 }
 
-.cs-dh-heart--lost {
+/* Fila de corazones — generada por buildHeartsHTML(), 5 por fila */
+.cs-hearts-row {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+}
+
+/* Corazón individual en desktop */
+.cs-heart {
+    font-size: 15px;
+    line-height: 1;
+    transition: opacity 0.3s, filter 0.3s;
+    filter: drop-shadow(0 0 3px rgba(255, 0, 128, 0.6));
+}
+
+/* Corazón perdido: gris y translúcido */
+.cs-heart--lost {
     opacity: 0.15;
     filter: grayscale(1);
+}
+
+/* ── Vidas mobile ── */
+/* Contenedor: oculto en desktop, visible en mobile como fila única */
+.cs-lives-mobile {
+    display: none;
+    flex-direction: row;  /* fila única horizontal */
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 0;
+}
+
+@media (max-width: 640px) {
+    .cs-lives-mobile {
+        display: flex;
+    }
+
+    /* En mobile, las rows de corazones se "aplanan" en la misma fila padre */
+    .cs-lives-mobile .cs-hearts-row {
+        display: contents; /* los hijos fluyen directamente al contenedor padre */
+    }
+
+    /* Corazones más chicos en mobile */
+    .cs-lives-mobile .cs-heart {
+        font-size: 10px;
+        filter: drop-shadow(0 0 2px rgba(255, 0, 128, 0.5));
+    }
 }
 
 /* Botones — igual que .btn-side en MemoryMatrix */
@@ -630,6 +711,18 @@
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
 }
 
+/* NUEVO JUEGO — verde para distinguirlo de NUEVO (mismo nivel) */
+.cs-btn-newgame {
+    border-color: var(--neon-green, #39ff14);
+    color: var(--neon-green, #39ff14);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+}
+
+.cs-btn-newgame:hover:not(:disabled) {
+    background: rgba(57, 255, 20, 0.08);
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
+}
+
 .cs-btn-hint:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -703,7 +796,27 @@
     box-shadow: none;
 }
 
-/* Tertiary — amarillo (Ayuda) */
+/* Logo desktop: oculto por defecto, activado en el bloque @media 768px de arriba */
+.cs-logo-desktop {
+    display: none;
+}
+
+/* Green — NUEVO TABLERO / NUEVA PARTIDA en mobile */
+.neon-arcade-btn--green {
+    border-color: #39ff14;
+    color: #39ff14;
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.35),
+                inset 0 0 10px rgba(57, 255, 20, 0.05);
+}
+
+.neon-arcade-btn--green:hover {
+    background: rgba(57, 255, 20, 0.1);
+    box-shadow: 0 0 22px rgba(57, 255, 20, 0.65),
+                inset 0 0 15px rgba(57, 255, 20, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Tertiary — amarillo (Pista) */
 .neon-arcade-btn--tertiary {
     border-color: var(--neon-yellow);
     color: var(--neon-yellow);
@@ -757,6 +870,19 @@
     to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* Nombre del nivel completado — centrado en el body del modal */
+.victory-level-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--neon-cyan);
+    opacity: 0.75;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 0 0 0.8rem 0;
+}
+
 .modal-header {
     display: flex;
     align-items: center;
@@ -803,6 +929,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    /* padding-top se asigna en desktop via grid (grid-row: 2) */
 }
 
 .info-card {
@@ -1018,8 +1145,23 @@
     100% { transform: scale(0.8); filter: grayscale(1); opacity: 0.2; }
 }
 
+/* En mobile el corazón es pequeño (10px), necesita más escala para notarse */
+@keyframes heartDyingMobile {
+    0%   { transform: scale(1);   filter: drop-shadow(0 0 4px rgba(255,60,60,0.9)); opacity: 1; }
+    25%  { transform: scale(4);   filter: drop-shadow(0 0 12px rgba(255,60,60,1));  opacity: 1; }
+    60%  { transform: scale(2.5); filter: drop-shadow(0 0 8px rgba(255,60,60,0.5)); opacity: 0.6; }
+    100% { transform: scale(0.8); filter: grayscale(1); opacity: 0.2; }
+}
+
 .life-heart--dying {
     animation: heartDying 0.4s ease-out forwards;
+}
+
+/* Override de la animación en mobile para mayor impacto visual */
+@media (max-width: 640px) {
+    .cs-lives-mobile .life-heart--dying {
+        animation: heartDyingMobile 0.5s ease-out forwards;
+    }
 }
 
 @keyframes boardLifeLost {
@@ -1205,23 +1347,59 @@
     line-height: 1.6;
 }
 
-.victory-message {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1rem;
-    color: var(--neon-text);
+/* Countdown: aparece sobre la pantalla al cerrar el modal de victoria con X */
+/* Wrapper fijo en toda la pantalla, centrado con flex */
+.next-level-countdown {
+    position: fixed;
+    bottom: 2rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    pointer-events: none; /* no bloquea clicks fuera del banner */
+    animation: fadeInUp 0.3s ease-out;
+}
+
+/* Banner visible con su propio click */
+.next-level-countdown span {
+    pointer-events: auto;
+    cursor: pointer;
+    background: rgba(10, 10, 26, 0.93);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 12px;
+    padding: 0.8rem 2rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    white-space: nowrap;
     text-align: center;
-    line-height: 1.6;
+}
+
+.next-level-countdown strong {
+    font-size: 1.4rem;
+    color: #fff;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .modal-footer {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    align-items: stretch; /* botones ocupan ancho completo en mobile */
 }
 
 @media (min-width: 640px) {
     .modal-footer {
         flex-direction: row;
+        justify-content: center; /* centrado en desktop, incluso con un solo botón */
     }
 }
 
@@ -1354,7 +1532,7 @@
         display: none;
     }
 
-    /* Ocultar emoji 🐴🔍 del título en mobile */
+    /* Ocultar logo del título en mobile para ahorrar espacio */
     .neon-icon {
         display: none;
     }

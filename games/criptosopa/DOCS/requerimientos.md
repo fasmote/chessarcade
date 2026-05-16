@@ -314,3 +314,35 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 ### 12.5 Modal de Victoria
 - **RF-137**: El modal de victoria siempre muestra ambas secciones (ESTE NIVEL y ACUMULADO), sin ocultar condicionalmente con display:none
 - **RF-138**: En nivel 1, la sección ACUMULADO muestra los mismos valores que ESTE NIVEL (correcto: el total después del nivel 1 es ese nivel)
+
+---
+
+## 13. Requerimientos Implementados — Sesión 2026-05-16 (parte 2)
+
+### 13.1 Progresión de Vidas (15→10→5)
+- **RF-139**: Las vidas se activan desde el nivel 1 (antes solo desde nivel 7)
+- **RF-140**: Tier 1 (niveles 1-3) = 15 vidas, Tier 2 (4-6) = 10 vidas, Tier 3 (7-8) = 5 vidas
+- **RF-141**: Las vidas persisten entre niveles del mismo tier; se resetean al entrar a un nuevo tier
+- **RF-142**: El display de corazones en desktop muestra 3/2/1 filas de 5 según el tier
+- **RF-143**: El display en mobile muestra una fila horizontal única de corazones mini
+
+### 13.2 UX Desktop
+- **RF-144**: Orden del panel lateral: NUEVO JUEGO (verde, arriba) → corazones → RENOVAR (cyan) → PISTA (amarillo) → ATRÁS (magenta)
+- **RF-145**: El botón "NUEVO TABLERO" se llama "RENOVAR" en desktop (mismo nivel, conserva vidas)
+- **RF-146**: Botón NUEVO JUEGO (verde): resetea todo desde nivel 1
+- **RF-147**: El botón mobile cambia a "NUEVA PARTIDA" cuando el jugador gana el nivel
+
+### 13.3 Mecánicas de Selección
+- **RF-148**: Doble click en casilla 1 con vidas activas: deja solo la casilla 1 en el path (requiere click adicional para perderla)
+- **RF-149**: Doble click en casilla 1 sin vidas activas: limpia todo el path gratis
+- **RF-150**: Palabras válidas en ambas direcciones (forward y backward)
+
+### 13.4 Modal y Game Over
+- **RF-151**: Modal de victoria muestra el nombre del nivel completado centrado
+- **RF-152**: Al cerrar el modal de victoria con X: countdown "Siguiente nivel en 3..." con auto-avance
+- **RF-153**: Modal Game Over auto-dismiss en 2 segundos → abre resumen de puntos
+- **RF-154**: X en Game Over muestra resumen con título "RESUMEN" y sin botón SIGUIENTE NIVEL
+
+### 13.5 Logo y Header Desktop (⚠️ PARCIALMENTE RESUELTO)
+- **RF-155**: Logo 🔤♞ visible en desktop a 3rem, posicionado a la izquierda del header
+- **RF-156** ⚠️ PENDIENTE: Título "CRIPTOSOPA" centrado en desktop. El span del logo fue movido fuera del h1 (que tiene -webkit-text-fill-color:transparent que hacía invisible cualquier hijo). El centrado del título sigue sin resolverse — el neon-container con align-items:center encoge el header y ninguna técnica CSS probada hasta ahora funcionó. **Primera prioridad de la próxima sesión.**
