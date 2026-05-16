@@ -284,3 +284,33 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 ### 11.1 Corrección de Timer Visual
 - **RF-121**: Al reiniciar la partida (game over o nuevo tablero), el display del timer debe mostrar 00:00 de inmediato, sin esperar al primer tick del intervalo
 - **RF-122**: Logs de diagnóstico permanentes en consola para detectar regresiones del timer: `[TIMER]` en cada llamada a `startNewGame()` y `[GAME OVER RESTART]` al reiniciar
+
+---
+
+## 12. Requerimientos Implementados — Sesión 2026-05-16
+
+### 12.1 Panel Lateral Izquierdo Desktop
+- **RF-123**: Panel lateral izquierdo visible solo en desktop (≥768px), oculto en mobile. Los controles mobile (controls-panel) se ocultan en desktop.
+- **RF-124**: El panel muestra 5 corazones siempre visibles: grises y atenuados cuando las vidas no están activas, magenta brillante cuando están activas
+- **RF-125**: Botón 🔄 NUEVO — inicia nuevo tablero. Estilo cyan, igual que `btn-side` de MemoryMatrix
+- **RF-126**: Botón 💡 PISTA — usa el mismo sistema de costo exponencial que el botón mobile. Estilo amarillo, igual que `btn-hint-side` de MemoryMatrix
+- **RF-127**: Botón ↩️ ATRÁS — elimina la última celda seleccionada del path. Estilo magenta, igual que `btn-undo-side` de MemoryMatrix
+- **RF-128**: El botón ATRÁS está deshabilitado cuando el path tiene 0 o 1 celdas (no puede ir antes de la primera celda)
+- **RF-129**: El botón ATRÁS nunca cuesta una vida, es una acción segura de navegación del path
+
+### 12.2 Doble Click para Limpiar Selección
+- **RF-130**: Doble click (≤350ms) sobre la primera celda seleccionada limpia la selección
+- **RF-131**: Sin vidas activas: el doble click borra todo el path (limpieza completa)
+- **RF-132**: Con vidas activas: el doble click borra el path excepto la primera celda — el jugador debe hacer un click adicional sobre esa celda para abandonarla (y perder una vida). Evita el exploit de cambiar letra de inicio sin costo.
+
+### 12.3 Palabras en Ambas Direcciones
+- **RF-133**: Si el jugador selecciona las celdas de una palabra en orden inverso, también se cuenta como encontrada
+- **RF-134**: La palabra se registra y muestra siempre con su nombre canónico (el de la lista objetivo), no al revés
+
+### 12.4 Instrucciones Desktop
+- **RF-135**: Sección de instrucciones al pie de la página, solo visible en desktop, con 6 bloques: Objetivo, Movimiento en L, Selección de letras, Pistas, Vidas (niveles 7-8) y Progresión
+- **RF-136**: El card de instrucciones del panel lateral (visible en mobile) se oculta en desktop para evitar duplicación
+
+### 12.5 Modal de Victoria
+- **RF-137**: El modal de victoria siempre muestra ambas secciones (ESTE NIVEL y ACUMULADO), sin ocultar condicionalmente con display:none
+- **RF-138**: En nivel 1, la sección ACUMULADO muestra los mismos valores que ESTE NIVEL (correcto: el total después del nivel 1 es ese nivel)
