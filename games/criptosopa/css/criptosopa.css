@@ -761,7 +761,30 @@
     box-shadow: none;
 }
 
-/* Tertiary — amarillo (Ayuda) */
+/* Logo desktop: igual al neon-card-icon de la página principal (3rem, drop-shadow) */
+.cs-logo-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 0 8px var(--neon-cyan));
+    vertical-align: middle;
+    line-height: 1;
+}
+
+/* Green — NUEVO TABLERO / NUEVA PARTIDA en mobile */
+.neon-arcade-btn--green {
+    border-color: #39ff14;
+    color: #39ff14;
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.35),
+                inset 0 0 10px rgba(57, 255, 20, 0.05);
+}
+
+.neon-arcade-btn--green:hover {
+    background: rgba(57, 255, 20, 0.1);
+    box-shadow: 0 0 22px rgba(57, 255, 20, 0.65),
+                inset 0 0 15px rgba(57, 255, 20, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Tertiary — amarillo (Pista) */
 .neon-arcade-btn--tertiary {
     border-color: var(--neon-yellow);
     color: var(--neon-yellow);
@@ -1442,7 +1465,7 @@
         display: none;
     }
 
-    /* Ocultar emoji 🐴🔍 del título en mobile */
+    /* Ocultar logo del título en mobile para ahorrar espacio */
     .neon-icon {
         display: none;
     }

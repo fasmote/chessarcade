@@ -151,33 +151,32 @@
                 ← MENÚ
             </a>
             <h1 class="neon-title">
-                <span class="neon-icon">🔤♞</span>
+                <!-- Logo igual al card de la página principal: letras ABC + caballito -->
+                <span class="neon-icon cs-logo-icon">🔤♞</span>
                 CriptoSopa
                 <span class="neon-subtitle">Knight Word Search</span>
             </h1>
         </header>
-
-        <!-- Timer -->
-        <div class="timer-container">
-            <div class="timer-display">
-                <span id="timerDisplay">00:00</span>
-            </div>
-        </div>
 
         <!-- Game Container -->
         <div class="game-wrapper">
 
             <!-- Desktop Side Controls (hidden on mobile) -->
             <div class="cs-side-left" id="csDesktopControls">
+                <!-- Nuevo Juego arriba: vuelve al nivel 1 con vidas completas -->
+                <button class="cs-btn-side cs-btn-newgame" onclick="newGameFull()">
+                    <span class="cs-btn-icon">🆕</span>
+                    <span class="cs-btn-label">NUEVO JUEGO</span>
+                </button>
                 <!-- Vidas (desktop) -->
                 <div class="cs-side-lives" id="livesDisplayDesktop">
                     <span class="cs-side-lives-label">VIDAS</span>
                     <span class="cs-side-hearts">❤️❤️❤️❤️❤️</span>
                 </div>
-                <!-- Nuevo Tablero -->
+                <!-- Renovar tablero: mismo nivel, preserva vidas y acumulado -->
                 <button class="cs-btn-side cs-btn-reset" onclick="startNewGame(false)">
                     <span class="cs-btn-icon">🔄</span>
-                    <span class="cs-btn-label">NUEVO</span>
+                    <span class="cs-btn-label">RENOVAR</span>
                 </button>
                 <!-- Pista -->
                 <button class="cs-btn-side cs-btn-hint" id="hintBtnDesktop" onclick="showHint()">
@@ -185,20 +184,21 @@
                     <span class="cs-btn-label">PISTA</span>
                     <span class="cs-btn-cost">-<span id="hintCostDesktop">50</span></span>
                 </button>
-                <!-- Atrás -->
+                <!-- Atrás: deshace la última celda seleccionada -->
                 <button class="cs-btn-side cs-btn-undo" id="undoBtnDesktop" onclick="undoLastMove()" disabled>
                     <span class="cs-btn-icon">↩️</span>
                     <span class="cs-btn-label">ATRÁS</span>
-                </button>
-                <!-- Nuevo Juego: vuelve al nivel 1 con vidas completas -->
-                <button class="cs-btn-side cs-btn-newgame" onclick="newGameFull()">
-                    <span class="cs-btn-icon">🆕</span>
-                    <span class="cs-btn-label">JUEGO</span>
                 </button>
             </div>
 
             <!-- Left Panel: Board -->
             <div class="board-panel">
+                <!-- Timer centrado sobre el tablero (dentro del board-panel) -->
+                <div class="timer-container">
+                    <div class="timer-display">
+                        <span id="timerDisplay">00:00</span>
+                    </div>
+                </div>
                 <div class="board-container">
                     <!-- Level warning banner (appears before no-illumination levels) -->
                     <div id="levelWarning" class="level-warning" style="display:none;">
@@ -222,15 +222,18 @@
                     <span class="cursor-blink">_</span>
                 </div>
 
-                <!-- Controls -->
+                <!-- Controls (mobile) -->
                 <div class="controls-panel">
-                    <button id="resetBtn" class="neon-arcade-btn neon-arcade-btn--primary">
-                        🔄 NUEVO TABLERO
+                    <!-- Verde: generar nuevo tablero del mismo nivel -->
+                    <button id="resetBtn" class="neon-arcade-btn neon-arcade-btn--green">
+                        🔄 <span id="resetBtnLabel">NUEVO TABLERO</span>
                     </button>
-                    <button id="hintBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
+                    <!-- Amarillo: pista con costo en puntos -->
+                    <button id="hintBtn" class="neon-arcade-btn neon-arcade-btn--tertiary">
                         💡 PISTA (-<span id="hintCost">50</span>)
                     </button>
-                    <button id="helpBtn" class="neon-arcade-btn neon-arcade-btn--tertiary">
+                    <!-- Celeste: abrir modal de ayuda -->
+                    <button id="helpBtn" class="neon-arcade-btn neon-arcade-btn--primary">
                         ❓ AYUDA
                     </button>
                 </div>

@@ -322,6 +322,7 @@ function startNewGame(resetTotal = true) {
     gameState.gameStatus = 'playing';
     gameState.hoveredWord = null;
     gameState.hintsUsedThisGame = 0;
+    updateResetBtnLabel(false); // restaurar texto del botón mobile
 
     const keepTimer = gameState.timerStarted;
     console.log(`[TIMER] startNewGame resetTotal=${resetTotal} keepTimer=${keepTimer} timer=${gameState.timer}`);
@@ -1184,10 +1185,17 @@ function updateHintButton() {
     if (elements.hintBtnDesktop) elements.hintBtnDesktop.disabled = !canAfford;
 }
 
+// Cambia el texto del botón NUEVO TABLERO en mobile según el estado del juego
+function updateResetBtnLabel(won) {
+    const label = document.getElementById('resetBtnLabel');
+    if (label) label.textContent = won ? 'NUEVA PARTIDA' : 'NUEVO TABLERO';
+}
+
 // Win game
 function winGame() {
     gameState.gameStatus = 'won';
     clearInterval(gameState.timerInterval);
+    updateResetBtnLabel(true); // en mobile el botón pasa a "NUEVA PARTIDA"
 
     // Feedback de victoria
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
