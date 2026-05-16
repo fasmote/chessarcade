@@ -679,3 +679,130 @@ if (!gameState.timerStarted) {
 4. **Guard de tiempo para touch**: un `_touchStartTime` + ventana de 220ms previene que el temblor natural del dedo revierta acciones recién hechas. 220ms es el tiempo mínimo perceptible entre dos intenciones distintas.
 
 5. **Singleton de AudioContext**: crear UN solo `AudioContext` y reutilizarlo. Crear múltiples contextos causa errores en algunos browsers. El patrón lazy-init (`if (!audioContext) { audioContext = new AudioContext(); }`) es el correcto.
+
+---
+
+## 12. Errores de UX Desktop — Sesión 2026-05-16
+
+### Error #115: Pistas siempre deshabilitadas en mobile y desktop
+**Fecha**: 2026-05-16
+**Severidad**: Alta
+**Descripción**: El botón PISTA permanecía deshabilitado incluso después de encontrar palabras y acumular puntos suficientes.
+
+**Causa Raíz**:
+`updateHintButton()` se llamaba en `startNewGame()` y en `showHint()`, pero **nunca al encontrar una palabra**. El score subía en `handleCellClick()` cuando se detectaba una palabra correcta, pero el estado del botón no se actualizaba. El botón quedaba en el estado que tenía al comienzo del juego (deshabilitado, score=0 < cost=50).
+
+```javascript
+// ANTES: faltaba updateHintButton() aquí
+gameState.score += CONFIG.POINTS_PER_WORD;
+updateDisplay();        // ← actualizaba el número visible
+// updateHintButton()  ← FALTABA esta línea
+
+// DESPUÉS
+gameState.score += CONFIG.POINTS_PER_WORD;
+updateDisplay();
+updateHintButton();     // ← ahora el botón reacciona al nuevo score
+```
+
+**Lección**: Cuando múltiples piezas de UI dependen del mismo valor de estado (en este caso `gameState.score`), hay que actualizar TODAS en cada punto donde ese valor cambia. Revisar todos los lugares donde se modifica `gameState.score` y asegurarse que `updateHintButton()` se llame en cada uno.
+
+**Archivos**: `games/criptosopa/js/criptosopa.js` — función `handleCellClick()`
+
+---
+
+### Error #116: Modal de victoria no mostraba sección ACUMULADO
+**Fecha**: 2026-05-16
+**Severidad**: Media
+**Descripción**: En desktop, la sección "ACUMULADO" del modal de victoria nunca aparecía. El jugador solo veía "ESTE NIVEL".
+
+**Causa Raíz**:
+`#modalTotalSection` tenía `style="display:none"` inline en el HTML y solo se mostraba cuando `totalTime > 0 || totalScore > 0`. En nivel 1, ambas son 0 → nunca aparecía. En niveles siguientes, la condición sí se cumplía, pero el jugador reportó que no veía el total en desktop — posiblemente estaba probando siempre en nivel 1.
+
+**Solución**:
+Eliminar el `display:none` condicional. Mostrar siempre ambas secciones. En nivel 1, el ACUMULADO muestra los mismos valores que ESTE NIVEL (correcto semánticamente: el total después del nivel 1 es ese nivel). El código JS simplificado:
+```javascript
+// ANTES: condicional complejo
+const isMultiLevel = gameState.totalTime > 0 || gameState.totalScore > 0;
+totalSection.style.display = isMultiLevel ? '' : 'none';
+
+// DESPUÉS: siempre visible, sin lógica condicional
+modalTotalTime.textContent  = formatTime(gameState.totalTime + gameState.timer);
+modalTotalScore.textContent = (gameState.totalScore + gameState.score).toLocaleString();
+```
+
+**Lección**: Ocultar secciones con lógica JS es frágil — si la condición no se cumple, el usuario nunca ve esa parte de la UI. Mejor mostrar siempre y atenuar visualmente (opacity, color) cuando el valor no es relevante.
+
+**Archivos**: `games/criptosopa/js/criptosopa.js`, `games/criptosopa/index.html`
+
+---
+
+### Error #117: Panel lateral rompió el layout (info-panel cayó abajo)
+**Fecha**: 2026-05-16
+**Severidad**: Alta
+**Descripción**: Al agregar el panel lateral izquierdo (`.cs-side-left`), el panel de estadísticas y palabras (`.info-panel`) desapareció de la derecha y apareció debajo del tablero.
+
+**Causa Raíz**:
+`.game-wrapper` usaba `grid-template-columns: 1fr 260px` (2 columnas). Al agregar `.cs-side-left` como primer hijo, el grid tenía 3 hijos pero solo 2 columnas:
+- Columna 1: `.cs-side-left`
+- Columna 2: `.board-panel`
+- Sin columna 3: `.info-panel` → **se va a la fila siguiente automáticamente**
+
+```css
+/* ANTES: 2 columnas, 3 hijos → info-panel cae abajo */
+.game-wrapper { grid-template-columns: 1fr 260px; }
+
+/* DESPUÉS: 3 columnas, 3 hijos → todo en la misma fila */
+.game-wrapper { grid-template-columns: auto 1fr 260px; }
+```
+
+**Lección**: Siempre que se agrega un hijo directo a un contenedor CSS Grid, verificar que `grid-template-columns` tenga al menos una columna para ese hijo. El grid coloca los elementos extras automáticamente en la siguiente fila sin warnings ni errores.
+
+**Archivos**: `games/criptosopa/css/criptosopa.css`
+
+---
+
+### Error #118: Botones del panel lateral no se parecían a MemoryMatrix (3 intentos)
+**Fecha**: 2026-05-16
+**Severidad**: Media (visual)
+**Descripción**: El primer intento de los botones del panel lateral no se parecía visualmente a MemoryMatrix. Se hicieron 3 intentos antes de lograr el estilo correcto.
+
+**Causa Raíz**:
+El CSS fue recreado de memoria sin leer el archivo fuente de MemoryMatrix. Los valores concretos diferían:
+- `width: 80px; height: 80px` (fijo cuadrado) vs `min-width: 80px; padding: 12px 16px` (MemoryMatrix)
+- `gap: 5px` vs `gap: 6px`
+- `font-size: 8px` vs `font-size: 10px`
+- `transition: 0.2s` vs `transition: 0.3s`
+- `opacity: 0.35` en disabled vs `opacity: 0.4` + `border-color: #555; color: #555`
+
+**Solución**:
+Leer el archivo fuente `games/memory-matrix-v2/styles.css` con el agente de búsqueda y copiar los valores exactos. El CSS correcto para cada clase:
+
+| Propiedad | Incorrecto | MemoryMatrix (correcto) |
+|---|---|---|
+| Tamaño | `width/height: 80px` | `min-width: 80px; padding: 12px 16px` |
+| Gap | `5px` | `6px` |
+| Font-size base | `8px` | `10px` |
+| Label font-size | `8px` | `9px` |
+| Transition | `0.2s ease` | `0.3s ease` |
+| Disabled opacity | `0.35` | `0.4` |
+| Disabled border | (no cambia) | `border-color: #555; color: #555` |
+
+**Lección**: Cuando se pide "copiar el estilo de X juego", leer el archivo CSS fuente antes de escribir una sola línea. Recrear de memoria introduce diferencias sutiles que acumulan y generan múltiples iteraciones de corrección.
+
+**Archivos**: `games/criptosopa/css/criptosopa.css`
+
+---
+
+### Error #119: Doble click — mecánica evolucionó 3 veces hasta quedar bien
+**Fecha**: 2026-05-16
+**Severidad**: Diseño / Baja
+**Descripción**: La mecánica del doble click sobre la celda 1 pasó por 3 versiones antes de quedar correcta.
+
+**Evolución**:
+1. **v1 (sin vida)**: doble click limpia todo el path, sin costo. Problema: con vidas activas es un exploit — el jugador puede cambiar la letra de inicio libremente.
+2. **v2 (con vida)**: doble click con vidas activas = pierde una vida. El usuario lo rechazó: "si la palabra es larga hay que hacer doble click para borrar, no debería costar vida".
+3. **v3 (final)**: doble click con vidas activas = borra todo EXCEPTO la primera celda (queda `[celda1]`). Para realmente abandonarla, el jugador hace un click más sobre esa única celda restante → pierde una vida. Sin vidas = limpia todo gratis.
+
+**Lección**: Las mecánicas de penalización requieren iteración con el usuario. La pregunta clave es siempre: ¿este gesto es un error accidental (merece penalización) o una acción deliberada (no merece penalización)? El doble click es deliberado pero puede ser "quiero borrar el final, no el inicio" — la v3 resuelve esto dejando solo la primera celda como punto de decisión explícita.
+
+**Archivos**: `games/criptosopa/js/criptosopa.js` — función `handleCellClick()`
