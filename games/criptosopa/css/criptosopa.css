@@ -1076,6 +1076,96 @@
 }
 
 /* ============================================
+   HOW TO PLAY — solo desktop
+   ============================================ */
+
+.cs-how-to-play {
+    display: none; /* oculto en mobile */
+    margin-top: 3rem;
+    padding: 2.5rem 1.5rem;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (min-width: 641px) {
+    .cs-how-to-play { display: block; }
+    .instructions-card-mobile { display: none !important; }
+}
+
+.cs-instructions {
+    background: rgba(0, 0, 0, 0.45);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 0 30px rgba(0, 217, 255, 0.15),
+                inset 0 0 20px rgba(0, 217, 255, 0.04);
+}
+
+.cs-instructions h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+    font-weight: 900;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 15px var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+    margin: 0 0 2rem 0;
+}
+
+.cs-instructions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+    .cs-instructions-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.cs-instruction-block {
+    background: rgba(10, 15, 30, 0.6);
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    border-radius: 12px;
+    padding: 1.2rem 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cs-instruction-block:hover {
+    border-color: rgba(0, 217, 255, 0.5);
+    box-shadow: 0 0 15px rgba(0, 217, 255, 0.1);
+}
+
+.cs-instruction-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.cs-instruction-block h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0 0 0.6rem 0;
+}
+
+.cs-instruction-block p {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
+}
+
+.cs-instruction-block p strong {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 6px var(--neon-cyan);
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
