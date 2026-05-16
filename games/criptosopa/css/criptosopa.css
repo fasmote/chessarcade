@@ -524,8 +524,9 @@
         align-self: center;
     }
     .controls-panel { display: none; }
-    /* El botón ← MENÚ es redundante en desktop (ya hay nav con HOME) */
     .neon-back-btn  { display: none; }
+    /* Centrar el título en el header ahora que el back btn está oculto */
+    .neon-header { justify-content: center; }
 }
 
 /* Corazones — igual que .lives-container en MemoryMatrix */
@@ -796,29 +797,30 @@
     }
 }
 
-/* Caja azul con "abc" — imita el emoji 🔤 */
+/* Caja azul con "abc" — imita el emoji 🔤 del card de la home */
 .cs-logo-abc {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #2979c8;          /* azul del emoji 🔤 */
+    background: #3a7bd5;
     color: #fff;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 2px;
     text-transform: lowercase;
-    padding: 3px 5px;
-    border-radius: 4px;
+    padding: 6px 10px;
+    border-radius: 6px;
     font-family: Arial, sans-serif;
     line-height: 1;
-    box-shadow: 0 0 8px rgba(41, 121, 200, 0.6);
+    box-shadow: 0 0 12px rgba(58, 123, 213, 0.7);
+    border: 1px solid rgba(255,255,255,0.3);
 }
 
 /* Caballito — símbolo del caballo de ajedrez */
 .cs-logo-knight {
-    font-size: 1.6rem;
-    color: var(--neon-cyan);
-    text-shadow: 0 0 10px var(--neon-cyan);
+    font-size: 2.2rem;
+    color: #fff;
+    text-shadow: 0 0 12px rgba(255,255,255,0.8);
     line-height: 1;
 }
 
@@ -1368,12 +1370,34 @@
     line-height: 1.6;
 }
 
-.victory-message {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1rem;
-    color: var(--neon-text);
-    text-align: center;
-    line-height: 1.6;
+/* Countdown: aparece sobre la pantalla al cerrar el modal de victoria con X */
+.next-level-countdown {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 10, 26, 0.93);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 12px;
+    padding: 0.8rem 2rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    z-index: 200;
+    white-space: nowrap;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.next-level-countdown strong {
+    font-size: 1.4rem;
+    color: #fff;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 .modal-footer {

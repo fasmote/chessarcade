@@ -229,7 +229,13 @@ function setupEventListeners() {
     elements.helpBtn?.addEventListener('click', () => showHelpModal(true));
     elements.closeHelpBtn?.addEventListener('click', () => showHelpModal(false));
     elements.closeHelpBtn2?.addEventListener('click', () => showHelpModal(false));
-    elements.closeVictoryBtn?.addEventListener('click', () => closeVictoryModal());
+    elements.closeVictoryBtn?.addEventListener('click', () => {
+        closeVictoryModal();
+        // Si el jugador ganó el nivel (no es resumen post-game-over), mostrar countdown
+        if (gameState.gameStatus === 'won') {
+            startNextLevelCountdown();
+        }
+    });
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
     elements.gameOverRestartBtn?.addEventListener('click', gameOverRestart);
@@ -1417,6 +1423,36 @@ function showVictoryModal(options = {}) {
 
 function closeVictoryModal() {
     elements.victoryModal?.classList.remove('active');
+}
+
+// Muestra un countdown de 3 segundos y luego pasa al siguiente nivel.
+// Se activa cuando el jugador cierra el modal de victoria con la X (en vez de SIGUIENTE NIVEL).
+function startNextLevelCountdown() {
+    const el = document.getElementById('nextLevelCountdown');
+    const textEl = document.getElementById('countdownText');
+    if (!el || !textEl) return;
+
+    let seconds = 3;
+    textEl.innerHTML = `Siguiente nivel en <strong>${seconds}</strong>...`;
+    el.style.display = 'block';
+
+    const interval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+            textEl.innerHTML = `Siguiente nivel en <strong>${seconds}</strong>...`;
+        } else {
+            clearInterval(interval);
+            el.style.display = 'none';
+            nextLevel(); // avanzar al siguiente nivel
+        }
+    }, 1000);
+
+    // Si el jugador toca el countdown, avanza de inmediato
+    el.onclick = () => {
+        clearInterval(interval);
+        el.style.display = 'none';
+        nextLevel();
+    };
 }
 
 // Show help modal
