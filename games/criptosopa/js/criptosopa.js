@@ -1193,25 +1193,15 @@ function gameOverRestart() {
 function showVictoryModal() {
     if (!elements.victoryModal) return;
 
-    const levelTime  = gameState.timer;
-    const levelScore = gameState.score;
-    const totalTime  = gameState.totalTime + gameState.timer;
-    const totalScore = gameState.totalScore + gameState.score;
-
-    const modalTime      = document.getElementById('modalTime');
-    const modalScore     = document.getElementById('modalScore');
+    const modalTime       = document.getElementById('modalTime');
+    const modalScore      = document.getElementById('modalScore');
     const modalTotalTime  = document.getElementById('modalTotalTime');
     const modalTotalScore = document.getElementById('modalTotalScore');
 
-    if (modalTime)       modalTime.textContent       = formatTime(levelTime);
-    if (modalScore)      modalScore.textContent      = levelScore.toLocaleString();
-    if (modalTotalTime)  modalTotalTime.textContent  = formatTime(totalTime);
-    if (modalTotalScore) modalTotalScore.textContent = totalScore.toLocaleString();
-
-    // Atenuar columna TOTAL en nivel 1 (sin acumulado previo)
-    const totalCol = document.querySelectorAll('.victory-cell.neon-glow-pink, .victory-col-header.neon-glow-pink');
-    const isFirstLevel = gameState.totalTime === 0 && gameState.totalScore === 0;
-    totalCol.forEach(el => el.style.opacity = isFirstLevel ? '0.35' : '1');
+    if (modalTime)       modalTime.textContent       = formatTime(gameState.timer);
+    if (modalScore)      modalScore.textContent      = gameState.score.toLocaleString();
+    if (modalTotalTime)  modalTotalTime.textContent  = formatTime(gameState.totalTime + gameState.timer);
+    if (modalTotalScore) modalTotalScore.textContent = (gameState.totalScore + gameState.score).toLocaleString();
 
     elements.victoryModal.classList.add('active');
 }
