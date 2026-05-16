@@ -525,18 +525,21 @@
     }
     .controls-panel { display: none; }
     .neon-back-btn  { display: none; }
-    /* Header: block full-width. text-align:center centra elementos inline-block */
+    /* Header: width 100% con posición relativa para el logo */
     .neon-header {
-        display: block !important;
         width: 100% !important;
         position: relative !important;
-        text-align: center;
+        box-sizing: border-box;
     }
-    /* h1 como inline-block: se centra con el text-align del header */
+    /* Centrar el h1 con margin auto — funciona siempre que el h1 tenga width definido */
     .neon-header .neon-title {
-        display: inline-block !important;
+        display: block !important;
+        width: -moz-fit-content !important;
+        width: fit-content !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
-    /* Logo: absolutamente posicionado, fuera del flujo, no afecta centrado */
+    /* Logo absolutamente posicionado a la izquierda del header */
     .cs-logo-desktop {
         display: block !important;
         position: absolute !important;
