@@ -781,46 +781,53 @@
     box-shadow: none;
 }
 
-/* Logo desktop: imita visualmente el card de la home (caja abc + caballito)
-   CSS puro porque el emoji 🔤 no renderiza de forma consistente entre browsers */
+/* Logo desktop: posicionado ABSOLUTE para no descentrar el título.
+   El header queda con position:relative y el logo flota a la izquierda. */
 .cs-logo-desktop {
-    display: none; /* oculto en mobile */
+    display: none;
 }
 
-@media (min-width: 641px) {
+@media (min-width: 768px) {
+    /* Permitir posicionamiento absoluto del logo dentro del header */
+    .neon-header {
+        position: relative;
+    }
+
     .cs-logo-desktop {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        vertical-align: middle;
-        margin-right: 6px;
+        gap: 6px;
+        position: absolute;
+        left: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
     }
 }
 
-/* Caja azul con "abc" — imita el emoji 🔤 del card de la home */
+/* Caja azul con "abc" — imita el card de la home */
 .cs-logo-abc {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: #3a7bd5;
     color: #fff;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 900;
     letter-spacing: 2px;
     text-transform: lowercase;
-    padding: 6px 10px;
+    padding: 7px 12px;
     border-radius: 6px;
     font-family: Arial, sans-serif;
     line-height: 1;
-    box-shadow: 0 0 12px rgba(58, 123, 213, 0.7);
-    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 0 14px rgba(58, 123, 213, 0.8);
+    border: 1px solid rgba(255,255,255,0.35);
 }
 
-/* Caballito — símbolo del caballo de ajedrez */
+/* Caballito */
 .cs-logo-knight {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     color: #fff;
-    text-shadow: 0 0 12px rgba(255,255,255,0.8);
+    text-shadow: 0 0 12px rgba(255,255,255,0.9);
     line-height: 1;
 }
 
