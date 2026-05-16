@@ -1267,22 +1267,32 @@ function loseLife() {
         setTimeout(() => board.classList.remove('board-life-lost'), 600);
     }
 
-    // Animar el corazón que se pierde en desktop (escala y desvanece antes de quedar gris)
-    const desktopEl = elements.livesDisplayDesktop;
-    if (desktopEl) {
-        const allHearts = desktopEl.querySelectorAll('.cs-heart:not(.cs-heart--lost)');
-        const dyingHeart = allHearts[allHearts.length - 1]; // el último activo es el que se pierde
+    // Función helper: anima el último corazón activo de un contenedor y lo vuelve gris
+    function animateDyingHeart(container, shakeTarget) {
+        if (!container) return false;
+        const allHearts = container.querySelectorAll('.cs-heart:not(.cs-heart--lost)');
+        const dyingHeart = allHearts[allHearts.length - 1]; // último corazón activo
         if (dyingHeart) {
             dyingHeart.classList.add('life-heart--dying');
             setTimeout(() => renderLives(), 400);
         } else {
             renderLives();
         }
-        desktopEl.classList.add('lives-shake');
-        setTimeout(() => desktopEl.classList.remove('lives-shake'), 500);
-    } else {
-        renderLives();
+        if (shakeTarget) {
+            shakeTarget.classList.add('lives-shake');
+            setTimeout(() => shakeTarget.classList.remove('lives-shake'), 500);
+        }
+        return !!dyingHeart;
     }
+
+    // Animar en desktop y mobile simultáneamente
+    const desktopEl = elements.livesDisplayDesktop;
+    const mobileEl  = document.getElementById('livesDisplayMobile');
+    const animatedDesktop = animateDyingHeart(desktopEl, desktopEl);
+    const animatedMobile  = animateDyingHeart(mobileEl, mobileEl);
+
+    // Si ninguno tuvo corazón activo para animar, renderizar directo
+    if (!animatedDesktop && !animatedMobile) renderLives();
 
     renderBoard();
     updateSelectionText();
@@ -1299,10 +1309,10 @@ function showGameOverModal() {
 }
 
 // Cierra el game over y muestra el resumen de puntos y tiempo acumulados.
-// Usa el mismo modal de victoria pero con el estado tal como quedó al perder.
+// Oculta el botón "Siguiente nivel" porque el jugador perdió — no puede continuar.
 function gameOverShowStats() {
     elements.gameOverModal?.classList.remove('active');
-    showVictoryModal();
+    showVictoryModal({ hideNextLevel: true });
 }
 
 function gameOverRestart() {
@@ -1316,9 +1326,15 @@ function gameOverRestart() {
 
 // ── Victory modal ──────────────────────────────────────────────
 
-// Muestra el modal de victoria con el nombre del nivel completado y las estadísticas
-function showVictoryModal() {
+// Muestra el modal de victoria con estadísticas de nivel y acumuladas.
+// options.hideNextLevel = true cuando se abre desde game over (el jugador perdió).
+function showVictoryModal(options = {}) {
     if (!elements.victoryModal) return;
+
+    // Mostrar u ocultar el botón "Siguiente nivel" según el contexto
+    if (elements.nextLevelBtn) {
+        elements.nextLevelBtn.style.display = options.hideNextLevel ? 'none' : '';
+    }
 
     // Mostrar el nombre del nivel completado en el encabezado del modal
     const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
