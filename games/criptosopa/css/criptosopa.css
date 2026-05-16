@@ -674,6 +674,18 @@
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
 }
 
+/* NUEVO JUEGO — verde para distinguirlo de NUEVO (mismo nivel) */
+.cs-btn-newgame {
+    border-color: var(--neon-green, #39ff14);
+    color: var(--neon-green, #39ff14);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+}
+
+.cs-btn-newgame:hover:not(:disabled) {
+    background: rgba(57, 255, 20, 0.08);
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
+}
+
 .cs-btn-hint:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -1289,11 +1301,13 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    align-items: stretch; /* botones ocupan ancho completo en mobile */
 }
 
 @media (min-width: 640px) {
     .modal-footer {
         flex-direction: row;
+        justify-content: center; /* centrado en desktop, incluso con un solo botón */
     }
 }
 

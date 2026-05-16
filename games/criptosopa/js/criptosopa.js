@@ -1237,9 +1237,29 @@ function renderLives() {
     }
 }
 
+// Muestra el banner de aviso al inicio de cada tier con mensaje adaptado al nivel
 function showLevelWarning() {
     const el = elements.levelWarning;
     if (!el) return;
+
+    // Mensaje distinto según el tier (definido por el índice del nivel actual)
+    const idx = gameState.currentLevelIndex;
+    const titleEl = el.querySelector('.level-warning-title');
+    const textEl  = el.querySelector('.level-warning-text');
+    if (idx === 0) {
+        // Tier 1 (niveles 1-3): introducción al sistema de vidas
+        if (titleEl) titleEl.textContent = '♞ ¡EMPIEZA EL JUEGO!';
+        if (textEl)  textEl.textContent  = 'Cambiar la primera letra seleccionada cuesta una vida';
+    } else if (idx === 3) {
+        // Tier 2 (niveles 4-6): iluminación reducida a solo borde
+        if (titleEl) titleEl.textContent = '⚠️ NIVEL INTERMEDIO';
+        if (textEl)  textEl.textContent  = 'Las casillas válidas muestran solo el borde. Cuidado con las vidas';
+    } else {
+        // Tier 3 (niveles 7-8): sin iluminación
+        if (titleEl) titleEl.textContent = '🔥 MODO EXPERTO';
+        if (textEl)  textEl.textContent  = 'Sin iluminación — las casillas válidas no se muestran';
+    }
+
     const heartsEl = document.getElementById('levelWarningHearts');
     if (heartsEl) heartsEl.textContent = Array(gameState.lives).fill('❤️').join(' ');
     el.style.display = 'flex';
@@ -1305,6 +1325,7 @@ function loseLife() {
 
 function showGameOverModal() {
     gameState.gameStatus = 'gameover';
+    clearInterval(gameState.timerInterval); // detener el reloj al perder
     elements.gameOverModal?.classList.add('active');
 }
 
@@ -1312,7 +1333,17 @@ function showGameOverModal() {
 // Oculta el botón "Siguiente nivel" porque el jugador perdió — no puede continuar.
 function gameOverShowStats() {
     elements.gameOverModal?.classList.remove('active');
-    showVictoryModal({ hideNextLevel: true });
+    showVictoryModal({ isGameOver: true });
+}
+
+// Botón "JUEGO" del panel desktop: reinicia desde nivel 1 con vidas completas.
+// Equivale a un game over voluntario — permite al jugador empezar de cero sin perder todas las vidas.
+function newGameFull() {
+    gameState.currentLevelIndex = 0;
+    gameState.timerStarted = false;
+    localStorage.setItem('criptosopa_level', '0');
+    closeVictoryModal();
+    startNewGame(true);
 }
 
 function gameOverRestart() {
@@ -1326,14 +1357,25 @@ function gameOverRestart() {
 
 // ── Victory modal ──────────────────────────────────────────────
 
-// Muestra el modal de victoria con estadísticas de nivel y acumuladas.
-// options.hideNextLevel = true cuando se abre desde game over (el jugador perdió).
+// Muestra el modal de victoria (o resumen tras game over) con estadísticas.
+// options.isGameOver = true cambia el título y mensaje para el contexto de derrota.
 function showVictoryModal(options = {}) {
     if (!elements.victoryModal) return;
 
-    // Mostrar u ocultar el botón "Siguiente nivel" según el contexto
+    // Cambiar título y mensaje según si es victoria o resumen de game over
+    const titleEl = elements.victoryModal.querySelector('.modal-title');
+    const messageEl = elements.victoryModal.querySelector('.victory-message');
+    if (options.isGameOver) {
+        if (titleEl) titleEl.textContent = '📊 RESUMEN';
+        if (messageEl) messageEl.textContent = 'Tu progreso hasta perder todas las vidas.';
+    } else {
+        if (titleEl) titleEl.textContent = '🎉 ¡COMPLETADO!';
+        if (messageEl) messageEl.textContent = '¡Has encontrado todas las palabras!';
+    }
+
+    // Ocultar "Siguiente nivel" en contexto de game over
     if (elements.nextLevelBtn) {
-        elements.nextLevelBtn.style.display = options.hideNextLevel ? 'none' : '';
+        elements.nextLevelBtn.style.display = options.isGameOver ? 'none' : '';
     }
 
     // Mostrar el nombre del nivel completado en el encabezado del modal
