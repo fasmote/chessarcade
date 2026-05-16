@@ -492,16 +492,18 @@ function handleCellClick(r, c) {
     if (isDoubleClick && gameState.selectedPath.length > 0) {
         const first = gameState.selectedPath[0];
         if (first.r === r && first.c === c) {
-            if (gameState.livesActive) {
-                loseLife();
+            if (gameState.livesActive && gameState.selectedPath.length > 1) {
+                // Con vidas: deja solo la primera celda (el jugador decide si la abandona)
+                gameState.selectedPath = [first];
             } else {
+                // Sin vidas (o path ya era 1): limpia todo
                 gameState.selectedPath = [];
-                playCellDeselectSound();
-                renderBoard();
-                updateSelectionText();
-                updateUndoButton();
-                updateKnightPosition();
             }
+            playCellDeselectSound();
+            renderBoard();
+            updateSelectionText();
+            updateUndoButton();
+            updateKnightPosition();
             return;
         }
     }
