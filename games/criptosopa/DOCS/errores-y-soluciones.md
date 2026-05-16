@@ -806,3 +806,54 @@ Leer el archivo fuente `games/memory-matrix-v2/styles.css` con el agente de bús
 **Lección**: Las mecánicas de penalización requieren iteración con el usuario. La pregunta clave es siempre: ¿este gesto es un error accidental (merece penalización) o una acción deliberada (no merece penalización)? El doble click es deliberado pero puede ser "quiero borrar el final, no el inicio" — la v3 resuelve esto dejando solo la primera celda como punto de decisión explícita.
 
 **Archivos**: `games/criptosopa/js/criptosopa.js` — función `handleCellClick()`
+
+---
+
+## 13. Error sin resolver — Sesión 2026-05-16
+
+### Error #120: Título "CRIPTOSOPA" no se centra en desktop — 7 intentos fallidos
+**Fecha**: 2026-05-16
+**Severidad**: Visual / Media
+**Estado**: ⚠️ SIN RESOLVER — primera prioridad próxima sesión
+
+**Descripción**:
+El título "CRIPTOSOPA" en el header del juego aparece desplazado a la izquierda en desktop. Se intentaron 7 técnicas CSS diferentes, ninguna funcionó.
+
+**Estructura HTML relevante**:
+```html
+<!-- .neon-container tiene: display:flex; flex-direction:column; align-items:center -->
+<div class="neon-container">
+    <header class="neon-header">
+        <span class="cs-logo-desktop">🔤♞</span>
+        <h1 class="neon-title">CriptoSopa ...</h1>
+    </header>
+</div>
+```
+
+**CSS relevante en neonchess-style.css (no modificable)**:
+```css
+.neon-container { display: flex; flex-direction: column; align-items: center; }
+.neon-title { text-align: center; -webkit-text-fill-color: transparent; ... }
+```
+
+**Causa raíz sospechada**:
+`align-items: center` en el flex column encoge el `header.neon-header` al ancho de su contenido. El h1 arranca desde la izquierda dentro de ese header encogido, aunque `text-align: center` ya está en `.neon-title`.
+
+**Intentos FALLIDOS — NO REPETIR**:
+
+| # | Técnica | Por qué no funcionó |
+|---|---|---|
+| 1 | `justify-content: center` en `.neon-header` | `.neon-header` no era flex — sin efecto |
+| 2 | `display: flex; justify-content: center` en `.neon-header` | h1 es block dentro del flex; no se centró |
+| 3 | `display: inline-block !important` en `.neon-title` + `text-align: center` en header | Header seguía encogido |
+| 4 | `width: fit-content !important; margin: 0 auto !important` en `.neon-title` | No se centró en el header encogido |
+| 5 | `width: 100% !important` en `.neon-header` | Conflicto con cascade de neon-container |
+| 6 | `display: block !important; width: 100% !important; text-align: center` | No sobrescribió el comportamiento del flex item |
+| 7 | `align-self: stretch !important` en `.neon-header` | Debería haber funcionado pero sin efecto visible |
+
+**Hipótesis para próxima sesión**:
+1. Usar **DevTools → Computed** para ver exactamente qué CSS gana en render real — todos los intentos anteriores fueron a ciegas.
+2. Verificar si hay `!important` externo en neonchess-style.css que bloquea las reglas de criptosopa.css.
+3. **Alternativa limpia**: mover el h1 FUERA del `neon-header`, como elemento independiente del `neon-container`, y crear un header separado solo para el logo. Sin conflicto con el flex container.
+
+**Archivos**: `games/criptosopa/css/criptosopa.css` — reglas de `.neon-header` y `.cs-logo-desktop`
