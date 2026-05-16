@@ -572,30 +572,31 @@
 }
 
 /* ── Vidas mobile ── */
-/* Contenedor debajo del tablero, solo visible en mobile (oculto en desktop) */
+/* Contenedor: oculto en desktop, visible en mobile como fila única */
 .cs-lives-mobile {
-    display: none; /* oculto en desktop */
-    flex-direction: column;
+    display: none;
+    flex-direction: row;  /* fila única horizontal */
+    justify-content: center;
     align-items: center;
     gap: 2px;
     padding: 4px 0;
 }
 
-/* En mobile se muestra */
 @media (max-width: 640px) {
     .cs-lives-mobile {
         display: flex;
     }
-}
 
-/* En mobile los corazones son más chicos */
-.cs-lives-mobile .cs-hearts-row {
-    gap: 2px;
-}
+    /* En mobile, las rows de corazones se "aplanan" en la misma fila padre */
+    .cs-lives-mobile .cs-hearts-row {
+        display: contents; /* los hijos fluyen directamente al contenedor padre */
+    }
 
-.cs-lives-mobile .cs-heart {
-    font-size: 10px;
-    filter: drop-shadow(0 0 2px rgba(255, 0, 128, 0.5));
+    /* Corazones más chicos en mobile */
+    .cs-lives-mobile .cs-heart {
+        font-size: 10px;
+        filter: drop-shadow(0 0 2px rgba(255, 0, 128, 0.5));
+    }
 }
 
 /* Botones — igual que .btn-side en MemoryMatrix */
@@ -800,23 +801,17 @@
     to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Encabezado del modal de victoria: título + nombre del nivel */
-.victory-modal-header {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-/* Nombre del nivel completado — aparece debajo de ¡COMPLETADO! */
+/* Nombre del nivel completado — centrado en el body del modal */
 .victory-level-name {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--neon-cyan);
-    opacity: 0.7;
+    opacity: 0.75;
     letter-spacing: 2px;
     text-transform: uppercase;
-    margin: 0;
+    text-align: center;
+    margin: 0 0 0.8rem 0;
 }
 
 .modal-header {
