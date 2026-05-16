@@ -160,6 +160,7 @@ const elements = {
     livesDisplay: null,
     livesDisplayDesktop: null,
     hintBtnDesktop: null,
+    undoBtnDesktop: null,
     levelWarning: null,
     gameOverModal: null,
     gameOverRestartBtn: null
@@ -202,6 +203,7 @@ function initializeDOM() {
     elements.livesDisplay = document.getElementById('livesDisplay');
     elements.livesDisplayDesktop = document.getElementById('livesDisplayDesktop');
     elements.hintBtnDesktop = document.getElementById('hintBtnDesktop');
+    elements.undoBtnDesktop = document.getElementById('undoBtnDesktop');
     elements.levelWarning = document.getElementById('levelWarning');
     elements.gameOverModal = document.getElementById('gameOverModal');
     elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
@@ -322,6 +324,7 @@ function startNewGame(resetTotal = true) {
     updateDisplay();
     updateHintButton();
     updateSelectionText();
+    updateUndoButton();
     renderLives();
 
     if (gameState.livesActive) {
@@ -564,6 +567,7 @@ function handleCellClick(r, c) {
     updateSelectionText();
     updateDisplay();
     updateHintButton();
+    updateUndoButton();
     updateKnightPosition();
 }
 
@@ -1081,6 +1085,24 @@ function updateDisplay() {
         const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
         elements.levelDisplay.textContent = `${gameState.currentLevelIndex + 1} — ${lvl.name}`;
     }
+}
+
+// Volver atrás un movimiento — solo disponible con path >= 2 celdas
+function undoLastMove() {
+    if (gameState.gameStatus !== 'playing') return;
+    if (gameState.selectedPath.length <= 1) return; // no puede ir antes de la primera celda
+    gameState.selectedPath.pop();
+    playCellDeselectSound();
+    renderBoard();
+    updateSelectionText();
+    updateKnightPosition();
+    updateUndoButton();
+}
+
+// Habilita/deshabilita el botón ATRÁS desktop según el path actual
+function updateUndoButton() {
+    if (!elements.undoBtnDesktop) return;
+    elements.undoBtnDesktop.disabled = gameState.selectedPath.length <= 1;
 }
 
 // Actualiza el botón de pista con el costo actual y lo habilita/deshabilita

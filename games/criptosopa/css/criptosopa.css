@@ -606,6 +606,18 @@
     opacity: 0.8;
 }
 
+/* ATRÁS — igual que .btn-undo-side en MemoryMatrix */
+.cs-btn-undo {
+    border-color: var(--neon-magenta);
+    color: var(--neon-magenta);
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
+}
+
+.cs-btn-undo:hover:not(:disabled) {
+    background: rgba(255, 0, 128, 0.1);
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.6);
+}
+
 /* PISTA — igual que .btn-hint-side en MemoryMatrix */
 .cs-btn-hint {
     border-color: var(--neon-yellow);
