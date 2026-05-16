@@ -158,6 +158,8 @@ const elements = {
     modalTime: null,
     modalScore: null,
     livesDisplay: null,
+    livesDisplayDesktop: null,
+    hintBtnDesktop: null,
     levelWarning: null,
     gameOverModal: null,
     gameOverRestartBtn: null
@@ -198,6 +200,8 @@ function initializeDOM() {
     elements.modalTime = document.getElementById('modalTime');
     elements.modalScore = document.getElementById('modalScore');
     elements.livesDisplay = document.getElementById('livesDisplay');
+    elements.livesDisplayDesktop = document.getElementById('livesDisplayDesktop');
+    elements.hintBtnDesktop = document.getElementById('hintBtnDesktop');
     elements.levelWarning = document.getElementById('levelWarning');
     elements.gameOverModal = document.getElementById('gameOverModal');
     elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
@@ -1081,13 +1085,17 @@ function updateDisplay() {
 
 // Actualiza el botón de pista con el costo actual y lo habilita/deshabilita
 function updateHintButton() {
-    if (!elements.hintBtn) return;
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
     const cost = levelConfig.hintBaseCost * Math.pow(CONFIG.HINT_BASE_MULTIPLIER, gameState.hintsUsedThisGame);
     const canAfford = gameState.score >= cost;
 
     if (elements.hintCost) elements.hintCost.textContent = cost;
-    elements.hintBtn.disabled = !canAfford;
+    if (elements.hintBtn) elements.hintBtn.disabled = !canAfford;
+
+    // Botón desktop
+    const hintCostDesktop = document.getElementById('hintCostDesktop');
+    if (hintCostDesktop) hintCostDesktop.textContent = cost;
+    if (elements.hintBtnDesktop) elements.hintBtnDesktop.disabled = !canAfford;
 }
 
 // Win game
@@ -1109,16 +1117,43 @@ function winGame() {
 // ── Lives system ──────────────────────────────────────────────
 
 function renderLives() {
+    // Mobile: oculto si lives no están activas
     const el = elements.livesDisplay;
-    if (!el) return;
-    if (!gameState.livesActive) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
-    el.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
-        const heart = document.createElement('span');
-        heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
-        heart.textContent = '❤️';
-        el.appendChild(heart);
+    if (el) {
+        if (!gameState.livesActive) { el.style.display = 'none'; }
+        else {
+            el.style.display = 'flex';
+            el.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const heart = document.createElement('span');
+                heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
+                heart.textContent = '❤️';
+                el.appendChild(heart);
+            }
+        }
+    }
+
+    // Desktop: siempre visible, activo o inactivo
+    const desktopEl = elements.livesDisplayDesktop;
+    if (desktopEl) {
+        const heartsSpan = desktopEl.querySelector('.cs-side-hearts');
+        if (heartsSpan) {
+            if (!gameState.livesActive) {
+                heartsSpan.innerHTML = '❤️❤️❤️❤️❤️';
+                desktopEl.classList.add('cs-side-lives--inactive');
+                desktopEl.classList.remove('cs-side-lives--active');
+            } else {
+                let html = '';
+                for (let i = 0; i < 5; i++) {
+                    html += i < gameState.lives
+                        ? '<span class="cs-dh-heart">❤️</span>'
+                        : '<span class="cs-dh-heart cs-dh-heart--lost">❤️</span>';
+                }
+                heartsSpan.innerHTML = html;
+                desktopEl.classList.add('cs-side-lives--active');
+                desktopEl.classList.remove('cs-side-lives--inactive');
+            }
+        }
     }
 }
 

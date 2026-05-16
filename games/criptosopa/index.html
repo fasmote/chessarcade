@@ -166,6 +166,27 @@
 
         <!-- Game Container -->
         <div class="game-wrapper">
+
+            <!-- Desktop Side Controls (hidden on mobile) -->
+            <div class="cs-side-left" id="csDesktopControls">
+                <!-- Vidas (desktop) -->
+                <div class="cs-side-lives" id="livesDisplayDesktop">
+                    <span class="cs-side-lives-label">VIDAS</span>
+                    <span class="cs-side-hearts">❤️❤️❤️❤️❤️</span>
+                </div>
+                <!-- Nuevo Tablero -->
+                <button class="cs-btn-side cs-btn-reset" onclick="startNewGame()">
+                    <span class="cs-btn-icon">🔄</span>
+                    <span class="cs-btn-label">NUEVO</span>
+                </button>
+                <!-- Pista -->
+                <button class="cs-btn-side cs-btn-hint" id="hintBtnDesktop" onclick="showHint()">
+                    <span class="cs-btn-icon">💡</span>
+                    <span class="cs-btn-label">PISTA</span>
+                    <span class="cs-btn-cost">-<span id="hintCostDesktop">50</span></span>
+                </button>
+            </div>
+
             <!-- Left Panel: Board -->
             <div class="board-panel">
                 <div class="board-container">
