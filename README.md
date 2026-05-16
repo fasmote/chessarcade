@@ -2,7 +2,7 @@
 
 ![ChessArcade Banner](./assets/images/chessarcade-banner.png)
 
-## 🚀 [Play Now!](https://fasmote.github.io/ChessArcade/) | [🎯 Square Rush](https://fasmote.github.io/ChessArcade/games/square-rush/index.html) | [🐴 Knight Quest](https://fasmote.github.io/ChessArcade/games/knight-quest/index.html) | [🧠 Memory Matrix](https://fasmote.github.io/ChessArcade/games/memory-matrix-v2/index.html) | [🟦 Master Sequence](https://fasmote.github.io/ChessArcade/games/master-sequence/index.html) | [⚔️ ChessInFive](https://fasmote.github.io/ChessArcade/games/chessinfive/index.html) | [🔐 Cripto-Caballo](https://fasmote.github.io/ChessArcade/games/criptocaballo/index.html)
+## 🚀 [Play Now!](https://fasmote.github.io/ChessArcade/) | [🎯 Square Rush](https://fasmote.github.io/ChessArcade/games/square-rush/index.html) | [🐴 Knight Quest](https://fasmote.github.io/ChessArcade/games/knight-quest/index.html) | [🧠 Memory Matrix](https://fasmote.github.io/ChessArcade/games/memory-matrix-v2/index.html) | [🟦 Master Sequence](https://fasmote.github.io/ChessArcade/games/master-sequence/index.html) | [⚔️ ChessInFive](https://fasmote.github.io/ChessArcade/games/chessinfive/index.html) | [🔐 Cripto-Caballo](https://fasmote.github.io/ChessArcade/games/criptocaballo/index.html) | [🔤♞ CriptoSopa](https://fasmote.github.io/ChessArcade/games/criptosopa/index.html)
 
 ---
 
@@ -19,6 +19,7 @@
 - **🟦 Master Sequence** - Simon Says meets chess! Memorize growing patterns *(Available Now!)*
 - **⚔️ ChessInFive** - Connect Four meets Chess! Two-player tactical strategy **+ AI Opponent!** *(Available Now!)*
 - **🔐 Cripto-Caballo** - Decode hidden messages with knight moves! Cryptography meets chess *(Available Now!)*
+- **🔤♞ CriptoSopa** - Knight-move word search with 8 progressive levels! Find chess vocabulary words by jumping like a knight across an 8×8 letter grid. Words can be found forwards or backwards! *(Available Now!)*
 
 #### 🎯 **Features:**
 - **🏆 Global Leaderboards**: Compete with players worldwide across all games
@@ -58,6 +59,7 @@ ChessArcade/
 - **🟦 Master Sequence** - ¡Simon Says encuentra el ajedrez! Memoriza patrones crecientes *(¡Disponible Ahora!)*
 - **⚔️ ChessInFive** - ¡Conecta Cuatro conoce al Ajedrez! Estrategia táctica para dos jugadores **+ ¡Oponente IA!** *(¡Disponible Ahora!)*
 - **🔐 Cripto-Caballo** - ¡Descifra mensajes ocultos con movimientos de caballo! Criptografía y ajedrez *(¡Disponible Ahora!)*
+- **🔤♞ CriptoSopa** - ¡Sopa de letras con movimientos de caballo! 8 niveles progresivos para encontrar vocabulario de ajedrez saltando en "L" por un tablero 8×8. ¡Las palabras valen en ambas direcciones! *(¡Disponible Ahora!)*
 
 #### 🎯 **Características:**
 - **🏆 Ranking Global**: Compite con jugadores de todo el mundo en todos los juegos

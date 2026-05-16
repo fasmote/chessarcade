@@ -266,6 +266,12 @@
     .board-container {
         padding: 0.75rem;
     }
+
+    /* El info-panel recibe un padding-top igual al alto del timer (que vive en board-panel)
+       para que sus contenidos queden visualmente alineados con el tablero, no con el timer */
+    .info-panel {
+        padding-top: 4.8rem;
+    }
 }
 
 /* Desktop (1024px+): sidebar completa, celdas grandes */
@@ -761,11 +767,40 @@
     box-shadow: none;
 }
 
-/* Logo desktop: igual al neon-card-icon de la página principal (3rem, drop-shadow) */
-.cs-logo-icon {
-    font-size: 2.5rem;
-    filter: drop-shadow(0 0 8px var(--neon-cyan));
-    vertical-align: middle;
+/* Logo desktop: badge con "ABC♞" visible en desktop, oculto en mobile */
+.cs-logo-desktop {
+    display: none; /* oculto por defecto (mobile) */
+}
+
+@media (min-width: 641px) {
+    .cs-logo-desktop {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        background: rgba(0, 255, 255, 0.08);
+        border: 1px solid var(--neon-cyan);
+        border-radius: 6px;
+        padding: 2px 8px;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+}
+
+/* "ABC" en cyan Orbitron */
+.cs-logo-abc {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 8px var(--neon-cyan);
+    letter-spacing: 1px;
+}
+
+/* "♞" en magenta */
+.cs-logo-knight {
+    font-size: 1.1rem;
+    color: var(--neon-magenta);
+    text-shadow: 0 0 8px var(--neon-magenta);
     line-height: 1;
 }
 
