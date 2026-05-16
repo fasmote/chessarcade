@@ -525,13 +525,17 @@
     }
     .controls-panel { display: none; }
     .neon-back-btn  { display: none; }
-    /* Header como flex centrado en desktop */
+    /* Header full-width y centrado en desktop */
     .neon-header {
         display: flex;
         justify-content: center;
         align-items: center;
         width: 100%;
-        text-align: center;
+        position: relative;
+    }
+    /* El h1 ocupa el ancho que necesita y se centra */
+    .neon-header .neon-title {
+        flex: 0 1 auto;
     }
 }
 
