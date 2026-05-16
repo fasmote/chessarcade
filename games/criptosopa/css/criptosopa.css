@@ -525,8 +525,14 @@
     }
     .controls-panel { display: none; }
     .neon-back-btn  { display: none; }
-    /* Centrar el título en el header ahora que el back btn está oculto */
-    .neon-header { justify-content: center; }
+    /* Header como flex centrado en desktop */
+    .neon-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        text-align: center;
+    }
 }
 
 /* Corazones — igual que .lives-container en MemoryMatrix */
@@ -781,8 +787,8 @@
     box-shadow: none;
 }
 
-/* Logo desktop: emoji 🔤♞ a 3rem — igual al .neon-card-icon de la home.
-   Posición absolute para no afectar el centrado del título. */
+/* Logo desktop: emoji 🔤♞ igual al neon-card-icon de la home (3rem).
+   Position absolute para no afectar el justify-content:center del título. */
 .cs-logo-desktop {
     display: none;
 }
@@ -796,8 +802,9 @@
         left: 1.5rem;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 3rem;    /* igual al neon-card-icon de la home */
+        font-size: 3rem;
         line-height: 1;
+        /* Sin filtros ni color — dejar que el emoji renderice natural */
     }
 }
 
