@@ -219,7 +219,8 @@ function initializeDOM() {
 
 // Setup event listeners
 function setupEventListeners() {
-    elements.resetBtn?.addEventListener('click', startNewGame);
+    // false = no resetear vidas ni acumulado al generar nuevo tablero del mismo nivel
+    elements.resetBtn?.addEventListener('click', () => startNewGame(false));
     elements.hintBtn?.addEventListener('click', showHint);
     elements.helpBtn?.addEventListener('click', () => showHelpModal(true));
     elements.closeHelpBtn?.addEventListener('click', () => showHelpModal(false));
@@ -1304,10 +1305,18 @@ function gameOverRestart() {
 
 // ── Victory modal ──────────────────────────────────────────────
 
-// Show victory modal
+// Muestra el modal de victoria con el nombre del nivel completado y las estadísticas
 function showVictoryModal() {
     if (!elements.victoryModal) return;
 
+    // Mostrar el nombre del nivel completado en el encabezado del modal
+    const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
+    const levelNameEl = document.getElementById('victoryLevelName');
+    if (levelNameEl) {
+        levelNameEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
+    }
+
+    // Estadísticas de este nivel y acumulado
     const modalTime       = document.getElementById('modalTime');
     const modalScore      = document.getElementById('modalScore');
     const modalTotalTime  = document.getElementById('modalTotalTime');

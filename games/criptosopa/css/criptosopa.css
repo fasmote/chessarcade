@@ -800,6 +800,25 @@
     to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* Encabezado del modal de victoria: título + nombre del nivel */
+.victory-modal-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Nombre del nivel completado — aparece debajo de ¡COMPLETADO! */
+.victory-level-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--neon-cyan);
+    opacity: 0.7;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 0;
+}
+
 .modal-header {
     display: flex;
     align-items: center;

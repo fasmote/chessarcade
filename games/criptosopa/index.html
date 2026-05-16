@@ -175,7 +175,7 @@
                     <span class="cs-side-hearts">❤️❤️❤️❤️❤️</span>
                 </div>
                 <!-- Nuevo Tablero -->
-                <button class="cs-btn-side cs-btn-reset" onclick="startNewGame()">
+                <button class="cs-btn-side cs-btn-reset" onclick="startNewGame(false)">
                     <span class="cs-btn-icon">🔄</span>
                     <span class="cs-btn-label">NUEVO</span>
                 </button>
@@ -339,7 +339,10 @@
     <div id="victoryModal" class="neon-modal">
         <div class="neon-modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">🎉 ¡COMPLETADO!</h2>
+                <div class="victory-modal-header">
+                    <h2 class="modal-title">🎉 ¡COMPLETADO!</h2>
+                    <p id="victoryLevelName" class="victory-level-name"></p>
+                </div>
                 <button id="closeVictoryBtn" class="modal-close-btn" aria-label="Cerrar">✕</button>
             </div>
             <div class="modal-body">
