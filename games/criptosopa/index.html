@@ -135,8 +135,8 @@
                     <span class="game-icon">🔐</span>
                     <span>CriptoCaballo</span>
                 </a>
-                <a href="index.html" class="game-menu-item current">
-                    <span class="game-icon">🐴🔍</span>
+                <a href="index.html" class="game-menu-item">
+                    <span class="game-icon">🔤♞</span>
                     <span>CriptoSopa</span>
                 </a>
             </div>
@@ -151,16 +151,14 @@
                 ← MENÚ
             </a>
             <h1 class="neon-title">
-                <!-- Logo desktop: letras ABC + caballito, igual al card de la home -->
-                <span class="neon-icon cs-logo-desktop">
-                    <span class="cs-logo-abc">ABC</span><span class="cs-logo-knight">♞</span>
-                </span>
+                <!-- Logo desktop: emoji 🔤♞ igual al card de la home (oculto en mobile) -->
+                <span class="neon-icon cs-logo-desktop">🔤♞</span>
                 CriptoSopa
                 <span class="neon-subtitle">Knight Word Search</span>
             </h1>
         </header>
 
-        <!-- Game Container -->
+        <!-- Game Container (grid 2 filas: fila 1=timer centrado, fila 2=tablero+info) -->
         <div class="game-wrapper">
 
             <!-- Desktop Side Controls (hidden on mobile) -->
@@ -193,14 +191,15 @@
                 </button>
             </div>
 
-            <!-- Left Panel: Board -->
-            <div class="board-panel">
-                <!-- Timer centrado sobre el tablero (dentro del board-panel) -->
-                <div class="timer-container">
-                    <div class="timer-display">
-                        <span id="timerDisplay">00:00</span>
-                    </div>
+            <!-- Timer: fila 1, columna 2 del grid — centrado sobre el tablero -->
+            <div class="timer-container">
+                <div class="timer-display">
+                    <span id="timerDisplay">00:00</span>
                 </div>
+            </div>
+
+            <!-- Left Panel: Board (fila 2, columna 2) -->
+            <div class="board-panel">
                 <div class="board-container">
                     <!-- Level warning banner (appears before no-illumination levels) -->
                     <div id="levelWarning" class="level-warning" style="display:none;">
