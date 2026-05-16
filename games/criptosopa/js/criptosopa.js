@@ -240,6 +240,12 @@ function setupEventListeners() {
 let _touchStartCell = null;
 let _touchStartTime  = 0;
 
+// Último click para detección de doble click
+let _lastClickR = -1;
+let _lastClickC = -1;
+let _lastClickTime = 0;
+const DOUBLE_CLICK_MS = 350;
+
 function initTouchDrag() {
     const board = elements.gameBoard;
     if (!board) return;
@@ -476,6 +482,24 @@ function handleCellClick(r, c) {
     if (!gameState.timerStarted) {
         gameState.timerStarted = true;
         startTimer();
+    }
+
+    // Doble click sobre la primera celda seleccionada → limpiar todo sin costo
+    const now = Date.now();
+    const isDoubleClick = (now - _lastClickTime < DOUBLE_CLICK_MS && _lastClickR === r && _lastClickC === c);
+    _lastClickR = r; _lastClickC = c; _lastClickTime = now;
+
+    if (isDoubleClick && gameState.selectedPath.length > 0) {
+        const first = gameState.selectedPath[0];
+        if (first.r === r && first.c === c) {
+            gameState.selectedPath = [];
+            playCellDeselectSound();
+            renderBoard();
+            updateSelectionText();
+            updateUndoButton();
+            updateKnightPosition();
+            return;
+        }
     }
 
     // First click
