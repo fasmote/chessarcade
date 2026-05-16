@@ -492,12 +492,16 @@ function handleCellClick(r, c) {
     if (isDoubleClick && gameState.selectedPath.length > 0) {
         const first = gameState.selectedPath[0];
         if (first.r === r && first.c === c) {
-            gameState.selectedPath = [];
-            playCellDeselectSound();
-            renderBoard();
-            updateSelectionText();
-            updateUndoButton();
-            updateKnightPosition();
+            if (gameState.livesActive) {
+                loseLife();
+            } else {
+                gameState.selectedPath = [];
+                playCellDeselectSound();
+                renderBoard();
+                updateSelectionText();
+                updateUndoButton();
+                updateKnightPosition();
+            }
             return;
         }
     }
