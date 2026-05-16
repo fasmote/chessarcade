@@ -277,32 +277,18 @@
                 <button id="closeVictoryBtn" class="modal-close-btn" aria-label="Cerrar">✕</button>
             </div>
             <div class="modal-body">
-                <div class="victory-stats">
-                    <div class="victory-section-label">ESTE NIVEL</div>
-                    <div class="victory-row">
-                        <div class="victory-stat">
-                            <span class="victory-label">Tiempo</span>
-                            <span id="modalTime" class="victory-value neon-glow-cyan">00:00</span>
-                        </div>
-                        <div class="victory-stat">
-                            <span class="victory-label">Puntos</span>
-                            <span id="modalScore" class="victory-value neon-glow-cyan">0</span>
-                        </div>
-                    </div>
-                    <div id="modalTotalSection" style="display:none;">
-                        <div class="victory-divider">· · · · · · · · · ·</div>
-                        <div class="victory-section-label victory-section-label--total">ACUMULADO</div>
-                        <div class="victory-row">
-                            <div class="victory-stat">
-                                <span class="victory-label">Tiempo</span>
-                                <span id="modalTotalTime" class="victory-value victory-value--total neon-glow-pink">00:00</span>
-                            </div>
-                            <div class="victory-stat">
-                                <span class="victory-label">Puntos</span>
-                                <span id="modalTotalScore" class="victory-value victory-value--total neon-glow-pink">0</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="victory-grid">
+                    <div class="victory-col-header"></div>
+                    <div class="victory-col-header neon-glow-cyan">NIVEL</div>
+                    <div class="victory-col-header neon-glow-pink">TOTAL</div>
+
+                    <div class="victory-row-label">⏱ Tiempo</div>
+                    <div class="victory-cell neon-glow-cyan"><span id="modalTime">00:00</span></div>
+                    <div class="victory-cell neon-glow-pink"><span id="modalTotalTime">00:00</span></div>
+
+                    <div class="victory-row-label">⭐ Puntos</div>
+                    <div class="victory-cell neon-glow-cyan"><span id="modalScore">0</span></div>
+                    <div class="victory-cell neon-glow-pink"><span id="modalTotalScore">0</span></div>
                 </div>
                 <p class="victory-message">¡Has encontrado todas las palabras!</p>
             </div>

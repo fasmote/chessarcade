@@ -553,6 +553,7 @@ function handleCellClick(r, c) {
     renderWordList();
     updateSelectionText();
     updateDisplay();
+    updateHintButton();
     updateKnightPosition();
 }
 
@@ -1192,21 +1193,25 @@ function gameOverRestart() {
 function showVictoryModal() {
     if (!elements.victoryModal) return;
 
-    const isMultiLevel = gameState.totalTime > 0 || gameState.totalScore > 0;
+    const levelTime  = gameState.timer;
+    const levelScore = gameState.score;
+    const totalTime  = gameState.totalTime + gameState.timer;
+    const totalScore = gameState.totalScore + gameState.score;
 
-    const modalTime = document.getElementById('modalTime');
-    if (modalTime) modalTime.textContent = formatTime(gameState.timer);
+    const modalTime      = document.getElementById('modalTime');
+    const modalScore     = document.getElementById('modalScore');
+    const modalTotalTime  = document.getElementById('modalTotalTime');
+    const modalTotalScore = document.getElementById('modalTotalScore');
 
-    if (elements.modalScore) elements.modalScore.textContent = gameState.score.toLocaleString();
+    if (modalTime)       modalTime.textContent       = formatTime(levelTime);
+    if (modalScore)      modalScore.textContent      = levelScore.toLocaleString();
+    if (modalTotalTime)  modalTotalTime.textContent  = formatTime(totalTime);
+    if (modalTotalScore) modalTotalScore.textContent = totalScore.toLocaleString();
 
-    const totalSection = document.getElementById('modalTotalSection');
-    if (totalSection) {
-        totalSection.style.display = isMultiLevel ? '' : 'none';
-        const totalTime = document.getElementById('modalTotalTime');
-        const totalScore = document.getElementById('modalTotalScore');
-        if (totalTime) totalTime.textContent = formatTime(gameState.totalTime + gameState.timer);
-        if (totalScore) totalScore.textContent = (gameState.totalScore + gameState.score).toLocaleString();
-    }
+    // Atenuar columna TOTAL en nivel 1 (sin acumulado previo)
+    const totalCol = document.querySelectorAll('.victory-cell.neon-glow-pink, .victory-col-header.neon-glow-pink');
+    const isFirstLevel = gameState.totalTime === 0 && gameState.totalScore === 0;
+    totalCol.forEach(el => el.style.opacity = isFirstLevel ? '0.35' : '1');
 
     elements.victoryModal.classList.add('active');
 }
