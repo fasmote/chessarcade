@@ -171,7 +171,8 @@ const elements = {
     undoBtnDesktop: null,
     levelWarning: null,
     gameOverModal: null,
-    gameOverRestartBtn: null
+    gameOverRestartBtn: null,
+    closeGameOverBtn: null
 };
 
 // Initialize game
@@ -215,6 +216,7 @@ function initializeDOM() {
     elements.levelWarning = document.getElementById('levelWarning');
     elements.gameOverModal = document.getElementById('gameOverModal');
     elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
+    elements.closeGameOverBtn = document.getElementById('closeGameOverBtn');
 }
 
 // Setup event listeners
@@ -229,6 +231,8 @@ function setupEventListeners() {
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
     elements.gameOverRestartBtn?.addEventListener('click', gameOverRestart);
+    // X del game over: cierra el modal y muestra el resumen de puntos acumulados
+    elements.closeGameOverBtn?.addEventListener('click', gameOverShowStats);
 
     // Global mouseup to stop dragging
     document.addEventListener('mouseup', () => {
@@ -1292,6 +1296,13 @@ function loseLife() {
 function showGameOverModal() {
     gameState.gameStatus = 'gameover';
     elements.gameOverModal?.classList.add('active');
+}
+
+// Cierra el game over y muestra el resumen de puntos y tiempo acumulados.
+// Usa el mismo modal de victoria pero con el estado tal como quedó al perder.
+function gameOverShowStats() {
+    elements.gameOverModal?.classList.remove('active');
+    showVictoryModal();
 }
 
 function gameOverRestart() {
