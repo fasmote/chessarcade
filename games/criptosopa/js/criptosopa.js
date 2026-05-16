@@ -158,6 +158,9 @@ const elements = {
     modalTime: null,
     modalScore: null,
     livesDisplay: null,
+    livesDisplayDesktop: null,
+    hintBtnDesktop: null,
+    undoBtnDesktop: null,
     levelWarning: null,
     gameOverModal: null,
     gameOverRestartBtn: null
@@ -198,6 +201,9 @@ function initializeDOM() {
     elements.modalTime = document.getElementById('modalTime');
     elements.modalScore = document.getElementById('modalScore');
     elements.livesDisplay = document.getElementById('livesDisplay');
+    elements.livesDisplayDesktop = document.getElementById('livesDisplayDesktop');
+    elements.hintBtnDesktop = document.getElementById('hintBtnDesktop');
+    elements.undoBtnDesktop = document.getElementById('undoBtnDesktop');
     elements.levelWarning = document.getElementById('levelWarning');
     elements.gameOverModal = document.getElementById('gameOverModal');
     elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
@@ -233,6 +239,12 @@ function setupEventListeners() {
 // (previene que el temblor del dedo deshaga el deselect o re-agregue la celda)
 let _touchStartCell = null;
 let _touchStartTime  = 0;
+
+// Último click para detección de doble click
+let _lastClickR = -1;
+let _lastClickC = -1;
+let _lastClickTime = 0;
+const DOUBLE_CLICK_MS = 350;
 
 function initTouchDrag() {
     const board = elements.gameBoard;
@@ -318,6 +330,7 @@ function startNewGame(resetTotal = true) {
     updateDisplay();
     updateHintButton();
     updateSelectionText();
+    updateUndoButton();
     renderLives();
 
     if (gameState.livesActive) {
@@ -471,6 +484,30 @@ function handleCellClick(r, c) {
         startTimer();
     }
 
+    // Doble click sobre la primera celda seleccionada → limpiar todo sin costo
+    const now = Date.now();
+    const isDoubleClick = (now - _lastClickTime < DOUBLE_CLICK_MS && _lastClickR === r && _lastClickC === c);
+    _lastClickR = r; _lastClickC = c; _lastClickTime = now;
+
+    if (isDoubleClick && gameState.selectedPath.length > 0) {
+        const first = gameState.selectedPath[0];
+        if (first.r === r && first.c === c) {
+            if (gameState.livesActive && gameState.selectedPath.length > 1) {
+                // Con vidas: deja solo la primera celda (el jugador decide si la abandona)
+                gameState.selectedPath = [first];
+            } else {
+                // Sin vidas (o path ya era 1): limpia todo
+                gameState.selectedPath = [];
+            }
+            playCellDeselectSound();
+            renderBoard();
+            updateSelectionText();
+            updateUndoButton();
+            updateKnightPosition();
+            return;
+        }
+    }
+
     // First click
     if (gameState.selectedPath.length === 0) {
         gameState.selectedPath.push({ r, c });
@@ -506,21 +543,27 @@ function handleCellClick(r, c) {
     // Add to path
     const newPath = [...gameState.selectedPath, { r, c }];
     const currentWord = newPath.map(p => gameState.board[p.r][p.c]).join('');
+    const reversedWord = currentWord.split('').reverse().join('');
+
+    // Acepta la palabra en cualquier dirección
+    const matchedWord = gameState.targetWords.includes(currentWord) ? currentWord
+                      : gameState.targetWords.includes(reversedWord) ? reversedWord
+                      : null;
 
     // Check if word is complete
-    if (gameState.targetWords.includes(currentWord)) {
-        if (!gameState.foundPaths.some(fp => fp.word === currentWord)) {
+    if (matchedWord) {
+        if (!gameState.foundPaths.some(fp => fp.word === matchedWord)) {
             const color = CONFIG.NEON_COLORS[gameState.foundPaths.length % CONFIG.NEON_COLORS.length];
 
             const foundPath = [...newPath]; // capturar antes de que cambie
 
             gameState.foundPaths.push({
-                word: currentWord,
+                word: matchedWord,
                 path: newPath,
                 color: color
             });
 
-            console.log(`[WORD FOUND] "${currentWord}" with path:`,
+            console.log(`[WORD FOUND] "${matchedWord}" with path:`,
                 newPath.map(p => `(${p.r},${p.c})=${gameState.board[p.r][p.c]}`).join(' -> '));
 
             gameState.selectedPath = [];
@@ -553,6 +596,8 @@ function handleCellClick(r, c) {
     renderWordList();
     updateSelectionText();
     updateDisplay();
+    updateHintButton();
+    updateUndoButton();
     updateKnightPosition();
 }
 
@@ -1072,15 +1117,37 @@ function updateDisplay() {
     }
 }
 
+// Volver atrás un movimiento — solo disponible con path >= 2 celdas
+function undoLastMove() {
+    if (gameState.gameStatus !== 'playing') return;
+    if (gameState.selectedPath.length <= 1) return; // no puede ir antes de la primera celda
+    gameState.selectedPath.pop();
+    playCellDeselectSound();
+    renderBoard();
+    updateSelectionText();
+    updateKnightPosition();
+    updateUndoButton();
+}
+
+// Habilita/deshabilita el botón ATRÁS desktop según el path actual
+function updateUndoButton() {
+    if (!elements.undoBtnDesktop) return;
+    elements.undoBtnDesktop.disabled = gameState.selectedPath.length <= 1;
+}
+
 // Actualiza el botón de pista con el costo actual y lo habilita/deshabilita
 function updateHintButton() {
-    if (!elements.hintBtn) return;
     const levelConfig = CONFIG.LEVELS[gameState.currentLevelIndex];
     const cost = levelConfig.hintBaseCost * Math.pow(CONFIG.HINT_BASE_MULTIPLIER, gameState.hintsUsedThisGame);
     const canAfford = gameState.score >= cost;
 
     if (elements.hintCost) elements.hintCost.textContent = cost;
-    elements.hintBtn.disabled = !canAfford;
+    if (elements.hintBtn) elements.hintBtn.disabled = !canAfford;
+
+    // Botón desktop
+    const hintCostDesktop = document.getElementById('hintCostDesktop');
+    if (hintCostDesktop) hintCostDesktop.textContent = cost;
+    if (elements.hintBtnDesktop) elements.hintBtnDesktop.disabled = !canAfford;
 }
 
 // Win game
@@ -1102,16 +1169,43 @@ function winGame() {
 // ── Lives system ──────────────────────────────────────────────
 
 function renderLives() {
+    // Mobile: oculto si lives no están activas
     const el = elements.livesDisplay;
-    if (!el) return;
-    if (!gameState.livesActive) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
-    el.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
-        const heart = document.createElement('span');
-        heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
-        heart.textContent = '❤️';
-        el.appendChild(heart);
+    if (el) {
+        if (!gameState.livesActive) { el.style.display = 'none'; }
+        else {
+            el.style.display = 'flex';
+            el.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const heart = document.createElement('span');
+                heart.className = 'life-heart' + (i < gameState.lives ? '' : ' life-heart--lost');
+                heart.textContent = '❤️';
+                el.appendChild(heart);
+            }
+        }
+    }
+
+    // Desktop: siempre visible, activo o inactivo
+    const desktopEl = elements.livesDisplayDesktop;
+    if (desktopEl) {
+        const heartsSpan = desktopEl.querySelector('.cs-side-hearts');
+        if (heartsSpan) {
+            if (!gameState.livesActive) {
+                heartsSpan.innerHTML = '❤️❤️❤️❤️❤️';
+                desktopEl.classList.add('cs-side-lives--inactive');
+                desktopEl.classList.remove('cs-side-lives--active');
+            } else {
+                let html = '';
+                for (let i = 0; i < 5; i++) {
+                    html += i < gameState.lives
+                        ? '<span class="cs-dh-heart">❤️</span>'
+                        : '<span class="cs-dh-heart cs-dh-heart--lost">❤️</span>';
+                }
+                heartsSpan.innerHTML = html;
+                desktopEl.classList.add('cs-side-lives--active');
+                desktopEl.classList.remove('cs-side-lives--inactive');
+            }
+        }
     }
 }
 
@@ -1192,21 +1286,15 @@ function gameOverRestart() {
 function showVictoryModal() {
     if (!elements.victoryModal) return;
 
-    const isMultiLevel = gameState.totalTime > 0 || gameState.totalScore > 0;
+    const modalTime       = document.getElementById('modalTime');
+    const modalScore      = document.getElementById('modalScore');
+    const modalTotalTime  = document.getElementById('modalTotalTime');
+    const modalTotalScore = document.getElementById('modalTotalScore');
 
-    const modalTime = document.getElementById('modalTime');
-    if (modalTime) modalTime.textContent = formatTime(gameState.timer);
-
-    if (elements.modalScore) elements.modalScore.textContent = gameState.score.toLocaleString();
-
-    const totalSection = document.getElementById('modalTotalSection');
-    if (totalSection) {
-        totalSection.style.display = isMultiLevel ? '' : 'none';
-        const totalTime = document.getElementById('modalTotalTime');
-        const totalScore = document.getElementById('modalTotalScore');
-        if (totalTime) totalTime.textContent = formatTime(gameState.totalTime + gameState.timer);
-        if (totalScore) totalScore.textContent = (gameState.totalScore + gameState.score).toLocaleString();
-    }
+    if (modalTime)       modalTime.textContent       = formatTime(gameState.timer);
+    if (modalScore)      modalScore.textContent      = gameState.score.toLocaleString();
+    if (modalTotalTime)  modalTotalTime.textContent  = formatTime(gameState.totalTime + gameState.timer);
+    if (modalTotalScore) modalTotalScore.textContent = (gameState.totalScore + gameState.score).toLocaleString();
 
     elements.victoryModal.classList.add('active');
 }

@@ -166,6 +166,32 @@
 
         <!-- Game Container -->
         <div class="game-wrapper">
+
+            <!-- Desktop Side Controls (hidden on mobile) -->
+            <div class="cs-side-left" id="csDesktopControls">
+                <!-- Vidas (desktop) -->
+                <div class="cs-side-lives" id="livesDisplayDesktop">
+                    <span class="cs-side-lives-label">VIDAS</span>
+                    <span class="cs-side-hearts">❤️❤️❤️❤️❤️</span>
+                </div>
+                <!-- Nuevo Tablero -->
+                <button class="cs-btn-side cs-btn-reset" onclick="startNewGame()">
+                    <span class="cs-btn-icon">🔄</span>
+                    <span class="cs-btn-label">NUEVO</span>
+                </button>
+                <!-- Pista -->
+                <button class="cs-btn-side cs-btn-hint" id="hintBtnDesktop" onclick="showHint()">
+                    <span class="cs-btn-icon">💡</span>
+                    <span class="cs-btn-label">PISTA</span>
+                    <span class="cs-btn-cost">-<span id="hintCostDesktop">50</span></span>
+                </button>
+                <!-- Atrás -->
+                <button class="cs-btn-side cs-btn-undo" id="undoBtnDesktop" onclick="undoLastMove()" disabled>
+                    <span class="cs-btn-icon">↩️</span>
+                    <span class="cs-btn-label">ATRÁS</span>
+                </button>
+            </div>
+
             <!-- Left Panel: Board -->
             <div class="board-panel">
                 <div class="board-container">
@@ -229,7 +255,7 @@
                     </ul>
                 </div>
 
-                <div class="info-card">
+                <div class="info-card instructions-card-mobile">
                     <h2 class="info-title">🐴 INSTRUCCIONES</h2>
                     <ul class="instructions-list">
                         <li>Click en la primera letra</li>
@@ -241,6 +267,45 @@
             </aside>
         </div>
     </div>
+
+    <!-- How to Play — solo desktop -->
+    <section class="cs-how-to-play">
+        <div class="cs-instructions">
+            <h2>🐴 CÓMO JUGAR</h2>
+            <div class="cs-instructions-grid">
+                <div class="cs-instruction-block">
+                    <div class="cs-instruction-icon">🎯</div>
+                    <h3>Objetivo</h3>
+                    <p>Encontrá todas las palabras ocultas en el tablero. Cada palabra está escondida siguiendo el movimiento del <strong>caballo de ajedrez</strong>. Las palabras pueden leerse en cualquier dirección.</p>
+                </div>
+                <div class="cs-instruction-block">
+                    <div class="cs-instruction-icon">♞</div>
+                    <h3>Movimiento en L</h3>
+                    <p>El caballo se mueve en forma de <strong>L</strong>: 2 casillas en una dirección y 1 casilla perpendicular (o viceversa). Desde cada letra seleccionada, las casillas alcanzables se iluminan automáticamente.</p>
+                </div>
+                <div class="cs-instruction-block">
+                    <div class="cs-instruction-icon">✍️</div>
+                    <h3>Selección de letras</h3>
+                    <p>Hacé <strong>click</strong> en la primera letra y continuá seleccionando letras válidas. En mobile podés <strong>arrastrar el dedo</strong>. Para retroceder, clickeá la última letra seleccionada. La palabra se valida automáticamente.</p>
+                </div>
+                <div class="cs-instruction-block">
+                    <div class="cs-instruction-icon">💡</div>
+                    <h3>Pistas</h3>
+                    <p>Cada pista cuesta puntos y el <strong>costo se duplica</strong> con cada uso. Ganás <strong>100 puntos</strong> por palabra encontrada. Usá las pistas con cuidado — cuantas más usés, más caras serán.</p>
+                </div>
+                <div class="cs-instruction-block">
+                    <div class="cs-instruction-icon">❤️</div>
+                    <h3>Vidas (niveles 7 y 8)</h3>
+                    <p>En los niveles avanzados tenés <strong>5 vidas</strong> compartidas. Perdés una vida si intentás cambiar la primera letra ya seleccionada. Si se agotan todas las vidas, el juego termina y volvés al nivel 1.</p>
+                </div>
+                <div class="cs-instruction-block">
+                    <div class="cs-instruction-icon">🏆</div>
+                    <h3>Progresión</h3>
+                    <p>Hay <strong>8 niveles</strong> con vocabulario de ajedrez, campeones del mundo, tácticas, animales, países y deportes. La dificultad aumenta: más palabras por nivel y menos ayudas visuales.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Help Modal -->
     <div id="helpModal" class="neon-modal">
@@ -289,18 +354,16 @@
                             <span id="modalScore" class="victory-value neon-glow-cyan">0</span>
                         </div>
                     </div>
-                    <div id="modalTotalSection" style="display:none;">
-                        <div class="victory-divider">· · · · · · · · · ·</div>
-                        <div class="victory-section-label victory-section-label--total">ACUMULADO</div>
-                        <div class="victory-row">
-                            <div class="victory-stat">
-                                <span class="victory-label">Tiempo</span>
-                                <span id="modalTotalTime" class="victory-value victory-value--total neon-glow-pink">00:00</span>
-                            </div>
-                            <div class="victory-stat">
-                                <span class="victory-label">Puntos</span>
-                                <span id="modalTotalScore" class="victory-value victory-value--total neon-glow-pink">0</span>
-                            </div>
+                    <div class="victory-divider">· · · · · · · · · ·</div>
+                    <div class="victory-section-label victory-section-label--total">ACUMULADO</div>
+                    <div class="victory-row">
+                        <div class="victory-stat victory-stat--total">
+                            <span class="victory-label">Tiempo</span>
+                            <span id="modalTotalTime" class="victory-value victory-value--total neon-glow-pink">00:00</span>
+                        </div>
+                        <div class="victory-stat victory-stat--total">
+                            <span class="victory-label">Puntos</span>
+                            <span id="modalTotalScore" class="victory-value victory-value--total neon-glow-pink">0</span>
                         </div>
                     </div>
                 </div>

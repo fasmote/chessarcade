@@ -5,6 +5,28 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-16] — Desktop UX: panel lateral, instrucciones, mecánicas de selección
+
+### ✨ Added
+- **Panel lateral izquierdo desktop** (estilo MemoryMatrix): corazones ❤️❤️❤️❤️❤️ siempre visibles (grises cuando vidas no activas, magenta cuando activas) + botón 🔄 NUEVO + botón 💡 PISTA (amarillo) + botón ↩️ ATRÁS (magenta). Solo visible en desktop (≥768px), mobile sin cambios.
+- **Botón ATRÁS**: elimina la última celda seleccionada del path. Deshabilitado cuando el path tiene 1 sola celda (no se puede ir antes de la primera). No cuesta vida.
+- **Doble click en celda 1**: limpia la selección rápidamente. Sin vidas: borra todo. Con vidas: deja solo la celda 1 en el path (el jugador debe hacer un click adicional para abandonarla y perder la vida). Evita que sea un exploit para cambiar la letra de inicio sin penalización.
+- **Palabras válidas en ambas direcciones**: si el jugador recorre el path de una palabra al revés, también se cuenta como encontrada. El nombre mostrado siempre es el canónico.
+- **Instrucciones desktop al pie**: sección `cs-how-to-play` con 6 bloques en grilla de 3 columnas (Objetivo, Movimiento en L, Selección, Pistas, Vidas, Progresión). Solo visible en desktop. El card de instrucciones del panel lateral se oculta en desktop y se mantiene en mobile.
+
+### 🐛 Fixed
+- **Pistas siempre deshabilitadas**: `updateHintButton()` no se llamaba al encontrar una palabra. El score subía pero el botón permanecía `disabled`. Fix: agregar `updateHintButton()` en `handleCellClick()` junto a `updateDisplay()`.
+- **Modal victoria desktop roto**: `#modalTotalSection` estaba oculto con `display:none` y solo aparecía cuando `totalTime > 0`. En nivel 1 nunca aparecía. Rediseño: siempre visible, ambas secciones (ESTE NIVEL y ACUMULADO) muestran valores en todo momento.
+- **Estilo botones laterales desktop**: CSS de `cs-btn-side` copiado exactamente de MemoryMatrix v2 (`padding: 12px 16px`, `min-width: 80px`, `gap: 6px`, `font-size: 10px`, `transition: 0.3s`). Anteriormente los botones eran demasiado distintos.
+- **Grid 3 columnas desktop**: `game-wrapper` tenía `grid-template-columns: 1fr 260px` (2 columnas). Al agregar el panel lateral, el `info-panel` caía a la fila siguiente. Fix: `auto 1fr 260px` (3 columnas).
+
+### 📚 Aprendizajes
+- **CSS grid con número fijo de columnas**: agregar un nuevo hijo a un grid sin ampliar `grid-template-columns` hace que el elemento extra se vaya a la fila siguiente. Siempre verificar que la cantidad de columnas del grid coincida con los hijos directos del contenedor.
+- **`display:none` condicional en modales**: ocultar secciones con lógica JS es frágil — si la condición no se cumple en el camino feliz, el usuario nunca ve la sección. Mejor mostrar siempre y atenuar visualmente cuando no aplica.
+- **Comentarios educativos en el código**: a partir de esta sesión, todo código nuevo lleva comentarios explicativos orientados al aprendizaje del usuario.
+
+---
+
 ## [2026-05-14] — Fix timer DOM no reseteaba visualmente
 
 ### 🐛 Fixed
