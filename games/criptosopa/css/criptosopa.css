@@ -550,9 +550,52 @@
     box-shadow: 0 0 10px rgba(255, 0, 128, 0.3);
 }
 
-.cs-dh-heart--lost {
+/* Fila de corazones — generada por buildHeartsHTML(), 5 por fila */
+.cs-hearts-row {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+}
+
+/* Corazón individual en desktop */
+.cs-heart {
+    font-size: 15px;
+    line-height: 1;
+    transition: opacity 0.3s, filter 0.3s;
+    filter: drop-shadow(0 0 3px rgba(255, 0, 128, 0.6));
+}
+
+/* Corazón perdido: gris y translúcido */
+.cs-heart--lost {
     opacity: 0.15;
     filter: grayscale(1);
+}
+
+/* ── Vidas mobile ── */
+/* Contenedor debajo del tablero, solo visible en mobile (oculto en desktop) */
+.cs-lives-mobile {
+    display: none; /* oculto en desktop */
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 0;
+}
+
+/* En mobile se muestra */
+@media (max-width: 640px) {
+    .cs-lives-mobile {
+        display: flex;
+    }
+}
+
+/* En mobile los corazones son más chicos */
+.cs-lives-mobile .cs-hearts-row {
+    gap: 2px;
+}
+
+.cs-lives-mobile .cs-heart {
+    font-size: 10px;
+    filter: drop-shadow(0 0 2px rgba(255, 0, 128, 0.5));
 }
 
 /* Botones — igual que .btn-side en MemoryMatrix */
