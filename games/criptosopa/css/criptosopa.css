@@ -524,6 +524,8 @@
         align-self: center;
     }
     .controls-panel { display: none; }
+    /* El botón ← MENÚ es redundante en desktop (ya hay nav con HOME) */
+    .neon-back-btn  { display: none; }
 }
 
 /* Corazones — igual que .lives-container en MemoryMatrix */
@@ -778,19 +780,46 @@
     box-shadow: none;
 }
 
-/* Logo desktop: emoji 🔤♞ idéntico al card de la home — oculto en mobile */
+/* Logo desktop: imita visualmente el card de la home (caja abc + caballito)
+   CSS puro porque el emoji 🔤 no renderiza de forma consistente entre browsers */
 .cs-logo-desktop {
     display: none; /* oculto en mobile */
 }
 
 @media (min-width: 641px) {
     .cs-logo-desktop {
-        display: inline;
-        font-size: 2.2rem;     /* mismo orden de magnitud que el card (48px) */
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
         vertical-align: middle;
-        margin-right: 4px;
-        filter: drop-shadow(0 0 6px rgba(0, 200, 255, 0.5));
+        margin-right: 6px;
     }
+}
+
+/* Caja azul con "abc" — imita el emoji 🔤 */
+.cs-logo-abc {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #2979c8;          /* azul del emoji 🔤 */
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: lowercase;
+    padding: 3px 5px;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    line-height: 1;
+    box-shadow: 0 0 8px rgba(41, 121, 200, 0.6);
+}
+
+/* Caballito — símbolo del caballo de ajedrez */
+.cs-logo-knight {
+    font-size: 1.6rem;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan);
+    line-height: 1;
 }
 
 /* Green — NUEVO TABLERO / NUEVA PARTIDA en mobile */
