@@ -172,7 +172,8 @@ const elements = {
     levelWarning: null,
     gameOverModal: null,
     gameOverRestartBtn: null,
-    closeGameOverBtn: null
+    closeGameOverBtn: null,
+    modalRestartBtn: null
 };
 
 // Initialize game
@@ -216,7 +217,8 @@ function initializeDOM() {
     elements.levelWarning = document.getElementById('levelWarning');
     elements.gameOverModal = document.getElementById('gameOverModal');
     elements.gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
-    elements.closeGameOverBtn = document.getElementById('closeGameOverBtn');
+    elements.closeGameOverBtn  = document.getElementById('closeGameOverBtn');
+    elements.modalRestartBtn   = document.getElementById('modalRestartBtn');
 }
 
 // Setup event listeners
@@ -231,8 +233,9 @@ function setupEventListeners() {
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
     elements.submitScoreBtn?.addEventListener('click', submitScore);
     elements.gameOverRestartBtn?.addEventListener('click', gameOverRestart);
-    // X del game over: cierra el modal y muestra el resumen de puntos acumulados
     elements.closeGameOverBtn?.addEventListener('click', gameOverShowStats);
+    // Botón "VOLVER A EMPEZAR" en el modal de resumen (visible solo en contexto game over)
+    elements.modalRestartBtn?.addEventListener('click', () => { closeVictoryModal(); gameOverRestart(); });
 
     // Global mouseup to stop dragging
     document.addEventListener('mouseup', () => {
@@ -1327,6 +1330,12 @@ function showGameOverModal() {
     gameState.gameStatus = 'gameover';
     clearInterval(gameState.timerInterval); // detener el reloj al perder
     elements.gameOverModal?.classList.add('active');
+    // Auto-transición al resumen de puntos después de 2 segundos si el jugador no interactúa
+    setTimeout(() => {
+        if (elements.gameOverModal?.classList.contains('active')) {
+            gameOverShowStats();
+        }
+    }, 2000);
 }
 
 // Cierra el game over y muestra el resumen de puntos y tiempo acumulados.
@@ -1373,10 +1382,9 @@ function showVictoryModal(options = {}) {
         if (messageEl) messageEl.textContent = '¡Has encontrado todas las palabras!';
     }
 
-    // Ocultar "Siguiente nivel" en contexto de game over
-    if (elements.nextLevelBtn) {
-        elements.nextLevelBtn.style.display = options.isGameOver ? 'none' : '';
-    }
+    // En game over: ocultar "Siguiente nivel", mostrar "Volver a empezar"
+    if (elements.nextLevelBtn)   elements.nextLevelBtn.style.display   = options.isGameOver ? 'none' : '';
+    if (elements.modalRestartBtn) elements.modalRestartBtn.style.display = options.isGameOver ? ''     : 'none';
 
     // Mostrar el nombre del nivel completado en el encabezado del modal
     const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];

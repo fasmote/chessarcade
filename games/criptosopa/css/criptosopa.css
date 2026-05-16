@@ -282,10 +282,12 @@
     }
 }
 
-/* Timer */
+/* Timer — centrado en toda la página (desktop y mobile) */
 .timer-container {
     display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
     margin-bottom: 1.5rem;
 }
 
