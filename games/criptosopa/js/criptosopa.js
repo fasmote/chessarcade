@@ -506,21 +506,27 @@ function handleCellClick(r, c) {
     // Add to path
     const newPath = [...gameState.selectedPath, { r, c }];
     const currentWord = newPath.map(p => gameState.board[p.r][p.c]).join('');
+    const reversedWord = currentWord.split('').reverse().join('');
+
+    // Acepta la palabra en cualquier dirección
+    const matchedWord = gameState.targetWords.includes(currentWord) ? currentWord
+                      : gameState.targetWords.includes(reversedWord) ? reversedWord
+                      : null;
 
     // Check if word is complete
-    if (gameState.targetWords.includes(currentWord)) {
-        if (!gameState.foundPaths.some(fp => fp.word === currentWord)) {
+    if (matchedWord) {
+        if (!gameState.foundPaths.some(fp => fp.word === matchedWord)) {
             const color = CONFIG.NEON_COLORS[gameState.foundPaths.length % CONFIG.NEON_COLORS.length];
 
             const foundPath = [...newPath]; // capturar antes de que cambie
 
             gameState.foundPaths.push({
-                word: currentWord,
+                word: matchedWord,
                 path: newPath,
                 color: color
             });
 
-            console.log(`[WORD FOUND] "${currentWord}" with path:`,
+            console.log(`[WORD FOUND] "${matchedWord}" with path:`,
                 newPath.map(p => `(${p.r},${p.c})=${gameState.board[p.r][p.c]}`).join(' -> '));
 
             gameState.selectedPath = [];
