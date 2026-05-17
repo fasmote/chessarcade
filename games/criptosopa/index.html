@@ -145,19 +145,17 @@
 
     <!-- Main Container -->
     <div class="neon-container">
-        <!-- Título centrado — estructura idéntica a MemoryMatrix (.title-section) -->
-        <div class="cs-title-section">
-            <h1 class="cs-game-title">
-                <!-- Logo dentro del h1 pero ANTES del span con gradient,
-                     así no hereda -webkit-text-fill-color:transparent -->
-                <span class="cs-logo-desktop">🔤♞</span>
-                <span class="cs-title-text">CriptoSopa</span>
-            </h1>
-            <p class="cs-game-subtitle">Knight Word Search</p>
-        </div>
-
-        <!-- Game Container (grid 2 filas: fila 1=timer centrado, fila 2=tablero+info) -->
+        <!-- Game Container: grid 3 filas — fila 1=título, fila 2=timer, fila 3=tablero+info -->
         <div class="game-wrapper">
+
+            <!-- Título en columna 2 fila 1 del grid: centrado sobre el tablero -->
+            <div class="cs-title-section">
+                <h1 class="cs-game-title">
+                    <span class="cs-logo-desktop">🔤♞</span>
+                    <span class="cs-title-text">CriptoSopa</span>
+                </h1>
+                <p class="cs-game-subtitle">Knight Word Search</p>
+            </div>
 
             <!-- Desktop Side Controls (hidden on mobile) -->
             <div class="cs-side-left" id="csDesktopControls">
