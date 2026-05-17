@@ -527,6 +527,8 @@
     }
     .controls-panel { display: none; }
     .neon-back-btn  { display: none; }
+    /* Reducir padding top del contenedor global para subir todo el contenido */
+    .neon-container { padding-top: 0.5rem; }
     /* Logo visible en desktop — inline dentro del h1 */
     .cs-logo-desktop {
         display: inline;
@@ -826,7 +828,7 @@
     filter: drop-shadow(0 0 20px var(--neon-cyan));
 }
 
-/* Subtítulo */
+/* Subtítulo — desplazado a la derecha para alinear con el texto del título (no con el logo) */
 .cs-game-subtitle {
     font-family: 'Orbitron', sans-serif;
     font-size: 1rem;
@@ -836,6 +838,7 @@
     animation: neonPulse 3s ease-in-out infinite;
     text-transform: uppercase;
     margin-top: 0.3rem;
+    margin-left: 4rem; /* ~ancho del logo 3.5rem + 10px gap */
 }
 
 /* Ocultar subtítulo en mobile (igual que antes) */
