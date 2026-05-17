@@ -5,6 +5,30 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-17] — Logo, centrado del título y fixes de layout desktop
+
+### ✨ Added
+- **Logo 🔤♞ en desktop**: visible a 3.5rem en el header, idéntico al card de la home. Inline dentro del h1 pero ANTES del span con gradient, para no heredar `-webkit-text-fill-color: transparent`.
+- **Título "CRIPTOSOPA" centrado**: reemplazado el sistema `neon-header/neon-title` por `div.cs-title-section` con `display:flex; flex-direction:column; align-items:center` (igual a `.title-section` de MemoryMatrix). El gradient se aplica solo a `span.cs-title-text`, no al h1.
+- **Título desplazado hacia el tablero**: `margin-right: 170px` (768px+) y `margin-right: 230px` (1024px+) para compensar la asimetría entre el info-panel (260-320px) y el side-panel (~90px). Así el título queda centrado sobre el tablero, no sobre el viewport completo.
+- **Marquee visible**: `grid-template-rows: auto 1fr → auto auto` para que el board-panel no quede con altura fija que cortaba la selection-bar.
+- **Timer más cerca del tablero**: `margin-bottom: 0.3rem` (era 1.5rem).
+- **Contenido más arriba**: `padding-top: 0.5rem` en `.neon-container` desktop (era 2rem).
+
+### 🐛 Fixed
+- **Logo invisible (causa raíz final)**: `-webkit-text-fill-color: transparent` del `neon-title` se propagaba a TODOS los hijos del h1, haciendo invisible cualquier emoji o texto dentro. Solución: sacar el logo del h1 y aplicar el gradient solo a un `span.cs-title-text` hijo.
+- **Logo invisible (segunda causa)**: `.cs-logo-desktop { display: none }` estaba DESPUÉS del `@media (min-width: 768px)` que lo mostraba. Misma especificidad + posición posterior = gana siempre → logo oculto en desktop. Solución: mover la regla `display:none` ANTES del media query.
+- **Título no centrado**: `neon-container` con `align-items: center` encogía el `header.neon-header` a su ancho de contenido. Ninguna de las 7 técnicas probadas funcionó. Solución: abandonar el `neon-header` y copiar la estructura de MemoryMatrix.
+- **Marquee cortado**: `grid-template-rows: auto 1fr` daba altura fija al board-panel. Cambio a `auto auto` para que crezca con su contenido.
+
+### 📚 Aprendizajes
+- **`-webkit-text-fill-color: transparent` se propaga a hijos**: NUNCA poner logos/iconos dentro de un h1 con gradient text usando esta técnica. Siempre envolver el texto en un span hijo y aplicar el gradient al span, no al h1.
+- **Orden del CSS importa tanto como especificidad**: una regla `display: none` después de un media query con la misma especificidad SIEMPRE gana. Reglas globales de "ocultar por defecto" deben ir ANTES de los media queries que las sobreescriben.
+- **Para centrar sobre una columna de un grid asimétrico**: usar `margin-right` equivalente a la diferencia de anchos entre los paneles laterales. Es más robusto que mover elementos dentro del grid.
+- **Siempre copiar la estructura de otros juegos que funcionan**: 7 intentos fallidos con técnicas CSS "puras". La solución llegó al copiar exactamente `.title-section` de MemoryMatrix.
+
+---
+
 ## [2026-05-14 — 16] — Sesión en progreso: progresión de vidas, modal, UX desktop
 
 ### ✨ Added
