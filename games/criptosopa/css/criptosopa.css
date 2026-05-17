@@ -512,7 +512,9 @@
    PANEL LATERAL IZQUIERDO — solo desktop
    CSS copiado de MemoryMatrix v2 / styles.css
    ============================================ */
-.cs-side-left {
+/* Panel lateral y logo: ocultos en mobile, se activan en el media query 768px */
+.cs-side-left,
+.cs-logo-desktop {
     display: none;
 }
 
@@ -786,10 +788,7 @@
     box-shadow: none;
 }
 
-/* Logo desktop: oculto por defecto, activado en el bloque @media 768px de arriba */
-.cs-logo-desktop {
-    display: none;
-}
+/* (regla movida arriba del media query — ver sección panel lateral) */
 
 /* ── Título centrado — estructura idéntica a MemoryMatrix ── */
 
