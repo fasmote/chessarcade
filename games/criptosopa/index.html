@@ -145,18 +145,16 @@
 
     <!-- Main Container -->
     <div class="neon-container">
-        <!-- Header -->
-        <header class="neon-header">
-            <a href="../../index.html" class="neon-back-btn" aria-label="Volver al menú">
-                ← MENÚ
-            </a>
-            <!-- Logo fuera del h1 para evitar -webkit-text-fill-color:transparent del neon-title -->
-            <span class="cs-logo-desktop">🔤♞</span>
-            <h1 class="neon-title">
-                CriptoSopa
-                <span class="neon-subtitle">Knight Word Search</span>
+        <!-- Título centrado — estructura idéntica a MemoryMatrix (.title-section) -->
+        <div class="cs-title-section">
+            <h1 class="cs-game-title">
+                <!-- Logo dentro del h1 pero ANTES del span con gradient,
+                     así no hereda -webkit-text-fill-color:transparent -->
+                <span class="cs-logo-desktop">🔤♞</span>
+                <span class="cs-title-text">CriptoSopa</span>
             </h1>
-        </header>
+            <p class="cs-game-subtitle">Knight Word Search</p>
+        </div>
 
         <!-- Game Container (grid 2 filas: fila 1=timer centrado, fila 2=tablero+info) -->
         <div class="game-wrapper">

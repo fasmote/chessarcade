@@ -809,12 +809,12 @@ Leer el archivo fuente `games/memory-matrix-v2/styles.css` con el agente de bús
 
 ---
 
-## 13. Error sin resolver — Sesión 2026-05-16
+## 13. Errores resueltos — Sesión 2026-05-17
 
-### Error #120: Título "CRIPTOSOPA" no se centra en desktop — 7 intentos fallidos
-**Fecha**: 2026-05-16
+### Error #120: Título "CRIPTOSOPA" no se centra en desktop ✅ RESUELTO
+**Fecha**: 2026-05-16 (detectado) / 2026-05-17 (resuelto)
 **Severidad**: Visual / Media
-**Estado**: ⚠️ SIN RESOLVER — primera prioridad próxima sesión
+**Estado**: ✅ RESUELTO
 
 **Descripción**:
 El título "CRIPTOSOPA" en el header del juego aparece desplazado a la izquierda en desktop. Se intentaron 7 técnicas CSS diferentes, ninguna funcionó.
@@ -857,3 +857,49 @@ El título "CRIPTOSOPA" en el header del juego aparece desplazado a la izquierda
 3. **Alternativa limpia**: mover el h1 FUERA del `neon-header`, como elemento independiente del `neon-container`, y crear un header separado solo para el logo. Sin conflicto con el flex container.
 
 **Archivos**: `games/criptosopa/css/criptosopa.css` — reglas de `.neon-header` y `.cs-logo-desktop`
+
+**✅ SOLUCIÓN FINAL (2026-05-17)**:
+Copiar la estructura de MemoryMatrix (`.title-section`):
+```html
+<div class="cs-title-section">
+    <h1 class="cs-game-title">
+        <span class="cs-logo-desktop">🔤♞</span>   ← logo ANTES del span de texto
+        <span class="cs-title-text">CriptoSopa</span>  ← gradient solo en este span
+    </h1>
+    <p class="cs-game-subtitle">Knight Word Search</p>
+</div>
+```
+```css
+.cs-title-section {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+/* Desplazar hacia el tablero compensando la asimetría side-panel vs info-panel */
+@media (min-width: 768px)  { .cs-title-section { margin-right: 170px; } }
+@media (min-width: 1024px) { .cs-title-section { margin-right: 230px; } }
+```
+
+**Causas raíz descubiertas en el proceso**:
+1. **`-webkit-text-fill-color: transparent`** del `neon-title` se propagaba a todos los hijos → logo emoji invisible dentro del h1. Fix: aplicar gradient solo a `span.cs-title-text`, no al h1.
+2. **Orden CSS**: `.cs-logo-desktop { display: none }` estaba DESPUÉS del media query que lo mostraba → logo siempre oculto por cascade. Fix: mover la regla antes del media query.
+3. **`align-items: center` del `neon-container`** encogía el header → título no tomaba ancho completo → `text-align: center` no tenía efecto. Fix: abandonar `neon-header` y usar estructura propia.
+
+---
+
+## 14. Errores de Layout — Sesión 2026-05-17
+
+### Error #121: Logo emoji no visible en header — `-webkit-text-fill-color` ✅ RESUELTO
+**Fecha**: 2026-05-16/17
+**Causa**: El h1 con clase `neon-title` tenía `-webkit-text-fill-color: transparent` que se propagaba a todos los hijos, haciendo invisible el emoji `🔤♞`.
+**Solución**: Sacar el logo del h1. Aplicar el gradient solo a un `span.cs-title-text` hijo. El emoji queda fuera del span con transparent fill.
+
+### Error #122: Logo desktop siempre oculto — orden de reglas CSS ✅ RESUELTO
+**Fecha**: 2026-05-17
+**Causa**: `.cs-logo-desktop { display: none }` estaba en la línea 790 del CSS, DESPUÉS del `@media (min-width: 768px)` que lo mostraba (línea ~530). Misma especificidad → regla posterior gana → logo siempre oculto.
+**Solución**: Mover la regla `display: none` ANTES del media query. La regla que aparece más tarde en el archivo SIEMPRE gana si la especificidad es igual — las reglas "por defecto" deben ir primero.
+
+### Error #123: Marquee cortado — `grid-template-rows: auto 1fr` ✅ RESUELTO  
+**Fecha**: 2026-05-17
+**Causa**: El grid usaba `1fr` en la fila del tablero, dando al board-panel una altura fija. Si el contenido (tablero + lives + selection-bar) era más alto que `1fr`, la selection-bar con la marquee quedaba cortada.
+**Solución**: Cambiar a `auto auto` para que ambas filas crezcan con su contenido.
+
+**Lección general de la sesión**: Antes de intentar técnicas CSS "a ciegas", mirar cómo lo hace otro juego que ya funciona. Los 7 intentos fallidos con `justify-content`, `align-self`, `width:100%`, `margin:auto`, etc. se evitaban copiando la estructura de MemoryMatrix desde el principio.

@@ -263,7 +263,7 @@
 
     .game-wrapper {
         grid-template-columns: auto 1fr 260px;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto; /* auto en ambas filas para no cortar el contenido */
         align-items: start;
         padding: 0.75rem;
     }
@@ -305,7 +305,7 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.3rem; /* reducido — el espacio entre timer y tablero */
 }
 
 .timer-display {
@@ -512,7 +512,9 @@
    PANEL LATERAL IZQUIERDO — solo desktop
    CSS copiado de MemoryMatrix v2 / styles.css
    ============================================ */
-.cs-side-left {
+/* Panel lateral y logo: ocultos en mobile, se activan en el media query 768px */
+.cs-side-left,
+.cs-logo-desktop {
     display: none;
 }
 
@@ -525,22 +527,14 @@
     }
     .controls-panel { display: none; }
     .neon-back-btn  { display: none; }
-    /* align-self:stretch sobreescribe el align-items:center del neon-container
-       que encogía el header. Así el header ocupa el 100% del ancho disponible. */
-    .neon-header {
-        align-self: stretch !important;
-        text-align: center;
-        position: relative;
-    }
-    /* Logo absolutamente posicionado a la izquierda, fuera del flujo */
+    /* Reducir padding top del contenedor global para subir todo el contenido */
+    .neon-container { padding-top: 0.5rem; }
+    /* Logo visible en desktop — inline dentro del h1 */
     .cs-logo-desktop {
-        display: block !important;
-        position: absolute !important;
-        left: 1.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 3rem;
-        line-height: 1;
+        display: inline;
+        font-size: 3.5rem;
+        margin-right: 10px;
+        vertical-align: middle;
     }
 }
 
@@ -796,9 +790,70 @@
     box-shadow: none;
 }
 
-/* Logo desktop: oculto por defecto, activado en el bloque @media 768px de arriba */
-.cs-logo-desktop {
-    display: none;
+/* (regla movida arriba del media query — ver sección panel lateral) */
+
+/* ── Título centrado — estructura idéntica a MemoryMatrix ── */
+
+/* Contenedor: flex column con align-items:center — centra hijos horizontalmente.
+   Igual que .title-section en MemoryMatrix. */
+.cs-title-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+/* En desktop: desplazar título hacia el centro del tablero.
+   El info-panel (260-320px) pesa más que el side-panel (~90px),
+   margin-right compensa esa asimetría acercando el título al centro del tablero. */
+@media (min-width: 768px) {
+    .cs-title-section { margin-right: 170px; }
+}
+@media (min-width: 1024px) {
+    .cs-title-section { margin-right: 230px; }
+}
+
+/* h1 del título: display flex para poner logo + texto en la misma línea */
+.cs-game-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: clamp(2rem, 7vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* Texto con gradient animado — igual visual que .neon-title pero solo en este span,
+   así el logo emoji hermano no hereda -webkit-text-fill-color:transparent */
+.cs-title-text {
+    background: linear-gradient(45deg, var(--neon-magenta), #39ff14, #4040ff, #ff9900);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: neonGradientShift 4s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px var(--neon-cyan));
+}
+
+/* Subtítulo — desplazado a la derecha para alinear con el texto del título (no con el logo) */
+.cs-game-subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--neon-cyan);
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 10px var(--neon-cyan);
+    animation: neonPulse 3s ease-in-out infinite;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+    margin-left: 4rem; /* ~ancho del logo 3.5rem + 10px gap */
+}
+
+/* Ocultar subtítulo en mobile (igual que antes) */
+@media (max-width: 640px) {
+    .cs-game-subtitle { display: none; }
 }
 
 /* Green — NUEVO TABLERO / NUEVA PARTIDA en mobile */

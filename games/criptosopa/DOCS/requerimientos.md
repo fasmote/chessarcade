@@ -345,4 +345,20 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 
 ### 13.5 Logo y Header Desktop (⚠️ PARCIALMENTE RESUELTO)
 - **RF-155**: Logo 🔤♞ visible en desktop a 3rem, posicionado a la izquierda del header
-- **RF-156** ⚠️ PENDIENTE: Título "CRIPTOSOPA" centrado en desktop. El span del logo fue movido fuera del h1 (que tiene -webkit-text-fill-color:transparent que hacía invisible cualquier hijo). El centrado del título sigue sin resolverse — el neon-container con align-items:center encoge el header y ninguna técnica CSS probada hasta ahora funcionó. **Primera prioridad de la próxima sesión.**
+- **RF-156** ✅ RESUELTO (2026-05-17): Logo 🔤♞ visible a 3.5rem en desktop. Título centrado sobre el tablero. Ver errores #120-123 para el detalle de la solución.
+
+---
+
+## 14. Requerimientos Implementados — Sesión 2026-05-17
+
+### 14.1 Header y Logo Desktop
+- **RF-157**: Logo 🔤♞ visible en el header desktop a 3.5rem, idéntico al card de la home
+- **RF-158**: Título "CRIPTOSOPA" centrado sobre el tablero (no sobre el viewport completo)
+- **RF-159**: Subtítulo "Knight Word Search" centrado debajo del título
+- **RF-160**: Estructura del título copiada de MemoryMatrix: `div.cs-title-section` con `display:flex; align-items:center`. El gradient se aplica solo al `span.cs-title-text`, no al h1, para evitar que `-webkit-text-fill-color:transparent` tape el logo.
+
+### 14.2 Layout Desktop
+- **RF-161**: `grid-template-rows: auto auto` en el game-wrapper (era `auto 1fr`) para que el board-panel crezca con su contenido y no corte la marquee
+- **RF-162**: `margin-right: 170px` (768px+) y `230px` (1024px+) en `cs-title-section` para centrar el título sobre el tablero compensando la asimetría entre info-panel (260-320px) y side-panel (~90px)
+- **RF-163**: Timer con `margin-bottom: 0.3rem` (reducido de 1.5rem) para acercar el reloj al tablero
+- **RF-164**: `padding-top: 0.5rem` en `.neon-container` desktop para subir todo el contenido
