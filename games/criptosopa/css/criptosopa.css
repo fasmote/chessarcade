@@ -804,6 +804,16 @@
     margin-bottom: 0.5rem;
 }
 
+/* En desktop: desplazar título hacia el centro del tablero.
+   El info-panel (260-320px) pesa más que el side-panel (~90px),
+   margin-right compensa esa asimetría acercando el título al centro del tablero. */
+@media (min-width: 768px) {
+    .cs-title-section { margin-right: 170px; }
+}
+@media (min-width: 1024px) {
+    .cs-title-section { margin-right: 230px; }
+}
+
 /* h1 del título: display flex para poner logo + texto en la misma línea */
 .cs-game-title {
     display: flex;
