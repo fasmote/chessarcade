@@ -263,7 +263,7 @@
 
     .game-wrapper {
         grid-template-columns: auto 1fr 260px;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto; /* auto en ambas filas para no cortar el contenido */
         align-items: start;
         padding: 0.75rem;
     }
@@ -305,7 +305,7 @@
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.3rem; /* reducido — el espacio entre timer y tablero */
 }
 
 .timer-display {
