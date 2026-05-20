@@ -362,3 +362,14 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 - **RF-162**: `margin-right: 170px` (768px+) y `230px` (1024px+) en `cs-title-section` para centrar el título sobre el tablero compensando la asimetría entre info-panel (260-320px) y side-panel (~90px)
 - **RF-163**: Timer con `margin-bottom: 0.3rem` (reducido de 1.5rem) para acercar el reloj al tablero
 - **RF-164**: `padding-top: 0.5rem` en `.neon-container` desktop para subir todo el contenido
+
+---
+
+## 15. Requerimientos Implementados — Sesión 2026-05-20
+
+### 15.1 Nuevos Niveles
+- **RF-165**: Nivel 7 "Aperturas" — nombres de aperturas y defensas de ajedrez, border illumination, 10 vidas, 7 palabras por partida
+- **RF-166**: Nivel 8 "Mitología" — dioses y personajes de mitología grecolatina, border illumination, 10 vidas, 7 palabras por partida
+- **RF-167**: Países y Deportes renumerados a niveles 9 y 10 (sin cambios en su configuración)
+- **RF-168**: El juego pasa de 8 a 10 niveles en total. Tier 2 (borde) comprende niveles 4-8; tier 3 (sin iluminación) comprende niveles 9-10
+- **RF-169**: Banner de aviso de tier actualizado — `tierStartLevels = [0, 3, 8]` para reflejar que el tier difícil comienza en el nivel 9
