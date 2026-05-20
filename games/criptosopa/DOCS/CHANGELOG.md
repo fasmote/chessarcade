@@ -5,6 +5,16 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-20] — Niveles 7 (Aperturas) y 8 (Mitología)
+
+### ✨ Added
+- **Nivel 7 — Aperturas** (border, 10 vidas, 7 palabras por partida): pool con nombres de aperturas y defensas de ajedrez — SICILIANA, FRANCESA, ESPAÑOLA, ITALIANA, ESCOCESA, INGLESA, CATALANA, GRUNFELD, BENONI, NAJDORF, DRAGON, BERLIN, PETROFF, PIRC, RETI, ALEKHINE, BENKO, BUDAPEST, HOLANDES, ESLAVA, NIMZO, MODERNA, INDIA, CARO.
+- **Nivel 8 — Mitología** (border, 10 vidas, 7 palabras): pool con dioses y personajes de la mitología grecolatina — ZEUS, ATENEA, POSEIDON, ARES, AFRODITA, APOLO, ARTEMISA, HADES, HERMES, HERA, HEFESTO, DIONISO, CRONOS, HERCULES, TESEO, PERSEO, MEDUSA, CENTAURO, HIDRA, PEGASO, ICARO, NARCISO, PANDORA, PROMETEO, ATLAS, OLIMPO, DAFNE, SIRENA, CICLOPE, ARIADNA, AQUILES, ODISEO, TROYA, ORFEO, CALIPSO, CIRCE.
+- **Países y Deportes renumerados** a niveles 9 y 10 (tier difícil, sin iluminación, 5 vidas).
+- **Banner de aviso actualizado**: `tierStartLevels = [0, 3, 8]` — el tier 3 ahora arranca en el índice 8 (nivel 9).
+
+---
+
 ## [2026-05-17] — Logo, centrado del título y fixes de layout desktop
 
 ### ✨ Added
