@@ -1394,6 +1394,26 @@
     color: var(--neon-magenta);
 }
 
+/* Desglose de bonuses: 📝 palabras + ⚡ velocidad + ❤️ vidas × multiplicador */
+.victory-breakdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.8rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    background: rgba(0, 255, 255, 0.05);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+}
+
+.vb-item { color: rgba(255,255,255,0.8); }
+.vb-sep  { color: var(--neon-cyan); font-weight: 700; }
+.vb-multiplier { color: var(--neon-yellow); font-weight: 900; font-size: 1rem; }
+
 .victory-message {
     font-family: 'Rajdhani', sans-serif;
     font-size: 1.1rem;

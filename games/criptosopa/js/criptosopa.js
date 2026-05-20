@@ -14,7 +14,7 @@ const CONFIG = {
         { hex: '#39ff14', glow: '0 0 15px #39ff14' },
         { hex: '#b026ff', glow: '0 0 15px #b026ff' },
     ],
-    POINTS_PER_WORD: 100,
+    POINTS_PER_LETTER: 30,   // puntaje base por letra de la palabra encontrada
     HINT_BASE_MULTIPLIER: 2, // el costo se duplica en cada pista usada
 
     LEVELS: [
@@ -165,7 +165,9 @@ let gameState = {
     hoveredWord: null,
     gameStatus: 'playing',
     isDragging: false,
-    hintCell: null
+    hintCell: null,
+    // Desglose del último puntaje de nivel (para mostrar en el modal de victoria)
+    lastBonus: { words: 0, speed: 0, lives: 0, multiplier: 1 }
 };
 
 // DOM Elements
@@ -634,7 +636,8 @@ function handleCellClick(r, c) {
 
             gameState.selectedPath = [];
             gameState.isDragging = false; // evitar que touchmove re-seleccione la última celda
-            gameState.score += CONFIG.POINTS_PER_WORD;
+            // Puntaje por longitud de palabra: largo × 30 pts (palabras más largas valen más)
+            gameState.score += matchedWord.length * CONFIG.POINTS_PER_LETTER;
 
             // Sprint 1: feedback al encontrar palabra
             if (navigator.vibrate) navigator.vibrate(100);
@@ -1228,6 +1231,23 @@ function winGame() {
     clearInterval(gameState.timerInterval);
     updateResetBtnLabel(true); // en mobile el botón pasa a "NUEVA PARTIDA"
 
+    // ── Calcular bonuses y aplicar multiplicador ──
+    const segundos    = Math.floor(gameState.timer / 100); // timer en centisegundos → segundos
+    const speedBonus  = Math.max(0, 500 - segundos);       // 500 pts base, -1 por segundo
+    const livesBonus  = gameState.lives * 50;              // vidas restantes × 50 pts
+    const nivel       = gameState.currentLevelIndex + 1;   // nivel 1-based
+    const multiplier  = Math.round((1 + nivel * 0.1) * 10) / 10; // 1.1 … 2.0, redondeado a 1 decimal
+    const wordScore   = gameState.score;                   // puntaje acumulado por palabras
+
+    const finalScore = Math.round((wordScore + speedBonus + livesBonus) * multiplier);
+
+    // Guardar desglose para mostrarlo en el modal de victoria
+    gameState.lastBonus = { words: wordScore, speed: speedBonus, lives: livesBonus, multiplier };
+    gameState.score = finalScore;
+
+    updateDisplay(); // actualizar el marcador con el puntaje final
+    updateHintButton();
+
     // Feedback de victoria
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
     playVictorySound();
@@ -1430,6 +1450,20 @@ function showVictoryModal(options = {}) {
     const levelNameEl = document.getElementById('victoryLevelName');
     if (levelNameEl) {
         levelNameEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
+    }
+
+    // Desglose de bonuses (solo en victoria normal, no en resumen de game over)
+    const breakdown = document.getElementById('victoryBreakdown');
+    if (breakdown) {
+        breakdown.style.display = options.isGameOver ? 'none' : 'flex';
+        if (!options.isGameOver) {
+            const b = gameState.lastBonus;
+            const el = (id) => document.getElementById(id);
+            if (el('vbWords'))      el('vbWords').textContent      = b.words.toLocaleString();
+            if (el('vbSpeed'))      el('vbSpeed').textContent      = `+${b.speed}`;
+            if (el('vbLives'))      el('vbLives').textContent      = `+${b.lives}`;
+            if (el('vbMultiplier')) el('vbMultiplier').textContent = `×${b.multiplier}`;
+        }
     }
 
     // Estadísticas de este nivel y acumulado
