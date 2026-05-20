@@ -373,3 +373,16 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 - **RF-167**: Países y Deportes renumerados a niveles 9 y 10 (sin cambios en su configuración)
 - **RF-168**: El juego pasa de 8 a 10 niveles en total. Tier 2 (borde) comprende niveles 4-8; tier 3 (sin iluminación) comprende niveles 9-10
 - **RF-169**: Banner de aviso de tier actualizado — `tierStartLevels = [0, 3, 8]` para reflejar que el tier difícil comienza en el nivel 9
+
+---
+
+## 16. Requerimientos Implementados — Sesión 2026-05-20 (parte 2)
+
+### 16.1 Sistema de Puntaje Revisado
+- **RF-170**: Puntaje por palabra basado en longitud: `largo_palabra × 30 pts` (antes 100 fijo). Palabras más largas valen más.
+- **RF-171**: Bonus de velocidad al completar el nivel: `max(0, 500 - segundos_del_nivel)`. Completar en 0s da 500 pts, decrece 1 pt/segundo, nunca resta.
+- **RF-172**: Bonus de vidas restantes al completar el nivel: `vidas_restantes × 50 pts`. Premia jugar limpio sin cambiar la primera celda.
+- **RF-173**: Multiplicador por nivel: `1 + nivel × 0.1` (nivel 1 = ×1.1, nivel 5 = ×1.5, nivel 10 = ×2.0). Cada nivel tiene su propio valor creciente.
+- **RF-174**: Fórmula completa: `(puntaje_palabras + bonus_velocidad + bonus_vidas) × multiplicador`, redondeado al entero más cercano.
+- **RF-175**: Los bonuses se calculan y aplican en `winGame()` antes de mostrar el modal de victoria.
+- **RF-176**: El modal de victoria muestra el desglose de bonuses (palabras / velocidad / vidas / multiplicador) para que el jugador entienda de dónde viene el puntaje.
