@@ -86,7 +86,7 @@ const CONFIG = {
             wordsPerGame: 7,
             illumination: 'border',
             hintBaseCost: 100,
-            lives: 10,              // último nivel del tier medio
+            lives: 10,
             pool: ['TIGRE','AGUILA','JIRAFA','ELEFANTE','DELFIN','PINGUINO',
                    'COCODRILO','SERPIENTE','MARIPOSA','CANGURO','CAMELLO',
                    'HIPOPOTAMO','GORILA','LEON','PANDA','GUEPARDO','LOBO',
@@ -94,11 +94,36 @@ const CONFIG = {
                    'TORTUGA','JAGUAR','LEOPARDO']
         },
         {
+            name: 'Aperturas',
+            wordsPerGame: 7,
+            illumination: 'border',
+            hintBaseCost: 100,
+            lives: 10,              // mismo tier que niveles 4-6
+            pool: ['SICILIANA','FRANCESA','ESPAÑOLA','ITALIANA','ESCOCESA',
+                   'INGLESA','CATALANA','GRUNFELD','BENONI','NAJDORF',
+                   'DRAGON','BERLIN','PETROFF','PIRC','RETI','ALEKHINE',
+                   'BENKO','BUDAPEST','HOLANDES','ESLAVA','NIMZO',
+                   'MODERNA','INDIA','BUDAPEST','CARO','TITAN']
+        },
+        {
+            name: 'Mitología',
+            wordsPerGame: 7,
+            illumination: 'border',
+            hintBaseCost: 100,
+            lives: 10,              // último nivel del tier medio
+            pool: ['ZEUS','ATENEA','POSEIDON','ARES','AFRODITA','APOLO',
+                   'ARTEMISA','HADES','HERMES','HERA','HEFESTO','DIONISO',
+                   'CRONOS','HERCULES','TESEO','PERSEO','MEDUSA','CENTAURO',
+                   'HIDRA','PEGASO','ICARO','NARCISO','PANDORA','PROMETEO',
+                   'ATLAS','OLIMPO','DAFNE','SIRENA','CICLOPE','ARIADNA',
+                   'AQUILES','ODISEO','TROYA','ORFEO','CALIPSO','CIRCE']
+        },
+        {
             name: 'Países',
             wordsPerGame: 8,
             illumination: 'none',   // sin iluminación de casillas válidas
             hintBaseCost: 150,
-            lives: 5,               // tier difícil: solo 5 vidas (1 fila de 5)
+            lives: 5,               // tier difícil (niveles 9-10): solo 5 vidas
             pool: ['ARGENTINA','RUSIA','NORUEGA','ALEMANIA','ESPANA','FRANCIA',
                    'ITALIA','BRASIL','CHINA','INDIA','JAPON','HOLANDA',
                    'AUSTRALIA','CANADA','HUNGRIA','GEORGIA','ARMENIA',
@@ -110,7 +135,7 @@ const CONFIG = {
             wordsPerGame: 8,
             illumination: 'none',
             hintBaseCost: 150,
-            lives: 5,               // mismo tier que nivel 7
+            lives: 5,               // mismo tier que nivel 9
             pool: ['TENIS','NATACION','ATLETISMO','FUTBOL','CICLISMO','VOLEIBOL',
                    'BALONCESTO','GIMNASIA','BOXEO','SURF','GOLF','RUGBY',
                    'BEISBOL','HOCKEY','REMO','ESGRIMA','JUDO','KARATE',
@@ -361,9 +386,9 @@ function startNewGame(resetTotal = true) {
     updateUndoButton();
     renderLives();
 
-    // Mostrar banner solo en el primer nivel de cada tier (1, 4, 7)
+    // Mostrar banner solo en el primer nivel de cada tier (1, 4, 9)
     // para no interrumpir al jugador en cada nivel con la misma info
-    const tierStartLevels = [0, 3, 6]; // índices 0-based
+    const tierStartLevels = [0, 3, 8]; // índices 0-based (tier3 ahora empieza en nivel 9 = índice 8)
     if (tierStartLevels.includes(gameState.currentLevelIndex)) {
         setTimeout(() => showLevelWarning(), 150);
     }
@@ -1267,7 +1292,7 @@ function showLevelWarning() {
         // Tier 1 (niveles 1-3): introducción al sistema de vidas
         if (titleEl) titleEl.textContent = '♞ ¡EMPIEZA EL JUEGO!';
         if (textEl)  textEl.textContent  = 'Cambiar la primera letra seleccionada cuesta una vida';
-    } else if (idx === 3) {
+    } else if (idx === 3) { // tier 2 empieza en índice 3 (nivel 4)
         // Tier 2 (niveles 4-6): iluminación reducida a solo borde
         if (titleEl) titleEl.textContent = '⚠️ NIVEL INTERMEDIO';
         if (textEl)  textEl.textContent  = 'Las casillas válidas muestran solo el borde. Cuidado con las vidas';
