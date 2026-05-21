@@ -5,6 +5,23 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-21] — Reorden secuencia victoria + multiplicador vuela desde el número de nivel
+
+### ✨ Added
+- **`flyLevelMultiplier(multiplier)`**: el número del nivel se infla en cyan (×5, overlay temporal), luego un badge "NIVEL N — Nombre ×M" vuela al marcador con arpegio ascendente C5-E5-G5. Al impactar: score se multiplica, marcador hace shake cyan.
+- **`playLevelMultiplierSound()`**: tres notas triangle ascendentes (C5→E5→G5) — contraste intencional con el sad trombone de la penalización.
+- **Timer pausa en azul-gris** (`timer-paused`): al ganar, el timer queda azul-gris neutro; solo se pone rojo cuando llega la penalización al final.
+
+### 🔄 Changed
+- **Orden de la secuencia de victoria**: corazones → multiplicador de nivel → penalización de tiempo. El tiempo ahora es el golpe final dramático.
+- Flash overlay `multiplierFlash` reemplazado por animación `flyLevelMultiplier` que sale del display de nivel.
+
+### 🐛 Fixed
+- **`nivel` usado antes de ser declarado** en `flyLevelMultiplier`: `nivel` y `lvl` se declaraban DESPUÉS del bloque que los usaba en el `numOverlay`. La variable existía en el scope (hoisting no aplica a `const`) y arrojaba ReferenceError silencioso que abortaba toda la función. Fix: mover las declaraciones al inicio.
+- **`badge.querySelector` sobre elemento no appendeado**: los estilos de las líneas internas del badge usaban `querySelector` antes de que el badge estuviera en el DOM. Reemplazado con estilos inline directamente en el `innerHTML`.
+
+---
+
 ## [2026-05-21] — Sistema de puntaje: penalización de tiempo + secuencia visual de victoria
 
 ### ✨ Added

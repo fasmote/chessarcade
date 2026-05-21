@@ -393,18 +393,25 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 
 ### 17.1 Penalización de Tiempo
 - **RF-177**: El tiempo tardado en completar el nivel se convierte en puntos negativos: `minutos × 100 + segundos`. Ejemplo: 2:31 → −231 pts. El timer siempre resta; terminar más rápido protege el puntaje.
-- **RF-178**: El timer se congela en ROJO al ganar (animación `timerPenalty`, borde y texto en `#ff2020`), señalando visualmente que el tiempo viene a cobrar.
+- **RF-178**: El timer se congela en **azul-gris neutro** (`timer-paused`) al ganar. Solo se pone rojo (`timer-penalty`) cuando arranca la animación de penalización — así el rojo anticipa el golpe final sin adelantarlo.
 - **RF-179**: Un badge rojo "−N" aparece sobre el timer congelado, hace pop elástico (scale 0→1, cubic-bezier), y espera 700ms para que el jugador lo lea.
 - **RF-180**: El badge vuela hacia el marcador en 700ms (ease-in). Al llegar: el score baja (`Math.max(0, score − timePenalty)`), el marcador hace shake rojo (scale 1.9×, rotate 5°, glow rojo), y un toast "−N" rojo sube flotando.
 - **RF-181**: Sonido sad trombone al aparecer el badge: tres notas sawtooth descendentes con bend (A#4 → F#4 → A#3), cada una de 200–400ms, que imitan el "wah wah wah" de trombón.
 
 ### 17.2 Secuencia Visual de Victoria (5 Fases)
-- **RF-182**: **Fase 1** (t=500ms): timer congela en rojo.
+- **RF-182**: **Fase 1** (t=500ms): timer congela en **azul-gris neutro** (`timer-paused`). No hay rojo todavía.
 - **RF-183**: **Fase 2** (t=1500ms): animación de corazones colector (ver 17.3). Duración variable según vidas restantes.
-- **RF-184**: **Fase 3** (t=T2+heartsDuration+300ms): badge de penalización vuela desde el timer al score y resta.
-- **RF-185**: **Fase 4** (t=T3+2000ms): flash del multiplicador de nivel. El score se multiplica y actualiza.
-- **RF-186**: **Fase 5** (t=T4+1300ms): modal de victoria.
-- **RF-187**: Los tiempos de las fases 3–5 se calculan dinámicamente en función de `gameState.lives` para que el modal nunca interrumpa ninguna animación. Con 10 vidas la secuencia dura ~8s; con 1 vida ~4s.
+- **RF-184**: **Fase 3** (t=T2+heartsDuration+300ms): `flyLevelMultiplier()` — número del nivel se infla, badge vuela al score y multiplica.
+- **RF-185**: **Fase 4** (t=T3+2600ms): timer se pone rojo, `flyTimePenalty()` — badge vuela y resta (golpe final dramático).
+- **RF-186**: **Fase 5** (t=T4+2200ms): modal de victoria.
+- **RF-187**: Los tiempos de las fases 3–5 se calculan dinámicamente en función de `gameState.lives` para que el modal nunca interrumpa ninguna animación.
+
+### 17.4 Multiplicador de Nivel (`flyLevelMultiplier`)
+- **RF-194**: El número del nivel (ej: "5") se infla en cyan ×5 como overlay temporal sobre `#levelDisplay`, luego se desvanece. El elemento original no se modifica.
+- **RF-195**: Un badge "NIVEL N — Nombre ×M" en cyan aparece con pop elástico en la posición de `#levelDisplay` (o centro-arriba si el elemento no es visible en pantalla).
+- **RF-196**: El badge espera 900ms para que el jugador lo lea, luego vuela al marcador en 700ms. Al impactar: `score = Math.max(0, Math.round(score × multiplier))`, marcador shake cyan (scale 2.2×, rotate 8°), toast "×M" cyan flota.
+- **RF-197**: Sonido `playLevelMultiplierSound()`: arpegio ascendente triangle C5→E5→G5 (contraste intencional con el sad trombone de la penalización — suma vs resta).
+- **RF-198**: Si `#levelDisplay` no está en el viewport (ej: mobile con panel stats oculto), el badge y el numOverlay usan `window.innerWidth/2, window.innerHeight×0.2` como fallback.
 
 ### 17.3 Animación de Corazones Colector
 - **RF-188**: Al ganar, cada corazón individual hace pop (scale ×2) y desaparece de su posición en el display de vidas.
