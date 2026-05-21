@@ -1225,28 +1225,26 @@ function updateResetBtnLabel(won) {
     if (label) label.textContent = won ? 'NUEVA PARTIDA' : 'NUEVO TABLERO';
 }
 
-// Win game
+// Win game — calcula bonuses y lanza la secuencia visual
 function winGame() {
     gameState.gameStatus = 'won';
     clearInterval(gameState.timerInterval);
-    updateResetBtnLabel(true); // en mobile el botón pasa a "NUEVA PARTIDA"
+    updateResetBtnLabel(true);
 
-    // ── Calcular bonuses y aplicar multiplicador ──
-    const segundos    = Math.floor(gameState.timer / 100); // timer en centisegundos → segundos
-    const speedBonus  = Math.max(0, 500 - segundos);       // 500 pts base, -1 por segundo
-    const livesBonus  = gameState.lives * 50;              // vidas restantes × 50 pts
-    const nivel       = gameState.currentLevelIndex + 1;   // nivel 1-based
-    const multiplier  = Math.round((1 + nivel * 0.1) * 10) / 10; // 1.1 … 2.0, redondeado a 1 decimal
-    const wordScore   = gameState.score;                   // puntaje acumulado por palabras
+    const segundos   = Math.floor(gameState.timer / 100);
+    const speedBonus = Math.max(0, 500 - segundos);
+    const livesBonus = gameState.lives * 50;
+    const nivel      = gameState.currentLevelIndex + 1;
+    const multiplier = Math.round((1 + nivel * 0.1) * 10) / 10;
+    const wordScore  = gameState.score;
 
-    const finalScore = Math.round((wordScore + speedBonus + livesBonus) * multiplier);
-
-    // Guardar desglose para mostrarlo en el modal de victoria
+    // Guardar desglose para el modal
     gameState.lastBonus = { words: wordScore, speed: speedBonus, lives: livesBonus, multiplier };
-    gameState.score = finalScore;
 
-    updateDisplay(); // actualizar el marcador con el puntaje final
-    updateHintButton();
+    // El score arranca en wordScore + speedBonus y sube de a 50 con cada corazón.
+    // El multiplicador se aplica en la fase 3 de la secuencia, no acá.
+    gameState.score = wordScore + speedBonus;
+    updateDisplay();
 
     // Feedback inmediato
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
@@ -1286,8 +1284,12 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
     // ── Fase 2 (1.5s): corazones vuelan en trencito al marcador ──
     setTimeout(() => flyHeartsToScore(), 1500);
 
-    // ── Fase 3 (3.0s): flash del multiplicador ──
+    // ── Fase 3 (3.0s): aplicar multiplicador al score + flash visual ──
     setTimeout(() => {
+        // Aplicar el multiplicador sobre el score acumulado hasta ahora
+        gameState.score = Math.round(gameState.score * multiplier);
+        updateDisplay();
+
         const el = document.getElementById('multiplierFlash');
         if (!el) return;
         const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
@@ -1303,11 +1305,10 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
     setTimeout(() => showVictoryModal(), 4000);
 }
 
-// Anima cada corazón activo desde el display de vidas hasta el marcador de puntos.
-// Usa getBoundingClientRect() para posición real → clon fixed → CSS transition.
-// Efecto "trencito": cada corazón sale 130ms después del anterior.
+// Anima cada corazón en trencito desde el display al marcador de puntos.
+// 3 fases por corazón: pop al salir → vuelo visible → impacto en el marcador.
+// Cada corazón suma 50 pts al score al llegar, con su propio sonido de impacto.
 function flyHeartsToScore() {
-    // Elegir el contenedor de vidas visible (desktop o mobile)
     const livesEl = window.innerWidth >= 768
         ? elements.livesDisplayDesktop
         : document.getElementById('livesDisplayMobile');
@@ -1317,61 +1318,159 @@ function flyHeartsToScore() {
     const hearts = [...livesEl.querySelectorAll('.cs-heart:not(.cs-heart--lost)')];
     if (hearts.length === 0) return;
 
-    // Posición destino: centro del marcador de puntos
+    // Destino: centro del marcador de puntos
     const scoreRect = scoreEl.getBoundingClientRect();
     const destX = scoreRect.left + scoreRect.width  / 2;
     const destY = scoreRect.top  + scoreRect.height / 2;
 
     hearts.forEach((heart, i) => {
+        const STAGGER    = 220; // ms entre cada corazón (más lento = más visible)
+        const FLIGHT_MS  = 600; // duración del vuelo
+
         setTimeout(() => {
-            // Posición de origen: centro del corazón original
             const r    = heart.getBoundingClientRect();
             const srcX = r.left + r.width  / 2;
             const srcY = r.top  + r.height / 2;
 
-            // Ocultar el corazón original suavemente
-            heart.style.transition = 'opacity 0.15s';
-            heart.style.opacity    = '0';
+            // ── Sonido de salida: pop grave ──
+            playHeartPopSound();
 
-            // Clon volador con position:fixed en la posición del original
+            // Animación de "salto" del corazón original antes de desaparecer
+            heart.style.transition = 'transform 0.12s, opacity 0.12s 0.1s';
+            heart.style.transform  = 'scale(1.8)';
+            setTimeout(() => { heart.style.opacity = '0'; heart.style.transform = 'scale(0)'; }, 80);
+
+            // Clon volador: grande y brillante para que se note
             const clone = document.createElement('span');
             clone.textContent = '❤️';
             Object.assign(clone.style, {
                 position:      'fixed',
                 left:          `${srcX}px`,
                 top:           `${srcY}px`,
-                fontSize:      '1.3rem',
+                fontSize:      '2.2rem',           // grande y visible
                 zIndex:        '400',
                 pointerEvents: 'none',
-                transform:     'translate(-50%, -50%) scale(1)',
-                filter:        'drop-shadow(0 0 10px #ff0080)',
-                // Transición de vuelo hacia el destino
-                transition:    'left 0.48s cubic-bezier(0.4,0,0.2,1), top 0.48s cubic-bezier(0.4,0,0.2,1), transform 0.48s, opacity 0.15s 0.38s',
+                transform:     'translate(-50%, -50%) scale(1.2)',
+                filter:        'drop-shadow(0 0 14px #ff0080) drop-shadow(0 0 6px white)',
+                transition:    `left ${FLIGHT_MS}ms cubic-bezier(0.3,0,0.5,1), top ${FLIGHT_MS}ms cubic-bezier(0.3,0,0.5,1), transform ${FLIGHT_MS}ms ease-in, filter 0.2s`,
             });
             document.body.appendChild(clone);
 
-            // Lanzar en el siguiente frame (necesario para que el transition arranque)
+            // Lanzar vuelo en siguiente frame
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 clone.style.left      = `${destX}px`;
                 clone.style.top       = `${destY}px`;
-                clone.style.transform = 'translate(-50%, -50%) scale(0.3)';
-                clone.style.opacity   = '0';
+                clone.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                clone.style.filter    = 'drop-shadow(0 0 4px #ff0080)';
+                // Sonido de whoosh al salir volando
+                playHeartWhooshSound();
             }));
 
-            // Al llegar: micro-pulso en el marcador y limpieza
+            // Al llegar: impacto
             setTimeout(() => {
                 clone.remove();
-                scoreEl.style.transition = 'transform 0.1s, color 0.1s';
-                scoreEl.style.transform  = 'scale(1.5)';
-                scoreEl.style.color      = '#ff0080';
-                setTimeout(() => {
-                    scoreEl.style.transform = '';
-                    scoreEl.style.color     = '';
-                }, 160);
-            }, 500);
 
-        }, i * 130); // 130ms de separación entre corazones → efecto trencito
+                // Sonido de impacto/moneda
+                playHeartImpactSound();
+
+                // Score sube de a 50
+                gameState.score += 50;
+                updateDisplay();
+
+                // Sacudida del marcador
+                scoreEl.style.transition = 'none';
+                scoreEl.style.transform  = 'scale(1.8) rotate(-5deg)';
+                scoreEl.style.color      = '#ff0080';
+                scoreEl.style.textShadow = '0 0 20px #ff0080';
+                setTimeout(() => {
+                    scoreEl.style.transition  = 'transform 0.2s, color 0.2s, text-shadow 0.2s';
+                    scoreEl.style.transform   = '';
+                    scoreEl.style.color       = '';
+                    scoreEl.style.textShadow  = '';
+                }, 80);
+
+                // Partícula de impacto: "+50" que aparece y sube
+                const spark = document.createElement('div');
+                spark.textContent = '+50';
+                Object.assign(spark.style, {
+                    position:   'fixed',
+                    left:       `${destX + 30}px`,
+                    top:        `${destY - 10}px`,
+                    fontSize:   '1.1rem',
+                    fontFamily: "'Orbitron', sans-serif",
+                    fontWeight: '900',
+                    color:      '#ff0080',
+                    zIndex:     '401',
+                    pointerEvents: 'none',
+                    textShadow: '0 0 10px #ff0080',
+                    animation:  'vToastFloat 0.8s ease-out forwards',
+                });
+                document.body.appendChild(spark);
+                spark.addEventListener('animationend', () => spark.remove());
+
+            }, FLIGHT_MS + 50);
+
+        }, i * STAGGER);
     });
+}
+
+// ── Sonidos de la animación de corazones ──
+
+// Pop al salir: burbuja grave que revienta
+function playHeartPopSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.1);
+    } catch(e) {}
+}
+
+// Whoosh en vuelo: barrido de ruido corto
+function playHeartWhooshSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let k = 0; k < data.length; k++) data[k] = (Math.random() * 2 - 1) * (1 - k / data.length);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass'; filter.frequency.value = 1800; filter.Q.value = 2;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        src.start(ctx.currentTime); src.stop(ctx.currentTime + 0.15);
+    } catch(e) {}
+}
+
+// Impacto/moneda al llegar: ping agudo
+function playHeartImpactSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.22);
+    } catch(e) {}
 }
 
 // ── Lives system ──────────────────────────────────────────────
