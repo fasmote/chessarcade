@@ -380,9 +380,36 @@ CriptoSopa es un juego de búsqueda de palabras con mecánica única de movimien
 
 ### 16.1 Sistema de Puntaje Revisado
 - **RF-170**: Puntaje por palabra basado en longitud: `largo_palabra × 30 pts` (antes 100 fijo). Palabras más largas valen más.
-- **RF-171**: Bonus de velocidad al completar el nivel: `max(0, 500 - segundos_del_nivel)`. Completar en 0s da 500 pts, decrece 1 pt/segundo, nunca resta.
+- **RF-171**: ~~Bonus de velocidad~~ → **REEMPLAZADO** por penalización de tiempo (ver RF-177). El tiempo tardado nunca suma; siempre resta.
 - **RF-172**: Bonus de vidas restantes al completar el nivel: `vidas_restantes × 50 pts`. Premia jugar limpio sin cambiar la primera celda.
 - **RF-173**: Multiplicador por nivel: `1 + nivel × 0.1` (nivel 1 = ×1.1, nivel 5 = ×1.5, nivel 10 = ×2.0). Cada nivel tiene su propio valor creciente.
-- **RF-174**: Fórmula completa: `(puntaje_palabras + bonus_velocidad + bonus_vidas) × multiplicador`, redondeado al entero más cercano.
-- **RF-175**: Los bonuses se calculan y aplican en `winGame()` antes de mostrar el modal de victoria.
-- **RF-176**: El modal de victoria muestra el desglose de bonuses (palabras / velocidad / vidas / multiplicador) para que el jugador entienda de dónde viene el puntaje.
+- **RF-174**: Fórmula completa: `max(0, (puntaje_palabras + bonus_vidas − penalización_tiempo) × multiplicador)`, redondeado al entero más cercano. El score nunca puede ser negativo.
+- **RF-175**: El puntaje se construye progresivamente durante la secuencia visual (no se calcula de golpe en `winGame()`): los corazones suman en tiempo real, el badge de tiempo resta en tiempo real, el multiplicador se aplica al final.
+- **RF-176**: El modal de victoria muestra el desglose: `📝 palabras + ❤️ vidas − ⏱️ tiempo × nivel`. El separador `−` es rojo para señalar la penalización.
+
+---
+
+## 17. Requerimientos Implementados — Sesión 2026-05-21
+
+### 17.1 Penalización de Tiempo
+- **RF-177**: El tiempo tardado en completar el nivel se convierte en puntos negativos: `minutos × 100 + segundos`. Ejemplo: 2:31 → −231 pts. El timer siempre resta; terminar más rápido protege el puntaje.
+- **RF-178**: El timer se congela en ROJO al ganar (animación `timerPenalty`, borde y texto en `#ff2020`), señalando visualmente que el tiempo viene a cobrar.
+- **RF-179**: Un badge rojo "−N" aparece sobre el timer congelado, hace pop elástico (scale 0→1, cubic-bezier), y espera 700ms para que el jugador lo lea.
+- **RF-180**: El badge vuela hacia el marcador en 700ms (ease-in). Al llegar: el score baja (`Math.max(0, score − timePenalty)`), el marcador hace shake rojo (scale 1.9×, rotate 5°, glow rojo), y un toast "−N" rojo sube flotando.
+- **RF-181**: Sonido sad trombone al aparecer el badge: tres notas sawtooth descendentes con bend (A#4 → F#4 → A#3), cada una de 200–400ms, que imitan el "wah wah wah" de trombón.
+
+### 17.2 Secuencia Visual de Victoria (5 Fases)
+- **RF-182**: **Fase 1** (t=500ms): timer congela en rojo.
+- **RF-183**: **Fase 2** (t=1500ms): animación de corazones colector (ver 17.3). Duración variable según vidas restantes.
+- **RF-184**: **Fase 3** (t=T2+heartsDuration+300ms): badge de penalización vuela desde el timer al score y resta.
+- **RF-185**: **Fase 4** (t=T3+2000ms): flash del multiplicador de nivel. El score se multiplica y actualiza.
+- **RF-186**: **Fase 5** (t=T4+1300ms): modal de victoria.
+- **RF-187**: Los tiempos de las fases 3–5 se calculan dinámicamente en función de `gameState.lives` para que el modal nunca interrumpa ninguna animación. Con 10 vidas la secuencia dura ~8s; con 1 vida ~4s.
+
+### 17.3 Animación de Corazones Colector
+- **RF-188**: Al ganar, cada corazón individual hace pop (scale ×2) y desaparece de su posición en el display de vidas.
+- **RF-189**: Un clon pequeño de cada corazón vuela al corazón colector central (posicionado entre el display de vidas y el centro de la pantalla), con stagger de 180ms entre cada uno.
+- **RF-190**: El corazón colector crece con cada fusión: `scale = 0.8 + merged × 0.15`. Cada fusión emite un "plop" (sine 520→260Hz, 140ms) y un pulso de glow.
+- **RF-191**: El label del colector muestra el bonus acumulado: "+50", "+100", "+150", etc.
+- **RF-192**: Cuando el último corazón llegó (400ms de delay), el colector vuela al marcador en 700ms (cubic-bezier). Al impactar: score += livesBonus, marcador hace shake rosa (scale 2.2×, rotate −8°), toast "+N" rosa flota.
+- **RF-193**: Sonidos: pop al salir (sine 320→80Hz), whoosh en vuelo (noise bandpass 1800Hz), plop al fusionarse (sine 520→260Hz), impacto al llegar (triangle 1400→800Hz).

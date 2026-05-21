@@ -5,6 +5,35 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-05-21] — Sistema de puntaje: penalización de tiempo + secuencia visual de victoria
+
+### ✨ Added
+- **Penalización de tiempo**: el tiempo tardado en completar el nivel se convierte en puntos negativos — `minutos × 100 + segundos`. Ejemplo: 2:31 → −231 pts. Reemplaza el bonus de velocidad.
+- **Fórmula de puntaje final**: `max(0, (puntaje_palabras + bonus_vidas − penalización_tiempo) × multiplicador_nivel)`.
+- **Timer congela en ROJO** al ganar (señala que el tiempo viene a cobrar su peaje).
+- **Badge de penalización**: "−N" rojo aparece sobre el timer congelado, espera 700ms para que el jugador lo lea, luego vuela hacia el marcador con sonido de sad trombone.
+- **Sad trombone** (`playTimePenaltySound`): tres notas descendentes con osciladores sawtooth (A#4 → F#4 → A#3), cada una con bend descendente para imitar el trombón.
+- **Impacto de penalización**: al llegar al marcador, el score baja y hace shake rojo (scale 1.9×, rotate 5°, glow rojo), el badge salta hacia arriba en rojo.
+- **Corazón colector**: los corazones individuales vuelan uno a uno hacia un corazón central que crece con cada fusión (`scale = 0.8 + merged × 0.15`). Cada fusión emite un "plop" (`playHeartMergeSound`, sine 520→260Hz). Al terminar, el colector vuela solo al marcador con whoosh e impacto, sumando el bonus de vidas.
+- **Timings de victoria dinámicos**: las fases 3–5 se calculan en función de `gameState.lives` para que el modal nunca aparezca antes de que termine ninguna animación. Con 10 vidas la secuencia completa tarda ~8s; con 1 vida ~4s.
+- **Desglose en modal**: `📝 palabras + ❤️ vidas − ⏱️ tiempo × nivel` (el separador `−` es rojo).
+
+### 🔄 Changed
+- **Bonus de velocidad eliminado**: `max(0, 500−segundos)` reemplazado por la penalización de tiempo. El tiempo ahora siempre resta, nunca suma.
+- **Secuencia de victoria reestructurada**: de 4 fases fijas a 5 fases con timings dinámicos (corazones → penalización → multiplicador → modal).
+- El puntaje ya no arranca con speedBonus sumado — arranca solo en `wordScore` y se construye progresivamente durante la animación.
+
+---
+
+## [2026-05-20] — Sistema de puntaje: longitud, vidas, multiplicador de nivel
+
+### ✨ Added
+- **Puntaje por letra**: `largo_palabra × 30 pts` (antes 100 pts fijo por palabra). Palabras más largas valen más.
+- **Bonus de vidas**: `vidas_restantes × 50 pts` al completar el nivel. Premia jugar limpio sin cambiar la primera celda.
+- **Multiplicador por nivel**: `1 + nivel × 0.1` (nivel 1 → ×1.1, nivel 5 → ×1.5, nivel 10 → ×2.0). Niveles más difíciles amplifican todo.
+
+---
+
 ## [2026-05-20] — Niveles 7 (Aperturas) y 8 (Mitología)
 
 ### ✨ Added
