@@ -1272,7 +1272,7 @@ function playVictorySequence(timePenalty, livesBonus, multiplier) {
 
     const T2 = 1500;                        // Fase 2: corazones vuelan
     const T3 = T2 + heartsDuration + 300;   // Fase 3: multiplicador de nivel
-    const T4 = T3 + 1500;                   // Fase 4: penalización de tiempo (cierre dramático)
+    const T4 = T3 + 2600;                   // Fase 4: penalización de tiempo (cierre dramático)
     const T5 = T4 + 2200;                   // Fase 5: modal de victoria
 
     // ── Fase 1 (0.5s): timer se pausa (queda neutro — el rojo llega con la penalización al final) ──
@@ -1284,21 +1284,8 @@ function playVictorySequence(timePenalty, livesBonus, multiplier) {
     // ── Fase 2: corazones vuelan al colector que luego va al marcador ──
     setTimeout(() => flyHeartsToScore(), T2);
 
-    // ── Fase 3: multiplicador de nivel — flash con nombre del nivel + aplica al score ──
-    setTimeout(() => {
-        gameState.score = Math.max(0, Math.round(gameState.score * multiplier));
-        updateDisplay();
-
-        const el = document.getElementById('multiplierFlash');
-        if (!el) return;
-        const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
-        const lvlEl = document.getElementById('mfLevel');
-        const valEl = document.getElementById('mfValue');
-        if (lvlEl) lvlEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
-        if (valEl) valEl.textContent = `×${multiplier}`;
-        el.style.display = 'flex';
-        el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
-    }, T3);
+    // ── Fase 3: badge "NIVEL N × M" sale del display de nivel y vuela al marcador ──
+    setTimeout(() => flyLevelMultiplier(multiplier), T3);
 
     // ── Fase 4: timer se pone rojo + badge de penalización vuela y resta (golpe final) ──
     setTimeout(() => flyTimePenalty(timePenalty), T4);
@@ -1479,6 +1466,150 @@ function launchCollectorToScore(collector, labelEl, totalBonus, scoreEl, destX, 
         spark.addEventListener('animationend', () => spark.remove());
 
     }, 750);
+}
+
+// El display del nivel se infla, sale un badge "NIVEL N — Nombre × M" y vuela al marcador.
+// Al impactar: score *= multiplier, sacudida cyan, toast "×M" flota.
+function flyLevelMultiplier(multiplier) {
+    const levelEl = document.getElementById('levelDisplay');
+    const scoreEl = elements.scoreDisplay;
+    if (!scoreEl) return;
+
+    const scoreRect = scoreEl.getBoundingClientRect();
+    const destX = scoreRect.left + scoreRect.width  / 2;
+    const destY = scoreRect.top  + scoreRect.height / 2;
+
+    // Origen: el display del nivel si está visible, centro-arriba como fallback
+    let srcX, srcY;
+    if (levelEl) {
+        const r = levelEl.getBoundingClientRect();
+        if (r.top >= 0 && r.bottom <= window.innerHeight && r.width > 0) {
+            srcX = r.left + r.width  / 2;
+            srcY = r.top  + r.height / 2;
+            // El display de nivel se infla brevemente
+            levelEl.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), color 0.3s, text-shadow 0.3s';
+            levelEl.style.transform  = 'scale(2.8)';
+            levelEl.style.color      = '#00ffff';
+            levelEl.style.textShadow = '0 0 18px #00ffff';
+            setTimeout(() => {
+                levelEl.style.transform  = '';
+                levelEl.style.color      = '';
+                levelEl.style.textShadow = '';
+            }, 500);
+        } else {
+            srcX = window.innerWidth  / 2;
+            srcY = window.innerHeight * 0.18;
+        }
+    } else {
+        srcX = window.innerWidth  / 2;
+        srcY = window.innerHeight * 0.18;
+    }
+
+    const lvl   = CONFIG.LEVELS[gameState.currentLevelIndex];
+    const nivel  = gameState.currentLevelIndex + 1;
+
+    // Badge con dos líneas: nombre del nivel arriba, multiplicador grande abajo
+    const badge = document.createElement('div');
+    badge.innerHTML = `<div class="mlvl-label">NIVEL ${nivel} — ${lvl.name}</div><div class="mlvl-value">×${multiplier}</div>`;
+    Object.assign(badge.style, {
+        position:      'fixed',
+        left:          `${srcX}px`,
+        top:           `${srcY}px`,
+        zIndex:        '402',
+        pointerEvents: 'none',
+        transform:     'translate(-50%, -50%) scale(0)',
+        transition:    'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+        textAlign:     'center',
+        lineHeight:    '1.15',
+        fontFamily:    "'Orbitron', sans-serif",
+        fontWeight:    '900',
+        color:         '#00ffff',
+        textShadow:    '0 0 20px #00ffff, 0 0 45px #00ffff',
+    });
+    // Estilos de las dos líneas internas
+    badge.querySelector('.mlvl-label').style.cssText = 'font-size:0.75rem;letter-spacing:0.08em;opacity:0.85;';
+    badge.querySelector('.mlvl-value').style.cssText = 'font-size:2.4rem;';
+    document.body.appendChild(badge);
+
+    // Pop de aparición
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        badge.style.transform = 'translate(-50%, -50%) scale(1)';
+    }));
+
+    playLevelMultiplierSound();
+
+    // Después de que el jugador lee el badge, vuela al marcador
+    setTimeout(() => {
+        badge.style.transition = 'left 0.7s ease-in, top 0.7s ease-in, transform 0.6s ease-in, opacity 0.15s 0.6s';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            badge.style.left      = `${destX}px`;
+            badge.style.top       = `${destY}px`;
+            badge.style.transform = 'translate(-50%, -50%) scale(0.3)';
+            badge.style.opacity   = '0';
+        }));
+
+        // Al llegar: score se multiplica con sacudida cyan
+        setTimeout(() => {
+            badge.remove();
+            gameState.score = Math.max(0, Math.round(gameState.score * multiplier));
+            updateDisplay();
+
+            scoreEl.style.transition = 'none';
+            scoreEl.style.transform  = 'scale(2.2) rotate(8deg)';
+            scoreEl.style.color      = '#00ffff';
+            scoreEl.style.textShadow = '0 0 30px #00ffff, 0 0 60px #00ffff';
+            setTimeout(() => {
+                scoreEl.style.transition  = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), color 0.3s, text-shadow 0.3s';
+                scoreEl.style.transform   = '';
+                scoreEl.style.color       = '';
+                scoreEl.style.textShadow  = '';
+            }, 90);
+
+            // Toast "×M" que sube
+            const spark = document.createElement('div');
+            spark.textContent = `×${multiplier}`;
+            Object.assign(spark.style, {
+                position:   'fixed',
+                left:       `${destX + 40}px`,
+                top:        `${destY - 15}px`,
+                fontSize:   '1.6rem',
+                fontFamily: "'Orbitron', sans-serif",
+                fontWeight: '900',
+                color:      '#00ffff',
+                zIndex:     '401',
+                pointerEvents: 'none',
+                textShadow: '0 0 15px #00ffff',
+                animation:  'vToastFloat 1s ease-out forwards',
+            });
+            document.body.appendChild(spark);
+            spark.addEventListener('animationend', () => spark.remove());
+
+        }, 730);
+    }, 900); // pausa para que el jugador lea el badge
+}
+
+// Tres notas ascendentes brillantes — "level up"
+function playLevelMultiplierSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        [
+            { freq: 523, delay: 0,    dur: 0.20 },  // C5
+            { freq: 659, delay: 0.14, dur: 0.20 },  // E5
+            { freq: 784, delay: 0.28, dur: 0.35 },  // G5
+        ].forEach(({ freq, delay, dur }) => {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+            gain.gain.setValueAtTime(0.18, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime  + delay + dur);
+        });
+    } catch(e) {}
 }
 
 // El badge "−N" aparece en el timer (ya congelado en rojo), espera un momento
