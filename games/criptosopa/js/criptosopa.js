@@ -14,7 +14,7 @@ const CONFIG = {
         { hex: '#39ff14', glow: '0 0 15px #39ff14' },
         { hex: '#b026ff', glow: '0 0 15px #b026ff' },
     ],
-    POINTS_PER_WORD: 100,
+    POINTS_PER_LETTER: 30,   // puntaje base por letra de la palabra encontrada
     HINT_BASE_MULTIPLIER: 2, // el costo se duplica en cada pista usada
 
     LEVELS: [
@@ -165,7 +165,9 @@ let gameState = {
     hoveredWord: null,
     gameStatus: 'playing',
     isDragging: false,
-    hintCell: null
+    hintCell: null,
+    // Desglose del último puntaje de nivel (para mostrar en el modal de victoria)
+    lastBonus: { words: 0, timePenalty: 0, lives: 0, multiplier: 1 }
 };
 
 // DOM Elements
@@ -634,7 +636,8 @@ function handleCellClick(r, c) {
 
             gameState.selectedPath = [];
             gameState.isDragging = false; // evitar que touchmove re-seleccione la última celda
-            gameState.score += CONFIG.POINTS_PER_WORD;
+            // Puntaje por longitud de palabra: largo × 30 pts (palabras más largas valen más)
+            gameState.score += matchedWord.length * CONFIG.POINTS_PER_LETTER;
 
             // Sprint 1: feedback al encontrar palabra
             if (navigator.vibrate) navigator.vibrate(100);
@@ -1222,21 +1225,457 @@ function updateResetBtnLabel(won) {
     if (label) label.textContent = won ? 'NUEVA PARTIDA' : 'NUEVO TABLERO';
 }
 
-// Win game
+// Win game — calcula bonuses y lanza la secuencia visual
 function winGame() {
     gameState.gameStatus = 'won';
     clearInterval(gameState.timerInterval);
-    updateResetBtnLabel(true); // en mobile el botón pasa a "NUEVA PARTIDA"
+    updateResetBtnLabel(true);
 
-    // Feedback de victoria
+    const totalCentis   = gameState.timer;
+    const totalSegs     = Math.floor(totalCentis / 100);
+    const minutos       = Math.floor(totalSegs / 60);
+    const segsRestantes = totalSegs % 60;
+    // 2:31 → 231 puntos de penalización (min×100 + seg)
+    const timePenalty = minutos * 100 + segsRestantes;
+    const livesBonus  = gameState.lives * 50;
+    const nivel       = gameState.currentLevelIndex + 1;
+    const multiplier  = Math.round((1 + nivel * 0.1) * 10) / 10;
+    const wordScore   = gameState.score;
+
+    // Guardar desglose para el modal
+    gameState.lastBonus = { words: wordScore, timePenalty, lives: livesBonus, multiplier };
+
+    // Score arranca en wordScore; los corazones suman, el tiempo resta, el multiplicador se aplica al final.
+    gameState.score = wordScore;
+    updateDisplay();
+
+    // Feedback inmediato
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
     playVictorySound();
     launchConfetti();
 
-    // Esperar para que el jugador vea el tablero completo
+    // Secuencia visual de bonuses → modal de victoria al final
+    playVictorySequence(timePenalty, livesBonus, multiplier);
+}
+
+// Orquesta la secuencia visual de bonuses antes del modal de victoria.
+// Fase 1 (0.5s): timer congela en verde + toast de velocidad
+// Fase 2 (1.5s): corazones vuelan en trencito desde el display hasta el marcador
+// Fase 3 (3.0s): flash del multiplicador
+// Fase 4 (4.0s): modal de victoria
+function playVictorySequence(timePenalty, livesBonus, multiplier) {
+    // Tiempos dinámicos: el modal espera a que terminen TODAS las animaciones
+    const n       = gameState.lives;
+    const STAGGER = 180; // debe coincidir con flyHeartsToScore
+    const FLY_MS  = 400;
+    const heartsDuration = n > 0 ? (n - 1) * STAGGER + FLY_MS + 30 + 400 + 700 + 400 : 0;
+
+    const T2 = 1500;                        // Fase 2: corazones vuelan
+    const T3 = T2 + heartsDuration + 300;   // Fase 3: badge de tiempo vuela al score
+    const T4 = T3 + 2000;                   // Fase 4: flash del multiplicador
+    const T5 = T4 + 1300;                   // Fase 5: modal de victoria
+
+    // ── Fase 1 (0.5s): timer se congela en ROJO (el tiempo va a restar) ──
     setTimeout(() => {
-        showVictoryModal();
-    }, 4000);
+        const timerEl = document.querySelector('.timer-display');
+        if (timerEl) timerEl.classList.add('timer-penalty');
+    }, 500);
+
+    // ── Fase 2: corazones vuelan al colector que luego va al marcador ──
+    setTimeout(() => flyHeartsToScore(), T2);
+
+    // ── Fase 3: badge de penalización vuela desde el timer y resta ──
+    setTimeout(() => flyTimePenalty(timePenalty), T3);
+
+    // ── Fase 4: aplicar multiplicador al score + flash visual ──
+    setTimeout(() => {
+        gameState.score = Math.max(0, Math.round(gameState.score * multiplier));
+        updateDisplay();
+
+        const el = document.getElementById('multiplierFlash');
+        if (!el) return;
+        const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
+        const lvlEl = document.getElementById('mfLevel');
+        const valEl = document.getElementById('mfValue');
+        if (lvlEl) lvlEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
+        if (valEl) valEl.textContent = `×${multiplier}`;
+        el.style.display = 'flex';
+        el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
+    }, T4);
+
+    // ── Fase 5: modal de victoria ──
+    setTimeout(() => showVictoryModal(), T5);
+}
+
+// Los corazones individuales vuelan hacia un corazón COLECTOR que crece con la suma.
+// Cuando el último llega, el colector viaja solo al marcador con el total acumulado.
+function flyHeartsToScore() {
+    const livesEl = window.innerWidth >= 768
+        ? elements.livesDisplayDesktop
+        : document.getElementById('livesDisplayMobile');
+    const scoreEl = elements.scoreDisplay;
+    if (!livesEl || !scoreEl) return;
+
+    const hearts = [...livesEl.querySelectorAll('.cs-heart:not(.cs-heart--lost)')];
+    if (hearts.length === 0) return;
+
+    const livesRect  = livesEl.getBoundingClientRect();
+    const scoreRect  = scoreEl.getBoundingClientRect();
+
+    // Posición del colector: entre el display de vidas y el centro de la pantalla
+    const collX = Math.min(livesRect.right + 80, window.innerWidth / 2);
+    const collY = livesRect.top + livesRect.height / 2;
+
+    // Destino final: marcador de puntos
+    const destX = scoreRect.left + scoreRect.width  / 2;
+    const destY = scoreRect.top  + scoreRect.height / 2;
+
+    // Crear el corazón colector — empieza pequeño y crece
+    const collector = document.createElement('div');
+    collector.innerHTML = '<span class="coll-heart">❤️</span><span class="coll-label">+0</span>';
+    Object.assign(collector.style, {
+        position:      'fixed',
+        left:          `${collX}px`,
+        top:           `${collY}px`,
+        zIndex:        '402',
+        pointerEvents: 'none',
+        transform:     'translate(-50%, -50%) scale(0)',
+        transition:    'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+        display:       'flex',
+        flexDirection: 'column',
+        alignItems:    'center',
+        lineHeight:    '1',
+        fontFamily:    "'Orbitron', sans-serif",
+        fontWeight:    '900',
+        textAlign:     'center',
+    });
+    document.body.appendChild(collector);
+
+    const heartEl  = collector.querySelector('.coll-heart');
+    const labelEl  = collector.querySelector('.coll-label');
+    Object.assign(heartEl.style,  { fontSize: '3rem', filter: 'drop-shadow(0 0 12px #ff0080)' });
+    Object.assign(labelEl.style,  { fontSize: '1rem', color: '#ff0080', textShadow: '0 0 8px #ff0080', marginTop: '2px' });
+
+    const STAGGER  = 180; // ms entre corazones individuales
+    const FLY_MS   = 400; // vuelo de cada corazón al colector
+    let   merged   = 0;
+    let   accBonus = 0;
+
+    hearts.forEach((heart, i) => {
+        setTimeout(() => {
+            const r    = heart.getBoundingClientRect();
+            const srcX = r.left + r.width  / 2;
+            const srcY = r.top  + r.height / 2;
+
+            // Pop y desaparece el corazón original
+            playHeartPopSound();
+            heart.style.transition = 'transform 0.1s, opacity 0.15s 0.08s';
+            heart.style.transform  = 'scale(2)';
+            setTimeout(() => { heart.style.opacity = '0'; heart.style.transform = 'scale(0)'; }, 80);
+
+            // Clon pequeño que vuela al colector
+            const clone = document.createElement('span');
+            clone.textContent = '❤️';
+            Object.assign(clone.style, {
+                position:      'fixed',
+                left:          `${srcX}px`,
+                top:           `${srcY}px`,
+                fontSize:      '1.4rem',
+                zIndex:        '401',
+                pointerEvents: 'none',
+                transform:     'translate(-50%, -50%)',
+                filter:        'drop-shadow(0 0 8px #ff0080)',
+                transition:    `left ${FLY_MS}ms ease-in, top ${FLY_MS}ms ease-in, opacity 0.1s ${FLY_MS - 80}ms`,
+            });
+            document.body.appendChild(clone);
+
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                clone.style.left    = `${collX}px`;
+                clone.style.top     = `${collY}px`;
+                clone.style.opacity = '0';
+                playHeartWhooshSound();
+            }));
+
+            // Al llegar al colector
+            setTimeout(() => {
+                clone.remove();
+                merged++;
+                accBonus += 50;
+
+                // El colector aparece/crece con un pop elástico
+                const scale = 0.8 + merged * 0.15; // crece con cada corazón
+                collector.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                labelEl.textContent       = `+${accBonus}`;
+
+                // Pulso visual en el colector
+                playHeartMergeSound();
+                heartEl.style.transition = 'filter 0.1s';
+                heartEl.style.filter     = 'drop-shadow(0 0 25px #ff0080) drop-shadow(0 0 10px white)';
+                setTimeout(() => { heartEl.style.filter = 'drop-shadow(0 0 12px #ff0080)'; }, 120);
+
+                // Cuando el último corazón llegó → lanzar el colector al marcador
+                if (merged === hearts.length) {
+                    setTimeout(() => launchCollectorToScore(collector, labelEl, accBonus, scoreEl, destX, destY), 400);
+                }
+            }, FLY_MS + 30);
+
+        }, i * STAGGER);
+    });
+}
+
+// Lanza el corazón colector (ya grande) desde su posición hasta el marcador de puntos.
+function launchCollectorToScore(collector, labelEl, totalBonus, scoreEl, destX, destY) {
+    // Preparar transición de vuelo largo hacia el marcador
+    collector.style.transition = 'left 0.7s cubic-bezier(0.4,0,0.8,1), top 0.7s cubic-bezier(0.4,0,0.8,1), transform 0.7s ease-in, opacity 0.15s 0.6s';
+
+    playHeartWhooshSound();
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        collector.style.left      = `${destX}px`;
+        collector.style.top       = `${destY}px`;
+        collector.style.transform = 'translate(-50%, -50%) scale(0.4)';
+        collector.style.opacity   = '0';
+    }));
+
+    // Al llegar: impacto grande
+    setTimeout(() => {
+        collector.remove();
+
+        // Score sube con el total
+        gameState.score += totalBonus;
+        updateDisplay();
+
+        playHeartImpactSound();
+
+        // Sacudida fuerte del marcador
+        scoreEl.style.transition = 'none';
+        scoreEl.style.transform  = 'scale(2.2) rotate(-8deg)';
+        scoreEl.style.color      = '#ff0080';
+        scoreEl.style.textShadow = '0 0 30px #ff0080, 0 0 60px #ff0080';
+        setTimeout(() => {
+            scoreEl.style.transition  = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), color 0.3s, text-shadow 0.3s';
+            scoreEl.style.transform   = '';
+            scoreEl.style.color       = '';
+            scoreEl.style.textShadow  = '';
+        }, 90);
+
+        // Toast "+totalBonus" grande que sube
+        const spark = document.createElement('div');
+        spark.textContent = `+${totalBonus}`;
+        Object.assign(spark.style, {
+            position:   'fixed',
+            left:       `${destX + 40}px`,
+            top:        `${destY - 15}px`,
+            fontSize:   '1.6rem',
+            fontFamily: "'Orbitron', sans-serif",
+            fontWeight: '900',
+            color:      '#ff0080',
+            zIndex:     '401',
+            pointerEvents: 'none',
+            textShadow: '0 0 15px #ff0080',
+            animation:  'vToastFloat 1s ease-out forwards',
+        });
+        document.body.appendChild(spark);
+        spark.addEventListener('animationend', () => spark.remove());
+
+    }, 750);
+}
+
+// El badge "−N" aparece en el timer (ya congelado en rojo), espera un momento
+// para que el jugador lo vea, y luego vuela hacia el marcador restando puntos.
+function flyTimePenalty(timePenalty) {
+    if (timePenalty <= 0) return;
+
+    const timerEl = document.querySelector('.timer-display');
+    const scoreEl = elements.scoreDisplay;
+    if (!timerEl || !scoreEl) return;
+
+    const timerRect = timerEl.getBoundingClientRect();
+    const scoreRect = scoreEl.getBoundingClientRect();
+
+    const srcX  = timerRect.left + timerRect.width  / 2;
+    const srcY  = timerRect.top  + timerRect.height / 2;
+    const destX = scoreRect.left + scoreRect.width  / 2;
+    const destY = scoreRect.top  + scoreRect.height / 2;
+
+    // Badge rojo que aparece en el timer
+    const badge = document.createElement('div');
+    badge.textContent = `−${timePenalty}`;
+    Object.assign(badge.style, {
+        position:      'fixed',
+        left:          `${srcX}px`,
+        top:           `${srcY}px`,
+        fontSize:      '2.2rem',
+        fontFamily:    "'Orbitron', sans-serif",
+        fontWeight:    '900',
+        color:         '#ff2020',
+        textShadow:    '0 0 20px #ff2020, 0 0 40px #ff2020',
+        zIndex:        '402',
+        pointerEvents: 'none',
+        transform:     'translate(-50%, -50%) scale(0)',
+        transition:    'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+    });
+    document.body.appendChild(badge);
+
+    // Pop de aparición
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        badge.style.transform = 'translate(-50%, -50%) scale(1)';
+    }));
+
+    // Sonido tétrico al aparecer
+    playTimePenaltySound();
+
+    // Después de que el jugador ve el badge, vuela al marcador
+    setTimeout(() => {
+        badge.style.transition = 'left 0.7s ease-in, top 0.7s ease-in, transform 0.6s ease-in, opacity 0.15s 0.6s';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            badge.style.left      = `${destX}px`;
+            badge.style.top       = `${destY}px`;
+            badge.style.transform = 'translate(-50%, -50%) scale(0.3)';
+            badge.style.opacity   = '0';
+        }));
+
+        // Al llegar: el score baja con shake rojo
+        setTimeout(() => {
+            badge.remove();
+            gameState.score = Math.max(0, gameState.score - timePenalty);
+            updateDisplay();
+
+            scoreEl.style.transition = 'none';
+            scoreEl.style.transform  = 'scale(1.9) rotate(5deg)';
+            scoreEl.style.color      = '#ff2020';
+            scoreEl.style.textShadow = '0 0 30px #ff2020, 0 0 60px #ff2020';
+            setTimeout(() => {
+                scoreEl.style.transition  = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), color 0.3s, text-shadow 0.3s';
+                scoreEl.style.transform   = '';
+                scoreEl.style.color       = '';
+                scoreEl.style.textShadow  = '';
+            }, 100);
+
+            // Toast "−N" que baja (al revés que los positivos)
+            const spark = document.createElement('div');
+            spark.textContent = `−${timePenalty}`;
+            Object.assign(spark.style, {
+                position:   'fixed',
+                left:       `${destX + 40}px`,
+                top:        `${destY + 10}px`,
+                fontSize:   '1.6rem',
+                fontFamily: "'Orbitron', sans-serif",
+                fontWeight: '900',
+                color:      '#ff2020',
+                zIndex:     '401',
+                pointerEvents: 'none',
+                textShadow: '0 0 15px #ff2020',
+                animation:  'vToastFloat 1s ease-out forwards',
+            });
+            document.body.appendChild(spark);
+            spark.addEventListener('animationend', () => spark.remove());
+
+        }, 730);
+    }, 700); // pausa para que el jugador lea el badge
+}
+
+// Tres notas descendentes (sad trombone) cuando el tiempo ataca el score
+function playTimePenaltySound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        [
+            { freq: 466, delay: 0,    dur: 0.20 },  // A#4
+            { freq: 370, delay: 0.22, dur: 0.20 },  // F#4
+            { freq: 233, delay: 0.44, dur: 0.40 },  // A#3 — la más larga y grave
+        ].forEach(({ freq, delay, dur }) => {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            // Pequeño bend descendente en cada nota para sonar más a trombón
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.88, ctx.currentTime + delay + dur);
+            gain.gain.setValueAtTime(0.14, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + dur);
+        });
+    } catch(e) {}
+}
+
+// ── Sonidos de la animación de corazones ──
+
+// Pop al salir: burbuja grave que revienta
+function playHeartPopSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.1);
+    } catch(e) {}
+}
+
+// Whoosh en vuelo: barrido de ruido corto
+function playHeartWhooshSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let k = 0; k < data.length; k++) data[k] = (Math.random() * 2 - 1) * (1 - k / data.length);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass'; filter.frequency.value = 1800; filter.Q.value = 2;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        src.start(ctx.currentTime); src.stop(ctx.currentTime + 0.15);
+    } catch(e) {}
+}
+
+// Impacto/moneda al llegar: ping agudo
+function playHeartImpactSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.18);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.22);
+    } catch(e) {}
+}
+
+// Plop suave al fusionarse en el colector
+function playHeartMergeSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(260, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.14);
+    } catch(e) {}
 }
 
 // ── Lives system ──────────────────────────────────────────────
@@ -1430,6 +1869,20 @@ function showVictoryModal(options = {}) {
     const levelNameEl = document.getElementById('victoryLevelName');
     if (levelNameEl) {
         levelNameEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
+    }
+
+    // Desglose de bonuses (solo en victoria normal, no en resumen de game over)
+    const breakdown = document.getElementById('victoryBreakdown');
+    if (breakdown) {
+        breakdown.style.display = options.isGameOver ? 'none' : 'flex';
+        if (!options.isGameOver) {
+            const b = gameState.lastBonus;
+            const el = (id) => document.getElementById(id);
+            if (el('vbWords'))       el('vbWords').textContent       = b.words.toLocaleString();
+            if (el('vbLives'))       el('vbLives').textContent       = `+${b.lives}`;
+            if (el('vbTimePenalty')) el('vbTimePenalty').textContent = b.timePenalty.toLocaleString();
+            if (el('vbMultiplier')) el('vbMultiplier').textContent = `×${b.multiplier}`;
+        }
     }
 
     // Estadísticas de este nivel y acumulado

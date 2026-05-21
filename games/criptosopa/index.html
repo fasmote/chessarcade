@@ -377,6 +377,16 @@
                         </div>
                     </div>
                 </div>
+                <!-- Desglose de bonuses del nivel -->
+                <div class="victory-breakdown" id="victoryBreakdown">
+                    <span class="vb-item">📝 <span id="vbWords">0</span></span>
+                    <span class="vb-sep">+</span>
+                    <span class="vb-item">❤️ <span id="vbLives">0</span></span>
+                    <span class="vb-sep vb-sep-minus">−</span>
+                    <span class="vb-item vb-penalty">⏱️ <span id="vbTimePenalty">0</span></span>
+                    <span class="vb-sep">×</span>
+                    <span class="vb-item vb-multiplier"><span id="vbMultiplier">1.0</span></span>
+                </div>
                 <p class="victory-message">¡Has encontrado todas las palabras!</p>
             </div>
             <div class="modal-footer">
@@ -397,6 +407,15 @@
     <!-- Countdown overlay: aparece al cerrar el modal de victoria con X -->
     <div id="nextLevelCountdown" class="next-level-countdown" style="display:none;">
         <span id="countdownText">Siguiente nivel en <strong>3</strong>...</span>
+    </div>
+
+    <!-- Contenedor de toasts flotantes para la secuencia de victoria -->
+    <div id="victoryToasts" class="victory-toasts"></div>
+
+    <!-- Flash del multiplicador: aparece 1s antes del modal -->
+    <div id="multiplierFlash" class="multiplier-flash" style="display:none;">
+        <div class="mf-level" id="mfLevel"></div>
+        <div class="mf-value" id="mfValue"></div>
     </div>
 
     <!-- Game Over Modal -->
