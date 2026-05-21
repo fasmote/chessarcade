@@ -1248,15 +1248,68 @@ function winGame() {
     updateDisplay(); // actualizar el marcador con el puntaje final
     updateHintButton();
 
-    // Feedback de victoria
+    // Feedback inmediato
     if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
     playVictorySound();
     launchConfetti();
 
-    // Esperar para que el jugador vea el tablero completo
+    // Secuencia visual de bonuses → modal de victoria al final
+    playVictorySequence(speedBonus, livesBonus, multiplier);
+}
+
+// Orquesta la secuencia visual de bonuses antes del modal de victoria.
+// Fase 1 (0.5s): timer congela en verde + toast de velocidad
+// Fase 2 (1.5s): corazones vuelan uno a uno con "+50"
+// Fase 3 (3.0s): flash del multiplicador
+// Fase 4 (4.0s): modal de victoria
+function playVictorySequence(speedBonus, livesBonus, multiplier) {
+    const toastContainer = document.getElementById('victoryToasts');
+
+    // Crea un toast flotante en una posición de pantalla y lo destruye al terminar
+    function spawnToast(text, cssClass, xPct, yPct, delay) {
+        setTimeout(() => {
+            const t = document.createElement('div');
+            t.className = `v-toast ${cssClass}`;
+            t.textContent = text;
+            t.style.left = `${xPct}%`;
+            t.style.top  = `${yPct}%`;
+            toastContainer?.appendChild(t);
+            t.addEventListener('animationend', () => t.remove());
+        }, delay);
+    }
+
+    // ── Fase 1 (0.5s): congelar timer en verde + toast velocidad ──
     setTimeout(() => {
-        showVictoryModal();
-    }, 4000);
+        const timerEl = document.querySelector('.timer-display');
+        if (timerEl) timerEl.classList.add('timer-won');
+        if (speedBonus > 0) {
+            spawnToast(`⚡ +${speedBonus}`, 'v-toast-speed', 48, 18, 0);
+        }
+    }, 500);
+
+    // ── Fase 2 (1.5s): corazones vuelan uno a uno ──
+    const livesCount = gameState.lives;
+    for (let i = 0; i < livesCount; i++) {
+        const xPct = 45 + (i % 5) * 2.5;   // distribuidos horizontalmente
+        const yPct = 42 - Math.floor(i / 5) * 8;
+        spawnToast(`❤️ +50`, 'v-toast-heart', xPct, yPct, 1500 + i * 140);
+    }
+
+    // ── Fase 3 (3.0s): flash del multiplicador ──
+    setTimeout(() => {
+        const el = document.getElementById('multiplierFlash');
+        const lvlEl = document.getElementById('mfLevel');
+        const valEl = document.getElementById('mfValue');
+        if (!el) return;
+        const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
+        if (lvlEl) lvlEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
+        if (valEl) valEl.textContent = `×${multiplier}`;
+        el.style.display = 'flex';
+        el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
+    }, 3000);
+
+    // ── Fase 4 (4.0s): modal de victoria ──
+    setTimeout(() => showVictoryModal(), 4000);
 }
 
 // ── Lives system ──────────────────────────────────────────────
