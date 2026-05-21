@@ -1274,6 +1274,20 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
         t.addEventListener('animationend', () => t.remove());
     }
 
+    // Calcular tiempos dinámicos según cuántos corazones van a volar
+    // para que el modal nunca aparezca antes de que termine la animación
+    const n        = gameState.lives;
+    const STAGGER  = 180; // ms entre cada corazón (debe coincidir con flyHeartsToScore)
+    const FLY_MS   = 400; // vuelo de cada clon al colector
+    // Duración total de flyHeartsToScore: último corazón sale, llega, delay colector, colector vuela, buffer
+    const heartsDuration = n > 0
+        ? (n - 1) * STAGGER + FLY_MS + 30 + 400 + 700 + 400
+        : 0;
+
+    const T2 = 1500;                       // Fase 2: vuelan corazones
+    const T3 = T2 + heartsDuration + 200;  // Fase 3: multiplicador (200ms después de que aterriza el colector)
+    const T4 = T3 + 1300;                  // Fase 4: modal de victoria
+
     // ── Fase 1 (0.5s): congelar timer en verde + toast velocidad ──
     setTimeout(() => {
         const timerEl = document.querySelector('.timer-display');
@@ -1281,12 +1295,11 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
         if (speedBonus > 0) spawnToast(`⚡ +${speedBonus}`, 'v-toast-speed', 48, 18);
     }, 500);
 
-    // ── Fase 2 (1.5s): corazones vuelan en trencito al marcador ──
-    setTimeout(() => flyHeartsToScore(), 1500);
+    // ── Fase 2: corazones vuelan al colector que luego va al marcador ──
+    setTimeout(() => flyHeartsToScore(), T2);
 
-    // ── Fase 3 (3.0s): aplicar multiplicador al score + flash visual ──
+    // ── Fase 3: aplicar multiplicador al score + flash visual ──
     setTimeout(() => {
-        // Aplicar el multiplicador sobre el score acumulado hasta ahora
         gameState.score = Math.round(gameState.score * multiplier);
         updateDisplay();
 
@@ -1299,10 +1312,10 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
         if (valEl) valEl.textContent = `×${multiplier}`;
         el.style.display = 'flex';
         el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
-    }, 3000);
+    }, T3);
 
-    // ── Fase 4 (4.0s): modal de victoria ──
-    setTimeout(() => showVictoryModal(), 4000);
+    // ── Fase 4: modal de victoria ──
+    setTimeout(() => showVictoryModal(), T4);
 }
 
 // Los corazones individuales vuelan hacia un corazón COLECTOR que crece con la suma.
