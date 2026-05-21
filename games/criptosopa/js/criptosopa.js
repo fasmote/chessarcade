@@ -1468,87 +1468,70 @@ function launchCollectorToScore(collector, labelEl, totalBonus, scoreEl, destX, 
     }, 750);
 }
 
-// El display del nivel se infla, sale un badge "NIVEL N — Nombre × M" y vuela al marcador.
+// El número del nivel se infla en su posición, luego sale un badge "NIVEL N × M" que vuela al marcador.
 // Al impactar: score *= multiplier, sacudida cyan, toast "×M" flota.
 function flyLevelMultiplier(multiplier) {
-    const levelEl = document.getElementById('levelDisplay');
     const scoreEl = elements.scoreDisplay;
     if (!scoreEl) return;
+
+    // Declarar nivel y lvl PRIMERO para que estén disponibles en todo el cuerpo
+    const nivel = gameState.currentLevelIndex + 1;
+    const lvl   = CONFIG.LEVELS[gameState.currentLevelIndex];
+    if (!lvl) return;
 
     const scoreRect = scoreEl.getBoundingClientRect();
     const destX = scoreRect.left + scoreRect.width  / 2;
     const destY = scoreRect.top  + scoreRect.height / 2;
 
     // Origen: el display del nivel si está visible, centro-arriba como fallback
-    let srcX, srcY;
+    const levelEl = document.getElementById('levelDisplay');
+    let srcX = window.innerWidth  / 2;
+    let srcY = window.innerHeight * 0.2;
     if (levelEl) {
         const r = levelEl.getBoundingClientRect();
-        if (r.top >= 0 && r.bottom <= window.innerHeight && r.width > 0) {
+        if (r.width > 0 && r.top >= 0 && r.bottom <= window.innerHeight) {
             srcX = r.left + r.width  / 2;
             srcY = r.top  + r.height / 2;
-            // Solo el NÚMERO del nivel se infla — overlay temporal encima del texto completo
-            const numOverlay = document.createElement('div');
-            numOverlay.textContent = nivel;
-            Object.assign(numOverlay.style, {
-                position:   'fixed',
-                left:       `${srcX}px`,
-                top:        `${srcY}px`,
-                transform:  'translate(-50%, -50%) scale(1)',
-                fontFamily: "'Orbitron', sans-serif",
-                fontWeight: '900',
-                fontSize:   '1rem',
-                color:      '#00ffff',
-                textShadow: '0 0 18px #00ffff',
-                zIndex:     '401',
-                pointerEvents: 'none',
-                transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s 0.45s',
-            });
-            document.body.appendChild(numOverlay);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                numOverlay.style.transform = 'translate(-50%, -50%) scale(5)';
-            }));
-            setTimeout(() => {
-                numOverlay.style.opacity = '0';
-                setTimeout(() => numOverlay.remove(), 220);
-            }, 450);
-        } else {
-            srcX = window.innerWidth  / 2;
-            srcY = window.innerHeight * 0.18;
         }
-    } else {
-        srcX = window.innerWidth  / 2;
-        srcY = window.innerHeight * 0.18;
     }
 
-    const lvl   = CONFIG.LEVELS[gameState.currentLevelIndex];
-    const nivel  = gameState.currentLevelIndex + 1;
+    // Número del nivel se infla en la posición de origen (overlay temporal, sin tocar el elemento real)
+    const numOverlay = document.createElement('div');
+    numOverlay.textContent = nivel;
+    numOverlay.style.cssText = `
+        position:fixed; left:${srcX}px; top:${srcY}px; z-index:403; pointer-events:none;
+        transform:translate(-50%,-50%) scale(1);
+        transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s 0.5s;
+        font-family:'Orbitron',sans-serif; font-weight:900; font-size:1.2rem;
+        color:#00ffff; text-shadow:0 0 18px #00ffff;
+    `;
+    document.body.appendChild(numOverlay);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        numOverlay.style.transform = 'translate(-50%,-50%) scale(5)';
+    }));
+    setTimeout(() => {
+        numOverlay.style.opacity = '0';
+        setTimeout(() => numOverlay.remove(), 220);
+    }, 500);
 
-    // Badge con dos líneas: nombre del nivel arriba, multiplicador grande abajo
+    // Badge con dos líneas (estilos inline, sin querySelector)
     const badge = document.createElement('div');
-    badge.innerHTML = `<div class="mlvl-label">NIVEL ${nivel} — ${lvl.name}</div><div class="mlvl-value">×${multiplier}</div>`;
-    Object.assign(badge.style, {
-        position:      'fixed',
-        left:          `${srcX}px`,
-        top:           `${srcY}px`,
-        zIndex:        '402',
-        pointerEvents: 'none',
-        transform:     'translate(-50%, -50%) scale(0)',
-        transition:    'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-        textAlign:     'center',
-        lineHeight:    '1.15',
-        fontFamily:    "'Orbitron', sans-serif",
-        fontWeight:    '900',
-        color:         '#00ffff',
-        textShadow:    '0 0 20px #00ffff, 0 0 45px #00ffff',
-    });
-    // Estilos de las dos líneas internas
-    badge.querySelector('.mlvl-label').style.cssText = 'font-size:0.75rem;letter-spacing:0.08em;opacity:0.85;';
-    badge.querySelector('.mlvl-value').style.cssText = 'font-size:2.4rem;';
+    badge.style.cssText = `
+        position:fixed; left:${srcX}px; top:${srcY}px; z-index:402; pointer-events:none;
+        transform:translate(-50%,-50%) scale(0);
+        transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+        text-align:center; line-height:1.15;
+        font-family:'Orbitron',sans-serif; font-weight:900;
+        color:#00ffff; text-shadow:0 0 20px #00ffff, 0 0 45px #00ffff;
+    `;
+    badge.innerHTML = `
+        <div style="font-size:0.75rem;letter-spacing:0.08em;opacity:0.85;">NIVEL ${nivel} — ${lvl.name}</div>
+        <div style="font-size:2.4rem;">×${multiplier}</div>
+    `;
     document.body.appendChild(badge);
 
-    // Pop de aparición
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        badge.style.transform = 'translate(-50%, -50%) scale(1)';
+        badge.style.transform = 'translate(-50%,-50%) scale(1)';
     }));
 
     playLevelMultiplierSound();
@@ -1559,7 +1542,7 @@ function flyLevelMultiplier(multiplier) {
         requestAnimationFrame(() => requestAnimationFrame(() => {
             badge.style.left      = `${destX}px`;
             badge.style.top       = `${destY}px`;
-            badge.style.transform = 'translate(-50%, -50%) scale(0.3)';
+            badge.style.transform = 'translate(-50%,-50%) scale(0.3)';
             badge.style.opacity   = '0';
         }));
 
@@ -1583,24 +1566,17 @@ function flyLevelMultiplier(multiplier) {
             // Toast "×M" que sube
             const spark = document.createElement('div');
             spark.textContent = `×${multiplier}`;
-            Object.assign(spark.style, {
-                position:   'fixed',
-                left:       `${destX + 40}px`,
-                top:        `${destY - 15}px`,
-                fontSize:   '1.6rem',
-                fontFamily: "'Orbitron', sans-serif",
-                fontWeight: '900',
-                color:      '#00ffff',
-                zIndex:     '401',
-                pointerEvents: 'none',
-                textShadow: '0 0 15px #00ffff',
-                animation:  'vToastFloat 1s ease-out forwards',
-            });
+            spark.style.cssText = `
+                position:fixed; left:${destX + 40}px; top:${destY - 15}px; z-index:401; pointer-events:none;
+                font-size:1.6rem; font-family:'Orbitron',sans-serif; font-weight:900;
+                color:#00ffff; text-shadow:0 0 15px #00ffff;
+                animation:vToastFloat 1s ease-out forwards;
+            `;
             document.body.appendChild(spark);
             spark.addEventListener('animationend', () => spark.remove());
 
         }, 730);
-    }, 900); // pausa para que el jugador lea el badge
+    }, 900);
 }
 
 // Tres notas ascendentes brillantes — "level up"
