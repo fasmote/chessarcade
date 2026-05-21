@@ -1486,16 +1486,31 @@ function flyLevelMultiplier(multiplier) {
         if (r.top >= 0 && r.bottom <= window.innerHeight && r.width > 0) {
             srcX = r.left + r.width  / 2;
             srcY = r.top  + r.height / 2;
-            // El display de nivel se infla brevemente
-            levelEl.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), color 0.3s, text-shadow 0.3s';
-            levelEl.style.transform  = 'scale(2.8)';
-            levelEl.style.color      = '#00ffff';
-            levelEl.style.textShadow = '0 0 18px #00ffff';
+            // Solo el NÚMERO del nivel se infla — overlay temporal encima del texto completo
+            const numOverlay = document.createElement('div');
+            numOverlay.textContent = nivel;
+            Object.assign(numOverlay.style, {
+                position:   'fixed',
+                left:       `${srcX}px`,
+                top:        `${srcY}px`,
+                transform:  'translate(-50%, -50%) scale(1)',
+                fontFamily: "'Orbitron', sans-serif",
+                fontWeight: '900',
+                fontSize:   '1rem',
+                color:      '#00ffff',
+                textShadow: '0 0 18px #00ffff',
+                zIndex:     '401',
+                pointerEvents: 'none',
+                transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s 0.45s',
+            });
+            document.body.appendChild(numOverlay);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                numOverlay.style.transform = 'translate(-50%, -50%) scale(5)';
+            }));
             setTimeout(() => {
-                levelEl.style.transform  = '';
-                levelEl.style.color      = '';
-                levelEl.style.textShadow = '';
-            }, 500);
+                numOverlay.style.opacity = '0';
+                setTimeout(() => numOverlay.remove(), 220);
+            }, 450);
         } else {
             srcX = window.innerWidth  / 2;
             srcY = window.innerHeight * 0.18;
