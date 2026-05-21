@@ -1305,9 +1305,8 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
     setTimeout(() => showVictoryModal(), 4000);
 }
 
-// Anima cada corazón en trencito desde el display al marcador de puntos.
-// 3 fases por corazón: pop al salir → vuelo visible → impacto en el marcador.
-// Cada corazón suma 50 pts al score al llegar, con su propio sonido de impacto.
+// Los corazones individuales vuelan hacia un corazón COLECTOR que crece con la suma.
+// Cuando el último llega, el colector viaja solo al marcador con el total acumulado.
 function flyHeartsToScore() {
     const livesEl = window.innerWidth >= 768
         ? elements.livesDisplayDesktop
@@ -1318,100 +1317,166 @@ function flyHeartsToScore() {
     const hearts = [...livesEl.querySelectorAll('.cs-heart:not(.cs-heart--lost)')];
     if (hearts.length === 0) return;
 
-    // Destino: centro del marcador de puntos
-    const scoreRect = scoreEl.getBoundingClientRect();
+    const livesRect  = livesEl.getBoundingClientRect();
+    const scoreRect  = scoreEl.getBoundingClientRect();
+
+    // Posición del colector: entre el display de vidas y el centro de la pantalla
+    const collX = Math.min(livesRect.right + 80, window.innerWidth / 2);
+    const collY = livesRect.top + livesRect.height / 2;
+
+    // Destino final: marcador de puntos
     const destX = scoreRect.left + scoreRect.width  / 2;
     const destY = scoreRect.top  + scoreRect.height / 2;
 
-    hearts.forEach((heart, i) => {
-        const STAGGER    = 220; // ms entre cada corazón (más lento = más visible)
-        const FLIGHT_MS  = 600; // duración del vuelo
+    // Crear el corazón colector — empieza pequeño y crece
+    const collector = document.createElement('div');
+    collector.innerHTML = '<span class="coll-heart">❤️</span><span class="coll-label">+0</span>';
+    Object.assign(collector.style, {
+        position:      'fixed',
+        left:          `${collX}px`,
+        top:           `${collY}px`,
+        zIndex:        '402',
+        pointerEvents: 'none',
+        transform:     'translate(-50%, -50%) scale(0)',
+        transition:    'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+        display:       'flex',
+        flexDirection: 'column',
+        alignItems:    'center',
+        lineHeight:    '1',
+        fontFamily:    "'Orbitron', sans-serif",
+        fontWeight:    '900',
+        textAlign:     'center',
+    });
+    document.body.appendChild(collector);
 
+    const heartEl  = collector.querySelector('.coll-heart');
+    const labelEl  = collector.querySelector('.coll-label');
+    Object.assign(heartEl.style,  { fontSize: '3rem', filter: 'drop-shadow(0 0 12px #ff0080)' });
+    Object.assign(labelEl.style,  { fontSize: '1rem', color: '#ff0080', textShadow: '0 0 8px #ff0080', marginTop: '2px' });
+
+    const STAGGER  = 180; // ms entre corazones individuales
+    const FLY_MS   = 400; // vuelo de cada corazón al colector
+    let   merged   = 0;
+    let   accBonus = 0;
+
+    hearts.forEach((heart, i) => {
         setTimeout(() => {
             const r    = heart.getBoundingClientRect();
             const srcX = r.left + r.width  / 2;
             const srcY = r.top  + r.height / 2;
 
-            // ── Sonido de salida: pop grave ──
+            // Pop y desaparece el corazón original
             playHeartPopSound();
-
-            // Animación de "salto" del corazón original antes de desaparecer
-            heart.style.transition = 'transform 0.12s, opacity 0.12s 0.1s';
-            heart.style.transform  = 'scale(1.8)';
+            heart.style.transition = 'transform 0.1s, opacity 0.15s 0.08s';
+            heart.style.transform  = 'scale(2)';
             setTimeout(() => { heart.style.opacity = '0'; heart.style.transform = 'scale(0)'; }, 80);
 
-            // Clon volador: grande y brillante para que se note
+            // Clon pequeño que vuela al colector
             const clone = document.createElement('span');
             clone.textContent = '❤️';
             Object.assign(clone.style, {
                 position:      'fixed',
                 left:          `${srcX}px`,
                 top:           `${srcY}px`,
-                fontSize:      '2.2rem',           // grande y visible
-                zIndex:        '400',
+                fontSize:      '1.4rem',
+                zIndex:        '401',
                 pointerEvents: 'none',
-                transform:     'translate(-50%, -50%) scale(1.2)',
-                filter:        'drop-shadow(0 0 14px #ff0080) drop-shadow(0 0 6px white)',
-                transition:    `left ${FLIGHT_MS}ms cubic-bezier(0.3,0,0.5,1), top ${FLIGHT_MS}ms cubic-bezier(0.3,0,0.5,1), transform ${FLIGHT_MS}ms ease-in, filter 0.2s`,
+                transform:     'translate(-50%, -50%)',
+                filter:        'drop-shadow(0 0 8px #ff0080)',
+                transition:    `left ${FLY_MS}ms ease-in, top ${FLY_MS}ms ease-in, opacity 0.1s ${FLY_MS - 80}ms`,
             });
             document.body.appendChild(clone);
 
-            // Lanzar vuelo en siguiente frame
             requestAnimationFrame(() => requestAnimationFrame(() => {
-                clone.style.left      = `${destX}px`;
-                clone.style.top       = `${destY}px`;
-                clone.style.transform = 'translate(-50%, -50%) scale(0.5)';
-                clone.style.filter    = 'drop-shadow(0 0 4px #ff0080)';
-                // Sonido de whoosh al salir volando
+                clone.style.left    = `${collX}px`;
+                clone.style.top     = `${collY}px`;
+                clone.style.opacity = '0';
                 playHeartWhooshSound();
             }));
 
-            // Al llegar: impacto
+            // Al llegar al colector
             setTimeout(() => {
                 clone.remove();
+                merged++;
+                accBonus += 50;
 
-                // Sonido de impacto/moneda
-                playHeartImpactSound();
+                // El colector aparece/crece con un pop elástico
+                const scale = 0.8 + merged * 0.15; // crece con cada corazón
+                collector.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                labelEl.textContent       = `+${accBonus}`;
 
-                // Score sube de a 50
-                gameState.score += 50;
-                updateDisplay();
+                // Pulso visual en el colector
+                playHeartMergeSound();
+                heartEl.style.transition = 'filter 0.1s';
+                heartEl.style.filter     = 'drop-shadow(0 0 25px #ff0080) drop-shadow(0 0 10px white)';
+                setTimeout(() => { heartEl.style.filter = 'drop-shadow(0 0 12px #ff0080)'; }, 120);
 
-                // Sacudida del marcador
-                scoreEl.style.transition = 'none';
-                scoreEl.style.transform  = 'scale(1.8) rotate(-5deg)';
-                scoreEl.style.color      = '#ff0080';
-                scoreEl.style.textShadow = '0 0 20px #ff0080';
-                setTimeout(() => {
-                    scoreEl.style.transition  = 'transform 0.2s, color 0.2s, text-shadow 0.2s';
-                    scoreEl.style.transform   = '';
-                    scoreEl.style.color       = '';
-                    scoreEl.style.textShadow  = '';
-                }, 80);
-
-                // Partícula de impacto: "+50" que aparece y sube
-                const spark = document.createElement('div');
-                spark.textContent = '+50';
-                Object.assign(spark.style, {
-                    position:   'fixed',
-                    left:       `${destX + 30}px`,
-                    top:        `${destY - 10}px`,
-                    fontSize:   '1.1rem',
-                    fontFamily: "'Orbitron', sans-serif",
-                    fontWeight: '900',
-                    color:      '#ff0080',
-                    zIndex:     '401',
-                    pointerEvents: 'none',
-                    textShadow: '0 0 10px #ff0080',
-                    animation:  'vToastFloat 0.8s ease-out forwards',
-                });
-                document.body.appendChild(spark);
-                spark.addEventListener('animationend', () => spark.remove());
-
-            }, FLIGHT_MS + 50);
+                // Cuando el último corazón llegó → lanzar el colector al marcador
+                if (merged === hearts.length) {
+                    setTimeout(() => launchCollectorToScore(collector, labelEl, accBonus, scoreEl, destX, destY), 400);
+                }
+            }, FLY_MS + 30);
 
         }, i * STAGGER);
     });
+}
+
+// Lanza el corazón colector (ya grande) desde su posición hasta el marcador de puntos.
+function launchCollectorToScore(collector, labelEl, totalBonus, scoreEl, destX, destY) {
+    // Preparar transición de vuelo largo hacia el marcador
+    collector.style.transition = 'left 0.7s cubic-bezier(0.4,0,0.8,1), top 0.7s cubic-bezier(0.4,0,0.8,1), transform 0.7s ease-in, opacity 0.15s 0.6s';
+
+    playHeartWhooshSound();
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        collector.style.left      = `${destX}px`;
+        collector.style.top       = `${destY}px`;
+        collector.style.transform = 'translate(-50%, -50%) scale(0.4)';
+        collector.style.opacity   = '0';
+    }));
+
+    // Al llegar: impacto grande
+    setTimeout(() => {
+        collector.remove();
+
+        // Score sube con el total
+        gameState.score += totalBonus;
+        updateDisplay();
+
+        playHeartImpactSound();
+
+        // Sacudida fuerte del marcador
+        scoreEl.style.transition = 'none';
+        scoreEl.style.transform  = 'scale(2.2) rotate(-8deg)';
+        scoreEl.style.color      = '#ff0080';
+        scoreEl.style.textShadow = '0 0 30px #ff0080, 0 0 60px #ff0080';
+        setTimeout(() => {
+            scoreEl.style.transition  = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), color 0.3s, text-shadow 0.3s';
+            scoreEl.style.transform   = '';
+            scoreEl.style.color       = '';
+            scoreEl.style.textShadow  = '';
+        }, 90);
+
+        // Toast "+totalBonus" grande que sube
+        const spark = document.createElement('div');
+        spark.textContent = `+${totalBonus}`;
+        Object.assign(spark.style, {
+            position:   'fixed',
+            left:       `${destX + 40}px`,
+            top:        `${destY - 15}px`,
+            fontSize:   '1.6rem',
+            fontFamily: "'Orbitron', sans-serif",
+            fontWeight: '900',
+            color:      '#ff0080',
+            zIndex:     '401',
+            pointerEvents: 'none',
+            textShadow: '0 0 15px #ff0080',
+            animation:  'vToastFloat 1s ease-out forwards',
+        });
+        document.body.appendChild(spark);
+        spark.addEventListener('animationend', () => spark.remove());
+
+    }, 750);
 }
 
 // ── Sonidos de la animación de corazones ──
@@ -1470,6 +1535,24 @@ function playHeartImpactSound() {
         gain.gain.setValueAtTime(0.3, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
         osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.22);
+    } catch(e) {}
+}
+
+// Plop suave al fusionarse en el colector
+function playHeartMergeSound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(260, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.14);
     } catch(e) {}
 }
 
