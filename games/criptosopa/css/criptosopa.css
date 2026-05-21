@@ -1505,7 +1505,7 @@
     font-size: 1.3rem;
 }
 
-/* Timer: glow verde al congelarse */
+/* Timer: glow verde al congelarse (victoria sin penalización de tiempo) */
 @keyframes timerVictory {
     0%   { border-color: var(--neon-orange); box-shadow: 0 0 20px rgba(255,153,0,0.3); }
     40%  { border-color: #39ff14;            box-shadow: 0 0 40px rgba(57,255,20,0.8);  }
@@ -1515,6 +1515,32 @@
 .timer-display.timer-won {
     animation: timerVictory 0.4s ease-out forwards;
     border-color: #39ff14;
+}
+
+/* Timer: glow rojo al congelarse cuando el tiempo resta puntos */
+@keyframes timerPenalty {
+    0%   { border-color: var(--neon-orange); box-shadow: 0 0 20px rgba(255,153,0,0.3); }
+    40%  { border-color: #ff2020;            box-shadow: 0 0 40px rgba(255,32,32,0.9);  }
+    100% { border-color: #ff2020;            box-shadow: 0 0 20px rgba(255,32,32,0.5);  }
+}
+
+.timer-display.timer-penalty {
+    animation: timerPenalty 0.4s ease-out forwards;
+    border-color: #ff2020;
+}
+
+.timer-display.timer-penalty span {
+    color: #ff2020;
+}
+
+/* Desglose: separador y valor del tiempo como penalización */
+.vb-sep-minus {
+    color: #ff2020;
+}
+
+.vb-penalty {
+    color: #ff2020;
+    text-shadow: 0 0 8px rgba(255,32,32,0.6);
 }
 
 /* Flash del multiplicador — overlay central */

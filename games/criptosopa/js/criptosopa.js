@@ -167,7 +167,7 @@ let gameState = {
     isDragging: false,
     hintCell: null,
     // Desglose del último puntaje de nivel (para mostrar en el modal de victoria)
-    lastBonus: { words: 0, speed: 0, lives: 0, multiplier: 1 }
+    lastBonus: { words: 0, timePenalty: 0, lives: 0, multiplier: 1 }
 };
 
 // DOM Elements
@@ -1231,19 +1231,22 @@ function winGame() {
     clearInterval(gameState.timerInterval);
     updateResetBtnLabel(true);
 
-    const segundos   = Math.floor(gameState.timer / 100);
-    const speedBonus = Math.max(0, 500 - segundos);
-    const livesBonus = gameState.lives * 50;
-    const nivel      = gameState.currentLevelIndex + 1;
-    const multiplier = Math.round((1 + nivel * 0.1) * 10) / 10;
-    const wordScore  = gameState.score;
+    const totalCentis   = gameState.timer;
+    const totalSegs     = Math.floor(totalCentis / 100);
+    const minutos       = Math.floor(totalSegs / 60);
+    const segsRestantes = totalSegs % 60;
+    // 2:31 → 231 puntos de penalización (min×100 + seg)
+    const timePenalty = minutos * 100 + segsRestantes;
+    const livesBonus  = gameState.lives * 50;
+    const nivel       = gameState.currentLevelIndex + 1;
+    const multiplier  = Math.round((1 + nivel * 0.1) * 10) / 10;
+    const wordScore   = gameState.score;
 
     // Guardar desglose para el modal
-    gameState.lastBonus = { words: wordScore, speed: speedBonus, lives: livesBonus, multiplier };
+    gameState.lastBonus = { words: wordScore, timePenalty, lives: livesBonus, multiplier };
 
-    // El score arranca en wordScore + speedBonus y sube de a 50 con cada corazón.
-    // El multiplicador se aplica en la fase 3 de la secuencia, no acá.
-    gameState.score = wordScore + speedBonus;
+    // Score arranca en wordScore; los corazones suman, el tiempo resta, el multiplicador se aplica al final.
+    gameState.score = wordScore;
     updateDisplay();
 
     // Feedback inmediato
@@ -1252,7 +1255,7 @@ function winGame() {
     launchConfetti();
 
     // Secuencia visual de bonuses → modal de victoria al final
-    playVictorySequence(speedBonus, livesBonus, multiplier);
+    playVictorySequence(timePenalty, livesBonus, multiplier);
 }
 
 // Orquesta la secuencia visual de bonuses antes del modal de victoria.
@@ -1260,47 +1263,33 @@ function winGame() {
 // Fase 2 (1.5s): corazones vuelan en trencito desde el display hasta el marcador
 // Fase 3 (3.0s): flash del multiplicador
 // Fase 4 (4.0s): modal de victoria
-function playVictorySequence(speedBonus, livesBonus, multiplier) {
-    const toastContainer = document.getElementById('victoryToasts');
+function playVictorySequence(timePenalty, livesBonus, multiplier) {
+    // Tiempos dinámicos: el modal espera a que terminen TODAS las animaciones
+    const n       = gameState.lives;
+    const STAGGER = 180; // debe coincidir con flyHeartsToScore
+    const FLY_MS  = 400;
+    const heartsDuration = n > 0 ? (n - 1) * STAGGER + FLY_MS + 30 + 400 + 700 + 400 : 0;
 
-    // Crea un toast flotante para el bonus de velocidad
-    function spawnToast(text, cssClass, xPct, yPct) {
-        const t = document.createElement('div');
-        t.className = `v-toast ${cssClass}`;
-        t.textContent = text;
-        t.style.left = `${xPct}%`;
-        t.style.top  = `${yPct}%`;
-        toastContainer?.appendChild(t);
-        t.addEventListener('animationend', () => t.remove());
-    }
+    const T2 = 1500;                        // Fase 2: corazones vuelan
+    const T3 = T2 + heartsDuration + 300;   // Fase 3: badge de tiempo vuela al score
+    const T4 = T3 + 2000;                   // Fase 4: flash del multiplicador
+    const T5 = T4 + 1300;                   // Fase 5: modal de victoria
 
-    // Calcular tiempos dinámicos según cuántos corazones van a volar
-    // para que el modal nunca aparezca antes de que termine la animación
-    const n        = gameState.lives;
-    const STAGGER  = 180; // ms entre cada corazón (debe coincidir con flyHeartsToScore)
-    const FLY_MS   = 400; // vuelo de cada clon al colector
-    // Duración total de flyHeartsToScore: último corazón sale, llega, delay colector, colector vuela, buffer
-    const heartsDuration = n > 0
-        ? (n - 1) * STAGGER + FLY_MS + 30 + 400 + 700 + 400
-        : 0;
-
-    const T2 = 1500;                       // Fase 2: vuelan corazones
-    const T3 = T2 + heartsDuration + 200;  // Fase 3: multiplicador (200ms después de que aterriza el colector)
-    const T4 = T3 + 1300;                  // Fase 4: modal de victoria
-
-    // ── Fase 1 (0.5s): congelar timer en verde + toast velocidad ──
+    // ── Fase 1 (0.5s): timer se congela en ROJO (el tiempo va a restar) ──
     setTimeout(() => {
         const timerEl = document.querySelector('.timer-display');
-        if (timerEl) timerEl.classList.add('timer-won');
-        if (speedBonus > 0) spawnToast(`⚡ +${speedBonus}`, 'v-toast-speed', 48, 18);
+        if (timerEl) timerEl.classList.add('timer-penalty');
     }, 500);
 
     // ── Fase 2: corazones vuelan al colector que luego va al marcador ──
     setTimeout(() => flyHeartsToScore(), T2);
 
-    // ── Fase 3: aplicar multiplicador al score + flash visual ──
+    // ── Fase 3: badge de penalización vuela desde el timer y resta ──
+    setTimeout(() => flyTimePenalty(timePenalty), T3);
+
+    // ── Fase 4: aplicar multiplicador al score + flash visual ──
     setTimeout(() => {
-        gameState.score = Math.round(gameState.score * multiplier);
+        gameState.score = Math.max(0, Math.round(gameState.score * multiplier));
         updateDisplay();
 
         const el = document.getElementById('multiplierFlash');
@@ -1312,10 +1301,10 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
         if (valEl) valEl.textContent = `×${multiplier}`;
         el.style.display = 'flex';
         el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
-    }, T3);
+    }, T4);
 
-    // ── Fase 4: modal de victoria ──
-    setTimeout(() => showVictoryModal(), T4);
+    // ── Fase 5: modal de victoria ──
+    setTimeout(() => showVictoryModal(), T5);
 }
 
 // Los corazones individuales vuelan hacia un corazón COLECTOR que crece con la suma.
@@ -1490,6 +1479,126 @@ function launchCollectorToScore(collector, labelEl, totalBonus, scoreEl, destX, 
         spark.addEventListener('animationend', () => spark.remove());
 
     }, 750);
+}
+
+// El badge "−N" aparece en el timer (ya congelado en rojo), espera un momento
+// para que el jugador lo vea, y luego vuela hacia el marcador restando puntos.
+function flyTimePenalty(timePenalty) {
+    if (timePenalty <= 0) return;
+
+    const timerEl = document.querySelector('.timer-display');
+    const scoreEl = elements.scoreDisplay;
+    if (!timerEl || !scoreEl) return;
+
+    const timerRect = timerEl.getBoundingClientRect();
+    const scoreRect = scoreEl.getBoundingClientRect();
+
+    const srcX  = timerRect.left + timerRect.width  / 2;
+    const srcY  = timerRect.top  + timerRect.height / 2;
+    const destX = scoreRect.left + scoreRect.width  / 2;
+    const destY = scoreRect.top  + scoreRect.height / 2;
+
+    // Badge rojo que aparece en el timer
+    const badge = document.createElement('div');
+    badge.textContent = `−${timePenalty}`;
+    Object.assign(badge.style, {
+        position:      'fixed',
+        left:          `${srcX}px`,
+        top:           `${srcY}px`,
+        fontSize:      '2.2rem',
+        fontFamily:    "'Orbitron', sans-serif",
+        fontWeight:    '900',
+        color:         '#ff2020',
+        textShadow:    '0 0 20px #ff2020, 0 0 40px #ff2020',
+        zIndex:        '402',
+        pointerEvents: 'none',
+        transform:     'translate(-50%, -50%) scale(0)',
+        transition:    'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+    });
+    document.body.appendChild(badge);
+
+    // Pop de aparición
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        badge.style.transform = 'translate(-50%, -50%) scale(1)';
+    }));
+
+    // Sonido tétrico al aparecer
+    playTimePenaltySound();
+
+    // Después de que el jugador ve el badge, vuela al marcador
+    setTimeout(() => {
+        badge.style.transition = 'left 0.7s ease-in, top 0.7s ease-in, transform 0.6s ease-in, opacity 0.15s 0.6s';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            badge.style.left      = `${destX}px`;
+            badge.style.top       = `${destY}px`;
+            badge.style.transform = 'translate(-50%, -50%) scale(0.3)';
+            badge.style.opacity   = '0';
+        }));
+
+        // Al llegar: el score baja con shake rojo
+        setTimeout(() => {
+            badge.remove();
+            gameState.score = Math.max(0, gameState.score - timePenalty);
+            updateDisplay();
+
+            scoreEl.style.transition = 'none';
+            scoreEl.style.transform  = 'scale(1.9) rotate(5deg)';
+            scoreEl.style.color      = '#ff2020';
+            scoreEl.style.textShadow = '0 0 30px #ff2020, 0 0 60px #ff2020';
+            setTimeout(() => {
+                scoreEl.style.transition  = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), color 0.3s, text-shadow 0.3s';
+                scoreEl.style.transform   = '';
+                scoreEl.style.color       = '';
+                scoreEl.style.textShadow  = '';
+            }, 100);
+
+            // Toast "−N" que baja (al revés que los positivos)
+            const spark = document.createElement('div');
+            spark.textContent = `−${timePenalty}`;
+            Object.assign(spark.style, {
+                position:   'fixed',
+                left:       `${destX + 40}px`,
+                top:        `${destY + 10}px`,
+                fontSize:   '1.6rem',
+                fontFamily: "'Orbitron', sans-serif",
+                fontWeight: '900',
+                color:      '#ff2020',
+                zIndex:     '401',
+                pointerEvents: 'none',
+                textShadow: '0 0 15px #ff2020',
+                animation:  'vToastFloat 1s ease-out forwards',
+            });
+            document.body.appendChild(spark);
+            spark.addEventListener('animationend', () => spark.remove());
+
+        }, 730);
+    }, 700); // pausa para que el jugador lea el badge
+}
+
+// Tres notas descendentes (sad trombone) cuando el tiempo ataca el score
+function playTimePenaltySound() {
+    if (!soundEnabled) return;
+    try {
+        const ctx = initAudio();
+        if (ctx.state === 'suspended') { ctx.resume(); return; }
+        [
+            { freq: 466, delay: 0,    dur: 0.20 },  // A#4
+            { freq: 370, delay: 0.22, dur: 0.20 },  // F#4
+            { freq: 233, delay: 0.44, dur: 0.40 },  // A#3 — la más larga y grave
+        ].forEach(({ freq, delay, dur }) => {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            // Pequeño bend descendente en cada nota para sonar más a trombón
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.88, ctx.currentTime + delay + dur);
+            gain.gain.setValueAtTime(0.14, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + dur);
+        });
+    } catch(e) {}
 }
 
 // ── Sonidos de la animación de corazones ──
@@ -1769,9 +1878,9 @@ function showVictoryModal(options = {}) {
         if (!options.isGameOver) {
             const b = gameState.lastBonus;
             const el = (id) => document.getElementById(id);
-            if (el('vbWords'))      el('vbWords').textContent      = b.words.toLocaleString();
-            if (el('vbSpeed'))      el('vbSpeed').textContent      = `+${b.speed}`;
-            if (el('vbLives'))      el('vbLives').textContent      = `+${b.lives}`;
+            if (el('vbWords'))       el('vbWords').textContent       = b.words.toLocaleString();
+            if (el('vbLives'))       el('vbLives').textContent       = `+${b.lives}`;
+            if (el('vbTimePenalty')) el('vbTimePenalty').textContent = b.timePenalty.toLocaleString();
             if (el('vbMultiplier')) el('vbMultiplier').textContent = `×${b.multiplier}`;
         }
     }
