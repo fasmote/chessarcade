@@ -1259,49 +1259,40 @@ function winGame() {
 
 // Orquesta la secuencia visual de bonuses antes del modal de victoria.
 // Fase 1 (0.5s): timer congela en verde + toast de velocidad
-// Fase 2 (1.5s): corazones vuelan uno a uno con "+50"
+// Fase 2 (1.5s): corazones vuelan en trencito desde el display hasta el marcador
 // Fase 3 (3.0s): flash del multiplicador
 // Fase 4 (4.0s): modal de victoria
 function playVictorySequence(speedBonus, livesBonus, multiplier) {
     const toastContainer = document.getElementById('victoryToasts');
 
-    // Crea un toast flotante en una posición de pantalla y lo destruye al terminar
-    function spawnToast(text, cssClass, xPct, yPct, delay) {
-        setTimeout(() => {
-            const t = document.createElement('div');
-            t.className = `v-toast ${cssClass}`;
-            t.textContent = text;
-            t.style.left = `${xPct}%`;
-            t.style.top  = `${yPct}%`;
-            toastContainer?.appendChild(t);
-            t.addEventListener('animationend', () => t.remove());
-        }, delay);
+    // Crea un toast flotante para el bonus de velocidad
+    function spawnToast(text, cssClass, xPct, yPct) {
+        const t = document.createElement('div');
+        t.className = `v-toast ${cssClass}`;
+        t.textContent = text;
+        t.style.left = `${xPct}%`;
+        t.style.top  = `${yPct}%`;
+        toastContainer?.appendChild(t);
+        t.addEventListener('animationend', () => t.remove());
     }
 
     // ── Fase 1 (0.5s): congelar timer en verde + toast velocidad ──
     setTimeout(() => {
         const timerEl = document.querySelector('.timer-display');
         if (timerEl) timerEl.classList.add('timer-won');
-        if (speedBonus > 0) {
-            spawnToast(`⚡ +${speedBonus}`, 'v-toast-speed', 48, 18, 0);
-        }
+        if (speedBonus > 0) spawnToast(`⚡ +${speedBonus}`, 'v-toast-speed', 48, 18);
     }, 500);
 
-    // ── Fase 2 (1.5s): corazones vuelan uno a uno ──
-    const livesCount = gameState.lives;
-    for (let i = 0; i < livesCount; i++) {
-        const xPct = 45 + (i % 5) * 2.5;   // distribuidos horizontalmente
-        const yPct = 42 - Math.floor(i / 5) * 8;
-        spawnToast(`❤️ +50`, 'v-toast-heart', xPct, yPct, 1500 + i * 140);
-    }
+    // ── Fase 2 (1.5s): corazones vuelan en trencito al marcador ──
+    setTimeout(() => flyHeartsToScore(), 1500);
 
     // ── Fase 3 (3.0s): flash del multiplicador ──
     setTimeout(() => {
         const el = document.getElementById('multiplierFlash');
-        const lvlEl = document.getElementById('mfLevel');
-        const valEl = document.getElementById('mfValue');
         if (!el) return;
         const lvl = CONFIG.LEVELS[gameState.currentLevelIndex];
+        const lvlEl = document.getElementById('mfLevel');
+        const valEl = document.getElementById('mfValue');
         if (lvlEl) lvlEl.textContent = `Nivel ${gameState.currentLevelIndex + 1} — ${lvl.name}`;
         if (valEl) valEl.textContent = `×${multiplier}`;
         el.style.display = 'flex';
@@ -1310,6 +1301,77 @@ function playVictorySequence(speedBonus, livesBonus, multiplier) {
 
     // ── Fase 4 (4.0s): modal de victoria ──
     setTimeout(() => showVictoryModal(), 4000);
+}
+
+// Anima cada corazón activo desde el display de vidas hasta el marcador de puntos.
+// Usa getBoundingClientRect() para posición real → clon fixed → CSS transition.
+// Efecto "trencito": cada corazón sale 130ms después del anterior.
+function flyHeartsToScore() {
+    // Elegir el contenedor de vidas visible (desktop o mobile)
+    const livesEl = window.innerWidth >= 768
+        ? elements.livesDisplayDesktop
+        : document.getElementById('livesDisplayMobile');
+    const scoreEl = elements.scoreDisplay;
+    if (!livesEl || !scoreEl) return;
+
+    const hearts = [...livesEl.querySelectorAll('.cs-heart:not(.cs-heart--lost)')];
+    if (hearts.length === 0) return;
+
+    // Posición destino: centro del marcador de puntos
+    const scoreRect = scoreEl.getBoundingClientRect();
+    const destX = scoreRect.left + scoreRect.width  / 2;
+    const destY = scoreRect.top  + scoreRect.height / 2;
+
+    hearts.forEach((heart, i) => {
+        setTimeout(() => {
+            // Posición de origen: centro del corazón original
+            const r    = heart.getBoundingClientRect();
+            const srcX = r.left + r.width  / 2;
+            const srcY = r.top  + r.height / 2;
+
+            // Ocultar el corazón original suavemente
+            heart.style.transition = 'opacity 0.15s';
+            heart.style.opacity    = '0';
+
+            // Clon volador con position:fixed en la posición del original
+            const clone = document.createElement('span');
+            clone.textContent = '❤️';
+            Object.assign(clone.style, {
+                position:      'fixed',
+                left:          `${srcX}px`,
+                top:           `${srcY}px`,
+                fontSize:      '1.3rem',
+                zIndex:        '400',
+                pointerEvents: 'none',
+                transform:     'translate(-50%, -50%) scale(1)',
+                filter:        'drop-shadow(0 0 10px #ff0080)',
+                // Transición de vuelo hacia el destino
+                transition:    'left 0.48s cubic-bezier(0.4,0,0.2,1), top 0.48s cubic-bezier(0.4,0,0.2,1), transform 0.48s, opacity 0.15s 0.38s',
+            });
+            document.body.appendChild(clone);
+
+            // Lanzar en el siguiente frame (necesario para que el transition arranque)
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                clone.style.left      = `${destX}px`;
+                clone.style.top       = `${destY}px`;
+                clone.style.transform = 'translate(-50%, -50%) scale(0.3)';
+                clone.style.opacity   = '0';
+            }));
+
+            // Al llegar: micro-pulso en el marcador y limpieza
+            setTimeout(() => {
+                clone.remove();
+                scoreEl.style.transition = 'transform 0.1s, color 0.1s';
+                scoreEl.style.transform  = 'scale(1.5)';
+                scoreEl.style.color      = '#ff0080';
+                setTimeout(() => {
+                    scoreEl.style.transform = '';
+                    scoreEl.style.color     = '';
+                }, 160);
+            }, 500);
+
+        }, i * 130); // 130ms de separación entre corazones → efecto trencito
+    });
 }
 
 // ── Lives system ──────────────────────────────────────────────
