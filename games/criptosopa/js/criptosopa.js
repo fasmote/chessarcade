@@ -2069,40 +2069,11 @@ function showHelpModal(show) {
     }
 }
 
-// Submit score
-async function submitScore() {
-    if (typeof submitGameScore !== 'function') {
-        console.error('Leaderboard API not loaded');
-        alert('El sistema de puntuaciones no está disponible.');
-        return;
-    }
-
-    const playerName = prompt('Ingresa tu nombre para el ranking:');
-    if (!playerName) return;
-
-    try {
-        elements.submitScoreBtn.disabled = true;
-        elements.submitScoreBtn.textContent = 'Enviando...';
-
-        const result = await submitGameScore('criptosopa', playerName, gameState.score, {
-            level: gameState.level,
-            time: gameState.timer,
-            words_found: gameState.foundPaths.length
-        });
-
-        if (result.success) {
-            alert(`¡Puntuación enviada! Ranking: #${result.rank} de ${result.totalPlayers}`);
-            closeVictoryModal();
-        } else {
-            alert('Error al enviar la puntuación. Intenta de nuevo.');
-        }
-    } catch (error) {
-        console.error('Error submitting score:', error);
-        alert('Error al enviar la puntuación.');
-    } finally {
-        elements.submitScoreBtn.disabled = false;
-        elements.submitScoreBtn.textContent = '📊 ENVIAR PUNTUACIÓN';
-    }
+// El submit de score lo maneja leaderboard-integration.js.
+// Esta función queda como stub para no romper el addEventListener de setupEventListeners
+// hasta que leaderboard-integration.js cargue y reemplace el handler.
+function submitScore() {
+    console.warn('[criptosopa] submitScore() stub — leaderboard-integration.js aún no cargó');
 }
 
 // Sound system with Web Audio API
@@ -2654,6 +2625,9 @@ window.SoundManager = {
 
 // Make toggleSound available globally for onclick handler
 window.toggleSound = toggleSound;
+
+// Exponer gameState para leaderboard-integration.js (que carga en un IIFE separado)
+Object.defineProperty(window, 'csGameState', { get: () => gameState });
 
 // Initialize
 console.log('CriptoSopa (Knight Word Search) loaded successfully!');

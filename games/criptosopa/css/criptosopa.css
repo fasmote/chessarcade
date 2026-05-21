@@ -2163,6 +2163,130 @@
     90% { transform: translate(-5px, -5px); }
 }
 
+/* ── Leaderboard: input de nombre en el modal de victoria ── */
+.name-input-container {
+    margin: 0.5rem 0;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 0, 128, 0.08);
+    border: 1px solid var(--neon-magenta);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    animation: nameContainerPulse 2s ease-in-out infinite;
+}
+
+@keyframes nameContainerPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 128, 0.3); }
+    50%       { box-shadow: 0 0 20px rgba(255, 0, 128, 0.6); }
+}
+
+.name-input-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    color: var(--neon-magenta);
+    letter-spacing: 0.05em;
+}
+
+.name-input-field {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--neon-magenta);
+    border-radius: 4px;
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    padding: 0.4rem 0.6rem;
+    text-transform: uppercase;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.name-input-field:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+}
+
+.name-input-field.highlight-input {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+}
+
+/* ── Leaderboard: animación de ranking ── */
+.ranking-animation-container {
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--neon-cyan);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    margin: 0.6rem 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.4s ease;
+}
+
+.ranking-animation-container.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ranking-animation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    color: var(--neon-cyan);
+    letter-spacing: 0.08em;
+}
+
+.ranking-animation-score {
+    color: var(--neon-magenta);
+    font-weight: 900;
+}
+
+.ranking-list-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 70px;
+    padding: 0.3rem 0.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+    margin-bottom: 0.2rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    transition: all 0.3s ease;
+}
+
+.ranking-list-row.player-row {
+    background: linear-gradient(90deg, rgba(255, 0, 128, 0.25), rgba(0, 255, 255, 0.15));
+    border: 1px solid var(--neon-magenta);
+    animation: pulseGlow 1s ease-in-out infinite;
+}
+
+.rank-position { color: var(--neon-yellow); font-weight: 700; }
+.rank-name     { color: #e0e0e0; truncate: ellipsis; overflow: hidden; white-space: nowrap; }
+.rank-score    { color: var(--neon-cyan); text-align: right; font-weight: 700; }
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 128, 0.4); }
+    50%       { box-shadow: 0 0 20px rgba(255, 0, 128, 0.8); }
+}
+
+.ranking-animation-message {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    color: var(--neon-yellow);
+    padding-top: 0.4rem;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    letter-spacing: 0.05em;
+}
+
+.ranking-animation-message.show {
+    opacity: 1;
+}
+
 .board-shake {
     animation: boardShake 0.5s ease-in-out;
 }

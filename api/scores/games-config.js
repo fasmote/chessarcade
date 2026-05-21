@@ -50,6 +50,15 @@ export const GAME_LIMITS = {
     score_type: 'wins',
     has_levels: false,
     has_time: true
+  },
+
+  'criptosopa': {
+    name: 'CriptoSopa',
+    max_score: 150000,      // 10 niveles × ~15000 pts máx (palabras+vidas−tiempo) × multiplicador
+    max_time_ms: 7200000,   // 2 horas máximo
+    score_type: 'points',
+    has_levels: true,
+    has_time: true
   }
 };
 

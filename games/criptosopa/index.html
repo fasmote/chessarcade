@@ -390,6 +390,14 @@
                 <p class="victory-message">¡Has encontrado todas las palabras!</p>
             </div>
             <div class="modal-footer">
+                <!-- Input de nombre para el leaderboard (oculto hasta que leaderboard-integration.js lo muestra) -->
+                <div id="csSubmitSection" style="display:none; width:100%; margin-bottom:0.5rem;">
+                    <div class="name-input-container">
+                        <label class="name-input-label" for="csPlayerNameInput">✨ Tu nombre para el ranking:</label>
+                        <input type="text" id="csPlayerNameInput" class="name-input-field"
+                               maxlength="20" placeholder="JUGADOR" autocomplete="off">
+                    </div>
+                </div>
                 <button id="nextLevelBtn" class="neon-arcade-btn neon-arcade-btn--primary">
                     ▶️ SIGUIENTE NIVEL
                 </button>
@@ -444,6 +452,8 @@
     <script src="../../js/leaderboard-api.js"></script>
     <script src="../../js/leaderboard-ui.js"></script>
     <script src="js/criptosopa.js"></script>
+    <script src="js/ranking-animation.js"></script>
+    <script src="js/leaderboard-integration.js"></script>
 
     <!-- Hamburger Menu Library (mobile) -->
     <script src="../../js/hamburger-menu.js"></script>
