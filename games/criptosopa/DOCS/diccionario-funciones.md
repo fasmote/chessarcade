@@ -13,6 +13,11 @@
 - [Módulo Marquee](#módulo-marquee) *(agregado 2026-05-09)*
 - [Tutorial Primera Vez](#tutorial-primera-vez) *(agregado 2026-05-09)*
 - [Touch Drag Mobile](#touch-drag-mobile) *(agregado 2026-05-08)*
+- [Sistema de Progresión y Niveles](#sistema-de-progresión-y-niveles) *(agregado 2026-05-21)*
+- [Sistema de Vidas y Game Over](#sistema-de-vidas-y-game-over) *(agregado 2026-05-21)*
+- [Sistema de Victoria y Puntaje](#sistema-de-victoria-y-puntaje) *(agregado 2026-05-21)*
+- [Animaciones Volantes — Patrón Reutilizable](#animaciones-volantes--patrón-reutilizable) *(agregado 2026-05-21)*
+- [Sonidos de la Secuencia de Victoria](#sonidos-de-la-secuencia-de-victoria) *(agregado 2026-05-21)*
 
 ---
 
@@ -1184,6 +1189,338 @@ Variables module-level compartidas:
 
 ---
 
-**Última actualización**: 2026-05-09
-**Versión del juego**: 1.3
+---
+
+## Sistema de Progresión y Niveles
+*(Agregado 2026-05-21 — implementado mayo 14-20)*
+
+### `nextLevel()`
+Avanza al siguiente nivel preservando el estado de la partida (vidas, score acumulado).
+
+**Qué hace**:
+1. Acumula `gameState.timer` en `gameState.totalTime` y el score en `gameState.totalScore`
+2. Incrementa `gameState.currentLevelIndex`
+3. Compara las vidas del tier actual vs el nuevo — si el tier cambió, resetea vidas al nuevo máximo
+4. Llama `startNewGame(false)` (sin reset total, conserva acumulados)
+
+**Concepto de tier**: el juego tiene 3 tiers definidos en `tierStartLevels = [0, 3, 8]`. Al cruzar la frontera de un tier, las vidas se resetean al nuevo máximo y aparece el banner de advertencia.
+
+```javascript
+const prevLives = CONFIG.LEVELS[gameState.currentLevelIndex - 1].lives;
+const nextLives = CONFIG.LEVELS[gameState.currentLevelIndex].lives;
+if (nextLives !== prevLives) {
+    gameState.lives = nextLives; // nuevo tier → resetear vidas
+}
+```
+
+---
+
+### `formatTime(centiseconds)`
+Convierte centisegundos a string legible `MM:SS` o `H:MM:SS`.
+
+**Parámetro**: `centiseconds` — el timer interno usa centisegundos (1/100 de segundo).
+
+```javascript
+formatTime(9000)  // → "01:30"
+formatTime(36000) // → "06:00"
+formatTime(361234) // → "1:00:12"
+```
+
+**¿Por qué centisegundos?** El `setInterval` corre cada 10ms (= 1 centisegundo). Permite mostrar el timer con precisión de centésimas si se quiere, sin cambiar la lógica.
+
+---
+
+### `startNextLevelCountdown()`
+Al cerrar el modal con la X (en vez de "SIGUIENTE NIVEL"), muestra un banner countdown "Siguiente nivel en 3..." con auto-avance.
+
+Crea un div fijo sobre el tablero con `position: fixed`, actualiza el número cada segundo con `setInterval`, llama `nextLevel()` al llegar a 0. Un click en el banner avanza de inmediato.
+
+**Por qué existe**: ciertos jugadores cierran el modal con X instintivamente — el countdown les da control sin perder el auto-avance.
+
+---
+
+### `updateResetBtnLabel(won)`
+Cambia el texto del botón principal mobile según el estado del juego:
+- `won = false` → "NUEVO TABLERO"
+- `won = true` → "NUEVA PARTIDA"
+
+Pequeña función de UI que mantiene coherencia entre el estado del juego y el texto del botón.
+
+---
+
+### `undoLastMove()` y `updateUndoButton()`
+`undoLastMove()` elimina la última celda del `selectedPath` (equivalente al botón ↩️ ATRÁS del panel desktop). No cuesta vida — es navegación segura del path.
+
+`updateUndoButton()` habilita/deshabilita el botón ATRÁS según si hay más de 1 celda en el path. Con 0 o 1 celdas no se puede retroceder más.
+
+---
+
+### `updateHintButton()`
+Recalcula y muestra el costo actual de la pista (`hintBaseCost × 2^hintsUsados`) y deshabilita el botón si el score actual no alcanza para pagarlo. Se llama cada vez que el score cambia.
+
+```javascript
+const cost = levelConfig.hintBaseCost * Math.pow(2, gameState.hintsUsedThisGame);
+hintBtn.disabled = gameState.score < cost;
+```
+
+---
+
+### `updateSelectionText()`
+Actualiza la barra de texto debajo del tablero mostrando las letras seleccionadas actualmente. Si no hay selección, muestra la palabra sugerida del marquee. Se llama después de cada click.
+
+---
+
+## Sistema de Vidas y Game Over
+*(Agregado 2026-05-21 — implementado mayo 14-16)*
+
+### `buildHeartsHTML(maxLives, lives)`
+Genera el HTML de los corazones (❤️ activos y 🖤 perdidos) para los displays de vidas.
+
+**Parámetros**:
+- `maxLives`: cantidad total de corazones a mostrar (15, 10 o 5 según el tier)
+- `lives`: cuántos siguen vivos
+
+```javascript
+buildHeartsHTML(5, 3)
+// → "❤️❤️❤️🖤🖤"  (3 activos, 2 perdidos)
+```
+
+Genera spans con clase `cs-heart` (activo) o `cs-heart cs-heart--lost` (perdido). El CSS le da el color y la animación `heartDying` a los perdidos.
+
+---
+
+### `renderLives()`
+Actualiza ambos displays de vidas (desktop y mobile) con el HTML generado por `buildHeartsHTML`. Aplica `livesActive` para mostrar los corazones como grises/ocultos cuando el sistema de vidas no aplica en el nivel actual.
+
+Se llama después de cada cambio de vidas (`loseLife()`, `nextLevel()`, `startNewGame()`).
+
+---
+
+### `showLevelWarning()`
+Muestra un overlay de aviso al iniciar un nivel con iluminación `border` o `none`. El banner explica la regla de pérdida de vida y bloquea el tablero (`gameStatus = 'warning'`) hasta que el jugador lo descarte o transcurran 3.5 segundos.
+
+**Concepto**: el estado `'warning'` es un tercer estado del juego (además de `'playing'` y `'won'`) que bloquea `handleCellClick`.
+
+---
+
+### `loseLife()`
+Procesa la pérdida de una vida:
+1. Decrementa `gameState.lives`
+2. Anima el corazón perdido (`heartDying` — scale 2.2× + glow rojo → gris)
+3. Flash rojo sobre todo el tablero (`boardLifeLost`)
+4. Reproduce `playLoseLifeSound()` (2 osciladores sawtooth 220+110Hz descendiendo a 40Hz)
+5. Vibración haptica `[80, 40, 180]` en mobile
+6. Si `lives === 0` → llama `showGameOverModal()`
+
+---
+
+### `showGameOverModal()` y `gameOverShowStats()`
+`showGameOverModal()` muestra el modal de game over. Se auto-descarta en 2 segundos para ir al resumen, a menos que el jugador interactúe.
+
+`gameOverShowStats()` transforma el modal de game over en un resumen de estadísticas (mismo modal, diferente contenido). Útil para cuando el jugador cierra el game over con la X.
+
+---
+
+### `newGameFull()` y `gameOverRestart()`
+Ambas inician una partida desde cero (nivel 1, timer 0, score 0, vidas máximas).
+
+- `newGameFull()`: se llama desde el botón "NUEVO JUEGO" del panel lateral (en cualquier momento del juego)
+- `gameOverRestart()`: se llama desde "VOLVER A EMPEZAR" en el modal de game over. Hace `timerStarted = false` explícitamente antes de llamar `startNewGame(true)` para evitar que el timer del nivel anterior persista.
+
+**Lección aprendida**: siempre setear `timerStarted = false` ANTES de llamar `startNewGame(true)` cuando se quiere timer limpio. Si `timerStarted` queda en `true`, `startNewGame` interpreta que debe continuar el timer.
+
+---
+
+### `showVictoryModal(options = {})` y `closeVictoryModal()`
+`showVictoryModal()` puebla y muestra el modal de victoria con el tiempo, score, desglose de bonuses y nivel completado. El parámetro `options.isGameOver` permite reutilizar el modal como pantalla de resumen al perder todas las vidas.
+
+`closeVictoryModal()` oculta el modal y, si quedan niveles, inicia `startNextLevelCountdown()`.
+
+---
+
+## Sistema de Victoria y Puntaje
+*(Agregado 2026-05-21)*
+
+### `winGame()`
+Punto de entrada al flujo de victoria. Detiene el timer, calcula todos los componentes del puntaje, y orquesta la secuencia visual.
+
+**Cálculo del puntaje**:
+```javascript
+const totalSegs     = Math.floor(gameState.timer / 100);
+const minutos       = Math.floor(totalSegs / 60);
+const segsRestantes = totalSegs % 60;
+const timePenalty   = minutos * 100 + segsRestantes;  // 2:31 → 231
+const livesBonus    = gameState.lives * 50;
+const multiplier    = Math.round((1 + (nivel) * 0.1) * 10) / 10;
+```
+
+El score se inicializa solo con el puntaje de palabras. Los bonuses y penalizaciones se **aplican progresivamente durante la animación**, no de golpe aquí.
+
+**¿Por qué progresivo?** Permite que el jugador vea el número subir con los corazones y bajar con el tiempo — hace el puntaje tangible y emocionante.
+
+---
+
+### `playVictorySequence(timePenalty, livesBonus, multiplier)`
+Orquesta las 5 fases de la secuencia visual de victoria. Los tiempos de las fases 3-5 se calculan **dinámicamente** según la cantidad de vidas restantes para que ninguna animación sea interrumpida por el modal.
+
+```
+Fase 1 (t=500ms)   → Timer congela en rojo
+Fase 2 (t=1500ms)  → flyHeartsToScore() — duración variable
+Fase 3 (t=T2+dur)  → flyTimePenalty()  — resta tiempo
+Fase 4 (t=T3+2s)   → Flash multiplicador + aplica al score
+Fase 5 (t=T4+1.3s) → showVictoryModal()
+```
+
+**Fórmula de timing**:
+```javascript
+const heartsDuration = n > 0 ? (n - 1) * 180 + 400 + 30 + 400 + 700 + 400 : 0;
+// Donde n = gameState.lives, 180ms = stagger entre corazones
+```
+
+---
+
+## Animaciones Volantes — Patrón Reutilizable
+*(Agregado 2026-05-21)*
+
+> **Nota**: Estas tres funciones implementan el mismo patrón que se puede reutilizar en cualquier otro juego de ChessArcade que necesite "algo que vuela de un punto a otro".
+
+### El Patrón Base
+
+```javascript
+// 1. Obtener posición real de los elementos con getBoundingClientRect()
+const srcRect  = sourceElement.getBoundingClientRect();
+const destRect = destElement.getBoundingClientRect();
+
+// 2. Crear elemento "volador" con position: fixed
+const flyer = document.createElement('div');
+Object.assign(flyer.style, {
+    position: 'fixed',
+    left: `${srcRect.left + srcRect.width / 2}px`,
+    top:  `${srcRect.top + srcRect.height / 2}px`,
+    // ...estilo visual
+});
+document.body.appendChild(flyer);
+
+// 3. Doble requestAnimationFrame para forzar que el navegador pinte el estado inicial
+//    ANTES de aplicar la transición (si no, el navegador optimiza y no se ve el vuelo)
+requestAnimationFrame(() => requestAnimationFrame(() => {
+    flyer.style.transition = 'left 0.7s ease-in, top 0.7s ease-in, opacity 0.15s 0.6s';
+    flyer.style.left = `${destRect.left + destRect.width / 2}px`;
+    flyer.style.top  = `${destRect.top + destRect.height / 2}px`;
+    flyer.style.opacity = '0';
+}));
+
+// 4. setTimeout sincronizado con la duración de la transición para el efecto de impacto
+setTimeout(() => {
+    flyer.remove();
+    // ... impacto en el destino
+}, 730); // ligeramente > 700ms para que la transición termine
+```
+
+**¿Por qué el doble `requestAnimationFrame`?**
+Si aplicás la transición en el mismo frame en que agregás el elemento al DOM, el navegador puede "batching" ambas operaciones y el elemento aparece directamente en el destino sin animación. El doble RAF garantiza que hay al menos un frame renderizado con el estado inicial.
+
+---
+
+### `flyHeartsToScore()`
+**Propósito**: Animar el sistema de corazones-colector al ganar.
+
+**Flujo**:
+1. Lee los corazones vivos del display de vidas con `querySelectorAll('.cs-heart:not(.cs-heart--lost)')`
+2. Posiciona el **corazón colector** entre el display de vidas y el centro de la pantalla
+3. Por cada corazón, con stagger de 180ms:
+   - El corazón original hace pop (scale ×2) y desaparece
+   - Un clon vuela al colector (400ms, ease-in)
+   - Al llegar: el colector crece (`scale = 0.8 + merged × 0.15`), label actualiza "+50/+100/..."
+4. Cuando llega el último → llama `launchCollectorToScore()` con delay de 400ms
+
+**Para reutilizar en otro juego**: reemplazá la fuente (`querySelectorAll('.cs-heart...')`) con los elementos que querés animar, y el destino con el marcador del otro juego. El resto del patrón es genérico.
+
+---
+
+### `launchCollectorToScore(collector, labelEl, totalBonus, scoreEl, destX, destY)`
+**Propósito**: Lanzar el corazón colector (ya grande) al marcador de puntos.
+
+**Parámetros**:
+- `collector`: el elemento DOM del corazón colector
+- `labelEl`: el label "+N" dentro del colector
+- `totalBonus`: cuánto sumar al score al impactar
+- `scoreEl`: el elemento DOM del marcador (donde impacta)
+- `destX, destY`: coordenadas de destino (obtenidas con `getBoundingClientRect`)
+
+**Al impactar**:
+1. `gameState.score += totalBonus; updateDisplay()`
+2. Shake del marcador: `scale(2.2) rotate(-8deg)` → spring back con cubic-bezier elástico
+3. Toast "+N" que flota hacia arriba con animación `vToastFloat`
+
+**Para reutilizar**: cualquier elemento que acumule valor y deba "descargarlo" sobre un marcador puede usar esta función. Solo necesitás cambiar el color (actualmente rosa `#ff0080`).
+
+---
+
+### `flyTimePenalty(timePenalty)`
+**Propósito**: Animar la penalización de tiempo — un badge rojo que vuela desde el timer al score y lo disminuye.
+
+**Flujo**:
+1. Badge `"−N"` aparece con pop elástico sobre el timer (escala 0 → 1)
+2. Espera 700ms para que el jugador lo lea
+3. Vuela al marcador en 700ms (ease-in, se achica y desaparece)
+4. Al impactar: `gameState.score = Math.max(0, score − timePenalty)` (nunca negativo)
+5. Shake rojo del marcador + toast "−N" rojo flotando
+
+**Para reutilizar en otro juego**: cualquier "penalización que viene de algún display" puede usar este patrón. Cambiar la fuente (puede ser cualquier elemento), el color (actualmente rojo `#ff2020`), y el sonido.
+
+**Diferencia clave con `launchCollectorToScore`**: el badge aparece primero (pop) y espera antes de volar — le da al jugador tiempo para leer el número antes de la animación. Útil para penalizaciones que el jugador necesita "entender" antes de verlas aplicarse.
+
+---
+
+## Sonidos de la Secuencia de Victoria
+*(Agregado 2026-05-21)*
+
+Todos los sonidos usan la **Web Audio API** (`AudioContext`, osciladores, nodos de ganancia). Ver `initAudio()` y `playBeep()` para el patrón base.
+
+### `playHeartPopSound()`
+Pop al salir el corazón individual. Sine 320→80Hz en 100ms. Efecto de burbuja que revienta.
+
+### `playHeartWhooshSound()`
+Whoosh corto durante el vuelo del clon al colector. Ruido blanco filtrado con bandpass 1800Hz, 150ms. Imita el sonido de algo pasando rápido.
+
+```javascript
+// Cómo se genera ruido blanco en Web Audio API:
+const buf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+const data = buf.getChannelData(0);
+for (let k = 0; k < data.length; k++) {
+    data[k] = (Math.random() * 2 - 1) * (1 - k / data.length); // atenúa hacia el final
+}
+```
+
+### `playHeartMergeSound()`
+Plop suave al fusionarse un corazón en el colector. Sine 520→260Hz en 140ms. Tono que "baja" confirma que algo llegó y se integró.
+
+### `playHeartImpactSound()`
+Ping agudo cuando el colector impacta el marcador. Triangle 1400→800Hz en 220ms. El triangle wave suena más "limpio" y metálico que el sine.
+
+### `playTimePenaltySound()`
+Sad trombone: tres notas sawtooth descendentes con bend (imitan el portamento del trombón).
+
+```
+A#4 (466Hz) → delay 0ms,   duración 200ms
+F#4 (370Hz) → delay 220ms, duración 200ms
+A#3 (233Hz) → delay 440ms, duración 400ms  ← más larga, más triste
+```
+
+El oscilador `sawtooth` tiene muchos armónicos → suena "áspero" y dramático, ideal para una penalización. El sine suena limpio y suave (mejor para efectos positivos).
+
+```javascript
+// Bend descendente por nota (imita portamento de trombón):
+osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+osc.frequency.exponentialRampToValueAtTime(freq * 0.88, ctx.currentTime + delay + dur);
+```
+
+### `playLoseLifeSound()`
+Sonido crunch al perder una vida. Dos osciladores sawtooth simultáneos (220Hz + 110Hz) descendiendo a 40Hz en 300ms. La combinación de dos frecuencias descendentes crea una sensación de "aplastamiento".
+
+---
+
+**Última actualización**: 2026-05-21
+**Versión del juego**: 2.0
 **Autor**: Claude Code con comentarios educativos
