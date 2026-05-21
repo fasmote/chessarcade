@@ -1271,23 +1271,20 @@ function playVictorySequence(timePenalty, livesBonus, multiplier) {
     const heartsDuration = n > 0 ? (n - 1) * STAGGER + FLY_MS + 30 + 400 + 700 + 400 : 0;
 
     const T2 = 1500;                        // Fase 2: corazones vuelan
-    const T3 = T2 + heartsDuration + 300;   // Fase 3: badge de tiempo vuela al score
-    const T4 = T3 + 2000;                   // Fase 4: flash del multiplicador
-    const T5 = T4 + 1300;                   // Fase 5: modal de victoria
+    const T3 = T2 + heartsDuration + 300;   // Fase 3: multiplicador de nivel
+    const T4 = T3 + 1500;                   // Fase 4: penalización de tiempo (cierre dramático)
+    const T5 = T4 + 2200;                   // Fase 5: modal de victoria
 
-    // ── Fase 1 (0.5s): timer se congela en ROJO (el tiempo va a restar) ──
+    // ── Fase 1 (0.5s): timer se pausa (queda neutro — el rojo llega con la penalización al final) ──
     setTimeout(() => {
         const timerEl = document.querySelector('.timer-display');
-        if (timerEl) timerEl.classList.add('timer-penalty');
+        if (timerEl) timerEl.classList.add('timer-paused');
     }, 500);
 
     // ── Fase 2: corazones vuelan al colector que luego va al marcador ──
     setTimeout(() => flyHeartsToScore(), T2);
 
-    // ── Fase 3: badge de penalización vuela desde el timer y resta ──
-    setTimeout(() => flyTimePenalty(timePenalty), T3);
-
-    // ── Fase 4: aplicar multiplicador al score + flash visual ──
+    // ── Fase 3: multiplicador de nivel — flash con nombre del nivel + aplica al score ──
     setTimeout(() => {
         gameState.score = Math.max(0, Math.round(gameState.score * multiplier));
         updateDisplay();
@@ -1301,7 +1298,10 @@ function playVictorySequence(timePenalty, livesBonus, multiplier) {
         if (valEl) valEl.textContent = `×${multiplier}`;
         el.style.display = 'flex';
         el.addEventListener('animationend', () => { el.style.display = 'none'; }, { once: true });
-    }, T4);
+    }, T3);
+
+    // ── Fase 4: timer se pone rojo + badge de penalización vuela y resta (golpe final) ──
+    setTimeout(() => flyTimePenalty(timePenalty), T4);
 
     // ── Fase 5: modal de victoria ──
     setTimeout(() => showVictoryModal(), T5);
@@ -1489,6 +1489,10 @@ function flyTimePenalty(timePenalty) {
     const timerEl = document.querySelector('.timer-display');
     const scoreEl = elements.scoreDisplay;
     if (!timerEl || !scoreEl) return;
+
+    // El timer pasa de "pausado" a "rojo" — señal de que el tiempo viene a cobrar
+    timerEl.classList.remove('timer-paused');
+    timerEl.classList.add('timer-penalty');
 
     const timerRect = timerEl.getBoundingClientRect();
     const scoreRect = scoreEl.getBoundingClientRect();

@@ -1517,6 +1517,21 @@
     border-color: #39ff14;
 }
 
+/* Timer: gris azulado al pausarse (neutral — el rojo llega después con la penalización) */
+@keyframes timerPaused {
+    0%   { border-color: var(--neon-orange); box-shadow: 0 0 20px rgba(255,153,0,0.3); }
+    100% { border-color: #4a90b8;            box-shadow: 0 0 12px rgba(74,144,184,0.3); }
+}
+
+.timer-display.timer-paused {
+    animation: timerPaused 0.5s ease-out forwards;
+    border-color: #4a90b8;
+}
+
+.timer-display.timer-paused span {
+    color: #4a90b8;
+}
+
 /* Timer: glow rojo al congelarse cuando el tiempo resta puntos */
 @keyframes timerPenalty {
     0%   { border-color: var(--neon-orange); box-shadow: 0 0 20px rgba(255,153,0,0.3); }
