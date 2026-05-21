@@ -113,7 +113,7 @@
         isSubmitting = true;
 
         const input      = document.getElementById('csPlayerNameInput');
-        const playerName = (input?.value?.trim() || 'JUGADOR').toUpperCase().slice(0, 20);
+        const playerName = (input?.value?.trim() || 'JUGADOR').toUpperCase().slice(0, 15);
         localStorage.setItem(STORAGE_KEY, playerName);
 
         const score    = getScore();

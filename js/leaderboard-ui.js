@@ -30,7 +30,8 @@ const GAME_NAMES = {
   'knight-quest': 'Knight Quest',
   'memory-matrix': 'Memory Matrix',
   'master-sequence': 'Master Sequence',
-  'chessinfive': 'ChessInFive'
+  'chessinfive': 'ChessInFive',
+  'criptosopa': 'CriptoSopa'
 };
 
 /**
@@ -41,7 +42,8 @@ const GAME_EMOJIS = {
   'knight-quest': '♞',
   'memory-matrix': '🧠',
   'master-sequence': '🎯',
-  'chessinfive': '♟️'
+  'chessinfive': '♟️',
+  'criptosopa': '🔤'
 };
 
 // ===========================================================================
