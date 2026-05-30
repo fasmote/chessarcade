@@ -5,16 +5,16 @@
  *
  * Conecta CriptoSopa con el leaderboard global.
  * Se encarga de:
- *  1. Observar el victoryModal para activar la animación de ranking
+ *  1. Observar el gameOverModal para activar la animación de ranking
  *  2. Cargar/guardar el nombre del jugador desde localStorage
  *  3. Enviar el score acumulado total al leaderboard
  *  4. Abrir el leaderboard resaltando la fila del jugador
  *
  * Diferencias respecto a Master Sequence:
- *  - Trigger: victoryModal.active (no gameOverOverlay.hidden)
+ *  - Trigger: gameOverModal.active (cuando el jugador pierde todas las vidas)
  *  - Score: gameState.totalScore + gameState.score (acumulado de todos los niveles)
  *  - Estado del juego: accedido via window.csGameState (expuesto en criptosopa.js)
- *  - Input de nombre: #csPlayerNameInput (en footer del victoryModal)
+ *  - Input de nombre: #csPlayerNameInput (en body del gameOverModal)
  */
 
 (function() {
@@ -75,22 +75,24 @@
         }
     }
 
-    // ── Lógica al abrirse el modal de victoria ──
+    // ── Lógica al abrirse el modal de game over ──
 
-    function onVictoryModalOpen() {
+    function onGameOverModalOpen() {
         loadSavedName();
         resetSubmitBtn();
 
         const score         = getScore();
         const submitSection = document.getElementById('csSubmitSection');
+        const submitBtn     = document.getElementById('submitScoreBtn');
 
         if (score > 0) {
-            // Mostrar sección de nombre
+            // Mostrar sección de nombre y botón de envío
             if (submitSection) submitSection.style.display = 'block';
+            if (submitBtn)     submitBtn.style.display     = '';
 
             // Mostrar animación de ranking
             if (typeof window.showRankingAnimation === 'function') {
-                const modalBody = document.querySelector('#victoryModal .modal-body');
+                const modalBody = document.querySelector('#gameOverModal .modal-body');
                 if (modalBody) {
                     if (typeof window.clearRankingAnimation === 'function') {
                         window.clearRankingAnimation();
@@ -101,8 +103,9 @@
                 }
             }
         } else {
-            // Score 0: ocultar sección de envío (no debería ocurrir en la práctica)
+            // Score 0: ocultar sección de envío
             if (submitSection) submitSection.style.display = 'none';
+            if (submitBtn)     submitBtn.style.display     = 'none';
         }
     }
 
@@ -140,7 +143,7 @@
 
             // Cerrar modal y abrir leaderboard resaltando la fila
             setTimeout(() => {
-                const modal = document.getElementById('victoryModal');
+                const modal = document.getElementById('gameOverModal');
                 if (modal) modal.classList.remove('active');
 
                 setTimeout(() => {
@@ -168,14 +171,14 @@
     window.addEventListener('DOMContentLoaded', () => {
         loadSavedName();
 
-        // Observar el victoryModal: cuando se agrega la clase 'active', activar integración
-        const victoryModal = document.getElementById('victoryModal');
-        if (victoryModal) {
+        // Observar el gameOverModal: cuando se agrega la clase 'active', activar integración
+        const gameOverModal = document.getElementById('gameOverModal');
+        if (gameOverModal) {
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((m) => {
                     if (m.attributeName === 'class') {
-                        if (victoryModal.classList.contains('active')) {
-                            onVictoryModalOpen();
+                        if (gameOverModal.classList.contains('active')) {
+                            onGameOverModalOpen();
                         } else {
                             if (typeof window.clearRankingAnimation === 'function') {
                                 window.clearRankingAnimation();
@@ -184,10 +187,10 @@
                     }
                 });
             });
-            observer.observe(victoryModal, { attributes: true });
-            console.log('✅ [criptosopa-lb] Observer en victoryModal listo');
+            observer.observe(gameOverModal, { attributes: true });
+            console.log('✅ [criptosopa-lb] Observer en gameOverModal listo');
         } else {
-            console.warn('⚠️ [criptosopa-lb] #victoryModal no encontrado');
+            console.warn('⚠️ [criptosopa-lb] #gameOverModal no encontrado');
         }
 
         // Botón "ENVIAR PUNTUACIÓN" — reemplaza el stub de criptosopa.js

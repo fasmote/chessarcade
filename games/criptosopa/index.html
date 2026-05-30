@@ -390,23 +390,12 @@
                 <p class="victory-message">¡Has encontrado todas las palabras!</p>
             </div>
             <div class="modal-footer">
-                <!-- Input de nombre para el leaderboard (oculto hasta que leaderboard-integration.js lo muestra) -->
-                <div id="csSubmitSection" style="display:none; width:100%; margin-bottom:0.5rem;">
-                    <div class="name-input-container">
-                        <label class="name-input-label" for="csPlayerNameInput">✨ Tu nombre para el ranking:</label>
-                        <input type="text" id="csPlayerNameInput" class="name-input-field"
-                               maxlength="15" placeholder="JUGADOR" autocomplete="off">
-                    </div>
-                </div>
                 <button id="nextLevelBtn" class="neon-arcade-btn neon-arcade-btn--primary">
                     ▶️ SIGUIENTE NIVEL
                 </button>
                 <!-- Solo visible en contexto de game over, oculto en victoria normal -->
                 <button id="modalRestartBtn" class="neon-arcade-btn neon-arcade-btn--primary" style="display:none;">
                     🔄 VOLVER A EMPEZAR
-                </button>
-                <button id="submitScoreBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
-                    📊 ENVIAR PUNTUACIÓN
                 </button>
             </div>
         </div>
@@ -438,8 +427,19 @@
                 <div class="gameover-hearts"></div>
                 <p class="gameover-message">Se te acabaron las vidas</p>
                 <p class="gameover-sub">Volvés al nivel 1</p>
+                <!-- Input de nombre para el leaderboard (lo muestra leaderboard-integration.js) -->
+                <div id="csSubmitSection" style="display:none; width:100%; margin-top:0.75rem;">
+                    <div class="name-input-container">
+                        <label class="name-input-label" for="csPlayerNameInput">✨ Tu nombre para el ranking:</label>
+                        <input type="text" id="csPlayerNameInput" class="name-input-field"
+                               maxlength="15" placeholder="JUGADOR" autocomplete="off">
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
+                <button id="submitScoreBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
+                    📊 ENVIAR PUNTUACIÓN
+                </button>
                 <button id="gameOverRestartBtn" class="neon-arcade-btn neon-arcade-btn--primary">
                     🔄 VOLVER A EMPEZAR
                 </button>
