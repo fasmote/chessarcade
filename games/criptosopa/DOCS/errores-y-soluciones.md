@@ -903,3 +903,113 @@ Copiar la estructura de MemoryMatrix (`.title-section`):
 **Solución**: Cambiar a `auto auto` para que ambas filas crezcan con su contenido.
 
 **Lección general de la sesión**: Antes de intentar técnicas CSS "a ciegas", mirar cómo lo hace otro juego que ya funciona. Los 7 intentos fallidos con `justify-content`, `align-self`, `width:100%`, `margin:auto`, etc. se evitaban copiando la estructura de MemoryMatrix desde el principio.
+
+---
+
+## 11. Errores de Leaderboard — Sesión 2026-07-01
+
+### Error #124: Auto-cierre de 2s impedía escribir el nombre en Game Over
+**Fecha**: 2026-07-01
+**Severidad**: Crítica
+**Descripción**: Al perder todas las vidas, el `#gameOverModal` aparecía con el input de nombre, pero desaparecía a los 2 segundos antes de que el jugador pudiera escribir nada. El score nunca se enviaba.
+
+**Causa Raíz**:
+En `criptosopa.js`, `showGameOverModal()` tenía un `setTimeout` de 2000ms que llamaba a `gameOverShowStats()`. Esa función cerraba el `#gameOverModal` y abría el `#victoryModal` (resumen de puntos), pisando por completo el flujo del leaderboard.
+
+```javascript
+// ANTES (con error)
+function showGameOverModal() {
+    gameState.gameStatus = 'gameover';
+    clearInterval(gameState.timerInterval);
+    elements.gameOverModal?.classList.add('active');
+    setTimeout(() => {
+        if (elements.gameOverModal?.classList.contains('active')) {
+            gameOverShowStats(); // cerraba el modal a los 2s
+        }
+    }, 2000);
+}
+
+// DESPUÉS (corregido)
+function showGameOverModal() {
+    gameState.gameStatus = 'gameover';
+    clearInterval(gameState.timerInterval);
+    elements.gameOverModal?.classList.add('active');
+    // Sin auto-transición: el jugador envía su score o cierra manualmente.
+}
+```
+
+**Cómo se detectó**: el log 267 mostraba que `onGameOverModalOpen` se ejecutaba correctamente y la API respondía, pero el modal desaparecía en ~2s sin que el jugador interactuara.
+
+**Archivos**: `games/criptosopa/js/criptosopa.js` — función `showGameOverModal()`
+
+---
+
+### Error #125: Modal del leaderboard invisible en CriptoSopa
+**Fecha**: 2026-07-01
+**Severidad**: Alta
+**Descripción**: Al hacer click en el botón RANKING desde CriptoSopa, no pasaba nada visualmente. Desde otros juegos el leaderboard abría correctamente.
+
+**Causa Raíz**:
+`games/criptosopa/index.html` no cargaba `css/leaderboard.css`. Sin ese archivo, la clase `.modal-overlay` no tenía `position: fixed`, `opacity`, ni `z-index`. El DOM del modal se creaba y la API se llamaba (visible en logs), pero el elemento era invisible.
+
+Los demás juegos (Square Rush, Knight Quest, etc.) cargan `../../css/leaderboard.css` al final del `<body>`. CriptoSopa fue integrado al leaderboard sin incluir ese link.
+
+**Diagnóstico**: el log 268 mostraba las tres llamadas a `showLeaderboardModal` con respuesta de API exitosa, pero sin ningún error. La función trabajaba, solo que el resultado era invisible.
+
+**Solución**:
+```html
+<!-- Agregar en index.html antes de los scripts -->
+<link rel="stylesheet" href="../../css/leaderboard.css">
+```
+
+**Lección**: al integrar el leaderboard en un juego nuevo, siempre copiar el bloque completo de CSS + scripts de un juego que ya funciona (ej: Square Rush). No asumir que los estilos vienen de otro archivo ya cargado.
+
+**Archivos**: `games/criptosopa/index.html`
+
+---
+
+### Error #126: `submitScore()` stub pisaba la función real de `leaderboard-api.js`
+**Fecha**: 2026-07-01
+**Severidad**: Crítica
+**Descripción**: Al enviar el score, la barra del botón cambiaba a "Enviando..." y luego a "✅ ¡Enviado!" pero el score nunca aparecía en el leaderboard. La DB quedaba vacía para CriptoSopa.
+
+**Causa Raíz**:
+`criptosopa.js` tenía una función stub global llamada `submitScore()` (línea ~2070), creada como placeholder para el `addEventListener` de `setupEventListeners`. Como `criptosopa.js` se carga DESPUÉS de `leaderboard-api.js`, la declaración de función del stub sobreescribía la función real de la API:
+
+```javascript
+// En leaderboard-api.js (real)
+async function submitScore(gameId, playerName, score, options) { ... }
+
+// En criptosopa.js (stub — pisaba la real por cargar después)
+function submitScore() {
+    console.warn('[criptosopa] submitScore() stub');
+    // retornaba undefined — nunca hacía el POST
+}
+```
+
+`leaderboard-integration.js` llamaba `await submitScore(GAME_ID, ...)` y recibía `undefined` en vez de la respuesta de la API.
+
+**Cómo se detectó**: el log 269 mostraba en línea 40:
+```
+criptosopa.js:2071 [criptosopa] submitScore() stub — leaderboard-integration.js aún no cargó
+```
+seguido de:
+```
+leaderboard-integration.js:142 [criptosopa-lb] Resultado: undefined
+```
+
+**Solución**: renombrar el stub a `submitScoreStub()` para que no colisione:
+```javascript
+// setupEventListeners() — referencia al stub renombrado
+elements.submitScoreBtn?.addEventListener('click', submitScoreStub);
+
+// Stub con nombre sin conflicto
+function submitScoreStub() {
+    console.warn('[criptosopa] submitScoreStub() — leaderboard-integration.js aún no reemplazó el handler');
+}
+```
+`leaderboard-integration.js` reemplaza el handler con `submitBtn.replaceWith(cloneNode(true))` + `addEventListener('click', submitGameScore)`, así que el stub solo se ejecutaría si la integration no cargara.
+
+**Lección**: en JS, las declaraciones `function nombre()` a nivel global se convierten en `window.nombre`. Si dos archivos declaran la misma función global y se cargan en orden, la segunda pisa a la primera sin error ni advertencia. Los stubs/placeholders deben tener nombres únicos que no colisionen con funciones de otros módulos.
+
+**Archivos**: `games/criptosopa/js/criptosopa.js` — función `submitScoreStub()` y referencia en `setupEventListeners()`

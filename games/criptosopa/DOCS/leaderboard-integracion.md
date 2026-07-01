@@ -9,7 +9,7 @@
 
 | Aspecto | Master Sequence | CriptoSopa |
 |---|---|---|
-| Trigger de submit | `gameOverOverlay` se muestra | `victoryModal` gets class `active` |
+| Trigger de submit | `gameOverOverlay` se muestra | `gameOverModal` gets class `active` (ver nota abajo) |
 | Score a guardar | score del nivel actual | `totalScore + score` (acumulado de todos los niveles) |
 | Tiempo | `totalTimeMs` desde `window.lastSessionStats` | `(totalTime + timer) * 10` ms (centisegundos → ms) |
 | Variables de estado | expuestas en `window.lastSessionStats` | en `gameState` local — hay que exponer a `window` |
@@ -60,45 +60,47 @@ Así `leaderboard-integration.js` accede con `window.csGameState.totalScore`, et
 
 ---
 
-## Trigger: MutationObserver sobre `#victoryModal`
+## Trigger: MutationObserver sobre `#gameOverModal`
 
-A diferencia de Master Sequence (que observa `gameOverOverlay`), aquí observamos `#victoryModal`:
+> **Nota**: el diseño original planeaba observar `#victoryModal`, pero la implementación final usa `#gameOverModal`. El submit ocurre cuando el jugador pierde todas las vidas, no al completar un nivel. Esto tiene más sentido porque el score enviado es el acumulado de toda la sesión.
 
 ```javascript
-const victoryModal = document.getElementById('victoryModal');
+const gameOverModal = document.getElementById('gameOverModal');
 const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.attributeName === 'class') {
-            const isOpen = victoryModal.classList.contains('active');
-            if (isOpen) {
-                onVictoryModalOpen();
+            if (gameOverModal.classList.contains('active')) {
+                onGameOverModalOpen();
             } else {
                 clearRankingAnimation();
             }
         }
     });
 });
-observer.observe(victoryModal, { attributes: true });
+observer.observe(gameOverModal, { attributes: true });
 ```
 
 ---
 
-## HTML a agregar en `#victoryModal` (footer)
+## HTML en `#gameOverModal`
 
-Antes del `#submitScoreBtn` existente, agregar el input de nombre:
+`#csSubmitSection` y `#submitScoreBtn` están en el `#gameOverModal`, no en `#victoryModal`:
 
 ```html
-<!-- Input de nombre — oculto hasta que el jugador quiera enviar -->
-<div id="csSubmitSection" style="display:none;">
+<!-- En .modal-body del #gameOverModal -->
+<div id="csSubmitSection" style="display:none; width:100%; margin-top:0.75rem;">
     <div class="name-input-container">
-        <label class="name-input-label">✨ Tu nombre para el ranking:</label>
+        <label class="name-input-label" for="csPlayerNameInput">✨ Tu nombre para el ranking:</label>
         <input type="text" id="csPlayerNameInput" class="name-input-field"
-               maxlength="20" placeholder="JUGADOR">
+               maxlength="15" placeholder="JUGADOR" autocomplete="off">
     </div>
 </div>
-```
 
-Y el `#submitScoreBtn` existente se reutiliza (ya está en el footer).
+<!-- En .modal-footer del #gameOverModal, antes del botón reiniciar -->
+<button id="submitScoreBtn" class="neon-arcade-btn neon-arcade-btn--secondary">
+    📊 ENVIAR PUNTUACIÓN
+</button>
+```
 
 ---
 
@@ -140,29 +142,34 @@ Y el `#submitScoreBtn` existente se reutiliza (ya está en el footer).
 
 ---
 
-## Checklist de implementación
+## CSS requerido
 
-- [ ] Agregar `criptosopa` a `api/scores/games-config.js`
-- [ ] Exponer `window.csGameState` en `criptosopa.js`
-- [ ] Eliminar `submitScore()` rota de `criptosopa.js` (línea ~2073)
-- [ ] Agregar input de nombre en `#victoryModal` footer (HTML)
-- [ ] Agregar script tag en `index.html`
-- [ ] Crear `leaderboard-integration.js` con observer + submit + ranking animation
-- [ ] Probar: ganar nivel 1 con score > 0 → nombre → enviar → leaderboard resalta fila
-- [ ] Probar: ganar con score = 0 (imposible en práctica, pero validar que no rompe)
-- [ ] Probar: botón RANKING en header abre leaderboard correctamente
-- [ ] Probar: submit doble (flag `isSubmitting`)
+`index.html` debe cargar `leaderboard.css` además de los scripts habituales:
+
+```html
+<link rel="stylesheet" href="../../css/leaderboard.css">
+<script src="../../js/leaderboard-api.js"></script>
+<script src="../../js/leaderboard-ui.js"></script>
+<script src="js/criptosopa.js"></script>
+<script src="js/ranking-animation.js"></script>
+<script src="js/leaderboard-integration.js"></script>
+```
+
+Sin `leaderboard.css`, `.modal-overlay` no tiene `position:fixed` y el modal queda invisible aunque la función se ejecute correctamente.
 
 ---
 
-## Problema conocido: `submitScore()` rota
+## Checklist de implementación ✅ COMPLETO
 
-En `criptosopa.js` línea ~2073 existe una función `submitScore()` que:
-- Usa `gameState.level` → no existe (debería ser `currentLevelIndex`)  
-- Usa `prompt()` para pedir el nombre → reemplazar por input en modal
-- Solo envía `gameState.score` → debería ser el total acumulado
-- No dispara la animación de ranking ni resalta la fila en leaderboard
+- [x] Agregar `criptosopa` a `api/scores/games-config.js`
+- [x] Exponer `window.csGameState` en `criptosopa.js`
+- [x] Renombrar `submitScore()` stub a `submitScoreStub()` en `criptosopa.js` (no eliminar — necesario como handler temporal en `setupEventListeners`)
+- [x] Agregar input de nombre en `#gameOverModal` (body + footer)
+- [x] Agregar `leaderboard.css` y script tags en `index.html`
+- [x] Crear `leaderboard-integration.js` con observer + submit + ranking animation
+- [x] Eliminar auto-cierre de 2s en `showGameOverModal()` (`criptosopa.js`)
+- [x] Probar: perder todas las vidas con score > 0 → nombre → enviar → leaderboard resalta fila ✅
+- [x] Probar: botón RANKING en header abre leaderboard correctamente ✅
+- [x] Probar: desde otro juego, tab CriptoSopa visible en leaderboard ✅
 
-**Solución**: eliminar esa función completamente. El botón `#submitScoreBtn` será reconectado por `leaderboard-integration.js`.
-
-Creado: 2026-05-21
+Completado: 2026-07-01

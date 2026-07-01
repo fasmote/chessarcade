@@ -5,6 +5,24 @@ Para cambios generales del proyecto ver: `docs/CHANGELOG.md`
 
 ---
 
+## [2026-07-01] — Leaderboard operativo: submit en Game Over + fixes de integración
+
+### 🔄 Changed
+- **Trigger del submit**: movido de `#victoryModal` a `#gameOverModal`. El jugador solo puede enviar su score cuando pierde todas las vidas (fin de sesión), no al completar cada nivel individual.
+- **`#csSubmitSection` e `#submitScoreBtn`**: trasladados del footer de `#victoryModal` al body/footer de `#gameOverModal`.
+- **`leaderboard-integration.js`**: observer apunta a `#gameOverModal` en vez de `#victoryModal`; función renombrada `onVictoryModalOpen` → `onGameOverModalOpen`.
+- **`submitScore()` stub renombrado a `submitScoreStub()`** para no pisar la función real de `leaderboard-api.js` (ver Error #126).
+
+### 🐛 Fixed
+- **Auto-cierre de 2s en `gameOverModal`** (Error #124): `setTimeout` que llamaba a `gameOverShowStats()` fue eliminado de `showGameOverModal()`. El jugador ahora puede leer, escribir su nombre y enviar el score sin que el modal desaparezca.
+- **Modal de leaderboard invisible en CriptoSopa** (Error #125): faltaba `<link rel="stylesheet" href="../../css/leaderboard.css">` en `index.html`. Sin ese CSS, `.modal-overlay` no tenía `position:fixed` ni `opacity`, quedando invisible aunque la función se ejecutara.
+- **`submitScore()` stub pisaba la función real** (Error #126): renombrado a `submitScoreStub()`. Al tener el mismo nombre que la función de `leaderboard-api.js` y cargarse después, el stub sobreescribía la implementación real, devolviendo `undefined` en cada intento de envío.
+- **Supabase INACTIVE**: proyecto `chessarcade-scores` en estado INACTIVE por inactividad de free-tier. Restaurado vía MCP → estado `ACTIVE_HEALTHY`.
+- **Vercel sin deploy 40+ días**: GitHub App de Vercel apuntaba a `fasmote/Simulador_rifas_personales` en lugar de `fasmote/chessarcade`. Reconectado manualmente — auto-deploy funcionando desde `bcd7f2c`.
+- **`leaderboard.css` faltante en Hostinger**: `js/leaderboard-ui.js` y `games/criptosopa/js/leaderboard-integration.js` subidos vía FTP.
+
+---
+
 ## [2026-05-21] — Reorden secuencia victoria + multiplicador vuela desde el número de nivel
 
 ### ✨ Added
