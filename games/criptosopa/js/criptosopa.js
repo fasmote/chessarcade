@@ -1932,14 +1932,9 @@ function loseLife() {
 
 function showGameOverModal() {
     gameState.gameStatus = 'gameover';
-    clearInterval(gameState.timerInterval); // detener el reloj al perder
+    clearInterval(gameState.timerInterval);
     elements.gameOverModal?.classList.add('active');
-    // Auto-transición al resumen de puntos después de 2 segundos si el jugador no interactúa
-    setTimeout(() => {
-        if (elements.gameOverModal?.classList.contains('active')) {
-            gameOverShowStats();
-        }
-    }, 2000);
+    // Sin auto-transición: el jugador envía su score o cierra manualmente con X o reinicia.
 }
 
 // Cierra el game over y muestra el resumen de puntos y tiempo acumulados.

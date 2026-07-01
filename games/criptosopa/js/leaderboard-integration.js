@@ -85,12 +85,14 @@
         const submitSection = document.getElementById('csSubmitSection');
         const submitBtn     = document.getElementById('submitScoreBtn');
 
+        console.log('[criptosopa-lb] onGameOverModalOpen — score:', score);
+
         if (score > 0) {
-            // Mostrar sección de nombre y botón de envío
             if (submitSection) submitSection.style.display = 'block';
             if (submitBtn)     submitBtn.style.display     = '';
 
-            // Mostrar animación de ranking
+            console.log('[criptosopa-lb] Mostrando sección de envío y animación de ranking');
+
             if (typeof window.showRankingAnimation === 'function') {
                 const modalBody = document.querySelector('#gameOverModal .modal-body');
                 if (modalBody) {
@@ -98,12 +100,15 @@
                         window.clearRankingAnimation();
                     }
                     setTimeout(() => {
+                        console.log('[criptosopa-lb] Llamando showRankingAnimation');
                         window.showRankingAnimation(score, modalBody);
                     }, 600);
+                } else {
+                    console.warn('[criptosopa-lb] No se encontró #gameOverModal .modal-body');
                 }
             }
         } else {
-            // Score 0: ocultar sección de envío
+            console.warn('[criptosopa-lb] Score = 0, ocultando sección de envío');
             if (submitSection) submitSection.style.display = 'none';
             if (submitBtn)     submitBtn.style.display     = 'none';
         }
