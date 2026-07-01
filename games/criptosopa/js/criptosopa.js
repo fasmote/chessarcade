@@ -264,7 +264,7 @@ function setupEventListeners() {
         }
     });
     elements.nextLevelBtn?.addEventListener('click', nextLevel);
-    elements.submitScoreBtn?.addEventListener('click', submitScore);
+    elements.submitScoreBtn?.addEventListener('click', submitScoreStub);
     elements.gameOverRestartBtn?.addEventListener('click', gameOverRestart);
     elements.closeGameOverBtn?.addEventListener('click', gameOverShowStats);
     // Botón "VOLVER A EMPEZAR" en el modal de resumen (visible solo en contexto game over)
@@ -2064,11 +2064,10 @@ function showHelpModal(show) {
     }
 }
 
-// El submit de score lo maneja leaderboard-integration.js.
-// Esta función queda como stub para no romper el addEventListener de setupEventListeners
-// hasta que leaderboard-integration.js cargue y reemplace el handler.
-function submitScore() {
-    console.warn('[criptosopa] submitScore() stub — leaderboard-integration.js aún no cargó');
+// Stub temporal: leaderboard-integration.js lo reemplaza con replaceWith() + addEventListener.
+// No puede llamarse submitScore porque pisaría la función real de leaderboard-api.js.
+function submitScoreStub() {
+    console.warn('[criptosopa] submitScoreStub() — leaderboard-integration.js aún no reemplazó el handler');
 }
 
 // Sound system with Web Audio API
