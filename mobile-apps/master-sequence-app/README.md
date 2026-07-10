@@ -10,10 +10,36 @@ Aplicación móvil Android de Master Sequence creada con Capacitor.
 ✅ Rutas ajustadas para móvil
 ✅ API configurada para apuntar a producción (Vercel)
 ✅ Plataforma Android agregada
+✅ **Android Studio instalado y configurado**
+✅ **Variables de entorno configuradas (ANDROID_HOME, JAVA_HOME)**
+✅ **gradle.properties configurado (AndroidX + Jetifier)**
+✅ **App compilando y ejecutándose exitosamente en emulador**
 
-## 📋 Próximos Pasos
+**🎉 LA APP ESTÁ FUNCIONAL Y LISTA PARA PUBLICACIÓN**
 
-Para continuar con el desarrollo, necesitarás instalar **Android Studio**.
+## 📋 Estrategia de Desarrollo
+
+**Estado:** App móvil **pausada** hasta perfeccionar versión web.
+
+**Razón:** Es más eficiente iterar y pulir Master Sequence en la web primero:
+- Desarrollo más rápido (edit → refresh)
+- Testing más fácil
+- Feedback de usuarios inmediato
+- Cuando la web esté perfecta → publicar en Play Store será trivial
+
+**Pendiente para publicación:**
+- [ ] Perfeccionar versión web de Master Sequence
+- [ ] Crear iconos personalizados (1024x1024)
+- [ ] Crear splash screens
+- [ ] Optimizar para móvil (CSS, botones táctiles)
+- [ ] Pagar Google Play Developer Account ($25 USD)
+- [ ] Generar keystore y AAB firmado
+- [ ] Completar Google Play Console
+- [ ] Publicar en Play Store
+
+## 📋 Cómo Retomar el Desarrollo Móvil
+
+Cuando estés listo para publicar:
 
 ### 1. Instalar Android Studio
 
@@ -94,23 +120,32 @@ Incluye:
 
 ## ⚠️ Requisitos
 
-- **Node.js:** v18+ (instalado: v22.21.1 ✅)
-- **npm:** v9+ (instalado: v10.9.4 ✅)
-- **Android Studio:** Pendiente de instalación
-- **Espacio en disco:** ~20 GB disponibles (tenemos 30 GB ✅)
+- **Node.js:** v18+ ✅ (instalado: v22.21.1)
+- **npm:** v9+ ✅ (instalado: v10.9.4)
+- **Android Studio:** ✅ Instalado y configurado
+- **ANDROID_HOME:** ✅ Configurado
+- **JAVA_HOME:** ✅ Configurado
+- **Espacio en disco:** ~20 GB ✅
 
-## 🎯 Siguiente Milestone
+## 🎯 Próximo Milestone
 
-**Instalar Android Studio** y ejecutar la app en el emulador por primera vez.
+**Perfeccionar Master Sequence en la web** → Luego publicar versión móvil en Google Play Store.
 
-Una vez que tengas Android Studio:
+Cuando retomes el desarrollo móvil:
 ```bash
-npx cap open android
-```
+# Actualizar código web en la app
+npx cap sync android
 
-¡La app debería abrir en Android Studio y podrás ejecutarla!
+# Abrir en Android Studio
+npx cap open android
+
+# Ejecutar en emulador
+# Click en Play ▶️ en Android Studio
+```
 
 ---
 
 **Creado:** 2025-11-14
-**Branch:** `claude/android-app-master-sequence`
+**Última actualización:** 2025-11-15
+**Estado:** ✅ App funcional - Pausada hasta perfeccionar versión web
+**Branch:** `claude/android-app-master-sequence-011CV2NZwWwME4ac4jRR8AJZ`
