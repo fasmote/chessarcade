@@ -674,11 +674,53 @@ Agregar sección de admin en `test-leaderboard.html` y probar:
 
 ---
 
+## 🔄 Mantener Supabase Activa (Keepalive + Heartbeat)
+
+### El problema
+
+Supabase pausa los proyectos del **plan gratuito** tras **7 días sin actividad en la base de datos**. No importa cuánta gente visite el sitio: si nadie guarda un score ni abre el ranking, la DB no recibe consultas y se pausa.
+
+**Síntoma**: el leaderboard muestra "Error loading leaderboard" y la consola muestra `500 Internal server error` en `/api/scores/leaderboard`.
+
+### La solución automática
+
+- `vercel.json` tiene un cron que llama a `/api/scores/keepalive` todos los días a las 12:00 UTC (`0 12 * * *`).
+- `api/scores/keepalive.js` cuenta los scores y **escribe una fila en la tabla `heartbeat`** (un "latido"). Borra los latidos de más de 90 días.
+- La tabla se crea con `sql/create_heartbeat_table.sql`.
+
+### ⚠️ Limitación importante
+
+**El keepalive NO puede despertar una base ya pausada.** Si la DB se pausa una sola vez (por ejemplo, durante un período en que el cron no corrió), el keepalive empieza a fallar todos los días en silencio hasta que alguien la restaure a mano.
+
+### ¿El cron está corriendo? Verificarlo con el heartbeat
+
+En Supabase → SQL Editor:
+```sql
+SELECT * FROM heartbeat ORDER BY created_at DESC LIMIT 10;
+```
+- Debería haber **una fila por día** con `source = 'cron'`.
+- Filas con `source = 'manual'` son pruebas hechas abriendo la URL a mano.
+- Si el último latido tiene varios días, el cron dejó de correr: revisar en Vercel → proyecto → Settings → Cron Jobs.
+
+Probar a mano: abrir `https://chessarcade.vercel.app/api/scores/keepalive`. Debería responder `{"success":true, ...}`.
+
+### Si Supabase se pausa de nuevo
+
+1. Ir a https://supabase.com/dashboard → proyecto `chessarcade-scores`
+2. Click en **"Restore project"**
+3. Esperar 2–5 minutos hasta que el estado sea `ACTIVE_HEALTHY`
+4. Consultar la tabla `heartbeat` para ver hasta qué día corrió el cron
+
+**Historial**: se pausó en marzo y en octubre de 2026 (restaurada el 2026-10-08). El heartbeat se agregó en octubre para poder diagnosticar la próxima vez.
+
+---
+
 ## 📋 Checklist de Mantenimiento
 
 ### Semanal
 - [ ] Revisar scores sospechosos (muy altos)
 - [ ] Verificar que la API responde correctamente
+- [ ] Revisar que haya latidos recientes: `SELECT * FROM heartbeat ORDER BY created_at DESC LIMIT 7;`
 - [ ] Revisar logs de Vercel para errores
 
 ### Antes de Cambios Importantes
